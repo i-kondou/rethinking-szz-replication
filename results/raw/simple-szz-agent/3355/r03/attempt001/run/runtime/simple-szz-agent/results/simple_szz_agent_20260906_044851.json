@@ -1,0 +1,306 @@
+{
+  "metadata": {
+    "timestamp": "20260906_044851",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3355/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 43.177,
+      "max": 43.177,
+      "mean": 43.177,
+      "median": 43.177,
+      "total": 43.177,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 43.085,
+      "max": 43.085,
+      "mean": 43.085,
+      "median": 43.085,
+      "total": 43.085,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 16,
+      "max": 16,
+      "mean": 16,
+      "median": 16,
+      "total": 16,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 3074,
+      "max": 3074,
+      "mean": 3074,
+      "median": 3074,
+      "total": 3074,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 15380,
+      "max": 15380,
+      "mean": 15380,
+      "median": 15380,
+      "total": 15380,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 86365,
+      "max": 86365,
+      "mean": 86365,
+      "median": 86365,
+      "total": 86365,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.1643475,
+      "max": 0.1643475,
+      "mean": 0.1643475,
+      "median": 0.1643475,
+      "total": 0.1643475,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 8,
+      "max": 8,
+      "mean": 8,
+      "median": 8,
+      "total": 8,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 4,
+      "Glob": 1,
+      "Grep": 2,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 16,
+      "max": 16,
+      "mean": 16,
+      "median": 16,
+      "total": 16,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "3355",
+      "fix_commit_hash": "c05dbd11f9286459f19ca9262e9e5958ac9ab86b",
+      "ground_truth_bics": [
+        "888867c602e6969d278f2f7f141004c3bd7d1b38"
+      ],
+      "predicted_bics": [
+        "888867c602e6969d278f2f7f141004c3bd7d1b38"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "3355",
+      "fix_commit": "c05dbd11f9286459f19ca9262e9e5958ac9ab86b",
+      "ground_truth_bics": [
+        "888867c602e6969d278f2f7f141004c3bd7d1b38"
+      ],
+      "total_candidates": 16,
+      "gt_in_candidates": true,
+      "selected_commit": "888867c602e6969d278f2f7f141004c3bd7d1b38",
+      "selected_index": 14,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes FileHandler.java's fileMatcher visitFile method from: String tempPath = fileName.toString(); to: String tempPath = location.relativize(path).toString(); This restores the relative path (directory + filename) instead of just the bare filename, fixing a bug where the spec/config dropdown only showed the filename. Tracing the history of this exact line across the candidates: - candidate_04 introduced fileMatcher() originally using `path.toString().replaceAll(location + \"/\", \"",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "org.eclipse.cpacep/src/org/eclipse/cpacep/util/FileHandler.java"
+      ],
+      "call_stats": {
+        "duration_s": 43.177,
+        "duration_api_s": 43.085,
+        "num_turns": 9,
+        "input_tokens": 16,
+        "output_tokens": 3074,
+        "cache_creation_input_tokens": 15380,
+        "cache_read_input_tokens": 86365,
+        "total_cost_usd": 0.1643475,
+        "total_tool_calls": 8,
+        "tool_calls_by_name": {
+          "Read": 4,
+          "Glob": 1,
+          "Grep": 2,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3355/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3355_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3355/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3355_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3355/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3355_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 997,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 16,
+            "cache_creation_input_tokens": 443,
+            "cache_read_input_tokens": 10681,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "FileHandler",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 370,
+            "cache_read_input_tokens": 11124,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "tempPath|fileName\\.toString|visitFile",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2552,
+            "cache_read_input_tokens": 11494,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3355/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3355_candidate_selection/candidates/candidate_15.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 3610,
+            "cache_read_input_tokens": 14046,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3355/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3355_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_15\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes FileHandler.java's fileMatcher visitFile method from:\n    String tempPath = fileName.toString();\nto:\n    String tempPath = location.relativize(path).toString();\nThis restores the relative path (directory + filename) instead of just the bare filename, fixing a bug where the spec/config dropdown only showed the filename.\n\nTracing the history of this exact line across the candidates:\n- candidate_04 introduced fileMatcher() originally using `path.toString().replaceAll(location + \"/\", \"\")`, i.e. computing a relative path manually \u2014 this preserved subdirectory information.\n- candidates_07/10/11/12/13/14 only tweaked case-folding, camelCase conversion, and separator handling, but always kept the relative-path-derived value (still based on `path`, not just the filename).\n- candidate_15 is the commit that refactored fileMatcher to change its signature to take a Path `location`, switched the match target from `path` to `path.getFileName()`, and set `tempPath = fileName.toString()`. This is precisely the regression: it discarded the relative directory portion and kept only the bare filename, matching the described bug (\"only showed the filename without suffix\" being lost in the surrounding relative path context).\n- candidate_16 is the actual fix commit itself, changing `fileName.toString()` back to `location.relativize(path).toString()`.\n\nSince candidate_15 is the first (and only) commit that introduces the `tempPath = fileName.toString()` line that the fix directly reverts, it is the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1122,
+            "cache_read_input_tokens": 17656,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

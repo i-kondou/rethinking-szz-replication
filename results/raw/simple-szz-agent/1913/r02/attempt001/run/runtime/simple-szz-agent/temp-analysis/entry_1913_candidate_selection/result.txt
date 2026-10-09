@@ -1,0 +1,39 @@
+SELECTED: candidate_47
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit ("fixed some compilations issues and added more type information") touches
+CallLocalityContext.java, ClassInfoFlowAnalysis.java, ClassLocalObjectsAnalysis.java,
+InfoFlowAnalysis.java, SimpleMethodInfoFlowAnalysis.java, and TestDominance.java, tightening
+raw/generic types (e.g. HashMutableDirectedGraph -> HashMutableDirectedGraph<EquivalentValue>,
+MutableDirectedGraph -> MutableDirectedGraph<EquivalentValue>, DirectedGraph -> DirectedGraph<EquivalentValue>,
+DominatorNode -> DominatorNode<Node>, DominatorTree -> DominatorTree<Node>,
+MHGDominatorTree -> MHGDominatorTree<Node>) and replacing diamond-operator constructions
+`new Pair<>(...)` with explicit type arguments `new Pair<EquivalentValue,EquivalentValue>(...)`.
+
+candidate_47 is the commit that performed the large-scale generics migration across the
+soot.jimple.toolkits.infoflow package and soot.toolkits.graph (DominatorTree/DominatorNode/
+MHGDominatorTree/CytronDominanceFrontier/HashMutableDirectedGraph/MutableDirectedGraph/
+DirectedGraph/FlowSet, etc.), converting many previously-raw-typed classes and methods to use
+generics (e.g. `SimpleMethodInfoFlowAnalysis extends ForwardFlowAnalysis<Unit, FlowSet<Pair<...>>>`,
+`MutableDirectedGraph<EquivalentValue> infoFlowGraph`, `DominatorNode<Block> node`, etc.).
+Searching all 48 candidates confirms candidate_47 is the ONLY commit that introduces the
+`new Pair<>(sinkEqVal, sourceEqVal)` diamond-operator calls in SimpleMethodInfoFlowAnalysis.java
+(grep for lines adding "new Pair<>(" across every candidate diff returns only candidate_47).
+It is exactly these diamond-operator calls, plus a number of related classes/fields that were
+left as raw types or with `Object`-typed loop variables during this same migration
+(CallLocalityContext's `List<Object> nodes`, ClassInfoFlowAnalysis's raw `HashMutableDirectedGraph`
+fields/return types, InfoFlowAnalysis's raw `HashMutableDirectedGraph`/`MutableDirectedGraph`/
+`DirectedGraph` signatures, and TestDominance.java's raw `DominatorNode`/`DominatorTree`/
+`MHGDominatorTree` usages with unchecked casts to `Node`), that the fix commit subsequently
+corrects/completes. The fix is a direct continuation and cleanup of the exact same refactor
+started in candidate_47, indicating candidate_47 introduced the incomplete/inconsistent typing
+(and the diamond-operator usage incompatible with the project's source level) that caused the
+"compilation issues" referenced in the fix commit message.
+
+Note: candidate_48.diff is byte-for-byte identical to fix_commit_diff.txt (identical file blob
+hashes for every changed file), meaning the fix commit itself was inadvertently included as the
+last candidate. It was excluded from consideration since a fix commit cannot be its own
+bug-introducing commit; candidate_47 (the immediately preceding, actual code-introducing commit)
+is the correct selection.

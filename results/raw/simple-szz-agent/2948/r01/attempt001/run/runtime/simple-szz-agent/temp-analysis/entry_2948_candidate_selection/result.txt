@@ -1,0 +1,48 @@
+SELECTED: candidate_439
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix (fix_commit_diff.txt) changes the condition in NativeND2Reader.java's
+metadata-parsing loop from:
+
+    while (sb.charAt(sb.length() - 1) != ':' && sb.indexOf("_") < 0 && i < lines.length) {
+
+to:
+
+    while ((sb.length() == 0 || sb.charAt(sb.length() - 1) != ':') && sb.indexOf("_") < 0 && i < lines.length) {
+
+This guards against calling `sb.charAt(sb.length() - 1)` when `sb` is empty
+(length 0), which throws a StringIndexOutOfBoundsException. This happens when
+`lines[i]` (an element produced by splitting the text on spaces) is an empty
+string, e.g. from consecutive spaces in the input.
+
+Searching all 440 candidates for the exact buggy expression
+`sb.charAt(sb.length() - 1)` found it in only two candidates:
+
+- candidate_440: this diff *is* the fix itself (it changes the vulnerable
+  line to the safe, guarded version), so it cannot be the bug-introducing
+  commit.
+- candidate_439: this diff shows the original code being refactored from a
+  plain String-based implementation:
+
+      String key = lines[i++];
+      while (!key.endsWith(":") && key.indexOf('_') < 0 && i < lines.length) {
+        key += " " + lines[i++];
+
+  to a StringBuffer-based implementation:
+
+      StringBuffer sb = new StringBuffer(lines[i++]);
+      while (sb.charAt(sb.length() - 1) != ':' && sb.indexOf("_") < 0 && i < lines.length) {
+        sb.append(" ");
+        sb.append(lines[i++]);
+
+  The original code used `String.endsWith(":")`, which is always safe to
+  call on an empty string (`"".endsWith(":")` returns false, never throws).
+  The refactor to StringBuffer replaced this with a direct `charAt(length()-1)`
+  call, which throws StringIndexOutOfBoundsException whenever the buffer is
+  empty. This refactor is exactly what introduced the crash that the fix
+  commit later patches.
+
+No other candidate touches this line or this method's condition logic, so
+candidate_439 is clearly the commit that introduced the string indexing bug.

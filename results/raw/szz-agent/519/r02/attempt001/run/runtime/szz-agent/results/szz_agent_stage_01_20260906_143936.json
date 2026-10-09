@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "timestamp": "20260906_143936",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 0,
+    "gt_in_szz_candidates_rate": 0.0,
+    "llm_accuracy": 0.0
+  },
+  "results": [
+    {
+      "id": "519",
+      "fix_commit_hash": "bbcc596ff1f3b1e7d3351947c9a9e441ab825be7",
+      "bug_commit_hash": [
+        "1e8d8cde5bfab25b1d6e5ff39221c237374957f7"
+      ],
+      "szz_candidates": [
+        "c0f5be7d77bb51a61cf5745f43be907a197aae98"
+      ],
+      "szz_num_candidates": 1,
+      "gt_in_szz_candidates": false,
+      "matching_gt_in_candidates": [],
+      "llm_selected_commit": "c0f5be7d77bb51a61cf5745f43be907a197aae98",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit changes AbstractFile.onModification() so that validatePath() is only invoked when the `validatePathUniqueness` flag (backed by the config switch `application.filesystem.unique.paths`) is true: boolean valid = true; if (validatePathUniqueness) { valid = validatePath(securityContext, errorBuffer); } return valid && super.onModification(...); Previously, onModification() called `validatePath(securityContext, errorBuffer)` unconditionally, ignoring the `validatePathUniqueness` flag.",
+      "llm_correct": false,
+      "llm_error": null,
+      "repo_name": "subjects/519",
+      "bug_fixing_commit": "bbcc596ff1f3b1e7d3351947c9a9e441ab825be7",
+      "bug_inducing_commit": [
+        "1e8d8cde5bfab25b1d6e5ff39221c237374957f7"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "structr/structr"
+    }
+  ]
+}

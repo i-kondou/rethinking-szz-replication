@@ -1,0 +1,235 @@
+diff --git a/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java b/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java
+index bfc5995b..8224cced 100644
+--- a/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java
++++ b/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java
+@@ -98,7 +98,10 @@ public class MinimalImportScanner extends ImportScannerImpl implements ImportSca
+ 					CtReference parentType = (CtReference) parent;
+ 					Set<String> qualifiedNameTokens = new HashSet<>();
+ 
+-					qualifiedNameTokens.add(parentType.getSimpleName());
++					// we don't want to test the current ref name, as we risk to create field import and make autoreference
++					if (parentType != parent) {
++						qualifiedNameTokens.add(parentType.getSimpleName());
++					}
+ 
+ 					CtTypeReference typeReference;
+ 					if (parent instanceof CtFieldReference) {
+diff --git a/src/main/java/spoon/reflect/visitor/printer/ElementPrinterHelper.java b/src/main/java/spoon/reflect/visitor/printer/ElementPrinterHelper.java
+index c65fc273..7b08fac4 100644
+--- a/src/main/java/spoon/reflect/visitor/printer/ElementPrinterHelper.java
++++ b/src/main/java/spoon/reflect/visitor/printer/ElementPrinterHelper.java
+@@ -271,11 +271,11 @@ public class ElementPrinterHelper {
+ 				} else if (ref instanceof CtExecutableReference) {
+ 					CtExecutableReference execRef = (CtExecutableReference) ref;
+ 					if (execRef.getDeclaringType() != null) {
+-						printer.write("import static " + execRef.getDeclaringType().getQualifiedName() + "." + execRef.getSimpleName() + ";").writeln().writeTabs();
++						printer.write("import static " + this.removeInnerTypeSeparator(execRef.getDeclaringType().getQualifiedName()) + "." + execRef.getSimpleName() + ";").writeln().writeTabs();
+ 					}
+ 				} else if (ref instanceof CtFieldReference) {
+ 					CtFieldReference fieldRef = (CtFieldReference) ref;
+-					printer.write("import static " + fieldRef.getDeclaringType().getQualifiedName() + "." + fieldRef.getSimpleName() + ";").writeln().writeTabs();
++					printer.write("import static " + this.removeInnerTypeSeparator(fieldRef.getDeclaringType().getQualifiedName()) + "." + fieldRef.getSimpleName() + ";").writeln().writeTabs();
+ 				}
+ 
+ 			}
+@@ -283,6 +283,10 @@ public class ElementPrinterHelper {
+ 		}
+ 	}
+ 
++	private String removeInnerTypeSeparator(String fqn) {
++		return fqn.replace(CtType.INNERTTYPE_SEPARATOR, ".");
++	}
++
+ 	public void writeComment(CtComment comment) {
+ 		if (!env.isCommentsEnabled() || comment == null) {
+ 			return;
+diff --git a/src/test/java/spoon/test/imports/ImportTest.java b/src/test/java/spoon/test/imports/ImportTest.java
+index 8e269ef8..bd768a31 100644
+--- a/src/test/java/spoon/test/imports/ImportTest.java
++++ b/src/test/java/spoon/test/imports/ImportTest.java
+@@ -19,6 +19,7 @@ import spoon.reflect.reference.CtReference;
+ import spoon.reflect.reference.CtTypeReference;
+ import spoon.reflect.visitor.ImportScanner;
+ import spoon.reflect.visitor.ImportScannerImpl;
++import spoon.reflect.visitor.PrettyPrinter;
+ import spoon.reflect.visitor.Query;
+ import spoon.reflect.visitor.filter.NameFilter;
+ import spoon.reflect.visitor.filter.TypeFilter;
+@@ -35,6 +36,7 @@ import spoon.test.imports.testclasses.Tacos;
+ import spoon.test.imports.testclasses.internal.ChildClass;
+ import spoon.testing.utils.ModelUtils;
+ 
++import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.Collection;
+ import java.util.HashSet;
+@@ -45,8 +47,10 @@ import java.util.stream.Collectors;
+ import static org.junit.Assert.assertEquals;
+ import static org.junit.Assert.assertNotNull;
+ import static org.junit.Assert.assertNull;
++import static org.junit.Assert.assertThat;
+ import static org.junit.Assert.assertTrue;
+ import static org.junit.Assert.fail;
++import static spoon.testing.utils.ModelUtils.canBeBuilt;
+ 
+ public class ImportTest {
+ 
+@@ -555,4 +559,48 @@ public class ImportTest {
+ 			return this;
+ 		}
+ 	}
++
++	@Test
++	public void testWithInnerEnumDoesNotImportStaticInnerMethods() {
++		final Launcher launcher = new Launcher();
++		launcher.getEnvironment().setAutoImports(true);
++		String outputDir = "./target/spooned-innerenum";
++		launcher.addInputResource("./src/test/java/spoon/test/imports/testclasses/StaticImportsFromEnum.java");
++		launcher.setSourceOutputDirectory(outputDir);
++		launcher.run();
++		PrettyPrinter prettyPrinter = launcher.createPrettyPrinter();
++
++		CtType element = launcher.getFactory().Class().getAll().get(0);
++		List<CtType<?>> toPrint = new ArrayList<>();
++		toPrint.add(element);
++
++		prettyPrinter.calculate(element.getPosition().getCompilationUnit(), toPrint);
++		String output = prettyPrinter.getResult();
++
++		assertTrue("The file should not contain a static import to the inner enum method values",!output.contains("import static spoon.test.imports.testclasses.StaticImportsFromEnum$DataElement.values;"));
++		assertTrue("The file should not contain a static import to the inner enum method values of a distinct interface",!output.contains("import static spoon.test.imports.testclasses.ItfWithEnum$Bar.values;"));
++		assertTrue("The file should not contain a static import to the inner enum value",!output.contains("import static spoon.test.imports.testclasses.ItfWithEnum$Bar.Lip;"));
++		canBeBuilt(outputDir, 7);
++	}
++
++	@Test
++	public void testShouldNotCreateAutoreference() {
++		final Launcher launcher = new Launcher();
++		launcher.getEnvironment().setAutoImports(false);
++		String outputDir = "./target/spooned-autoref";
++		launcher.addInputResource("./src/test/java/spoon/test/imports/testclasses/ShouldNotAutoreference.java");
++		launcher.setSourceOutputDirectory(outputDir);
++		launcher.run();
++		PrettyPrinter prettyPrinter = launcher.createPrettyPrinter();
++
++		CtType element = launcher.getFactory().Class().getAll().get(0);
++		List<CtType<?>> toPrint = new ArrayList<>();
++		toPrint.add(element);
++
++		prettyPrinter.calculate(element.getPosition().getCompilationUnit(), toPrint);
++		String output = prettyPrinter.getResult();
++
++		assertTrue("The file should not contain a static import for NOFOLLOW_LINKS",!output.contains("import static java.nio.file.LinkOption.NOFOLLOW_LINKS;"));
++		canBeBuilt(outputDir, 7);
++	}
+ }
+diff --git a/src/test/java/spoon/test/imports/testclasses/ItfWithEnum.java b/src/test/java/spoon/test/imports/testclasses/ItfWithEnum.java
+new file mode 100644
+index 00000000..6cb2b62b
+--- /dev/null
++++ b/src/test/java/spoon/test/imports/testclasses/ItfWithEnum.java
+@@ -0,0 +1,21 @@
++/*
++ * Copyright (C) 2006-2016 INRIA and contributors
++ *  Spoon - http://spoon.gforge.inria.fr/
++ *
++ * This software is governed by the CeCILL-C License under French law and abiding by the rules of distribution of free software. You can use, modify and/or redistribute the software under the terms of the CeCILL-C license as circulated by CEA, CNRS and INRIA at http://www.cecill.info.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the CeCILL-C License for more details.
++ *
++ * The fact that you are presently reading this means that you have had knowledge of the CeCILL-C license and that you accept its terms.
++ */
++
++package spoon.test.imports.testclasses;
++
++/**
++ * Created by urli on 16/12/2016.
++ */
++public interface ItfWithEnum {
++    public enum Bar {
++        Lip
++    }
++}
+diff --git a/src/test/java/spoon/test/imports/testclasses/ShouldNotAutoreference.java b/src/test/java/spoon/test/imports/testclasses/ShouldNotAutoreference.java
+new file mode 100644
+index 00000000..da4d41d5
+--- /dev/null
++++ b/src/test/java/spoon/test/imports/testclasses/ShouldNotAutoreference.java
+@@ -0,0 +1,25 @@
++/*
++ * Copyright (C) 2006-2016 INRIA and contributors
++ *  Spoon - http://spoon.gforge.inria.fr/
++ *
++ * This software is governed by the CeCILL-C License under French law and abiding by the rules of distribution of free software. You can use, modify and/or redistribute the software under the terms of the CeCILL-C license as circulated by CEA, CNRS and INRIA at http://www.cecill.info.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the CeCILL-C License for more details.
++ *
++ * The fact that you are presently reading this means that you have had knowledge of the CeCILL-C license and that you accept its terms.
++ */
++
++package spoon.test.imports.testclasses;
++
++import java.nio.file.LinkOption;
++import java.util.Arrays;
++import java.util.Collection;
++
++/**
++ * Created by urli on 16/12/2016.
++ */
++public class ShouldNotAutoreference {
++
++    private String toto;
++    public static final Collection<LinkOption> NOFOLLOW_LINKS = Arrays.asList(new LinkOption[] {LinkOption.NOFOLLOW_LINKS});
++}
+diff --git a/src/test/java/spoon/test/imports/testclasses/StaticImportsFromEnum.java b/src/test/java/spoon/test/imports/testclasses/StaticImportsFromEnum.java
+new file mode 100644
+index 00000000..d19f328b
+--- /dev/null
++++ b/src/test/java/spoon/test/imports/testclasses/StaticImportsFromEnum.java
+@@ -0,0 +1,46 @@
++/*
++ * Copyright (C) 2006-2016 INRIA and contributors
++ *  Spoon - http://spoon.gforge.inria.fr/
++ *
++ * This software is governed by the CeCILL-C License under French law and abiding by the rules of distribution of free software. You can use, modify and/or redistribute the software under the terms of the CeCILL-C license as circulated by CEA, CNRS and INRIA at http://www.cecill.info.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the CeCILL-C License for more details.
++ *
++ * The fact that you are presently reading this means that you have had knowledge of the CeCILL-C license and that you accept its terms.
++ */
++
++package spoon.test.imports.testclasses;
++
++
++/**
++ * Created by urli on 16/12/2016.
++ */
++public class StaticImportsFromEnum {
++
++    static enum DataElement {
++        KEY("key"), VALUE("value");
++
++        private final String description;
++
++        private DataElement(final String description) {
++            this.description = description;
++        }
++
++        @Override
++        public String toString() {
++            return description;
++        }
++    }
++
++    public DataElement[] getValues() {
++        return DataElement.values();
++    }
++
++    public ItfWithEnum.Bar[] getBarValues() {
++        return ItfWithEnum.Bar.values();
++    }
++
++    public ItfWithEnum.Bar getLip() {
++        return ItfWithEnum.Bar.Lip;
++    }
++}

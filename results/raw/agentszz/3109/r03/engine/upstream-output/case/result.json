@@ -1,0 +1,22 @@
+{
+  "fix_commit": "395d7ef9ff15d70632f75e4eb4816680e612f9e1",
+  "bic": "0dd84a04f05c4a852194e92db650588d1a8166c0",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"HQL Reports: Export HQL\") introduced the else-branch code that calls `option.lookupValue(context.getUser(), value)` and `Long.valueOf(value)` without first checking whether `value` (from `helper.getParameter(option.name())`) is null. For single-choice parameters where the value could be null (e.g. no selection made), this leads to a NullPointerException, which is exactly what the fix commit addresses by wrapping the block in `if (value != null) { ... }`. Blame traces this exact block directly to this commit, and the surrounding diff confirms it as the origin of this parameter-handling logic.",
+  "metrics": {
+    "case_elapsed_seconds": 8.883358,
+    "api_elapsed_seconds": 8.70357,
+    "tool_elapsed_seconds": 0.073137,
+    "other_elapsed_seconds": 0.106656,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 16484,
+    "completion_tokens": 592,
+    "total_tokens": 17076,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:36:28.151973"
+}

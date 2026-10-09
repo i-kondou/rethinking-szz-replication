@@ -1,0 +1,20 @@
+SELECTED: candidate_07
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes java/src/libbun/parser/ast/ZNode.java, in the ZNode constructor:
+
+-		ParentNode.SetChild(this, ZNode._EnforcedParent);
++		this.ParentNode = ParentNode;
+
+This restores a direct field assignment (`this.ParentNode = ParentNode;`) in place of a call to `ParentNode.SetChild(this, ZNode._EnforcedParent)`. The buggy version is unsafe because in the constructor, `ParentNode` can legitimately be null (e.g. when constructing a root/top-level node that has no parent yet). Calling `.SetChild(...)` on a null `ParentNode` throws a NullPointerException, whereas a direct assignment `this.ParentNode = ParentNode;` safely handles the null case. The file blob hashes in the fix diff (index 9b71d71..54c0c73) confirm this reverts the file back to an earlier state.
+
+candidate_07 is exactly the commit that made the reverse change, introducing this bug. Its diff to ZNode.java has the inverse blob hashes (index 54c0c73..9b71d71) and the inverse content change:
+
+-		this.ParentNode = ParentNode;
++		ParentNode.SetChild(this, ZNode._EnforcedParent);
+
+This confirms candidate_07 is precisely the commit that turned the safe direct assignment into the unsafe `SetChild` call later undone by the fix. This commit is a broader refactor that also converts other direct `Node.ParentNode = this` assignments (in ZBlockNode.java and ZDesugarNode.java) into `this.SetChild(Node, ZNode._EnforcedParent)` calls, consistent with an intentional but flawed sweep to centralize parent-assignment logic through SetChild — flawed specifically in the ZNode constructor case because the receiver (`ParentNode`) can be null there.
+
+Note: candidate_08 contains a diff to ZNode.java that is byte-for-byte identical to the fix_commit_diff.txt (same blob hashes 9b71d71..54c0c73, same content). This is the fix itself, not the bug introduction — it was excluded as the answer since applying this change resolves the bug rather than causing it. No other candidate (01–06) touches this line at all; candidate_01 is the original class definition already using the safe `this.ParentNode = ParentNode;` form.

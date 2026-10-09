@@ -1,0 +1,45 @@
+SELECTED: candidate_112
+
+CONFIDENCE: MEDIUM
+
+EXPLANATION:
+The fix commit addresses two related but distinct bugs in OrderedScheduler
+(bookkeeper-common/.../OrderedScheduler.java, formerly
+bookkeeper-server/.../util/OrderedSafeExecutor.java before it was moved/renamed
+in candidate_137):
+
+1. PRIMARY BUG - "failed to track execution time with some calls": The
+   submitOrdered(long orderingKey, SafeRunnable r) and
+   submitOrdered(int orderingKey, SafeRunnable r) overloads called
+   chooseThread(orderingKey).execute(r) directly instead of wrapping the
+   runnable with the existing timedRunnable(r) helper (as the
+   submitOrdered(Object orderingKey, ...) overload already correctly did).
+   Because of this, tasks submitted through the long/int-keyed overloads never
+   had their task_queued / task_execution stats recorded at all — exactly
+   matching the phrase "failed to track execution time with SOME calls" in the
+   fix commit message.
+
+   This was introduced in candidate_112, which added the new
+   submitOrdered(long orderingKey, SafeRunnable r) and
+   submitOrdered(int orderingKey, SafeRunnable r) methods for the first time,
+   using chooseThread(orderingKey).submit(r) — without the timedRunnable()
+   wrapper that the pre-existing Object-keyed overload used. (candidate_113
+   later changed .submit(r) to .execute(r) for these same methods, but the
+   missing timedRunnable() wrapper — the actual bug — was already present
+   from candidate_112 onward, and persisted through the OrderedSafeExecutor
+   -> OrderedScheduler rename in candidate_137, all the way to the fix.)
+
+2. SECONDARY BUG - "task_queued duration": In the TimedRunnable.safeRun()
+   method, taskPendingStats.registerSuccessfulEvent(initNanos,
+   TimeUnit.NANOSECONDS) passed the raw initNanos timestamp instead of the
+   elapsed duration (MathUtils.elapsedNanos(initNanos)), producing a
+   nonsensical huge "duration" value. This bug was introduced earlier, in
+   candidate_92, which originally created the TimedRunnable class and the
+   timedRunnable()/taskPendingStats mechanism.
+
+Since the fix commit's headline bug ("failed to track execution time with
+some calls") is fixed by wiring timedRunnable() into the long/int overloads,
+and this omission was first introduced in candidate_112, I selected
+candidate_112 as the primary bug-introducing commit. Candidate_92 is a
+plausible alternate answer for the secondary (task_queued duration) bug, but
+candidate_112 more directly matches the primary described symptom.

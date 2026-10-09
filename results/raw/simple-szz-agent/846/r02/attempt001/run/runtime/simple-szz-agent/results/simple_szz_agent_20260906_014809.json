@@ -1,0 +1,360 @@
+{
+  "metadata": {
+    "timestamp": "20260906_014809",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 85.41,
+      "max": 85.41,
+      "mean": 85.41,
+      "median": 85.41,
+      "total": 85.41,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 85.298,
+      "max": 85.298,
+      "mean": 85.298,
+      "median": 85.298,
+      "total": 85.298,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 15,
+      "max": 15,
+      "mean": 15,
+      "median": 15,
+      "total": 15,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 8001,
+      "max": 8001,
+      "mean": 8001,
+      "median": 8001,
+      "total": 8001,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 24859,
+      "max": 24859,
+      "mean": 24859,
+      "median": 24859,
+      "total": 24859,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 135142,
+      "max": 135142,
+      "mean": 135142,
+      "median": 135142,
+      "total": 135142,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.30976560000000003,
+      "max": 0.30976560000000003,
+      "mean": 0.30976560000000003,
+      "median": 0.30976560000000003,
+      "total": 0.30976560000000003,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 7,
+      "Grep": 6,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 174,
+      "max": 174,
+      "mean": 174,
+      "median": 174,
+      "total": 174,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "846",
+      "fix_commit_hash": "9e0625d8d0827221dea0a9f6114ad8376ccc76b1",
+      "ground_truth_bics": [
+        "0a3fa76b3c2b4cba3708b1f06493e6ff9f398ec3"
+      ],
+      "predicted_bics": [
+        "0a3fa76b3c2b4cba3708b1f06493e6ff9f398ec3"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "846",
+      "fix_commit": "9e0625d8d0827221dea0a9f6114ad8376ccc76b1",
+      "ground_truth_bics": [
+        "0a3fa76b3c2b4cba3708b1f06493e6ff9f398ec3"
+      ],
+      "total_candidates": 174,
+      "gt_in_candidates": true,
+      "selected_commit": "0a3fa76b3c2b4cba3708b1f06493e6ff9f398ec3",
+      "selected_index": 160,
+      "confidence": "HIGH",
+      "explanation": "The fix commit adds a `if (myDataChoices != null) { ... }` guard around a block in DisplayControlImpl.java that checks `myDataChoices.size() > 0 && myDataChoices.get(0) instanceof DerivedDataChoice` and, if so, digs into the first DerivedDataChoice's sub-choices to determine whether `usesTimeDriver` should be set. Without the null check, this code throws a NullPointerException whenever `myDataChoices` is null at this point. Searching all 174 candidates for this exact code pattern (`myDataChoices",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/ucar/unidata/idv/control/DisplayControlImpl.java"
+      ],
+      "call_stats": {
+        "duration_s": 85.41,
+        "duration_api_s": 85.298,
+        "num_turns": 15,
+        "input_tokens": 18,
+        "output_tokens": 8001,
+        "cache_creation_input_tokens": 24859,
+        "cache_read_input_tokens": 135142,
+        "total_cost_usd": 0.30976560000000003,
+        "total_tool_calls": 14,
+        "tool_calls_by_name": {
+          "Read": 7,
+          "Grep": 6,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 14,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1510,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "myDataChoices.get\\(0\\) instanceof DerivedDataChoice",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 469,
+            "cache_read_input_tokens": 11193,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "myDataChoices|usesTimeDriver|DerivedDataChoice",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates/candidate_161.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "myDataChoices|usesTimeDriver|DerivedDataChoice",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates/candidate_162.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "myDataChoices|usesTimeDriver|DerivedDataChoice",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates/candidate_167.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "myDataChoices|usesTimeDriver|DerivedDataChoice",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates/candidate_174.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 5308,
+            "cache_read_input_tokens": 11662,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates/candidate_161.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates/candidate_162.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates/candidate_167.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 5223,
+            "cache_read_input_tokens": 16970,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates/candidate_174.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2821,
+            "cache_read_input_tokens": 22193,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "TimeDriver",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1735,
+            "cache_read_input_tokens": 25014,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_161\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit adds a `if (myDataChoices != null) { ... }` guard around a block in\nDisplayControlImpl.java that checks `myDataChoices.size() > 0 && myDataChoices.get(0)\ninstanceof DerivedDataChoice` and, if so, digs into the first DerivedDataChoice's\nsub-choices to determine whether `usesTimeDriver` should be set. Without the null\ncheck, this code throws a NullPointerException whenever `myDataChoices` is null at\nthis point.\n\nSearching all 174 candidates for this exact code pattern\n(`myDataChoices.get(0) instanceof DerivedDataChoice`) turns up only four commits:\ncandidate_161, candidate_162, candidate_167, and candidate_174.\n\n- candidate_161 is where this entire block is first introduced (all lines are\n  additions, inserted right after an early `return;` in the method) \u2014 and critically,\n  it is added with NO null check on `myDataChoices`:\n  `if(myDataChoices.size() > 0 && myDataChoices.get(0) instanceof DerivedDataChoice){ ... }`\n  This is exactly the unguarded pattern that later causes the NPE.\n\n- candidate_162 only reformats this block (whitespace/brace style changes) and\n  slightly tweaks the inner `dtimes`/`ud1` condition \u2014 it still has no null check on\n  `myDataChoices`, so the bug is inherited, not introduced, here.\n\n- candidate_167 is a large, unrelated bulk change (import cleanup, unrelated feature\n  additions elsewhere in the file) that happens to touch nearby lines but does not\n  change this null-check condition.\n\n- candidate_174 is essentially identical to the fix commit's diff itself (adding the\n  `if (myDataChoices != null)` wrapper), so it is not a bug-introducing candidate at\n  all \u2014 it looks like the actual fix (or a duplicate of it) rather than a cause.\n\nSince candidate_161 is the first commit to add this code path, and it does so without\nany null-guard on `myDataChoices`, it is the commit that introduced the\nNullPointerException later corrected by the fix.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1508,
+            "cache_read_input_tokens": 26749,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

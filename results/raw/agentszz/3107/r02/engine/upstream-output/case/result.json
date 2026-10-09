@@ -1,0 +1,22 @@
+{
+  "fix_commit": "e6a99bf1e0f2a8629866b0ab7ff2daa02180743c",
+  "bic": "2892ce1c339c14f7e05da3463a387dc4f751a795",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "The commit \"java: com.ilscipio.*: strip .properties extensions\" changed `loader.getResources(\"cmsFreemarkerTransforms.properties\")` to `loader.getResources(\"cmsFreemarkerTransforms\")`, claiming \"no functional change.\" However, this actually broke resource loading since the classpath resource file is literally named \"cmsFreemarkerTransforms.properties\" and ClassLoader.getResources requires the exact resource name including extension. The fix commit e6a99bf1 directly reverts this specific change, restoring the \".properties\" suffix, confirming this is the bug-introducing commit.",
+  "metrics": {
+    "case_elapsed_seconds": 18.322402,
+    "api_elapsed_seconds": 17.851705,
+    "tool_elapsed_seconds": 0.366295,
+    "other_elapsed_seconds": 0.104406,
+    "api_call_count": 6,
+    "tool_call_count": 5,
+    "prompt_tokens": 34320,
+    "completion_tokens": 1150,
+    "total_tokens": 35470,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:35:43.074470"
+}

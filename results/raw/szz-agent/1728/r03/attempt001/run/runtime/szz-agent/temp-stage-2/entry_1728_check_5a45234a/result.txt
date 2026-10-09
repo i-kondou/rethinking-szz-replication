@@ -1,0 +1,18 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a `destroy(Context)` method to `DownloadManagerInterface` (which unregisters `downloadCompletionReceiver` and nulls out the singleton instance) and adds an `onDestroy()` override in `MainActivity` that calls `DownloadManagerInterface.getInstance().destroy(this)`. The bug being fixed is that `MainActivity` never disposed of the `DownloadManagerInterface` singleton, leaking its registered broadcast receiver and singleton instance.
+
+In `files/old/`, the class `DownloadManagerInterface` does not exist at all (confirmed: the file at `data/downloadmanager/DownloadManagerInterface.java` is absent). The old `MainActivity` predates this abstraction entirely — it extends `android.app.Activity` (not `AppCompatActivity`), and manages its own `downloadCompletionReceiver` field directly, registering it in `onCreate()` and already correctly unregistering it in its own `onDestroy()`:
+
+```java
+@Override
+protected void onDestroy() {
+    getApplicationContext().unregisterReceiver(downloadCompletionReceiver);
+    super.onDestroy();
+}
+```
+
+Since the `DownloadManagerInterface` singleton/leak pattern that the fix addresses did not exist yet in this version of the codebase, the specific bug (missing disposal of `DownloadManagerInterface` in `onDestroy`) cannot be present in `files/old/`. The relevant code section simply doesn't exist yet, so per the task instructions this determination is straightforward and high-confidence.

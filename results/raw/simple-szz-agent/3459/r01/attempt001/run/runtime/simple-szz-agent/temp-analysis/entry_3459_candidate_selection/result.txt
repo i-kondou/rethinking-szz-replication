@@ -1,0 +1,20 @@
+SELECTED: candidate_27
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit message states: "Fixes NewAccountFormControllerTest, the call to orgDao.findByCommonName(...) in NewAccountFormController is not mocked up and resulted in NPE." The fix diff only touches the test file NewAccountFormControllerTest.java, adding a mock for `mockOrgDao.findByCommonName(eq(orgName))` that returns a mocked Org object, so that the existing test no longer throws a NullPointerException.
+
+candidate_27 is the commit that introduced the production code call responsible for this NPE. In candidate_27's diff to
+console/src/main/java/org/georchestra/console/ws/newaccount/NewAccountFormController.java, the createAccountForm() method was substantially rewritten. Critically, it added:
+
+    accountDao.insert(account, requestOriginator);
+    roleDao.addUser(Role.USER, account, requestOriginator);
+    if(account.getOrg().length() > 0) {
+        Org org = orgDao.findByCommonName(account.getOrg());
+        orgDao.addUser(org, account);
+    }
+
+This is the exact call (`orgDao.findByCommonName(...)`) referenced in the fix commit message. Prior to this commit, the account-creation logic did not call `orgDao.findByCommonName` at all (it only called `orgDao.generateId`, `orgDao.generateNumericId`, and `orgDao.insert` when creating a brand-new org). This candidate is also the one that entirely rewrote NewAccountFormControllerTest.java's setup, replacing the old mock configuration and `configureLegitFormBean()` helper, but it did not add a mock for `mockOrgDao.findByCommonName(...)`. Since the test's form bean sets `getOrg()` to return "geOrchestra testing team" (a non-empty value), the new production code path `if(account.getOrg().length() > 0) { orgDao.findByCommonName(...) }` gets exercised during the test, and since the mock isn't configured, it returns null, and the subsequent `orgDao.addUser(org, account)` call (or accessing the null org) throws a NullPointerException — precisely the bug the fix commit resolves.
+
+No earlier candidate (01-26) contains this `orgDao.findByCommonName` call inside NewAccountFormController.java's account creation flow. Later candidates that reference `orgDao.findByCommonName` (e.g., candidate_31, 34, 36-41) do so either in OrgsController.java (a related but separate `findByCommonName` usage for org management endpoints, unrelated to this bug) or represent later modifications/refactors that build upon the code already introduced by candidate_27. Therefore candidate_27 is identified as the commit that introduced the bug.

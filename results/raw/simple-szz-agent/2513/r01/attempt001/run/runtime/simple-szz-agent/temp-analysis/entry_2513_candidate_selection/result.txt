@@ -1,0 +1,44 @@
+SELECTED: candidate_08
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix (fix_commit_diff.txt) modifies `MinimalImportScanner.shouldTypeBeImported()` in
+`src/main/java/spoon/reflect/visitor/MinimalImportScanner.java`. Specifically it changes the
+`qualifiedNameTokens` collection from a `Set<String>` (HashSet) that is iterated in full to a
+`LinkedList<String>` where only the *last* token (`qualifiedNameTokens.getLast()`) is checked
+against `fieldAndMethodsNames`/`localVariablesOfBlock`, instead of checking every token
+(including intermediate package-name segments) as before:
+
+    for (String token : qualifiedNameTokens) {
+        if (fieldAndMethodsNames.contains(token) || localVariablesOfBlock.contains(token)) {
+            return true;
+        }
+    }
+
+This exact block of code — including the field/variable names `fieldAndMethodsNames` and
+`localVariablesOfBlock`, and the surrounding `lookForLocalVariables`/`AccessibleVariablesFinder`
+machinery — was first introduced in candidate_08. Prior to candidate_08 (candidate_04,
+candidate_06, candidate_07), the equivalent set was called `namedElements` and the matching
+logic, while similar in spirit, did not yet have this precise shape.
+
+Crucially, candidate_08 also changed `addFieldImport`/`addMethodImport` in
+`MinimalImportScanner` to no longer delegate to `super.addFieldImport()` /
+`super.addMethodImport()` (which contains the safety check
+`declaringType.equals(targetType) -> return false`, preventing a class from importing its own
+static members). Instead, candidate_08 inserts directly into `fieldImports`/`methodImports`
+whenever `shouldTypeBeImported()` returns true, bypassing that safety net entirely.
+
+Because `shouldTypeBeImported()` iterates over *all* qualifiedNameTokens — which include
+package-name segments in addition to the field/class name — a package segment can spuriously
+collide with an unrelated field/method/local-variable name elsewhere in scope, causing
+`shouldTypeBeImported()` to incorrectly return `true` for a private static field that is
+referenced from within its own declaring class (e.g., `DigestUtil.STREAM_BUFFER_LENGTH` used
+inside `DigestUtil` itself). Combined with the loss of the same-class safety check, this results
+in an incorrect `import static ...DigestUtil.STREAM_BUFFER_LENGTH;` being emitted — exactly the
+bug the fix's new test `testPrivateStaticImportShouldNotBeImportedInSameClass` guards against.
+
+No candidate between candidate_08 and the fix (candidate_09 is textually identical to the fix
+itself, i.e., it *is* the fix, not a bug-introducing commit) touches this code, confirming that
+candidate_08 is the commit whose state the fix directly patches, and therefore the
+bug-introducing commit.

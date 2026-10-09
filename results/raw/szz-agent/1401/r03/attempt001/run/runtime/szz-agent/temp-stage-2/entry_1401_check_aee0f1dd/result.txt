@@ -1,0 +1,29 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes a single line in createHighlightInfo() in LocalInspectionsPass.java:
+
+Buggy:
+  tooltip = XmlStringUtil.wrapInHtml(message.startsWith("<html>") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link ;
+
+Fixed:
+  tooltip = XmlStringUtil.wrapInHtml((message.startsWith("<html>") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link);
+
+The bug is an operator-precedence/parenthesization mistake: in the buggy version, `link` is concatenated *after* the call to wrapInHtml(), i.e. outside the resulting <html>...</html> wrapper, so the "show more" link ends up appended after the closing </html> tag of the tooltip. This causes the link (and potentially the whole tooltip rendering) to misbehave, which is consistent with the reported symptom "not all warnings are displayed in the editor". The fix simply moves `link` inside the parentheses so it becomes part of the content wrapped by wrapInHtml().
+
+Examining files/old/LocalInspectionsPass.java, the relevant tooltip-construction code is structured completely differently (this is a much older revision of the file, evidenced by the 2009 copyright header, different imports such as ProblemDescriptionNode/InspectionManagerEx, and other now-removed classes). The old implementation of createHighlightInfo() is:
+
+  if (descriptor.showTooltip()) {
+    if (message.startsWith("<html>")) {
+      tooltip = message.contains("</body>") ? message.replace("</body>", link + "</body>") : message.replace("</html>", link + "</html>");
+    }
+    else {
+      tooltip = "<html><body>" + XmlStringUtil.escapeString(message) + link + "</body></html>";
+    }
+  }
+
+Here, `link` is explicitly inserted before the closing </body> or </html> tag (or built directly inside the <body>...</body> wrapper), meaning the link is always correctly placed inside the HTML tooltip structure. This is functionally equivalent to the corrected behavior introduced by the fix commit - the old code never has the "link appended after the closing html tag" problem that the fix commit addresses.
+
+The precedence bug was introduced later, when the tooltip-construction logic was refactored to use XmlStringUtil.wrapInHtml() instead of the manual string-replacement/concatenation approach seen in files/old. Since that refactoring (and the accompanying bug) had not yet happened in files/old, the specific bug being investigated is not present in the old version.

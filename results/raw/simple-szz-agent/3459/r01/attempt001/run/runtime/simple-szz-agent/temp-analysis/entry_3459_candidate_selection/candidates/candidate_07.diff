@@ -1,0 +1,1179 @@
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/AccountDao.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/AccountDao.java
+index 9ed3b7c60..64afc4dc8 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/AccountDao.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/AccountDao.java
+@@ -4,6 +4,7 @@ import java.util.List;
+ import java.util.UUID;
+ 
+ import org.georchestra.ldapadmin.dto.Account;
++import org.springframework.ldap.NameNotFoundException;
+ import org.springframework.ldap.filter.Filter;
+ 
+ /**
+@@ -69,9 +70,9 @@ public interface AccountDao {
+ 	 *
+ 	 * @throws DuplicatedEmailException
+ 	 * @throws DataServiceException
+-	 * @throws NotFoundException
++	 * @throws NameNotFoundException
+ 	 */
+-	void update(Account account, Account modified, String originUUID) throws DataServiceException, DuplicatedEmailException, NotFoundException;
++	void update(Account account, Account modified, String originUUID) throws DataServiceException, DuplicatedEmailException, NameNotFoundException;
+ 
+ 	/**
+ 	 * Changes the user password
+@@ -89,9 +90,9 @@ public interface AccountDao {
+ 	 * @param uid
+ 	 * @param originUUID UUID of admin that make request
+ 	 * @throws DataServiceException
+-	 * @throws NotFoundException
++	 * @throws NameNotFoundException
+ 	 */
+-	void delete(final String uid, final String originUUID) throws DataServiceException, NotFoundException;
++	void delete(final String uid, final String originUUID) throws DataServiceException, NameNotFoundException;
+ 
+ 	/**
+ 	 * Returns the account that contains the uid provided as parameter.
+@@ -101,9 +102,9 @@ public interface AccountDao {
+ 	 * @return {@link Account}
+ 	 * 
+ 	 * @throws DataServiceException
+-	 * @throws NotFoundException
++	 * @throws NameNotFoundException
+ 	 */
+-	Account findByUID(final String uid)throws DataServiceException, NotFoundException;
++	Account findByUID(final String uid)throws DataServiceException, NameNotFoundException;
+ 
+     /**
+ 	 * Returns the account that correspond to specified entryUUID
+@@ -113,9 +114,9 @@ public interface AccountDao {
+ 	 * @return {@link Account}
+ 	 *
+ 	 * @throws DataServiceException
+-	 * @throws NotFoundException
++	 * @throws NameNotFoundException
+ 	 */
+-	Account findByUUID(UUID uuid) throws DataServiceException, NotFoundException;
++	Account findByUUID(UUID uuid) throws DataServiceException, NameNotFoundException;
+ 
+ 	/**
+ 	 * Returns the account that contains the email provided as parameter.
+@@ -124,9 +125,9 @@ public interface AccountDao {
+ 	 * @return {@link Account}
+ 	 * 
+ 	 * @throws DataServiceException
+-	 * @throws NotFoundException
++	 * @throws NameNotFoundException
+ 	 */
+-	Account findByEmail(final String email) throws DataServiceException, NotFoundException;
++	Account findByEmail(final String email) throws DataServiceException, NameNotFoundException;
+ 	
+ 
+ 	
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/AccountDaoImpl.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/AccountDaoImpl.java
+index 9733c2101..11ad9633c 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/AccountDaoImpl.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/AccountDaoImpl.java
+@@ -3,8 +3,6 @@
+  */
+ package org.georchestra.ldapadmin.ds;
+ 
+-import java.text.DateFormat;
+-import java.text.ParseException;
+ import java.util.Date;
+ import java.util.List;
+ import java.util.UUID;
+@@ -55,6 +53,7 @@ public final class AccountDaoImpl implements AccountDao {
+     private String uniqueNumberField = "employeeNumber";
+     private LdapRdn userSearchBaseDN;
+     private AtomicInteger uniqueNumberCounter = new AtomicInteger(-1);
++
+     @Autowired
+     private AdminLogDao logDao;
+ 
+@@ -126,7 +125,7 @@ public final class AccountDaoImpl implements AccountDao {
+ 
+             throw new DuplicatedEmailException("there is a user with this email: " + account.getEmail());
+ 
+-        } catch (NotFoundException e1) {
++        } catch (NameNotFoundException e1) {
+             // if no other accounts with the same e-mail exists yet, then the
+             // new account can be added.
+             LOG.debug("No account with the mail " + account.getEmail() + ", account can be created.");
+@@ -151,7 +150,7 @@ public final class AccountDaoImpl implements AccountDao {
+ 
+             this.groupDao.addUser(groupID, account.getUid(), originUUID);
+ 
+-        } catch (NotFoundException e) {
++        } catch (NameNotFoundException e) {
+             throw new DataServiceException(e);
+         }
+     }
+@@ -238,7 +237,7 @@ public final class AccountDaoImpl implements AccountDao {
+                         + account.getEmail());
+             }
+ 
+-        } catch (NotFoundException e1) {
++        } catch (NameNotFoundException e1) {
+             // if it doesn't exist an account with this e-mail the it can be
+             // part of the updated account.
+             LOG.debug("Updated account with email " + account.getEmail() + " does not exist, update possible.");
+@@ -265,7 +264,7 @@ public final class AccountDaoImpl implements AccountDao {
+      * @see {@link AccountDao#update(Account, Account, String)}
+      */
+     @Override
+-    public synchronized void update(Account account, Account modified, String originUUID) throws DataServiceException, DuplicatedEmailException, NotFoundException {
++    public synchronized void update(Account account, Account modified, String originUUID) throws DataServiceException, DuplicatedEmailException, NameNotFoundException {
+        if (! account.getUid().equals(modified.getUid())) {
+            ldapTemplate.rename(buildDn(account.getUid()), buildDn(modified.getUid()));
+            for (Group g : groupDao.findAllForUser(account.getUid())) {
+@@ -284,7 +283,7 @@ public final class AccountDaoImpl implements AccountDao {
+      * @see {@link AccountDao#delete(String, String)}
+      */
+     @Override
+-    public synchronized void delete(final String uid, final String originUUID) throws DataServiceException, NotFoundException {
++    public synchronized void delete(final String uid, final String originUUID) throws DataServiceException, NameNotFoundException {
+         this.ldapTemplate.unbind(buildDn(uid), true);
+ 
+         this.groupDao.deleteUser(uid, originUUID);
+@@ -329,10 +328,10 @@ public final class AccountDaoImpl implements AccountDao {
+      * @see {@link AccountDao#findByUID(String)}
+      */
+     @Override
+-    public Account findByUID(final String uid) throws NameNotFoundException {
++    public Account findByUID(final String uid) throws NameNotFoundException{
+ 
+         if(uid == null)
+-            throw new NotFoundException("Cannot find user with uid : " + uid + " in LDAP server");
++            throw new NameNotFoundException("Cannot find user with uid : " + uid + " in LDAP server");
+ 
+         Account a = (Account) ldapTemplate.lookup(buildDn(uid.toLowerCase()), UserSchema.ATTR_TO_RETRIEVE, new AccountContextMapper());
+         if(a == null)
+@@ -346,14 +345,14 @@ public final class AccountDaoImpl implements AccountDao {
+      * @see {@link AccountDao#findByUID(String)}
+      */
+     @Override
+-    public Account findByUUID(final UUID uuid) throws DataServiceException, NotFoundException {
++    public Account findByUUID(final UUID uuid) throws DataServiceException, NameNotFoundException {
+         SearchControls sc = new SearchControls();
+         sc.setReturningAttributes(UserSchema.ATTR_TO_RETRIEVE);
+         sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
+         EqualsFilter filter = new EqualsFilter("entryUUID", uuid.toString());
+         List<Account> accounts = ldapTemplate.search(DistinguishedName.EMPTY_PATH, filter.encode(), sc, new AccountContextMapper());
+         if(accounts.size() < 1)
+-            throw new NotFoundException("Cannot find Ldap entry with UUID = " + uuid);
++            throw new NameNotFoundException("Cannot find Ldap entry with UUID = " + uuid);
+         if(accounts.size() > 1)
+             throw new DataServiceException("Invalid response from ldap server, entryUUID should be unique");
+         return accounts.get(0);
+@@ -363,7 +362,7 @@ public final class AccountDaoImpl implements AccountDao {
+      * @see {@link AccountDao#findByEmail(String)}
+      */
+     @Override
+-    public Account findByEmail(final String email) throws DataServiceException, NotFoundException {
++    public Account findByEmail(final String email) throws DataServiceException, NameNotFoundException {
+ 
+         SearchControls sc = new SearchControls();
+         sc.setReturningAttributes(UserSchema.ATTR_TO_RETRIEVE);
+@@ -378,7 +377,7 @@ public final class AccountDaoImpl implements AccountDao {
+         List<Account> accountList = ldapTemplate.search(DistinguishedName.EMPTY_PATH, filter.encode(),sc,
+                 new AccountContextMapper());
+         if (accountList.isEmpty()) {
+-            throw new NotFoundException("There is no user with this email: " + email);
++            throw new NameNotFoundException("There is no user with this email: " + email);
+         }
+         Account account = accountList.get(0);
+ 
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/GroupDao.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/GroupDao.java
+index 2a2431a68..df8798f09 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/GroupDao.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/GroupDao.java
+@@ -6,6 +6,7 @@ package org.georchestra.ldapadmin.ds;
+ import java.util.List;
+ 
+ import org.georchestra.ldapadmin.dto.Group;
++import org.springframework.ldap.NameNotFoundException;
+ 
+ /**
+  * @author Mauricio Pazos
+@@ -19,13 +20,13 @@ public interface GroupDao {
+ 	 * @param groupID
+ 	 * @param userId
+ 	 * @param originUUID UUID of admin that generate this request
+-	 * @throws NotFoundException 
++	 * @throws NameNotFoundException
+ 	 * @throws DataServiceException 
+ 	 */
+-	void addUser(String  groupID, String userId, final String originUUID) throws DataServiceException, NotFoundException;
++	void addUser(String  groupID, String userId, final String originUUID) throws DataServiceException, NameNotFoundException;
+ 
+ 
+-	void addUsers(String cn, List<String> addList, final String originUUID) throws DataServiceException, NotFoundException;
++	void addUsers(String cn, List<String> addList, final String originUUID) throws DataServiceException, NameNotFoundException;
+ 
+ 	/**
+ 	 * Returns all groups. Each groups will contains its list of users.
+@@ -57,7 +58,7 @@ public interface GroupDao {
+ 	 */
+ 	void deleteUser(String uid, final String originUUID) throws DataServiceException;
+ 
+-	void deleteUsers(String cn, List<String> deleteList, String originUUID) throws DataServiceException, NotFoundException;
++	void deleteUsers(String cn, List<String> deleteList, String originUUID) throws DataServiceException, NameNotFoundException;
+ 
+ 	/**
+ 	 * Deletes the user from the group
+@@ -94,18 +95,18 @@ public interface GroupDao {
+ 	 * 
+ 	 * @param commonName
+ 	 * @throws DataServiceException
+-	 * @throws NotFoundException
++	 * @throws NameNotFoundException
+ 	 */
+-	void delete(String commonName) throws DataServiceException,	NotFoundException;
++	void delete(String commonName) throws DataServiceException,	NameNotFoundException;
+ 
+ 	/**
+ 	 * Search the group based on the common name (cn)
+ 	 * @param commonName
+ 	 * @return {@link Group}
+ 	 * 
+-	 * @throws NotFoundException
++	 * @throws NameNotFoundException
+ 	 */
+-	Group findByCommonName(String commonName) throws DataServiceException, NotFoundException;
++	Group findByCommonName(String commonName) throws DataServiceException, NameNotFoundException;
+ 
+ 	
+ 	/**
+@@ -115,12 +116,12 @@ public interface GroupDao {
+ 	 * @param modified
+ 	 * 
+ 	 */
+-	void update(String groupName, Group modified) throws DataServiceException, NotFoundException, DuplicatedCommonNameException;
++	void update(String groupName, Group modified) throws DataServiceException, NameNotFoundException, DuplicatedCommonNameException;
+ 
+ 
+-	void addUsersInGroups(List<String> putGroup, List<String> users, final String originUUID)  throws DataServiceException, NotFoundException;
++	void addUsersInGroups(List<String> putGroup, List<String> users, final String originUUID)  throws DataServiceException, NameNotFoundException;
+ 
+-	void deleteUsersInGroups(List<String> deleteGroup, List<String> users, final String originUUID) throws DataServiceException, NotFoundException;
++	void deleteUsersInGroups(List<String> deleteGroup, List<String> users, final String originUUID) throws DataServiceException, NameNotFoundException;
+ 
+ 
+ 	
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/GroupDaoImpl.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/GroupDaoImpl.java
+index 16c995658..cbb9384d6 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/GroupDaoImpl.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/GroupDaoImpl.java
+@@ -144,7 +144,7 @@ public class GroupDaoImpl implements GroupDao {
+ 	 * @see org.georchestra.ldapadmin.ds.GroupDao#addUser(java.lang.String, java.lang.String)
+ 	 */
+ 	@Override
+-	public void addUser(final String groupID, final String userId, final String originUUID) throws NotFoundException, DataServiceException {
++	public void addUser(final String groupID, final String userId, final String originUUID) throws NameNotFoundException, DataServiceException {
+ 
+ 
+ 		/* TODO Add hierarchic behaviour here :
+@@ -279,10 +279,10 @@ public class GroupDaoImpl implements GroupDao {
+ 	 * Searches the group by common name (cn)
+ 	 *
+ 	 * @param commonName
+-	 * @throws NotFoundException
++	 * @throws NameNotFoundException
+ 	 */
+ 	@Override
+-	public Group findByCommonName(String commonName) throws DataServiceException, NotFoundException {
++	public Group findByCommonName(String commonName) throws DataServiceException, NameNotFoundException {
+ 
+ 		try{
+ 			DistinguishedName dn = buildGroupDn(commonName);
+@@ -292,7 +292,7 @@ public class GroupDaoImpl implements GroupDao {
+ 
+ 		} catch (NameNotFoundException e){
+ 
+-			throw new NotFoundException("There is not a group with this common name (cn): " + commonName);
++			throw new NameNotFoundException("There is not a group with this common name (cn): " + commonName);
+ 		}
+ 	}
+ 
+@@ -303,16 +303,11 @@ public class GroupDaoImpl implements GroupDao {
+ 	 *
+ 	 */
+ 	@Override
+-	public void delete(final String commonName) throws DataServiceException, NotFoundException {
++	public void delete(final String commonName) throws DataServiceException, NameNotFoundException {
+ 
+ 		if (!this.groups.isProtected(commonName)) {
+-			try {
+-				this.ldapTemplate.unbind(buildGroupDn(commonName), true);
+-			} catch (NameNotFoundException e) {
+-				throw new NotFoundException(e);
+-			}
++			this.ldapTemplate.unbind(buildGroupDn(commonName), true);
+ 		} else {
+-
+ 			throw new DataServiceException("Group " + commonName + " is a protected group");
+ 		}
+ 
+@@ -364,7 +359,7 @@ public class GroupDaoImpl implements GroupDao {
+ 
+ 			throw new DuplicatedCommonNameException("there is a group with this name: " + group.getName());
+ 
+-		} catch (NotFoundException e1) {
++		} catch (NameNotFoundException e1) {
+ 			// if an group with the specified name cannot be retrieved, then
+ 			// the new group can be safely added.
+ 		    LOG.debug("The group with name " + group.getName() + " does not exist yet, it can "
+@@ -447,11 +442,11 @@ public class GroupDaoImpl implements GroupDao {
+ 	 * @param groupName
+ 	 * @param group
+ 	 * @throws DataServiceException
+-	 * @throws NotFoundException
++	 * @throws NameNotFoundException
+ 	 * @throws DuplicatedCommonNameException
+ 	 */
+ 	@Override
+-	public synchronized void update(final String groupName, final Group group) throws DataServiceException, NotFoundException, DuplicatedCommonNameException {
++	public synchronized void update(final String groupName, final Group group) throws DataServiceException, NameNotFoundException, DuplicatedCommonNameException {
+ 
+ 		if( group.getName().length()== 0 ){
+ 			throw new IllegalArgumentException("given name is required");
+@@ -464,7 +459,7 @@ public class GroupDaoImpl implements GroupDao {
+ 
+                 throw new DuplicatedCommonNameException("there is a group with this name: " + group.getName());
+ 
+-            } catch (NotFoundException e1) {
++            } catch (NameNotFoundException e1) {
+                 // if a group with the specified name cannot be retrieved, then
+                 // the new group can be safely renamed.
+                 LOG.debug("no account with name " + group.getName() + " can be found, it is then "
+@@ -512,7 +507,7 @@ public class GroupDaoImpl implements GroupDao {
+ 	}
+ 
+ 	@Override
+-	public void addUsers(String groupName, List<String> addList, final String originUUID) throws NotFoundException, DataServiceException {
++	public void addUsers(String groupName, List<String> addList, final String originUUID) throws NameNotFoundException, DataServiceException {
+ 
+ 		for (String uid : addList) {
+ 			addUser(groupName, uid, originUUID);
+@@ -521,7 +516,7 @@ public class GroupDaoImpl implements GroupDao {
+ 
+ 	@Override
+ 	public void deleteUsers(String groupName, List<String> deleteList, final String originUUID)
+-			throws DataServiceException, NotFoundException {
++			throws DataServiceException, NameNotFoundException {
+ 
+ 		for (String uid : deleteList) {
+ 			deleteUser(groupName, uid, originUUID);
+@@ -531,7 +526,7 @@ public class GroupDaoImpl implements GroupDao {
+ 
+ 	@Override
+ 	public void addUsersInGroups(List<String> putGroup, List<String> users, final String originUUID)
+-			throws DataServiceException, NotFoundException {
++			throws DataServiceException, NameNotFoundException {
+ 
+ 
+ 		for (String groupName : putGroup) {
+@@ -542,7 +537,7 @@ public class GroupDaoImpl implements GroupDao {
+ 
+ 	@Override
+ 	public void deleteUsersInGroups(List<String> deleteGroup, List<String> users, final String originUUID)
+-			throws DataServiceException, NotFoundException {
++			throws DataServiceException, NameNotFoundException {
+ 
+ 		for (String groupName : deleteGroup) {
+ 
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/NotFoundException.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/NotFoundException.java
+deleted file mode 100644
+index afa85d52d..000000000
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/NotFoundException.java
++++ /dev/null
+@@ -1,24 +0,0 @@
+-/**
+- *
+- */
+-package org.georchestra.ldapadmin.ds;
+-
+-/**
+- * @author Mauricio Pazos
+- *
+- */
+-public class NotFoundException extends Exception {
+-
+-
+-	/**
+-	 *
+-	 */
+-	private static final long serialVersionUID = 5259195828182895643L;
+-
+-	public NotFoundException(String message) {
+-		super(message);
+-	}
+-	public NotFoundException(Throwable e) {
+-	    super(e);
+-	}
+-}
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/UserTokenDao.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/UserTokenDao.java
+index 23ed40cc4..12a3f89c4 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/UserTokenDao.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/UserTokenDao.java
+@@ -14,6 +14,7 @@ import javax.sql.DataSource;
+ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
+ import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.ldap.NameNotFoundException;
+ 
+ /**
+  * Maintains the tokens generated when the "Lost password use case" is executed.
+@@ -77,9 +78,9 @@ public class UserTokenDao {
+      * @return uid
+      *
+      * @throws DataServiceException
+-     * @throws NotFoundException
++     * @throws NameNotFoundException
+      */
+-    public String findUserByToken(String token) throws DataServiceException, NotFoundException {
++    public String findUserByToken(String token) throws DataServiceException, NameNotFoundException {
+         Connection c = null;
+         try {
+             c = dataSource.getConnection();
+@@ -93,7 +94,7 @@ public class UserTokenDao {
+             List<Map<String, Object>> result = cmd.getResult();
+ 
+             if (result.isEmpty()) {
+-                throw new NotFoundException("the token " + token + " wasn't found.");
++                throw new NameNotFoundException("the token " + token + " wasn't found.");
+             }
+ 
+             String uid = (String) result.get(0).get(DatabaseSchema.UID_COLUMN);
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/groups/GroupsController.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/groups/GroupsController.java
+index 63e71dfe1..5a4206eb2 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/groups/GroupsController.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/groups/GroupsController.java
+@@ -14,7 +14,11 @@ import javax.servlet.http.HttpServletResponse;
+ 
+ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
+-import org.georchestra.ldapadmin.ds.*;
++import org.georchestra.ldapadmin.ds.AccountDao;
++import org.georchestra.ldapadmin.ds.DataServiceException;
++import org.georchestra.ldapadmin.ds.DuplicatedCommonNameException;
++import org.georchestra.ldapadmin.ds.GroupDao;
++import org.georchestra.ldapadmin.ds.ProtectedUserFilter;
+ import org.georchestra.ldapadmin.dto.Account;
+ import org.georchestra.ldapadmin.dto.Group;
+ import org.georchestra.ldapadmin.dto.GroupFactory;
+@@ -27,6 +31,7 @@ import org.json.JSONArray;
+ import org.json.JSONException;
+ import org.json.JSONObject;
+ import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.ldap.NameNotFoundException;
+ import org.springframework.stereotype.Controller;
+ import org.springframework.web.bind.annotation.RequestMapping;
+ import org.springframework.web.bind.annotation.RequestMethod;
+@@ -152,7 +157,7 @@ public class GroupsController {
+ 		try {
+ 			group = this.groupDao.findByCommonName(cn);
+ 
+-		} catch (NotFoundException e) {
++		} catch (NameNotFoundException e) {
+ 
+ 			ResponseUtil.buildResponse(response, ResponseUtil.buildResponseMessage(Boolean.FALSE, NOT_FOUND), HttpServletResponse.SC_NOT_FOUND);
+ 
+@@ -277,7 +282,7 @@ public class GroupsController {
+ 
+ 			ResponseUtil.writeSuccess(response);
+ 
+-		} catch (NotFoundException e) {
++		} catch (NameNotFoundException e) {
+ 			LOG.error(e.getMessage());
+ 			ResponseUtil.buildResponse(response, buildErrorResponse(e.getMessage()),
+ 					HttpServletResponse.SC_NOT_FOUND);
+@@ -347,7 +352,7 @@ public class GroupsController {
+ 		try {
+ 			group = this.groupDao.findByCommonName(cn);
+ 
+-		} catch (NotFoundException e) {
++		} catch (NameNotFoundException e) {
+ 
+ 			ResponseUtil.writeError(response, NOT_FOUND);
+ 
+@@ -365,7 +370,7 @@ public class GroupsController {
+ 
+ 			ResponseUtil.writeSuccess(response);
+ 
+-		}  catch (NotFoundException e) {
++		}  catch (NameNotFoundException e) {
+ 
+ 			ResponseUtil.buildResponse(response, ResponseUtil.buildResponseMessage(Boolean.FALSE, NOT_FOUND), HttpServletResponse.SC_NOT_FOUND);
+ 
+@@ -401,7 +406,7 @@ public class GroupsController {
+ 
+ 		try {
+ 			adminUUID = this.accountDao.findByUID(request.getHeader("sec-username")).getUUID();
+-		} catch (NotFoundException e) {
++		} catch (NameNotFoundException e) {
+ 			LOG.error("Unable to find Admin that initiate this request, so no admin log");
+ 		} catch (DataServiceException e) {
+ 			LOG.error("Unable to find Admin that initiate this request, so no admin log");
+@@ -423,7 +428,7 @@ public class GroupsController {
+ 
+ 			ResponseUtil.writeSuccess(response);
+ 
+-		}  catch (NotFoundException e) {
++		}  catch (NameNotFoundException e) {
+ 
+ 			ResponseUtil.buildResponse(response, ResponseUtil.buildResponseMessage(Boolean.FALSE, USER_NOT_FOUND), HttpServletResponse.SC_NOT_FOUND);
+ 
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/users/UsersController.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/users/UsersController.java
+index 8e7922c53..e603820bc 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/users/UsersController.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/users/UsersController.java
+@@ -6,7 +6,6 @@ package org.georchestra.ldapadmin.ws.backoffice.users;
+ 
+ 
+ import java.io.IOException;
+-import java.io.PrintWriter;
+ import java.text.Normalizer;
+ import java.util.List;
+ 
+@@ -20,7 +19,6 @@ import org.georchestra.ldapadmin.ds.AccountDao;
+ import org.georchestra.ldapadmin.ds.DataServiceException;
+ import org.georchestra.ldapadmin.ds.DuplicatedEmailException;
+ import org.georchestra.ldapadmin.ds.DuplicatedUidException;
+-import org.georchestra.ldapadmin.ds.NotFoundException;
+ import org.georchestra.ldapadmin.ds.ProtectedUserFilter;
+ import org.georchestra.ldapadmin.dto.Account;
+ import org.georchestra.ldapadmin.dto.AccountFactory;
+@@ -168,11 +166,11 @@ public class UsersController {
+ 	 *
+ 	 * @param response Returns the detailed information of the user as json
+ 	 * @throws IOException
+-	 * @throws NotFoundException 
++	 * @throws NameNotFoundException
+ 	 */
+ 	@RequestMapping(value=REQUEST_MAPPING+"/{uid}", method=RequestMethod.GET,
+ 					produces = "application/json; charset=UTF-8")
+-	public void findByUid(@PathVariable String uid, HttpServletResponse response) throws IOException, JSONException, NotFoundException {
++	public void findByUid(@PathVariable String uid, HttpServletResponse response) throws IOException, JSONException, NameNotFoundException {
+ 
+ 		// Check for protected accounts
+ 		if(this.userRule.isProtected(uid) ){
+@@ -286,7 +284,7 @@ public class UsersController {
+ 			String adminUUID = null;
+ 			try {
+ 				adminUUID = this.accountDao.findByUID(request.getHeader("sec-username")).getUUID();
+-			} catch (NotFoundException e) {
++			} catch (NameNotFoundException e) {
+ 				LOG.error("Unable to find admin/user connected, so no admin log generated when creating uid : " + account.getUid());
+ 			}
+ 
+@@ -383,10 +381,10 @@ public class UsersController {
+ 	 * @param response
+ 	 *
+ 	 * @throws IOException if the uid does not exist or fails to access to the LDAP store.
+-	 * @throws NotFoundException 
++	 * @throws NameNotFoundException
+ 	 */
+ 	@RequestMapping(value=REQUEST_MAPPING+ "/*", method=RequestMethod.PUT)
+-	public void update( HttpServletRequest request, HttpServletResponse response) throws IOException, NotFoundException{
++	public void update( HttpServletRequest request, HttpServletResponse response) throws IOException, NameNotFoundException{
+ 
+ 		final String uid = RequestUtil.getKeyFromPathVariable(request).toLowerCase();
+ 
+@@ -425,7 +423,7 @@ public class UsersController {
+ 			try {
+ 				Account adminAccount = this.accountDao.findByUID(request.getHeader("sec-username"));
+ 				adminUUID = adminAccount == null ? null : adminAccount.getUUID();
+-			} catch (NotFoundException ex){
++			} catch (NameNotFoundException ex){
+ 				adminUUID = null;
+ 			}
+ 			this.accountDao.update(account, modified, adminUUID);
+@@ -448,7 +446,7 @@ public class UsersController {
+ 			LOG.error(e.getMessage());
+ 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+ 			throw new IOException(e);
+-		} catch (NotFoundException e) {
++		} catch (NameNotFoundException e) {
+ 			LOG.error(e.getMessage());
+ 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+ 		}
+@@ -485,7 +483,7 @@ public class UsersController {
+ 			String adminUUID = null;
+ 			try {
+ 				adminUUID = this.accountDao.findByUID(request.getHeader("sec-username")).getUUID();
+-			} catch (NotFoundException e) {
++			} catch (NameNotFoundException e) {
+ 				LOG.error("Unable to find admin/user connected, so no admin log generated when deleting uid : " + uid);
+ 			}
+ 
+@@ -497,7 +495,7 @@ public class UsersController {
+ 			LOG.error(e.getMessage());
+ 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+             throw new IOException(e);
+-		} catch (NotFoundException e) {
++		} catch (NameNotFoundException e) {
+             String jsonResponse = ResponseUtil.buildResponseMessage(Boolean.FALSE, NOT_FOUND);
+             ResponseUtil.buildResponse(response, jsonResponse, HttpServletResponse.SC_NOT_FOUND);
+ 		}
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/users/UsersExport.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/users/UsersExport.java
+index ee57826a4..31ab99cb7 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/users/UsersExport.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/users/UsersExport.java
+@@ -3,12 +3,11 @@ package org.georchestra.ldapadmin.ws.backoffice.users;
+ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
+ import org.georchestra.ldapadmin.ds.AccountDao;
+-import org.georchestra.ldapadmin.ds.NotFoundException;
+ import org.georchestra.ldapadmin.dto.Account;
+ import org.json.JSONArray;
+ import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.ldap.NameNotFoundException;
+ import org.springframework.stereotype.Controller;
+-import org.springframework.web.bind.annotation.RequestBody;
+ import org.springframework.web.bind.annotation.RequestMapping;
+ import org.springframework.web.bind.annotation.RequestMethod;
+ import org.springframework.web.bind.annotation.RequestParam;
+@@ -61,7 +60,7 @@ public class UsersExport {
+             try {
+                 Account a = accountDao.findByUID(jsonUsers.getString(i));
+                 ret1.append(a.toCsv());
+-            } catch (NotFoundException e) {
++            } catch (NameNotFoundException e) {
+                 LOG.error(String.format("User [%s] not found, skipping", jsonUsers.getString(i)), e);
+             }
+         }
+@@ -82,7 +81,7 @@ public class UsersExport {
+             try {
+                 Account a = accountDao.findByUID(usersAr.getString(i));
+                 ret.append(a.toVcf());
+-            } catch (NotFoundException e) {
++            } catch (NameNotFoundException e) {
+                 LOG.error(String.format("User [%s] not found, skipping", usersAr.getString(i)), e);
+             }
+         }
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/edituserdetails/EditUserDetailsFormController.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/edituserdetails/EditUserDetailsFormController.java
+index ed0840cd0..ae5c317b7 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/edituserdetails/EditUserDetailsFormController.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/edituserdetails/EditUserDetailsFormController.java
+@@ -12,11 +12,11 @@ import javax.servlet.http.HttpSession;
+ import org.georchestra.ldapadmin.ds.AccountDao;
+ import org.georchestra.ldapadmin.ds.DataServiceException;
+ import org.georchestra.ldapadmin.ds.DuplicatedEmailException;
+-import org.georchestra.ldapadmin.ds.NotFoundException;
+ import org.georchestra.ldapadmin.dto.Account;
+ import org.georchestra.ldapadmin.ws.utils.UserUtils;
+ import org.georchestra.ldapadmin.ws.utils.Validation;
+ import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.ldap.NameNotFoundException;
+ import org.springframework.stereotype.Controller;
+ import org.springframework.ui.Model;
+ import org.springframework.validation.BindingResult;
+@@ -172,7 +172,7 @@ public class EditUserDetailsFormController {
+ 			try {
+ 				Account adminAccount = this.accountDao.findByUID(request.getHeader("sec-username"));
+ 				adminUUID = adminAccount == null ? null : adminAccount.getUUID();
+-			} catch (NotFoundException ex){
++			} catch (NameNotFoundException ex){
+ 				adminUUID = null;
+ 			}
+ 			this.accountDao.update(account, adminUUID);
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/emails/EmailController.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/emails/EmailController.java
+index e4fc1cef6..bb6ec05c3 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/emails/EmailController.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/emails/EmailController.java
+@@ -6,24 +6,44 @@ import org.georchestra.ldapadmin.dao.EmailDao;
+ import org.georchestra.ldapadmin.dao.EmailTemplateDao;
+ import org.georchestra.ldapadmin.ds.AccountDao;
+ import org.georchestra.ldapadmin.ds.DataServiceException;
+-import org.georchestra.ldapadmin.ds.NotFoundException;
+ import org.georchestra.ldapadmin.dto.Account;
+ import org.georchestra.ldapadmin.mailservice.EmailFactoryImpl;
+-import org.georchestra.ldapadmin.model.*;
++import org.georchestra.ldapadmin.model.AdminLogEntry;
++import org.georchestra.ldapadmin.model.AdminLogType;
++import org.georchestra.ldapadmin.model.Attachment;
++import org.georchestra.ldapadmin.model.EmailEntry;
++import org.georchestra.ldapadmin.model.EmailTemplate;
+ import org.json.JSONArray;
+ import org.json.JSONException;
+ import org.json.JSONObject;
+ import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.ldap.NameNotFoundException;
+ import org.springframework.stereotype.Controller;
+-import org.springframework.web.bind.annotation.*;
++import org.springframework.web.bind.annotation.PathVariable;
++import org.springframework.web.bind.annotation.RequestMapping;
++import org.springframework.web.bind.annotation.RequestMethod;
++import org.springframework.web.bind.annotation.RequestParam;
++import org.springframework.web.bind.annotation.ResponseBody;
+ 
+ import javax.activation.DataHandler;
+-import javax.mail.*;
+-import javax.mail.internet.*;
++import javax.mail.Message;
++import javax.mail.MessagingException;
++import javax.mail.Multipart;
++import javax.mail.Session;
++import javax.mail.Transport;
++import javax.mail.internet.InternetAddress;
++import javax.mail.internet.MailDateFormat;
++import javax.mail.internet.MimeBodyPart;
++import javax.mail.internet.MimeMessage;
++import javax.mail.internet.MimeMultipart;
+ import javax.mail.util.ByteArrayDataSource;
+ import javax.servlet.http.HttpServletRequest;
+ import java.io.IOException;
+-import java.util.*;
++import java.util.Date;
++import java.util.LinkedList;
++import java.util.List;
++import java.util.Properties;
++import java.util.UUID;
+ 
+ @Controller
+ public class EmailController {
+@@ -89,7 +109,7 @@ public class EmailController {
+      * @param content content of email (text part in html)
+      * @param attachmentsIds comma separated list of attachments identifier
+      * @return identifier of new email sent prefixed by "OK : "
+-     * @throws NotFoundException if sender cannot be found
++     * @throws NameNotFoundException if sender cannot be found
+      * @throws DataServiceException if there is issues while contacting LDAP server
+      * @throws MessagingException if email cannot be sent through SMTP protocol
+      * @throws IOException if email cannot be sent through SMTP protocol
+@@ -100,7 +120,7 @@ public class EmailController {
+                             @RequestParam("subject") String subject,
+                             @RequestParam("content") String content,
+                             @RequestParam("attachments") String attachmentsIds,
+-                            HttpServletRequest request) throws NotFoundException, DataServiceException, MessagingException, IOException {
++                            HttpServletRequest request) throws NameNotFoundException, DataServiceException, MessagingException, IOException {
+ 
+         EmailEntry email = new EmailEntry();
+         Account sender = this.accountDao.findByUID(request.getHeader("sec-username"));
+@@ -117,7 +137,7 @@ public class EmailController {
+             for (String attId : attachmentsIdsList) {
+                 Attachment att = this.attachmentRepo.findOne(Long.parseLong(attId));
+                 if(att == null)
+-                    throw new NotFoundException("Unable to find attachment with ID : " + attId);
++                    throw new NameNotFoundException("Unable to find attachment with ID : " + attId);
+                 attachments.add(att);
+             }
+         }
+@@ -202,11 +222,11 @@ public class EmailController {
+      * Send EmailEntry to smtp server
+      *
+      * @param email email to send
+-     * @throws NotFoundException if recipient cannot be found in LDAP server
++     * @throws NameNotFoundException if recipient cannot be found in LDAP server
+      * @throws DataServiceException if LDAP server is not available
+      * @throws MessagingException if some field of email cannot be encoded (malformed email address)
+      */
+-    private void send(EmailEntry email) throws NotFoundException, DataServiceException, MessagingException {
++    private void send(EmailEntry email) throws NameNotFoundException, DataServiceException, MessagingException {
+ 
+         final Properties props = System.getProperties();
+         props.put("mail.smtp.host", this.emailFactory.getSmtpHost());
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormController.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormController.java
+index f1598eec2..94164e1a8 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormController.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormController.java
+@@ -4,7 +4,7 @@
+ package org.georchestra.ldapadmin.ws.newaccount;
+ 
+ import java.io.IOException;
+-import java.util.logging.Logger;
++
+ 
+ import javax.servlet.ServletContext;
+ import javax.servlet.http.HttpServletRequest;
+@@ -17,7 +17,10 @@ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
+ import org.georchestra.ldapadmin.bs.Moderator;
+ import org.georchestra.ldapadmin.bs.ReCaptchaParameters;
+-import org.georchestra.ldapadmin.ds.*;
++import org.georchestra.ldapadmin.ds.AccountDao;
++import org.georchestra.ldapadmin.ds.DataServiceException;
++import org.georchestra.ldapadmin.ds.DuplicatedEmailException;
++import org.georchestra.ldapadmin.ds.DuplicatedUidException;
+ import org.georchestra.ldapadmin.dto.Account;
+ import org.georchestra.ldapadmin.dto.AccountFactory;
+ import org.georchestra.ldapadmin.dto.Group;
+@@ -28,6 +31,7 @@ import org.georchestra.ldapadmin.ws.utils.RecaptchaUtils;
+ import org.georchestra.ldapadmin.ws.utils.UserUtils;
+ import org.georchestra.ldapadmin.ws.utils.Validation;
+ import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.ldap.NameNotFoundException;
+ import org.springframework.stereotype.Controller;
+ import org.springframework.ui.Model;
+ import org.springframework.validation.BindingResult;
+@@ -155,7 +159,7 @@ public final class NewAccountFormController {
+ 			String adminUUID = null;
+ 			try {
+ 				adminUUID = this.accountDao.findByUID(request.getHeader("sec-username")).getUUID();
+-			} catch (NotFoundException e) {
++			} catch (NameNotFoundException e) {
+ 				LOG.error("Unable to find admin/user connected, so no admin log generated when creating uid : " + formBean.getUid());
+ 			}
+ 
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/passwordrecovery/NewPasswordFormController.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/passwordrecovery/NewPasswordFormController.java
+index 95aacfa32..3d302788b 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/passwordrecovery/NewPasswordFormController.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/passwordrecovery/NewPasswordFormController.java
+@@ -9,10 +9,10 @@ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
+ import org.georchestra.ldapadmin.ds.AccountDao;
+ import org.georchestra.ldapadmin.ds.DataServiceException;
+-import org.georchestra.ldapadmin.ds.NotFoundException;
+ import org.georchestra.ldapadmin.ds.UserTokenDao;
+ import org.georchestra.ldapadmin.ws.utils.PasswordUtils;
+ import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.ldap.NameNotFoundException;
+ import org.springframework.stereotype.Controller;
+ import org.springframework.ui.Model;
+ import org.springframework.validation.BindingResult;
+@@ -82,7 +82,7 @@ public class NewPasswordFormController {
+ 			
+ 			return "newPasswordForm";
+ 			
+-		} catch(NotFoundException e){
++		} catch(NameNotFoundException e){
+ 
+ 			return "passwordRecoveryForm";
+ 			
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormController.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormController.java
+index 1517c74bf..7087021da 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormController.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormController.java
+@@ -18,7 +18,6 @@ import org.georchestra.ldapadmin.bs.ReCaptchaParameters;
+ import org.georchestra.ldapadmin.ds.AccountDao;
+ import org.georchestra.ldapadmin.ds.DataServiceException;
+ import org.georchestra.ldapadmin.ds.GroupDao;
+-import org.georchestra.ldapadmin.ds.NotFoundException;
+ import org.georchestra.ldapadmin.ds.UserTokenDao;
+ import org.georchestra.ldapadmin.dto.Account;
+ import org.georchestra.ldapadmin.dto.Group;
+@@ -26,6 +25,7 @@ import org.georchestra.ldapadmin.mailservice.MailService;
+ import org.georchestra.ldapadmin.ws.utils.EmailUtils;
+ import org.georchestra.ldapadmin.ws.utils.RecaptchaUtils;
+ import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.ldap.NameNotFoundException;
+ import org.springframework.stereotype.Controller;
+ import org.springframework.ui.Model;
+ import org.springframework.validation.BindingResult;
+@@ -144,7 +144,7 @@ public class PasswordRecoveryFormController  {
+ 
+ 			for (Group g : group) {
+ 				if (g.getName().equals(Group.PENDING)) {
+-					throw new NotFoundException("User in PENDING group");
++					throw new NameNotFoundException("User in PENDING group");
+ 				}
+ 			}
+ 			
+@@ -173,7 +173,7 @@ public class PasswordRecoveryFormController  {
+ 			
+ 			throw new IOException(e);
+ 			
+-		} catch (NotFoundException e) {
++		} catch (NameNotFoundException e) {
+ 			
+ 			resultErrors.rejectValue("email", "email.error.notFound", "No user found for this email.");
+ 			
+@@ -184,9 +184,7 @@ public class PasswordRecoveryFormController  {
+ 
+ 
+ 	/**
+-	 * Create the URL to change the password based on the provided token  
+-	 * @param token
+-	 * @param token2 
++	 * Create the URL to change the password based on the provided token
+ 	 * 
+ 	 * @return a new URL to change password
+ 	 */
+diff --git a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/backoffice/UsersGroupsControllerTest.java b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/backoffice/UsersGroupsControllerTest.java
+index a650577e8..116b3a10b 100644
+--- a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/backoffice/UsersGroupsControllerTest.java
++++ b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/backoffice/UsersGroupsControllerTest.java
+@@ -15,8 +15,11 @@ import java.util.Set;
+ import org.apache.commons.logging.LogFactory;
+ import org.georchestra.ldapadmin.ds.AccountDaoImpl;
+ import org.georchestra.ldapadmin.ds.GroupDaoImpl;
+-import org.georchestra.ldapadmin.ds.NotFoundException;
+-import org.georchestra.ldapadmin.dto.*;
++import org.georchestra.ldapadmin.dto.Account;
++import org.georchestra.ldapadmin.dto.AccountFactory;
++import org.georchestra.ldapadmin.dto.Group;
++import org.georchestra.ldapadmin.dto.GroupFactory;
++import org.georchestra.ldapadmin.dto.UserSchema;
+ import org.georchestra.ldapadmin.ws.backoffice.groups.GroupsController;
+ import org.georchestra.ldapadmin.ws.backoffice.users.UserRule;
+ import org.georchestra.ldapadmin.ws.backoffice.users.UsersController;
+@@ -29,6 +32,7 @@ import org.junit.Rule;
+ import org.junit.Test;
+ import org.junit.rules.ErrorCollector;
+ import org.mockito.Mockito;
++import org.springframework.ldap.NameNotFoundException;
+ import org.springframework.ldap.core.AuthenticationSource;
+ import org.springframework.ldap.core.ContextMapper;
+ import org.springframework.ldap.core.DistinguishedName;
+@@ -289,7 +293,7 @@ public class UsersGroupsControllerTest {
+         // first, ensures the following group does not exist
+         try {
+             groupDao.delete(TEST_GROUP_NAME);
+-        } catch (NotFoundException e) {
++        } catch (NameNotFoundException e) {
+             LogFactory.getLog(this.getClass()).info(TEST_GROUP_NAME + " does not exist in the LDAP tree, it is safe to create it");
+         }
+         // Then creates it
+diff --git a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/backoffice/groups/GroupsControllerTest.java b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/backoffice/groups/GroupsControllerTest.java
+index 0dff999fa..47cc6ee0b 100644
+--- a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/backoffice/groups/GroupsControllerTest.java
++++ b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/backoffice/groups/GroupsControllerTest.java
+@@ -4,13 +4,15 @@ import static org.junit.Assert.assertTrue;
+ import static org.mockito.Matchers.eq;
+ 
+ import java.io.IOException;
+-import java.util.Arrays;
+ 
+ import javax.naming.Name;
+ import javax.servlet.http.HttpServletResponse;
+ 
+-import org.georchestra.ldapadmin.dao.AdminLogDao;
+-import org.georchestra.ldapadmin.ds.*;
++import org.georchestra.ldapadmin.ds.AccountDao;
++import org.georchestra.ldapadmin.ds.AccountDaoImpl;
++import org.georchestra.ldapadmin.ds.DataServiceException;
++import org.georchestra.ldapadmin.ds.DuplicatedCommonNameException;
++import org.georchestra.ldapadmin.ds.GroupDaoImpl;
+ import org.georchestra.ldapadmin.dto.Group;
+ import org.georchestra.ldapadmin.dto.GroupFactory;
+ import org.georchestra.ldapadmin.ws.backoffice.users.UserRule;
+@@ -20,6 +22,7 @@ import org.json.JSONObject;
+ import org.junit.Before;
+ import org.junit.Test;
+ import org.mockito.Mockito;
++import org.springframework.ldap.NameNotFoundException;
+ import org.springframework.ldap.core.AttributesMapper;
+ import org.springframework.ldap.core.ContextMapper;
+ import org.springframework.ldap.core.DirContextOperations;
+@@ -105,7 +108,7 @@ public class GroupsControllerTest {
+     @Test
+     public void testFindByCNNotFound() throws Exception {
+         request.setRequestURI("/ldapadmin/groups/NOTEXISTINGGROUP");
+-        Mockito.doThrow(NotFoundException.class).when(ldapTemplate).lookup((Name) Mockito.any(), (ContextMapper) Mockito.any());
++        Mockito.doThrow(NameNotFoundException.class).when(ldapTemplate).lookup((Name) Mockito.any(), (ContextMapper) Mockito.any());
+ 
+         groupCtrl.findByCN(request, response);
+ 
+@@ -178,7 +181,7 @@ public class GroupsControllerTest {
+         request.setContent("{ \"cn\": \"MYGROUP\", \"description\": \"Description for the group\" }".getBytes());
+         // ensures the mocked object does not return an already existing group
+         // Raising NotFoundException instead
+-        Mockito.doThrow(NotFoundException.class).when(ldapTemplate).lookup((Name) Mockito.any(), (ContextMapper) Mockito.any());
++        Mockito.doThrow(NameNotFoundException.class).when(ldapTemplate).lookup((Name) Mockito.any(), (ContextMapper) Mockito.any());
+ 
+         groupCtrl.create(request, response);
+ 
+@@ -242,7 +245,7 @@ public class GroupsControllerTest {
+         request.setRequestURI("/ldapadmin/groups/ADMINISTRATOR");
+         request.setContent(" { \"cn\": \"newName\", \"description\": \"new Description\" } ".getBytes());
+ 
+-        Mockito.doThrow(NotFoundException.class).when(ldapTemplate).lookup((Name) Mockito.any(), (ContextMapper) Mockito.any());
++        Mockito.doThrow(NameNotFoundException.class).when(ldapTemplate).lookup((Name) Mockito.any(), (ContextMapper) Mockito.any());
+ 
+         groupCtrl.update(request, response);
+ 
+@@ -273,11 +276,11 @@ public class GroupsControllerTest {
+         request.setContent(" { \"cn\": \"newName\", \"description\": \"new Description\" } ".getBytes());
+         Group retAdmin = GroupFactory.create("ADMINISTRATOR", "administrator group");
+         Mockito.when(ldapTemplate.lookup((Name) Mockito.any(), (ContextMapper) Mockito.any())).thenReturn(retAdmin);
+-        Mockito.doThrow(NotFoundException.class).when(ldapTemplate).lookup((Name) Mockito.any(), (AttributesMapper) Mockito.any());
++        Mockito.doThrow(NameNotFoundException.class).when(ldapTemplate).lookup((Name) Mockito.any(), (AttributesMapper) Mockito.any());
+         DistinguishedName dn2 = new DistinguishedName();
+         dn2.add("ou=groups");
+         dn2.add("cn", "newName");
+-        Mockito.doThrow(NotFoundException.class).when(ldapTemplate).lookup(eq(dn2), (ContextMapper) Mockito.any());
++        Mockito.doThrow(NameNotFoundException.class).when(ldapTemplate).lookup(eq(dn2), (ContextMapper) Mockito.any());
+ 
+         groupCtrl.update(request, response);
+ 
+@@ -298,7 +301,7 @@ public class GroupsControllerTest {
+         DistinguishedName dn2 = new DistinguishedName();
+         dn2.add("ou=groups");
+         dn2.add("cn", "newName");
+-        Mockito.doThrow(NotFoundException.class).when(ldapTemplate).lookup(eq(dn2), (ContextMapper) Mockito.any());
++        Mockito.doThrow(NameNotFoundException.class).when(ldapTemplate).lookup(eq(dn2), (ContextMapper) Mockito.any());
+ 
+         groupCtrl.update(request, response);
+ 
+@@ -318,7 +321,7 @@ public class GroupsControllerTest {
+         DistinguishedName dn2 = new DistinguishedName();
+         dn2.add("ou=groups");
+         dn2.add("cn", "newName");
+-        Mockito.doThrow(NotFoundException.class).when(ldapTemplate).lookup(eq(dn2), (ContextMapper) Mockito.any());
++        Mockito.doThrow(NameNotFoundException.class).when(ldapTemplate).lookup(eq(dn2), (ContextMapper) Mockito.any());
+ 
+         try {
+             groupCtrl.update(request, response);
+@@ -340,7 +343,7 @@ public class GroupsControllerTest {
+         DistinguishedName dn = new DistinguishedName();
+         dn.add("ou=groups");
+         dn.add("cn", "newName");
+-        Mockito.doThrow(NotFoundException.class).when(ldapTemplate).lookup(eq(dn), (ContextMapper) Mockito.any());
++        Mockito.doThrow(NameNotFoundException.class).when(ldapTemplate).lookup(eq(dn), (ContextMapper) Mockito.any());
+ 
+         groupCtrl.update(request, response);
+ 
+@@ -357,7 +360,7 @@ public class GroupsControllerTest {
+ 		request.setContent(toSend.toString().getBytes());
+ 		request.setRequestURI("/ldapadmin/groups_users");
+ 		DirContextOperations context = Mockito.mock(DirContextOperations.class);
+-		Mockito.doThrow(NotFoundException.class).when(ldapTemplate).lookupContext((Name) Mockito.any());
++		Mockito.doThrow(NameNotFoundException.class).when(ldapTemplate).lookupContext((Name) Mockito.any());
+ 
+ 		groupCtrl.updateUsers(request, response);
+ 
+diff --git a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/backoffice/users/UsersControllerTest.java b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/backoffice/users/UsersControllerTest.java
+index 4597948a6..b62bce893 100644
+--- a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/backoffice/users/UsersControllerTest.java
++++ b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/backoffice/users/UsersControllerTest.java
+@@ -16,7 +16,6 @@ import org.georchestra.ldapadmin.ds.AccountDaoImpl;
+ import org.georchestra.ldapadmin.ds.DataServiceException;
+ import org.georchestra.ldapadmin.ds.DuplicatedEmailException;
+ import org.georchestra.ldapadmin.ds.GroupDaoImpl;
+-import org.georchestra.ldapadmin.ds.NotFoundException;
+ import org.georchestra.ldapadmin.dto.Account;
+ import org.georchestra.ldapadmin.dto.AccountFactory;
+ import org.georchestra.ldapadmin.dto.UserSchema;
+@@ -27,7 +26,11 @@ import org.junit.Test;
+ import org.mockito.Mockito;
+ import org.springframework.http.HttpMethod;
+ import org.springframework.ldap.NameNotFoundException;
+-import org.springframework.ldap.core.*;
++import org.springframework.ldap.core.ContextMapper;
++import org.springframework.ldap.core.DirContextOperations;
++import org.springframework.ldap.core.DistinguishedName;
++import org.springframework.ldap.core.LdapRdn;
++import org.springframework.ldap.core.LdapTemplate;
+ import org.springframework.ldap.core.support.LdapContextSource;
+ import org.springframework.ldap.filter.AndFilter;
+ import org.springframework.ldap.filter.EqualsFilter;
+@@ -133,7 +136,7 @@ public class UsersControllerTest {
+ 
+     @Test
+     public void testFindByUidNotFound() throws Exception {
+-        Mockito.doThrow(NotFoundException.class).when(ldapTemplate).lookup((Name) Mockito.any(), (ContextMapper) Mockito.any());
++        Mockito.doThrow(NameNotFoundException.class).when(ldapTemplate).lookup((Name) Mockito.any(), (ContextMapper) Mockito.any());
+ 
+         usersCtrl.findByUid("notfounduser", response);
+ 
+@@ -533,7 +536,7 @@ public class UsersControllerTest {
+     @Test
+     public void testDeleteNotFoundExceptionCaught() throws Exception {
+         request.setRequestURI("/ldapadmin/users/pmauduitnotfound");
+-        Mockito.doThrow(NotFoundException.class).when(ldapTemplate).unbind((Name) Mockito.any(), eq(true));
++        Mockito.doThrow(NameNotFoundException.class).when(ldapTemplate).unbind((Name) Mockito.any(), eq(true));
+ 
+         usersCtrl.delete(request, response);
+ 
+diff --git a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormControllerTest.java b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormControllerTest.java
+index 1a0856b84..727f9d8e8 100644
+--- a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormControllerTest.java
++++ b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormControllerTest.java
+@@ -7,17 +7,18 @@ import java.io.IOException;
+ import java.util.Arrays;
+ import java.util.List;
+ 
+-import javax.servlet.http.HttpServletRequest;
+-
+ import net.tanesha.recaptcha.ReCaptcha;
+ import net.tanesha.recaptcha.ReCaptchaResponse;
+ 
+ import org.georchestra.ldapadmin.bs.Moderator;
+ import org.georchestra.ldapadmin.bs.ReCaptchaParameters;
+-import org.georchestra.ldapadmin.ds.*;
++import org.georchestra.ldapadmin.ds.AccountDao;
++import org.georchestra.ldapadmin.ds.DataServiceException;
++import org.georchestra.ldapadmin.ds.DuplicatedEmailException;
++import org.georchestra.ldapadmin.ds.DuplicatedUidException;
+ import org.georchestra.ldapadmin.dto.Account;
+ import org.georchestra.ldapadmin.dto.AccountFactory;
+-import org.georchestra.ldapadmin.dto.UserSchema;
++
+ import org.georchestra.ldapadmin.mailservice.EmailFactoryImpl;
+ import org.georchestra.ldapadmin.mailservice.MailService;
+ import org.georchestra.ldapadmin.ws.utils.Validation;
+@@ -25,6 +26,7 @@ import org.junit.After;
+ import org.junit.Before;
+ import org.junit.Test;
+ import org.mockito.Mockito;
++import org.springframework.ldap.NameNotFoundException;
+ import org.springframework.ldap.core.DistinguishedName;
+ import org.springframework.ldap.core.LdapRdn;
+ import org.springframework.ldap.core.LdapTemplate;
+@@ -93,7 +95,7 @@ public class NewAccountFormControllerTest {
+             Mockito.when(this.dao.findByUID(eq("testadmin"))).thenReturn(this.adminAccount);
+         } catch (DataServiceException e) {
+             assertTrue(false);
+-        } catch (NotFoundException e) {
++        } catch (NameNotFoundException e) {
+             assertTrue(false);
+         }
+ 
+diff --git a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/passwordrecovery/NewPasswordFormControllerTest.java b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/passwordrecovery/NewPasswordFormControllerTest.java
+index 573110a20..95965d9c1 100644
+--- a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/passwordrecovery/NewPasswordFormControllerTest.java
++++ b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/passwordrecovery/NewPasswordFormControllerTest.java
+@@ -8,12 +8,12 @@ import java.util.List;
+ 
+ import org.georchestra.ldapadmin.ds.AccountDao;
+ import org.georchestra.ldapadmin.ds.DataServiceException;
+-import org.georchestra.ldapadmin.ds.NotFoundException;
+ import org.georchestra.ldapadmin.ds.UserTokenDao;
+ import org.junit.After;
+ import org.junit.Before;
+ import org.junit.Test;
+ import org.mockito.Mockito;
++import org.springframework.ldap.NameNotFoundException;
+ import org.springframework.ui.Model;
+ import org.springframework.validation.BindingResult;
+ import org.springframework.web.bind.WebDataBinder;
+@@ -56,7 +56,7 @@ public class NewPasswordFormControllerTest {
+     @Test
+     public void testSetupFormUserNotFound() throws Exception {
+         Model model = Mockito.mock(Model.class);
+-        Mockito.doThrow(new NotFoundException("User not found")).when(userTokenDao).findUserByToken(Mockito.anyString());
++        Mockito.doThrow(new NameNotFoundException("User not found")).when(userTokenDao).findUserByToken(Mockito.anyString());
+ 
+         String ret = ctrl.setupForm("test", model);
+         assertTrue(ret.equals("passwordRecoveryForm"));
+diff --git a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormControllerTest.java b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormControllerTest.java
+index d7d59adf8..8dafec37c 100644
+--- a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormControllerTest.java
++++ b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormControllerTest.java
+@@ -14,7 +14,6 @@ import org.georchestra.ldapadmin.bs.ReCaptchaParameters;
+ import org.georchestra.ldapadmin.ds.AccountDao;
+ import org.georchestra.ldapadmin.ds.DataServiceException;
+ import org.georchestra.ldapadmin.ds.GroupDao;
+-import org.georchestra.ldapadmin.ds.NotFoundException;
+ import org.georchestra.ldapadmin.ds.UserTokenDao;
+ import org.georchestra.ldapadmin.dto.Account;
+ import org.georchestra.ldapadmin.dto.Group;
+@@ -25,6 +24,7 @@ import org.junit.After;
+ import org.junit.Before;
+ import org.junit.Test;
+ import org.mockito.Mockito;
++import org.springframework.ldap.NameNotFoundException;
+ import org.springframework.mock.web.MockHttpServletRequest;
+ import org.springframework.ui.Model;
+ import org.springframework.validation.BindingResult;
+@@ -115,7 +115,7 @@ public class PasswordRecoveryFormControllerTest {
+     public void testGenerateTokenWithUserNotFound() throws Exception {
+         prepareLegitRequest();
+         Mockito.when(utd.exist(Mockito.anyString())).thenReturn(false);
+-        Mockito.doThrow(NotFoundException.class).when(dao).findByEmail(Mockito.anyString());
++        Mockito.doThrow(NameNotFoundException.class).when(dao).findByEmail(Mockito.anyString());
+ 
+         String ret = ctrl.generateToken(request, formBean, result, status);
+         assertTrue(ret.equals("passwordRecoveryForm"));

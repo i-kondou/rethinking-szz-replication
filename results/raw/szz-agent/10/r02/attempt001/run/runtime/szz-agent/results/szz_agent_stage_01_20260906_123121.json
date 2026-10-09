@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "timestamp": "20260906_123121",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "10",
+      "fix_commit_hash": "f44d562a3dce5e425fb69480455467c28097c884",
+      "bug_commit_hash": [
+        "cfbce4351327f0f1a52ac2161dcbf49a0b31dad4"
+      ],
+      "szz_candidates": [
+        "cfbce4351327f0f1a52ac2161dcbf49a0b31dad4",
+        "79f4be80578f39ab4fcbf3f0f1ec824a52efc767",
+        "67d0a686e4dc4322714f0cca1c18447197b0a8df",
+        "9bfec017596dcac5f1297b540786c5b086e82003",
+        "dd07deea51c08b618e140fc8d781acf7d9ca91e8"
+      ],
+      "szz_num_candidates": 5,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "cfbce4351327f0f1a52ac2161dcbf49a0b31dad4"
+      ],
+      "llm_selected_commit": "cfbce4351327f0f1a52ac2161dcbf49a0b31dad4",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit (\"fixed /help bug\") completely removes the `reload()` method from CommandParser, the `reloadText()` methods from AbstractCommand/InvalidCommand/ OnlinePlayerArgCommand/PlayerArgCommand, and the mutable cached `helpText` field in AbstractCommand. It replaces this whole mechanism with a design where help text is computed on-the-fly inside `getHelpText(prefix)` using a new immutable `help` field (the raw, untruncated name) plus a live call to `t(commandCode)`. This is a direct, targe",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/10",
+      "bug_fixing_commit": "f44d562a3dce5e425fb69480455467c28097c884",
+      "bug_inducing_commit": [
+        "cfbce4351327f0f1a52ac2161dcbf49a0b31dad4"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "SimpleServer/SimpleServer"
+    }
+  ]
+}

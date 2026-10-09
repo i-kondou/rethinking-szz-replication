@@ -1,0 +1,334 @@
+{
+  "metadata": {
+    "timestamp": "20260906_041653",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2193/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 74.323,
+      "max": 74.323,
+      "mean": 74.323,
+      "median": 74.323,
+      "total": 74.323,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 74.23,
+      "max": 74.23,
+      "mean": 74.23,
+      "median": 74.23,
+      "total": 74.23,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 11,
+      "max": 11,
+      "mean": 11,
+      "median": 11,
+      "total": 11,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 6463,
+      "max": 6463,
+      "mean": 6463,
+      "median": 6463,
+      "total": 6463,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 29551,
+      "max": 29551,
+      "mean": 29551,
+      "median": 29551,
+      "total": 29551,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 133998,
+      "max": 133998,
+      "mean": 133998,
+      "median": 133998,
+      "total": 133998,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.3145044,
+      "max": 0.3145044,
+      "mean": 0.3145044,
+      "median": 0.3145044,
+      "total": 0.3145044,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Glob": 1,
+      "Grep": 3,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 17,
+      "max": 17,
+      "mean": 17,
+      "median": 17,
+      "total": 17,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 3,
+      "max": 3,
+      "mean": 3,
+      "median": 3,
+      "total": 3,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 3,
+      "max": 3,
+      "mean": 3,
+      "median": 3,
+      "total": 3,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2193",
+      "fix_commit_hash": "926db5e93e31a740b53bdd16f843c32f0065252d",
+      "ground_truth_bics": [
+        "a606537bf9dcdc884820ae18adb9b5d78d1ef0b8"
+      ],
+      "predicted_bics": [
+        "a606537bf9dcdc884820ae18adb9b5d78d1ef0b8"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2193",
+      "fix_commit": "926db5e93e31a740b53bdd16f843c32f0065252d",
+      "ground_truth_bics": [
+        "a606537bf9dcdc884820ae18adb9b5d78d1ef0b8"
+      ],
+      "total_candidates": 17,
+      "gt_in_candidates": true,
+      "selected_commit": "a606537bf9dcdc884820ae18adb9b5d78d1ef0b8",
+      "selected_index": 15,
+      "confidence": "HIGH",
+      "explanation": "The fix commit (identical in content to candidate_17, which is actually the fix commit itself appearing at the end of the candidate list) makes two changes to SimpleJDBCRecordStore.java: 1. In `streamAllWithData`/`allWithDataStream` and `getValues`/`valuesStream`, it removes a `try (final ResultSet res = ...executeQuery())` wrapper and replaces it with a plain (unclosed) `ResultSet res = ...executeQuery();`, adding the explicit comment \"this result-set can't be try-with-resource because it is re",
+      "is_correct": true,
+      "num_files_touched_by_fix": 3,
+      "num_source_files_touched_by_fix": 3,
+      "files_analyzed": [
+        "src/de/doe300/activerecord/store/impl/SimpleJDBCRecordStore.java",
+        "test/de/doe300/activerecord/TestActiveRecordSyntax.java",
+        "test/de/doe300/activerecord/proxy/handlers/InterfaceProxyHandlerTest.java"
+      ],
+      "call_stats": {
+        "duration_s": 74.323,
+        "duration_api_s": 74.23,
+        "num_turns": 11,
+        "input_tokens": 18,
+        "output_tokens": 6463,
+        "cache_creation_input_tokens": 29551,
+        "cache_read_input_tokens": 133998,
+        "total_cost_usd": 0.3145044,
+        "total_tool_calls": 10,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Glob": 1,
+          "Grep": 3,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2193/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2193_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 20,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2193/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2193_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2193/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2193_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4167,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 847,
+            "cache_read_input_tokens": 13851,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "SimpleJDBCRecordStore",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 388,
+            "cache_read_input_tokens": 14698,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "try \\(final ResultSet res = stm(t)?\\.executeQuery",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "PreparedStatement stmt|stmt = con.prepareStatement",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2300,
+            "cache_read_input_tokens": 15086,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2193/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2193_candidate_selection/candidates/candidate_17.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4299,
+            "cache_read_input_tokens": 17386,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2193/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2193_candidate_selection/candidates/candidate_16.diff",
+                  "offset": 560,
+                  "limit": 420
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 8243,
+            "cache_read_input_tokens": 21685,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2193/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2193_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_16\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit (identical in content to candidate_17, which is actually the fix commit itself appearing at the end of the candidate list) makes two changes to SimpleJDBCRecordStore.java:\n\n1. In `streamAllWithData`/`allWithDataStream` and `getValues`/`valuesStream`, it removes a `try (final ResultSet res = ...executeQuery())` wrapper and replaces it with a plain (unclosed) `ResultSet res = ...executeQuery();`, adding the explicit comment \"this result-set can't be try-with-resource because it is required to stay open\" / \"can't use try-with-resource here, because result-set is required to stay open\". This is the core bug: these methods return a lazily-evaluated `Stream` that reads from the `ResultSet` on demand (via a custom `Spliterator`). Wrapping the `ResultSet` in try-with-resources causes it to be closed as soon as the method returns \u2014 before the returned stream is ever consumed \u2014 so any attempt to iterate the stream fails (result set already closed).\n\n2. It also wraps the previously-unclosed `PreparedStatement stmt` in `insertNewRecord` with try-with-resources to fix a genuine resource leak, but this is a secondary/minor cleanup rather than the described \"bug\" with explanatory comments.\n\nTracing the ResultSet-closing bug back through the candidates: prior to candidate_16, `streamAllWithData` used a plain `final ResultSet res = stm.executeQuery();` (not try-with-resources) and manually built the `Stream`/`Spliterator` inline. candidate_16 is a large refactor that extracts this inline stream-building logic into new private helper methods `allWithDataStream(columns, res)` and `valuesStream(res)`, and \u2014 critically \u2014 introduces `try (final ResultSet res = stm.executeQuery()) { return allWithDataStream(columns, res); }` and the analogous pattern in `getValues`. This is exactly the problematic pattern the fix commit reverts (diff shows these try-with-resource blocks being added as \"+\" lines in candidate_16, matching the \"-\" lines removed by the fix commit).\n\nSince candidate_16 is the first (and only) candidate to introduce this premature-closing-of-ResultSet pattern, it is the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 3021,
+            "cache_read_input_tokens": 29928,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

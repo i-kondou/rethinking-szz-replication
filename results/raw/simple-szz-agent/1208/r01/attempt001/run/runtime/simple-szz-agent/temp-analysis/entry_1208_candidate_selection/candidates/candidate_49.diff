@@ -1,0 +1,47 @@
+diff --git a/src/main/java/gui/StitchingExplorerPanel.java b/src/main/java/gui/StitchingExplorerPanel.java
+index 80df11b..a0d3eb6 100644
+--- a/src/main/java/gui/StitchingExplorerPanel.java
++++ b/src/main/java/gui/StitchingExplorerPanel.java
+@@ -228,8 +228,13 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends
+ 				OptimizeGloballyPopupExpertBatch globalOptPopup = (OptimizeGloballyPopupExpertBatch) globalOptPopupOpt.get();
+ 				globalOptPopup.doClick();
+ 			}
+-			// discard the temp. SpimDataFilteringAndGrouping
+-			savedFilteringAndGrouping = null;
++			else
++			{
++				// discard the temp. SpimDataFilteringAndGrouping
++				// if we discard it right now, but want to do global opt (which runs asynchronously)
++				// it would not work. therefore, the global optimization will take care of this
++				savedFilteringAndGrouping = null;
++			}
+ 		}
+ 	}
+ 
+diff --git a/src/main/java/gui/popup/OptimizeGloballyPopupExpertBatch.java b/src/main/java/gui/popup/OptimizeGloballyPopupExpertBatch.java
+index b7ebfbb..ff479a8 100644
+--- a/src/main/java/gui/popup/OptimizeGloballyPopupExpertBatch.java
++++ b/src/main/java/gui/popup/OptimizeGloballyPopupExpertBatch.java
+@@ -97,7 +97,8 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
+ 						return;
+ 
+ 					SpimDataFilteringAndGrouping< AbstractSpimData< ? > > filteringAndGrouping;
+-					if ( ( (StitchingExplorerPanel< ?, ? >) panel ).getSavedFilteringAndGrouping() == null )
++					final boolean isSavedFaG = ( ( (StitchingExplorerPanel< ?, ? >) panel ).getSavedFilteringAndGrouping() == null );
++					if ( isSavedFaG )
+ 					{
+ 						FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
+ 						filteringAndGrouping = new SpimDataFilteringAndGrouping< AbstractSpimData< ? > >(
+@@ -279,6 +280,12 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
+ 
+ 					}
+ 
++					if (isSavedFaG)
++					{
++						// remove saved filtering and grouping once we are done here
++						( (StitchingExplorerPanel< ?, ? >) panel ).setSavedFilteringAndGrouping( null );
++					}
++
+ 					panel.bdvPopup().updateBDV();
+ 
+ 				}

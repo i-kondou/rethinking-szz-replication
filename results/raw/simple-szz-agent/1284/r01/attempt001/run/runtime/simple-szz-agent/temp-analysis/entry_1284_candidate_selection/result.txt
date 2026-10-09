@@ -1,0 +1,20 @@
+SELECTED: candidate_08
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the declaration of HIGH_SCORES_FILENAME in TetrisPanel.java from
+`private static final int HIGH_SCORES_FILENAME = "TetrisHighScores.txt";` to
+`private static final String HIGH_SCORES_FILENAME = "TetrisHighScores.txt";`.
+Assigning a String literal to an int-typed field is a compile-time type error in Java,
+matching the fix commit message "fix build error".
+
+candidate_08 is a large refactor of TetrisPanel.java that introduces this exact field for
+the first time, declared with type `int` instead of `String`:
+`private static final int HIGH_SCORES_FILENAME = "TetrisHighScores.txt";`
+The field is subsequently used as a filename string (e.g., `new File(HIGH_SCORES_FILENAME)`,
+`new FileWriter(HIGH_SCORES_FILENAME)`), confirming it was always meant to be a String and
+that the `int` type was a mistake introduced in this commit's refactor of the constant
+declarations block (where WIDTH, HEIGHT, ROWS, COLUMNS, etc. were all converted to
+`static final` fields). No other candidate touches this declaration prior to the fix in
+candidate_09, which is the fix commit itself.

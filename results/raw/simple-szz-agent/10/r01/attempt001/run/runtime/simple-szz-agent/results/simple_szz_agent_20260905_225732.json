@@ -1,0 +1,416 @@
+{
+  "metadata": {
+    "timestamp": "20260905_225732",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 98.341,
+      "max": 98.341,
+      "mean": 98.341,
+      "median": 98.341,
+      "total": 98.341,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 97.864,
+      "max": 97.864,
+      "mean": 97.864,
+      "median": 97.864,
+      "total": 97.864,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 17,
+      "max": 17,
+      "mean": 17,
+      "median": 17,
+      "total": 17,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 24,
+      "max": 24,
+      "mean": 24,
+      "median": 24,
+      "total": 24,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 7886,
+      "max": 7886,
+      "mean": 7886,
+      "median": 7886,
+      "total": 7886,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 51735,
+      "max": 51735,
+      "mean": 51735,
+      "median": 51735,
+      "total": 51735,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 286982,
+      "max": 286982,
+      "mean": 286982,
+      "median": 286982,
+      "total": 286982,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.5148666000000001,
+      "max": 0.5148666000000001,
+      "mean": 0.5148666000000001,
+      "median": 0.5148666000000001,
+      "total": 0.5148666000000001,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 16,
+      "max": 16,
+      "mean": 16,
+      "median": 16,
+      "total": 16,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 6,
+      "Grep": 9,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 131,
+      "max": 131,
+      "mean": 131,
+      "median": 131,
+      "total": 131,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 6,
+      "max": 6,
+      "mean": 6,
+      "median": 6,
+      "total": 6,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 6,
+      "max": 6,
+      "mean": 6,
+      "median": 6,
+      "total": 6,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "10",
+      "fix_commit_hash": "f44d562a3dce5e425fb69480455467c28097c884",
+      "ground_truth_bics": [
+        "cfbce4351327f0f1a52ac2161dcbf49a0b31dad4"
+      ],
+      "predicted_bics": [
+        "cfbce4351327f0f1a52ac2161dcbf49a0b31dad4"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "10",
+      "fix_commit": "f44d562a3dce5e425fb69480455467c28097c884",
+      "ground_truth_bics": [
+        "cfbce4351327f0f1a52ac2161dcbf49a0b31dad4"
+      ],
+      "total_candidates": 131,
+      "gt_in_candidates": true,
+      "selected_commit": "cfbce4351327f0f1a52ac2161dcbf49a0b31dad4",
+      "selected_index": 98,
+      "confidence": "HIGH",
+      "explanation": "The fix commit (\"fixed /help bug\") removes an entire caching/reload mechanism for command help text: it deletes `CommandParser.reload()`, `AbstractCommand.reloadText()` (and its overrides in `InvalidCommand`, `OnlinePlayerArgCommand`, `PlayerArgCommand`), the mutable `helpText` field, and the call to `commandParser.reload()` in `Server.java`. In its place, the fix computes the help text lazily on every call to `getHelpText()` using a new immutable `help` field plus `t(commandCode)` (the translat",
+      "is_correct": true,
+      "num_files_touched_by_fix": 6,
+      "num_source_files_touched_by_fix": 6,
+      "files_analyzed": [
+        "src/simpleserver/CommandParser.java",
+        "src/simpleserver/Server.java",
+        "src/simpleserver/command/AbstractCommand.java",
+        "src/simpleserver/command/InvalidCommand.java",
+        "src/simpleserver/command/OnlinePlayerArgCommand.java",
+        "src/simpleserver/command/PlayerArgCommand.java"
+      ],
+      "call_stats": {
+        "duration_s": 98.341,
+        "duration_api_s": 97.864,
+        "num_turns": 17,
+        "input_tokens": 24,
+        "output_tokens": 7886,
+        "cache_creation_input_tokens": 51735,
+        "cache_read_input_tokens": 286982,
+        "total_cost_usd": 0.5148666000000001,
+        "total_tool_calls": 16,
+        "tool_calls_by_name": {
+          "Read": 6,
+          "Grep": 9,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 8280,
+            "cache_read_input_tokens": 0,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2889,
+            "cache_read_input_tokens": 9682,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "helpText|reloadText|commandParser.reload|reload\\(\\)",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 7,
+            "cache_creation_input_tokens": 713,
+            "cache_read_input_tokens": 12571,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "helpText|reloadText|reload\\(\\)",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/candidates/candidate_55.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1065,
+            "cache_read_input_tokens": 13284,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "helpText|reloadText|reload\\(\\)|t\\(commandCode|commandCode\">\n<parameter name=\"path\">/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/candidates/candidate_58.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "helpText|reloadText|reload\\(\\)|t\\(commandCode|commandCode",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/candidates/candidate_59.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1475,
+            "cache_read_input_tokens": 14349,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "helpText|reloadText|reload\\(\\)|commandCode",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/candidates/candidate_58.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/candidates/candidate_59.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 17088,
+            "cache_read_input_tokens": 15824,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "helpText|reloadText|reload\\(\\)|commandCode|t\\(",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/candidates/candidate_78.diff",
+                  "output_mode": "content",
+                  "-C": 2
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "helpText|reloadText|reload\\(\\)|commandCode|t\\(",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/candidates/candidate_98.diff",
+                  "output_mode": "content",
+                  "-C": 2
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "helpText|reloadText|reload\\(\\)|commandCode|t\\(",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/candidates/candidate_99.diff",
+                  "output_mode": "content",
+                  "-C": 2
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 8526,
+            "cache_read_input_tokens": 32912,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "InvalidCommand|OnlinePlayerArgCommand|PlayerArgCommand\" -A 30",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/candidates/candidate_99.diff",
+                  "output_mode": "content"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 20,
+            "cache_creation_input_tokens": 1696,
+            "cache_read_input_tokens": 41438,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/candidates/candidate_99.diff",
+                  "offset": 530,
+                  "limit": 100
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2256,
+            "cache_read_input_tokens": 43134,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/candidates/candidate_99.diff",
+                  "offset": 1,
+                  "limit": 220
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 4728,
+            "cache_read_input_tokens": 45390,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/10/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_10_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_99\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit (\"fixed /help bug\") removes an entire caching/reload mechanism for command help text: it deletes `CommandParser.reload()`, `AbstractCommand.reloadText()` (and its overrides in `InvalidCommand`, `OnlinePlayerArgCommand`, `PlayerArgCommand`), the mutable `helpText` field, and the call to `commandParser.reload()` in `Server.java`. In its place, the fix computes the help text lazily on every call to `getHelpText()` using a new immutable `help` field plus `t(commandCode)` (the translation lookup), instead of caching a pre-built, pre-translated string.\n\nTracing this mechanism back through the candidates, `candidate_99` is exactly where it was introduced. That commit:\n- Adds `simpleserver.lang.Translations` (`t`) as the localization system and changes `AbstractCommand`'s constructor to build and cache `helpText` at construction time using `t.get(commandCode)` (`helpText = name + \"\u00a7f : \" + t.get(commandCode);`).\n- Adds `CommandParser.reload()`, which iterates over all server/player commands and calls `((AbstractCommand) command).reloadText()`.\n- Adds `AbstractCommand.reloadText()` (and overrides in `InvalidCommand`, `OnlinePlayerArgCommand`, `PlayerArgCommand`) to recompute the cached `helpText` after the fact.\n- Wires `commandParser.reload()` into `Server.java`'s `reload()` method, right after `t.setLanguage(...)`, so that command help text is (supposedly) refreshed once the correct language is loaded.\n\nThis design is fundamentally the root cause of the `/help` bug: commands are constructed (and their help text cached) via `CommandParser`'s `loadCommands()` before the server's language/translation resource has necessarily been loaded/reloaded in every code path, and the `reload()`/`reloadText()` synchronization mechanism is fragile \u2014 any place where `reload()` isn't invoked, or is invoked in the wrong order relative to language loading, leaves `/help` displaying stale, untranslated, or incorrect text. The eventual fix eliminates the caching entirely (computing the text on demand in `getHelpText()`), which only makes sense as a fix if this caching/reload scheme (introduced in candidate_99) was the actual source of the bug. No earlier candidate contains any `helpText`/`reloadText`/translation caching logic that matches what the fix removes \u2014 `candidate_55` (and subsequent commits before 99) has help text cached in a single `final` field with no reload path at all, so there is no stale-cache bug possible there. Later candidates (108, 110, 117, 126, 131) only extend or reuse this same `reloadText`/`helpText` pattern established in candidate_99, without introducing the caching/reload architecture itself.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 12,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1617,
+            "cache_read_input_tokens": 50118,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

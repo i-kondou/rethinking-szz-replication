@@ -1,0 +1,22 @@
+{
+  "fix_commit": "45bddf5b5c2d9df754f984fb1cf9bf6b6e254441",
+  "bic": "d6e4936fa54dc3577296dbadaeb556178dcad2c3",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit bumped DATABASE_VERSION from 7 to 8 and added the new \"api_allowed_keys\" table migration logic, but mistakenly introduced an extra `case 7:` (empty, \"// consolidate\") fall-through label in addition to `case 8:`. Since `case 7` had already been established by the prior version-bump commit (2b1c5358b77c, 6\u21927), this duplicate case number caused every subsequently added case label in later commits (9, 10, 11, 12, 13, 14, 15) to be off-by-one relative to the actual DATABASE_VERSION values, which is precisely the \"ridiculous database migration bug\" fixed in 45bddf5b5c2d.",
+  "metrics": {
+    "case_elapsed_seconds": 203.996101,
+    "api_elapsed_seconds": 203.398504,
+    "tool_elapsed_seconds": 0.490223,
+    "other_elapsed_seconds": 0.107375,
+    "api_call_count": 13,
+    "tool_call_count": 12,
+    "prompt_tokens": 145430,
+    "completion_tokens": 15886,
+    "total_tokens": 161316,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T17:38:03.280161"
+}

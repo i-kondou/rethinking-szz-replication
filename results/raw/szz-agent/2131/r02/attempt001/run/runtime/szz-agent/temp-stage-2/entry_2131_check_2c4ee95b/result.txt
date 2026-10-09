@@ -1,0 +1,24 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix reorders two statements in the FileHistoryPanelImpl constructor so that `myPopupActions = createPopupActions();` happens before `createDualView();`. In the buggy version, `createDualView()` runs first and internally calls:
+
+    PopupHandler.installPopupHandler(myDualView.getTreeView(), myPopupActions, ActionPlaces.UPDATE_POPUP, ActionManager.getInstance());
+
+Since `myPopupActions` is a `final` field not yet assigned at that point in the constructor, its default value (`null`) is passed as a method argument. `PopupHandler.installPopupHandler` evaluates this argument eagerly, permanently capturing `null` as the action group for the popup handler it installs — leading to an IllegalArgumentException (IAE) whenever the popup is later triggered, since the field itself does get properly assigned afterward but the captured copy does not update.
+
+In `files/old/`, the constructor also calls `createDualView()` before `myPopupActions = createPopupActions();` (same superficial ordering), but the mechanism for wiring up the popup is structurally different:
+
+    myDualView.getTreeView().addMouseListener(new PopupHandler() {
+      public void invokePopup(Component comp, int x, int y) {
+        ActionPopupMenu popupMenu = ActionManager.getInstance()
+          .createActionPopupMenu(ActionPlaces.UPDATE_POPUP, myPopupActions);
+        popupMenu.getComponent().show(comp, x, y);
+      }
+    });
+
+Here `myPopupActions` is referenced directly inside the `invokePopup()` method body of an anonymous inner class, which captures the outer field itself (not a parameter value). This method is only invoked lazily later, when the user actually triggers a popup — by which time the constructor has fully completed and `myPopupActions` has been properly assigned its non-null value. There is no premature/frozen evaluation of a null value.
+
+Therefore, although the old version has the same *ordering* of `createDualView()` vs. the `myPopupActions` assignment, the underlying popup-installation mechanism does not eagerly capture the field value, so the initialization-order bug described in the fix (and the associated IAE) does not manifest in the old version. The bug was introduced later, when the code was refactored to use the `PopupHandler.installPopupHandler(...)` utility method (found in the buggy version) that passes `myPopupActions` as an eagerly-evaluated argument.

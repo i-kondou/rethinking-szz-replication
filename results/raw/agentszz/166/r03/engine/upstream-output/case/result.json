@@ -1,0 +1,22 @@
+{
+  "fix_commit": "7179f4d17786a5f4e8ec16b560b335609ea16dd2",
+  "bic": "4fc7f4447c990082e8322c42ebafd1f33a2e60aa",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit introduced the line `EnvVars env = context.getBuild().getEnvironment();` in InverseBuildChooser.java, which is precisely the line the fix commit replaces with `context.getEnvironment()`. The commit added branch specifier expansion using build environment variables but did so via `context.getBuild()`, which returns null during polling (no build available), causing the NPE described in the fix. This is a direct causal match between the buggy code and the fix.",
+  "metrics": {
+    "case_elapsed_seconds": 7.753884,
+    "api_elapsed_seconds": 7.573776,
+    "tool_elapsed_seconds": 0.053479,
+    "other_elapsed_seconds": 0.126638,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 13703,
+    "completion_tokens": 565,
+    "total_tokens": 14268,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T17:40:28.059948"
+}

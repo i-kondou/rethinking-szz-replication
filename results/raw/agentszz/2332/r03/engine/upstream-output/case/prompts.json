@@ -1,0 +1,361 @@
+[
+  {
+    "round": 1,
+    "agent": "executor",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are an expert at identifying Bug-Introducing Commits (BICs) in the Linux kernel.\n\nGiven a fix commit, find the commit that originally introduced the bug.\n\n## Tools\n\n1. **git_show(commit, context_lines, stat_only, file_filter)** \u2014 View commit message and diff. Use file_filter for one file's changes in large commits.\n2. **git_blame(file_path, commit, line_start, line_end)** \u2014 Show which commit last modified each line.\n3. **git_log_s(search_string, path, after, before)** \u2014 Search commits that added or removed a string (-S).\n4. **git_log_func(function_name, file_path, after, before)** \u2014 Track function body change history.\n5. **git_grep(search_string, commit, path)** \u2014 Search codebase at a commit snapshot.\n\n## Workflow\n\n### Step 1: git_blame at fix~1\n\nYour first tool call should be git_blame on the changed lines at fix~1 \u2014 this is the most efficient starting point for nearly all cases:\n- MODIFIED or REMOVED lines \u2192 blame those exact lines\n- ONLY ADDED lines (omission fix) \u2192 no deleted or modified lines to trace. Blame surrounding context (adjacent lines, function signature, callers) to find which commit established the code structure that should have included this logic. If context blame is inconclusive, use git_log_s or git_log_func to trace the related identifier's history.\n\nOnly start with git_log_s or git_grep instead if the fix message clearly describes a cross-file behavior change (file A's fix caused by a change in file B) or an omission bug where the surrounding context provides no useful blame signal.\n\n### Step 2: Evaluate Blame Results\n\nBlame returns multiple commits. When two or more distinct commits appear, git_show at least the most frequent one and the one directly on the buggy line. If they are the same commit, one git_show is sufficient.\n\nFor each, run git_show (use file_filter for multi-file commits) and classify:\n\n**Non-semantic change?** Signals:\n- Refactoring: message says refactor/rename/move/extract/split/accessor/cleanup/\"no functional change\"; diff is mechanical; semantics unchanged.\n- Merge or cherry-pick: commit merges branches or backports code without introducing new logic.\n- Meta-change: whitespace adjustment, comment-only edit, formatting, copyright update, import reordering.\n\n\u2192 If the commit message indicates refactoring, merge/cherry-pick, or meta-change, treat it as non-semantic and trace further back via git_blame at this_commit~1. Only reconsider if the diff contains changes clearly beyond what the message describes.\n\u2192 Exception: if the commit moves/adds an entire driver or subsystem (e.g. \"Move driver from staging\", \"Add new driver\"), it IS the BIC \u2014 it introduced the buggy code into the tree the fix targets. Do not trace back into staging or the original source.\n\u2192 If re-blame cannot continue (e.g., file was renamed or blame chain breaks), fall back to git_log_s on the relevant symbol to trace its origin across renames.\n\n**Semantic introduction?** The commit added new logic, changed an expression's meaning, or created the code the fix corrects.\n\n**Initial commit (1da177e4c3f4)?** Valid BIC \u2014 bug existed from start of git history. Report with high confidence. Also check the fix commit message: if it describes a long-standing issue, says the code \"never had\" something, or does not reference any specific introducing commit, and blame traces back to 1da177e4c3f4, that strongly confirms this is the BIC. Do not keep searching for a newer commit when blame already points here. Note: if the fix message says another commit \"exposed\", \"triggered\", or \"made visible\" the problem, that commit is NOT the BIC \u2014 it merely revealed a pre-existing bug.\n\n**Multiple semantic candidates?** The BIC is the one that introduced the CORE buggy logic. Ask: \"if this commit had never been written, would the bug exist?\" A later commit that adjusted existing logic is not the BIC.\n\n### Step 3: Report\n\nConfirm before outputting:\n- Candidate introduced buggy logic, not just reformatted code\n- Direct causal link to what the fix corrects\n- Evidence found \u2192 report it. Uncertainty is not a reason to return empty.\n\n<r>\nBIC: <full_commit_hash>\nconfidence: <high|medium|low>\ntype: <introduction|omission|cross_file|refactor_penetration>\nreasoning: <brief explanation>\n</r>\n\n## Tool Rules\n\n- git_log_s: include a path when possible; broaden only if empty. Use the fix commit date as the `before` upper bound \u2014 the BIC must predate the fix.\n- git_show on large commits: use file_filter.\n- Do not git_show the same commit more than twice.\n- Timeout \u2192 retry with narrower parameters.\n- file_filter returns \"no changes\" \u2192 file was at a different path in that commit. Try git_show WITHOUT file_filter to see the actual paths, or blame at commit~1."
+      },
+      {
+        "role": "user",
+        "content": "## Fix Commit\n\ncommit 052fc158198e97c6e44d9bdff1e5bf5595d61f83\nDate: Sat Nov 18 00:37:44 2017 +0100\n\nFix synchronization in TS3Api\n\nShould fix the issues\n\ndiff --git a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\nindex 57ef52d..f5d5cec 100644\n--- a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n+++ b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;\n \n import java.util.concurrent.ExecutorService;\n import java.util.concurrent.Executors;\n+import java.util.concurrent.atomic.AtomicBoolean;\n \n public class TS3Query {\n \n@@ -69,9 +70,10 @@ public class TS3Query {\n \tprivate final TS3ApiAsync asyncApi;\n \tprivate final TS3Config config;\n \n-\tprivate QueryIO io;\n+\tprivate final AtomicBoolean connected = new AtomicBoolean(false);\n+\tprivate final AtomicBoolean shuttingDown = new AtomicBoolean(false);\n \n-\tprivate volatile boolean connected;\n+\tprivate QueryIO io;\n \n \t/**\n \t * Creates a TS3Query that connects to a TS3 server at\n@@ -92,7 +94,6 @@ public class TS3Query {\n \t\tthis.config = config;\n \t\tthis.fileTransferHelper = new FileTransferHelper(config.getHost());\n \t\tthis.connectionHandler = config.getReconnectStrategy().create(config.getConnectionHandler());\n-\t\tthis.connected = false;\n \n \t\tthis.asyncApi = new TS3ApiAsync(this);\n \t\tthis.api = new TS3Api(asyncApi);\n@@ -111,7 +112,7 @@ public class TS3Query {\n \t\t}\n \n \t\tio = new QueryIO(this, config);\n-\t\tconnected = true;\n+\t\tconnected.set(true);\n \n \t\ttry {\n \t\t\tconnectionHandler.onConnect(this);\n@@ -124,22 +125,39 @@ public class TS3Query {\n \t/**\n \t * Removes and closes all used resources to the TeamSpeak server.\n \t */\n-\tpublic synchronized void exit() {\n-\t\tif (connected) {\n+\tpublic void exit() {\n+\t\tif (shuttingDown.compareAndSet(false, true)) {\n \t\t\t// Sending this command will guarantee that all previously sent commands have been processed\n \t\t\ttry {\n \t\t\t\tapi.quit();\n \t\t\t} catch (TS3Exception e) {\n \t\t\t\tlog.warn(\"Could not send a quit command to terminate the connection\", e);\n+\t\t\t} finally {\n+\t\t\t\tshutDown();\n+\t\t\t}\n+\t\t} else {\n+\t\t\t// Only 1 thread shall ever send quit, the rest of the threads wait for the first thread to finish\n+\t\t\ttry {\n+\t\t\t\tsynchronized (this) {\n+\t\t\t\t\twhile (connected.get()) {\n+\t\t\t\t\t\twait();\n+\t\t\t\t\t}\n+\t\t\t\t}\n+\t\t\t} catch (InterruptedException e) {\n+\t\t\t\t// Restore interrupt, then bail out\n+\t\t\t\tThread.currentThread().interrupt();\n \t\t\t}\n \t\t}\n+\t}\n \n+\tprivate synchronized void shutDown() {\n \t\tif (io != null) {\n \t\t\tio.disconnect();\n \t\t}\n \n-\t\tconnected = false;\n \t\tuserThreadPool.shutdown();\n+\t\tconnected.set(false);\n+\t\tnotifyAll();\n \t}\n \n \t/**\n@@ -161,7 +179,7 @@ public class TS3Query {\n \t * @see TS3Config#setConnectionHandler(ConnectionHandler)\n \t */\n \tpublic boolean isConnected() {\n-\t\treturn connected;\n+\t\treturn connected.get();\n \t}\n \n \tpublic TS3Api getApi() {\n@@ -200,19 +218,23 @@ public class TS3Query {\n \t}\n \n \tvoid fireDisconnect() {\n-\t\tconnected = false;\n+\t\tconnected.set(false);\n \n \t\tsubmitUserTask(\"ConnectionHandler disconnect task\", new Runnable() {\n \t\t\t@Override\n \t\t\tpublic void run() {\n-\t\t\t\ttry {\n-\t\t\t\t\tconnectionHandler.onDisconnect(TS3Query.this);\n-\t\t\t\t} finally {\n-\t\t\t\t\tif (!connected) {\n-\t\t\t\t\t\texit();\n-\t\t\t\t\t}\n-\t\t\t\t}\n+\t\t\t\thandleDisconnect();\n \t\t\t}\n \t\t});\n \t}\n+\n+\tprivate synchronized void handleDisconnect() {\n+\t\ttry {\n+\t\t\tconnectionHandler.onDisconnect(this);\n+\t\t} finally {\n+\t\t\tif (!connected.get()) {\n+\t\t\t\tshutDown();\n+\t\t\t}\n+\t\t}\n+\t}\n }\n\n**Fix commit date: 2017-11-18**. The BIC must be before this date. Use this as the upper bound for any date-based searches.\n\nFind the Bug-Introducing Commit (BIC) for this fix.\n"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01Rh2az2aU8nKdtRQrsNFdmV",
+            "function": {
+              "arguments": "{\"file_path\": \"src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\", \"commit\": \"052fc158198e97c6e44d9bdff1e5bf5595d61f83~1\"}",
+              "name": "git_blame"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01Rh2az2aU8nKdtRQrsNFdmV",
+        "content": "[58 lines, 9 unique commits: 5fd0d017e157, 4811ec5f9bf8, dfd3b283fadc, a5190d342469, 58b34e995277, a807b5aef72a, 6e2c73748637, 3f479e07bbb0, 4ba902d1d543]\nL1: 5fd0d017e157 | package com.github.theholywaffle.teamspeak3;\nL2: 5fd0d017e157 | \nL3: 4811ec5f9bf8 | /*\nL4: 4811ec5f9bf8 |  * #%L\nL5: 4811ec5f9bf8 |  * TeamSpeak 3 Java API\nL6: 4811ec5f9bf8 |  * %%\nL7: 4811ec5f9bf8 |  * Copyright (C) 2014 Bert De Geyter\nL8: 4811ec5f9bf8 |  * %%\nL9: 4811ec5f9bf8 |  * Permission is hereby granted, free of charge, to any person obtaining a copy\nL10: 4811ec5f9bf8 |  * of this software and associated documentation files (the \"Software\"), to deal\nL11: 4811ec5f9bf8 |  * in the Software without restriction, including without limitation the rights\nL12: 4811ec5f9bf8 |  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\nL13: 4811ec5f9bf8 |  * copies of the Software, and to permit persons to whom the Software is\nL14: 4811ec5f9bf8 |  * furnished to do so, subject to the following conditions:\nL15: 4811ec5f9bf8 |  * \nL16: 4811ec5f9bf8 |  * The above copyright notice and this permission notice shall be included in\nL17: 4811ec5f9bf8 |  * all copies or substantial portions of the Software.\nL18: 4811ec5f9bf8 |  * \nL19: 4811ec5f9bf8 |  * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nL20: 4811ec5f9bf8 |  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nL21: 4811ec5f9bf8 |  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nL22: 4811ec5f9bf8 |  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nL23: 4811ec5f9bf8 |  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nL24: 4811ec5f9bf8 |  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nL25: 4811ec5f9bf8 |  * THE SOFTWARE.\nL26: 4811ec5f9bf8 |  * #L%\nL27: 4811ec5f9bf8 |  */\nL28: 4811ec5f9bf8 | \nL29: dfd3b283fadc | import com.github.theholywaffle.teamspeak3.api.exception.TS3Exception;\nL30: a5190d342469 | import com.github.theholywaffle.teamspeak3.api.reconnect.ConnectionHandler;\nL31: 58b34e995277 | import com.github.theholywaffle.teamspeak3.api.reconnect.ReconnectStrategy;\nL32: a807b5aef72a | import com.github.theholywaffle.teamspeak3.commands.Command;\nL33: 6e2c73748637 | import org.slf4j.Logger;\nL34: 6e2c73748637 | import org.slf4j.LoggerFactory;\nL35: a807b5aef72a | \nL36: 3f479e07bbb0 | import java.util.concurrent.ExecutorService;\nL37: 3f479e07bbb0 | import java.util.concurrent.Executors;\nL38: 5fd0d017e157 | \nL39: 5fd0d017e157 | public class TS3Query {\nL40: 5fd0d017e157 | \nL41: 6e2c73748637 | \tprivate static final Logger log = LoggerFactory.getLogger(TS3Query.class);\nL42: 6e2c73748637 | \nL43: 4ba902d1d543 | \tpublic static class FloodRate {\nL44: 4ba902d1d543 | \nL45: 4ba902d1d543 | \t\tpublic static final FloodRate DEFAULT = new FloodRate(350);\nL46: 4ba902d1d543 | \t\tpublic static final FloodRate UNLIMITED = new FloodRate(0);\nL47: 4ba902d1d543 | \n\nCommits referenced:\n  5fd0d017e157  Initial Upload\n  4811ec5f9bf8  test\n  dfd3b283fadc  Remove TS3Query#doCommand. Use the sync API to send a quit command.\n  a5190d342469  Partially rewrote the reconnect system.\n  58b34e995277  Add TS3Query::isConnected getter.\n  a807b5aef72a  Added an asynchronous implementation of the existing TS3Api, TS3ApiAsync\n  6e2c73748637  Use slf4j instead of JUL (#185)\n  3f479e07bbb0  Early version of the reconnect feature.\n  4ba902d1d543  Drastically increase FloodRate.UNLIMITED command throughput\n"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01SuTKo4Uzskhu3oUUtGgtju",
+            "function": {
+              "arguments": "{\"file_path\": \"src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\", \"commit\": \"052fc158198e97c6e44d9bdff1e5bf5595d61f83~1\", \"line_start\": 100, \"line_end\": 180}",
+              "name": "git_blame"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01SuTKo4Uzskhu3oUUtGgtju",
+        "content": "L100: 5fd0d017e157 | \nL101: 3f479e07bbb0 | \t// PUBLIC\nL102: 3f479e07bbb0 | \nL103: c8156def8cdc | \tpublic synchronized void connect() {\nL104: 0d7540268dad | \t\tif (userThreadPool.isShutdown()) {\nL105: 0d7540268dad | \t\t\tthrow new IllegalStateException(\"The query has already been shut down\");\nL106: 0d7540268dad | \t\t}\nL107: 0d7540268dad | \nL108: 3f479e07bbb0 | \t\tQueryIO oldIO = io;\nL109: 3f479e07bbb0 | \t\tif (oldIO != null) {\nL110: 3f479e07bbb0 | \t\t\toldIO.disconnect();\nL111: 3f479e07bbb0 | \t\t}\nL112: 3f479e07bbb0 | \nL113: afd50d05a8ff | \t\tio = new QueryIO(this, config);\nL114: afd50d05a8ff | \t\tconnected = true;\nL115: bbb1511a2aef | \nL116: 3f479e07bbb0 | \t\ttry {\nL117: a5190d342469 | \t\t\tconnectionHandler.onConnect(this);\nL118: afd50d05a8ff | \t\t} catch (Exception e) {\nL119: afd50d05a8ff | \t\t\tlog.error(\"ConnectionHandler threw exception in connect handler\", e);\nL120: 5fd0d017e157 | \t\t}\nL121: 3f479e07bbb0 | \t\tio.continueFrom(oldIO);\nL122: 5fd0d017e157 | \t}\nL123: 5fd0d017e157 | \nL124: 3f479e07bbb0 | \t/**\nL125: 0d7540268dad | \t * Removes and closes all used resources to the TeamSpeak server.\nL126: 3f479e07bbb0 | \t */\nL127: c8156def8cdc | \tpublic synchronized void exit() {\nL128: fd5b5a4b3238 | \t\tif (connected) {\nL129: dfd3b283fadc | \t\t\t// Sending this command will guarantee that all previously sent commands have been processed\nL130: dfd3b283fadc | \t\t\ttry {\nL131: dfd3b283fadc | \t\t\t\tapi.quit();\nL132: dfd3b283fadc | \t\t\t} catch (TS3Exception e) {\nL133: dfd3b283fadc | \t\t\t\tlog.warn(\"Could not send a quit command to terminate the connection\", e);\nL134: dfd3b283fadc | \t\t\t}\nL135: fd5b5a4b3238 | \t\t}\nL136: 3f479e07bbb0 | \nL137: 0d7540268dad | \t\tif (io != null) {\nL138: 0d7540268dad | \t\t\tio.disconnect();\nL139: 0d7540268dad | \t\t}\nL140: 0d7540268dad | \nL141: 58b34e995277 | \t\tconnected = false;\n\nCommits referenced:\n  5fd0d017e157  Initial Upload\n  3f479e07bbb0  Early version of the reconnect feature.\n  c8156def8cdc  Fix race condition on TS3Query#io\n  0d7540268dad  Don't throw an NPE if TS3Query::exit is called before connecting\n  afd50d05a8ff  Resolve some outstanding code issues\n  bbb1511a2aef  - Centralized settings with TS3Config\n  a5190d342469  Partially rewrote the reconnect system.\n  fd5b5a4b3238  Let's try fixing connection handlers & reconnects in general\n  dfd3b283fadc  Remove TS3Query#doCommand. Use the sync API to send a quit command.\n  58b34e995277  Add TS3Query::isConnected getter.\n"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01MmyvQ4Uu2YjpzypqfJuFnh",
+            "function": {
+              "arguments": "{\"commit\": \"c8156def8cdc\", \"file_filter\": \"src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\"}",
+              "name": "git_show"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01MmyvQ4Uu2YjpzypqfJuFnh",
+        "content": "commit c8156def8cdc0f33f763b3edd9cec79f86c9b390\nDate: Tue Jul 11 00:13:19 2017 +0200\n\nFix race condition on TS3Query#io\n\ndiff --git a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\nindex adf65cb..c14edc4 100644\n--- a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n+++ b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n@@ -100,7 +100,7 @@ public class TS3Query {\n \n \t// PUBLIC\n \n-\tpublic void connect() {\n+\tpublic synchronized void connect() {\n \t\tif (userThreadPool.isShutdown()) {\n \t\t\tthrow new IllegalStateException(\"The query has already been shut down\");\n \t\t}\n@@ -124,7 +124,7 @@ public class TS3Query {\n \t/**\n \t * Removes and closes all used resources to the TeamSpeak server.\n \t */\n-\tpublic void exit() {\n+\tpublic synchronized void exit() {\n \t\tif (connected) {\n \t\t\t// Sending this command will guarantee that all previously sent commands have been processed\n \t\t\ttry {\n@@ -174,7 +174,7 @@ public class TS3Query {\n \n \t// INTERNAL\n \n-\tvoid doCommandAsync(Command c) {\n+\tsynchronized void doCommandAsync(Command c) {\n \t\tio.enqueueCommand(c);\n \t}"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01S6t7o5mqxiNzW8PAnY35Go",
+            "function": {
+              "arguments": "{\"search_string\": \"fireDisconnect\", \"path\": \"src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\", \"before\": \"2017-11-18\"}",
+              "name": "git_log_s"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01S6t7o5mqxiNzW8PAnY35Go",
+        "content": "commit fd5b5a4b3238b34ecdceb6e24e113dfc80fa93fa\nDate: Wed Feb 22 18:15:59 2017 +0100\n\n    Let's try fixing connection handlers & reconnects in general\n\ncommit 3f479e07bbb0b6934daae712e961a5bcbe9e90a5\nDate: Sun Nov 08 12:31:29 2015 +0100\n\n    Early version of the reconnect feature."
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01RVEgrZEFv2ybd85MEpsd8n",
+            "function": {
+              "arguments": "{\"commit\": \"fd5b5a4b3238\", \"file_filter\": \"src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\"}",
+              "name": "git_show"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01RVEgrZEFv2ybd85MEpsd8n",
+        "content": "commit fd5b5a4b3238b34ecdceb6e24e113dfc80fa93fa\nDate: Wed Feb 22 18:15:59 2017 +0100\n\nLet's try fixing connection handlers & reconnects in general\n\n\n[diff: context lines stripped, 62 lines dropped]\ndiff --git a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\nindex d7f9d00..ee68df7 100644\n--- a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n+++ b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n@@ -64,15 +64,17 @@ public class TS3Query {\n-\tprivate final ExecutorService userThreadPool = Executors.newCachedThreadPool();\n+\tprivate final ConnectionHandler connectionHandler;\n+\tprivate final ExecutorService userThreadPool = Executors.newCachedThreadPool();\n+\tprivate final TS3Api api;\n+\tprivate final TS3ApiAsync asyncApi;\n-\tprivate final ConnectionHandler connectionHandler;\n-\tprivate TS3Api api;\n-\tprivate TS3ApiAsync asyncApi;\n+\n+\tprivate volatile boolean connected;\n@@ -96,11 +98,15 @@ public class TS3Query {\n+\t\tthis.connected = false;\n+\n+\t\tthis.api = new TS3Api(this);\n+\t\tthis.asyncApi = new TS3ApiAsync(this);\n-\tpublic TS3Query connect() {\n+\tpublic void connect() {\n@@ -108,8 +114,8 @@ public class TS3Query {\n+\t\t\tconnected = true;\n-\t\t\tfireDisconnect();\n@@ -119,17 +125,17 @@ public class TS3Query {\n-\n-\t\treturn this;\n-\t\t// Send a quit command synchronously\n-\t\t// This will guarantee that all previously sent commands have been processed\n-\t\tdoCommand(new CQuit());\n+\t\tif (connected) {\n+\t\t\t// Send a quit command synchronously\n+\t\t\t// This will guarantee that all previously sent commands have been processed\n+\t\t\tdoCommand(new CQuit());\n+\t\t}\n@@ -139,16 +145,10 @@ public class TS3Query {\n-\t\tif (api == null) {\n-\t\t\tapi = new TS3Api(this);\n-\t\t}\n-\t\tif (asyncApi == null) {\n-\t\t\tasyncApi = new TS3ApiAsync(this);\n-\t\t}\n@@ -184,6 +184,8 @@ public class TS3Query {\n+\t\tconnected = false;\n+\n@@ -192,6 +194,10 @@ public class TS3Query {\n+\n+\t\t\t\tif (!connected) {\n+\t\t\t\t\texit();\n+\t\t\t\t}"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_016aswr23pMLst1BJimagbNE",
+            "function": {
+              "arguments": "{\"commit\": \"fd5b5a4b3238\", \"file_filter\": \"src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\", \"context_lines\": 10}",
+              "name": "git_show"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_016aswr23pMLst1BJimagbNE",
+        "content": "commit fd5b5a4b3238b34ecdceb6e24e113dfc80fa93fa\nDate: Wed Feb 22 18:15:59 2017 +0100\n\nLet's try fixing connection handlers & reconnects in general\n\n\n[diff: context lines stripped, 107 lines dropped]\ndiff --git a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\nindex d7f9d00..ee68df7 100644\n--- a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n+++ b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n@@ -57,29 +57,31 @@ public class TS3Query {\n-\tprivate final ExecutorService userThreadPool = Executors.newCachedThreadPool();\n+\tprivate final ConnectionHandler connectionHandler;\n+\tprivate final ExecutorService userThreadPool = Executors.newCachedThreadPool();\n+\tprivate final TS3Api api;\n+\tprivate final TS3ApiAsync asyncApi;\n-\tprivate final ConnectionHandler connectionHandler;\n-\tprivate TS3Api api;\n-\tprivate TS3ApiAsync asyncApi;\n+\n+\tprivate volatile boolean connected;\n@@ -89,73 +91,71 @@ public class TS3Query {\n+\t\tthis.connected = false;\n+\n+\t\tthis.api = new TS3Api(this);\n+\t\tthis.asyncApi = new TS3ApiAsync(this);\n-\tpublic TS3Query connect() {\n+\tpublic void connect() {\n+\t\t\tconnected = true;\n-\t\t\tfireDisconnect();\n-\n-\t\treturn this;\n-\t\t// Send a quit command synchronously\n-\t\t// This will guarantee that all previously sent commands have been processed\n-\t\tdoCommand(new CQuit());\n+\t\tif (connected) {\n+\t\t\t// Send a quit command synchronously\n+\t\t\t// This will guarantee that all previously sent commands have been processed\n+\t\t\tdoCommand(new CQuit());\n+\t\t}\n-\t\tif (api == null) {\n-\t\t\tapi = new TS3Api(this);\n-\t\t}\n-\t\tif (asyncApi == null) {\n-\t\t\tasyncApi = new TS3ApiAsync(this);\n-\t\t}\n@@ -177,22 +177,28 @@ public class TS3Query {\n+\t\tconnected = false;\n+\n+\n+\t\t\t\tif (!connected) {\n+\t\t\t\t\texit();\n+\t\t\t\t}"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_0185yTSvBRDWrextDiqVg27Z",
+            "function": {
+              "arguments": "{\"commit\": \"fd5b5a4b3238\", \"file_filter\": \"src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\", \"context_lines\": 30}",
+              "name": "git_show"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_0185yTSvBRDWrextDiqVg27Z",
+        "content": "commit fd5b5a4b3238b34ecdceb6e24e113dfc80fa93fa\nDate: Wed Feb 22 18:15:59 2017 +0100\n\nLet's try fixing connection handlers & reconnects in general\n\n\n[diff: context lines stripped, 145 lines dropped]\ndiff --git a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\nindex d7f9d00..ee68df7 100644\n--- a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n+++ b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n@@ -37,162 +37,168 @@ import java.util.concurrent.ExecutorService;\n-\tprivate final ExecutorService userThreadPool = Executors.newCachedThreadPool();\n+\tprivate final ConnectionHandler connectionHandler;\n+\tprivate final ExecutorService userThreadPool = Executors.newCachedThreadPool();\n+\tprivate final TS3Api api;\n+\tprivate final TS3ApiAsync asyncApi;\n-\tprivate final ConnectionHandler connectionHandler;\n-\tprivate TS3Api api;\n-\tprivate TS3ApiAsync asyncApi;\n+\n+\tprivate volatile boolean connected;\n+\t\tthis.connected = false;\n+\n+\t\tthis.api = new TS3Api(this);\n+\t\tthis.asyncApi = new TS3ApiAsync(this);\n-\tpublic TS3Query connect() {\n+\tpublic void connect() {\n+\t\t\tconnected = true;\n-\t\t\tfireDisconnect();\n-\n-\t\treturn this;\n-\t\t// Send a quit command synchronously\n-\t\t// This will guarantee that all previously sent commands have been processed\n-\t\tdoCommand(new CQuit());\n+\t\tif (connected) {\n+\t\t\t// Send a quit command synchronously\n+\t\t\t// This will guarantee that all previously sent commands have been processed\n+\t\t\tdoCommand(new CQuit());\n+\t\t}\n-\t\tif (api == null) {\n-\t\t\tapi = new TS3Api(this);\n-\t\t}\n-\t\tif (asyncApi == null) {\n-\t\t\tasyncApi = new TS3ApiAsync(this);\n-\t\t}\n+\t\tconnected = false;\n+\n+\n+\t\t\t\tif (!connected) {\n+\t\t\t\t\texit();\n+\t\t\t\t}"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_014hMb9rfRbR5aTtEzam1qBJ",
+            "function": {
+              "arguments": "{\"commit\": \"fd5b5a4b3238\"}",
+              "name": "git_show"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_014hMb9rfRbR5aTtEzam1qBJ",
+        "content": "commit fd5b5a4b3238b34ecdceb6e24e113dfc80fa93fa\nDate: Wed Feb 22 18:15:59 2017 +0100\n\nLet's try fixing connection handlers & reconnects in general\n\n\n[diff: context lines stripped, 90 lines dropped]\ndiff --git a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\nindex d7f9d00..ee68df7 100644\n--- a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n+++ b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n@@ -64,15 +64,17 @@ public class TS3Query {\n-\tprivate final ExecutorService userThreadPool = Executors.newCachedThreadPool();\n+\tprivate final ConnectionHandler connectionHandler;\n+\tprivate final ExecutorService userThreadPool = Executors.newCachedThreadPool();\n+\tprivate final TS3Api api;\n+\tprivate final TS3ApiAsync asyncApi;\n-\tprivate final ConnectionHandler connectionHandler;\n-\tprivate TS3Api api;\n-\tprivate TS3ApiAsync asyncApi;\n+\n+\tprivate volatile boolean connected;\n@@ -96,11 +98,15 @@ public class TS3Query {\n+\t\tthis.connected = false;\n+\n+\t\tthis.api = new TS3Api(this);\n+\t\tthis.asyncApi = new TS3ApiAsync(this);\n-\tpublic TS3Query connect() {\n+\tpublic void connect() {\n@@ -108,8 +114,8 @@ public class TS3Query {\n+\t\t\tconnected = true;\n-\t\t\tfireDisconnect();\n@@ -119,17 +125,17 @@ public class TS3Query {\n-\n-\t\treturn this;\n-\t\t// Send a quit command synchronously\n-\t\t// This will guarantee that all previously sent commands have been processed\n-\t\tdoCommand(new CQuit());\n+\t\tif (connected) {\n+\t\t\t// Send a quit command synchronously\n+\t\t\t// This will guarantee that all previously sent commands have been processed\n+\t\t\tdoCommand(new CQuit());\n+\t\t}\n@@ -139,16 +145,10 @@ public class TS3Query {\n-\t\tif (api == null) {\n-\t\t\tapi = new TS3Api(this);\n-\t\t}\n\n... [32 diff lines omitted, 11 hunks total] ...\n\n-\t\t\t// Do not attempt to reconnect\n-\t\t\treturn;\n-\t\t} else if (timeout == startTimeout) {\n-\t\t\t// First run, announce disconnect\n-\t\t\tTS3Query.log.info(\"[Connection] Disconnected from TS3 server\");\n-\n-\t\t\tif (userConnectionHandler != null) {\n-\t\t\t\tuserConnectionHandler.onDisconnect(ts3Query);\n-\t\t\t}\n+\t\t// Announce disconnect and run user connection handler\n+\t\tTS3Query.log.info(\"[Connection] Disconnected from TS3 server - reconnecting in \" + startTimeout + \"ms\");\n+\t\tif (userConnectionHandler != null) {\n+\t\t\tuserConnectionHandler.onDisconnect(ts3Query);\n-\t\ttimeout = (int) Math.ceil(timeout * multiplier) + addend;\n-\t\tif (timeoutCap > 0) timeout = Math.min(timeout, timeoutCap);\n+\t\tint timeout = startTimeout;\n-\t\ttry {\n-\t\t\tThread.sleep(timeout);\n-\t\t} catch (InterruptedException e) {\n-\t\t\treturn;\n-\t\t}\n+\t\twhile (true) {\n+\t\t\ttry {\n+\t\t\t\tThread.sleep(timeout);\n+\t\t\t} catch (InterruptedException e) {\n+\t\t\t\treturn;\n+\t\t\t}\n-\t\ttry {\n-\t\t\tts3Query.connect();\n-\t\t} catch (TS3ConnectionFailedException conFailed) {\n-\t\t\t// Ignore exception, announce reconnect failure\n-\t\t\tTS3Query.log.fine(\"[Connection] Failed to reconnect - waiting \" + timeout + \"ms until next attempt\");\n+\t\t\ttimeout = (int) Math.ceil(timeout * multiplier) + addend;\n+\t\t\tif (timeoutCap > 0) timeout = Math.min(timeout, timeoutCap);\n+\n+\t\t\ttry {\n+\t\t\t\tts3Query.connect();\n+\t\t\t\treturn; // Successfully reconnected, return\n+\t\t\t} catch (TS3ConnectionFailedException conFailed) {\n+\t\t\t\t// Ignore exception, announce reconnect failure"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01QrXD1ViQFvkAA5ifSXEWoG",
+            "function": {
+              "arguments": "{\"commit\": \"fd5b5a4b3238~1:src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\"}",
+              "name": "git_show"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01QrXD1ViQFvkAA5ifSXEWoG",
+        "content": "\n\n"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01YX7FX8fauHg1dg1g8fBfXJ",
+            "function": {
+              "arguments": "{\"search_string\": \"fireDisconnect\", \"commit\": \"fd5b5a4b3238\"}",
+              "name": "git_grep"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01YX7FX8fauHg1dg1g8fBfXJ",
+        "content": "src/main/java/com/github/theholywaffle/teamspeak3/SocketReader.java:150:\t\t\tts3.fireDisconnect();\nsrc/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java:186:\tvoid fireDisconnect() {"
+      },
+      {
+        "content": "This commit (fd5b5a4b3238) introduced fireDisconnect() with the pattern `connected = false; ... if (!connected) exit();` that leads to the race condition being fixed. Let me look at the full fireDisconnect logic to confirm this is the origin of the racy pattern.",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01LLSQHJpyTavso8UDz3YKc7",
+            "function": {
+              "arguments": "{\"commit\": \"fd5b5a4b3238\", \"file_filter\": \"src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\", \"context_lines\": 5}",
+              "name": "git_show"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01LLSQHJpyTavso8UDz3YKc7",
+        "content": "commit fd5b5a4b3238b34ecdceb6e24e113dfc80fa93fa\nDate: Wed Feb 22 18:15:59 2017 +0100\n\nLet's try fixing connection handlers & reconnects in general\n\n\n[diff: context lines stripped, 82 lines dropped]\ndiff --git a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\nindex d7f9d00..ee68df7 100644\n--- a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n+++ b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n@@ -62,19 +62,21 @@ public class TS3Query {\n-\tprivate final ExecutorService userThreadPool = Executors.newCachedThreadPool();\n+\tprivate final ConnectionHandler connectionHandler;\n+\tprivate final ExecutorService userThreadPool = Executors.newCachedThreadPool();\n+\tprivate final TS3Api api;\n+\tprivate final TS3ApiAsync asyncApi;\n-\tprivate final ConnectionHandler connectionHandler;\n-\tprivate TS3Api api;\n-\tprivate TS3ApiAsync asyncApi;\n+\n+\tprivate volatile boolean connected;\n@@ -94,63 +96,61 @@ public class TS3Query {\n+\t\tthis.connected = false;\n+\n+\t\tthis.api = new TS3Api(this);\n+\t\tthis.asyncApi = new TS3ApiAsync(this);\n-\tpublic TS3Query connect() {\n+\tpublic void connect() {\n+\t\t\tconnected = true;\n-\t\t\tfireDisconnect();\n-\n-\t\treturn this;\n-\t\t// Send a quit command synchronously\n-\t\t// This will guarantee that all previously sent commands have been processed\n-\t\tdoCommand(new CQuit());\n+\t\tif (connected) {\n+\t\t\t// Send a quit command synchronously\n+\t\t\t// This will guarantee that all previously sent commands have been processed\n+\t\t\tdoCommand(new CQuit());\n+\t\t}\n-\t\tif (api == null) {\n-\t\t\tapi = new TS3Api(this);\n-\t\t}\n-\t\tif (asyncApi == null) {\n-\t\t\tasyncApi = new TS3ApiAsync(this);\n-\t\t}\n@@ -182,17 +182,23 @@ public class TS3Query {\n+\t\tconnected = false;\n+\n+\n+\t\t\t\tif (!connected) {\n+\t\t\t\t\texit();\n+\t\t\t\t}"
+      },
+      {
+        "content": "This confirms fd5b5a4b3238 introduced the `fireDisconnect()` method with the `connected = false; ... if (!connected) exit();` pattern that later needed synchronization to prevent races \u2014 exactly the pattern the fix commit rewrote into `handleDisconnect()` with proper synchronization guards.",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01QRVwVxLSj1AAVtaPdaA8kX",
+            "function": {
+              "arguments": "{\"search_string\": \"public void fireDisconnect\", \"commit\": \"fd5b5a4b3238\"}",
+              "name": "git_grep"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01QRVwVxLSj1AAVtaPdaA8kX",
+        "content": "No matches found for 'public void fireDisconnect' at fd5b5a4b3238"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_015LHAmqagubuMkpbPKfGsk7",
+            "function": {
+              "arguments": "{\"search_string\": \"void fireDisconnect\", \"commit\": \"fd5b5a4b3238~1\"}",
+              "name": "git_grep"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_015LHAmqagubuMkpbPKfGsk7",
+        "content": "src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java:186:\tvoid fireDisconnect() {"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_017ZRByE4sJQQ4MqpgMJA47n",
+            "function": {
+              "arguments": "{\"search_string\": \"void fireDisconnect\", \"path\": \"src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\", \"before\": \"2017-11-18\"}",
+              "name": "git_log_s"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_017ZRByE4sJQQ4MqpgMJA47n",
+        "content": "commit 3f479e07bbb0b6934daae712e961a5bcbe9e90a5\nDate: Sun Nov 08 12:31:29 2015 +0100\n\n    Early version of the reconnect feature."
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01EHUCJ5kWPh9uvL422xhbuq",
+            "function": {
+              "arguments": "{\"commit\": \"3f479e07bbb0\", \"file_filter\": \"src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\"}",
+              "name": "git_show"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01EHUCJ5kWPh9uvL422xhbuq",
+        "content": "commit 3f479e07bbb0b6934daae712e961a5bcbe9e90a5\nDate: Sun Nov 08 12:31:29 2015 +0100\n\nEarly version of the reconnect feature.\n\nThis will probably be not be the final version, but should be is functional as of now.\n\nTS3Config.setLoginCredentials had to be removed. Use TS3(Async)Api.login instead. I might add it in again at a later time to restore backwards-compatibility.\n\nThere has also been quite a bit of internal refactoring. If you've directly been accessing the IO part of the API, your code will break. If you absolutely need to have access to these parts of the API, let me know. Else the IO part will stay hidden from the user.\n\n\n[diff: context lines stripped, 53 lines dropped]\ndiff --git a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\nindex a50dfc5..0bb48b9 100644\n--- a/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n+++ b/src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java\n@@ -32,13 +32,10 @@ import com.github.theholywaffle.teamspeak3.commands.CQuit;\n-import java.io.BufferedReader;\n-import java.io.IOException;\n-import java.io.InputStreamReader;\n-import java.io.PrintStream;\n-import java.net.Socket;\n-import java.util.concurrent.ConcurrentLinkedQueue;\n+import java.util.concurrent.ExecutorService;\n+import java.util.concurrent.Executors;\n+import java.util.logging.Level;\n@@ -59,18 +56,30 @@ public class TS3Query {\n+\n+\tprivate final ExecutorService userThreadPool = Executors.newCachedThreadPool();\n-\tprivate Socket socket;\n-\tprivate PrintStream out;\n-\tprivate BufferedReader in;\n-\tprivate SocketReader socketReader;\n-\tprivate SocketWriter socketWriter;\n-\tprivate KeepAliveThread keepAlive;\n-\tprivate ConcurrentLinkedQueue<Command> commandList = new ConcurrentLinkedQueue<>();\n+\n+\tprivate QueryIO io;\n+\t/**\n+\t * Creates a TS3Query that connects to a TS3 server at\n+\t * {@code localhost:10011} using default settings.\n+\t */\n+\tpublic TS3Query() {\n+\t\tthis(new TS3Config());\n+\t}\n+\n+\t/**\n+\t * Creates a customized TS3Query that connects to a server\n+\t * specified by {@code config}.\n+\t *\n+\t * @param config\n+\t * \t\tconfiguration for this TS3Query\n\n... [69 diff lines omitted, 5 hunks total] ...\n\n+\tboolean doCommand(Command c) {\n+\t\tfinal long end = System.currentTimeMillis() + config.getCommandTimeout();\n@@ -126,10 +154,8 @@ public class TS3Query {\n-\t\tsocketReader.registerCallback(c, callback);\n-\t\tfinal long end = System.currentTimeMillis() + config.getCommandTimeout();\n-\t\tcommandList.offer(c);\n+\t\tio.queueCommand(c, callback);\n@@ -154,92 +180,32 @@ public class TS3Query {\n-\tpublic void doCommandAsync(final Command c) {\n+\tvoid doCommandAsync(Command c) {\n-\tpublic void doCommandAsync(final Command c, final Callback callback) {\n-\t\tif (callback != null) {\n-\t\t\tsocketReader.registerCallback(c, callback);\n-\t\t}\n-\t\tcommandList.offer(c);\n-\t}\n-\n-\t/**\n-\t * Removes and closes all used resources to the teamspeak server.\n-\t */\n-\tpublic void exit() {\n-\t\t// Send a quit command synchronously\n-\t\t// This will guarantee that all previously sent commands have been processed\n-\t\tdoCommand(new CQuit());\n-\n-\t\tif (keepAlive != null) {\n-\t\t\tkeepAlive.interrupt();\n-\t\t}\n-\t\tif (socketWriter != null) {\n-\t\t\tsocketWriter.interrupt();\n-\t\t}\n-\t\tif (socketReader != null) {\n-\t\t\tsocketReader.interrupt();\n-\t\t}\n-\n-\t\tif (out != null) {\n-\t\t\tout.close();\n-\t\t}\n-\t\tif (in != null) {\n-\t\t\ttry {"
+      }
+    ]
+  }
+]

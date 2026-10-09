@@ -1,0 +1,22 @@
+{
+  "fix_commit": "d33e5278b211753ac3d46acb7d6213f3ae75e087",
+  "bic": "406fd95d87bfcdbb282d65589ab1fb6e9fd0018a",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"Add RBD support for primary storage\") introduced the original RBD options string construction in KVMPhysicalDisk.java, including the line `rbdOpts += \":mon_host=\" + monHost + \"\\\\\\\\:\" + monPort;` which contains the double-escaped colon (`\\\\\\\\:` instead of `\\\\:`). Subsequent commits (fb9ceba93bbd, c3554ec31daf) modified surrounding logic (conditional on port) but retained the same double-escape bug, which the fix commit d33e5278b2 finally corrects by changing `\\\\\\\\:` to `\\\\:`. Since this is the commit that first wrote the double-escaped separator, it is the root cause.",
+  "metrics": {
+    "case_elapsed_seconds": 43.372696,
+    "api_elapsed_seconds": 34.313589,
+    "tool_elapsed_seconds": 8.900255,
+    "other_elapsed_seconds": 0.158856,
+    "api_call_count": 11,
+    "tool_call_count": 10,
+    "prompt_tokens": 81924,
+    "completion_tokens": 2022,
+    "total_tokens": 83946,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T19:57:09.705371"
+}

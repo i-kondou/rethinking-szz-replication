@@ -1,0 +1,64 @@
+SELECTED: candidate_01
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit ("Quantifiers are no Application terms any more") patches
+Z3UnsafeFormulaManager.java by:
+1. Adding an explicit `case Z3_QUANTIFIER_AST: return false;` branch to
+   isAtom(), so quantified formulas are no longer misclassified as atoms.
+2. Adding `Preconditions.checkArgument(get_ast_kind(z3context, t) ==
+   Z3_APP_AST)` guards to getArity(t) and getArg(t, n), so that calling
+   these methods on a non-application (e.g. quantifier) AST node fails
+   fast instead of silently returning garbage from the native Z3 API.
+
+Tracing Z3UnsafeFormulaManager.java back through the candidate history
+shows that this exact defective code was introduced in candidate_01, the
+very first commit that added the file (as z3/Z3UnsafeFormulaManager.java,
+newly created, hash 8a8b868):
+
+    public boolean isAtom(Long t) {
+      int astKind = get_ast_kind(z3context, t);
+      switch (astKind) {
+      case Z3_APP_AST:
+        long decl = get_app_decl(z3context, t);
+        return !nonAtomicOpTypes.contains(get_decl_kind(z3context, decl));
+      default:
+        return true;   // <-- quantifiers fall into this branch and are
+                        //     incorrectly treated as atoms
+      }
+    }
+
+    public int getArity(Long t) {
+      return get_app_num_args(z3context, t);   // no check that t is Z3_APP_AST
+    }
+
+    public Long getArg(Long t, int n) {
+      return get_app_arg(z3context, t, n);     // no check that t is Z3_APP_AST
+    }
+
+This is precisely the logic later corrected by the fix. All later
+candidates (02-11) only rename local variables/constants
+(nonAtomicOpTypes -> NON_ATOMIC_OP_TYPES in candidate_08, index
+d339ea7..bfb713b, which exactly matches the pre-fix blob hash bfb713b
+referenced in fix_commit_diff.txt), refactor unrelated code
+(replaceQuantifiedBody array handling in candidate_06), change the
+constant's type (Set -> ImmutableSet in candidate_07), fix license
+headers/imports (candidates_04/05), rename files into the src/ package
+layout (candidate_02), apply checkstyle/whitespace fixes (candidate_03),
+or add/adjust the SolverQuantifierTest test file (candidate_09 adds the
+test class without introspection tests; candidate_10 adds
+testIntrospectionForall/testIntrospectionExists but must wrap them with an
+explicit `assume().withFailureMessage("Bug in Z3QuantifiedFormulaManager")
+.that(solverToUse()).isNotEqualTo(Solvers.Z3)` workaround, acknowledging
+the known bug rather than fixing it). None of these intermediate commits
+touch the switch statement or add quantifier handling to
+isAtom/getArity/getArg -- the flawed logic is carried forward unchanged
+from candidate_01 all the way to candidate_08 (the commit immediately
+preceding the fix). candidate_11 is an exact duplicate of the fix commit
+itself (same index bfb713b..4510884 and identical changes), so it
+represents the fix, not the introduction of the bug.
+
+Since candidate_01 is where this specific buggy code pattern (treating
+quantifier ASTs as atoms/application terms in Z3UnsafeFormulaManager) was
+first introduced, it is the bug-introducing commit.

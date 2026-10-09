@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "kind": "claude-szz-agentic-baseline-subject-run",
+  "created_at": "2026-09-07T08:33:21.076751+00:00",
+  "state": "completed",
+  "scientific_result": true,
+  "test_stub": false,
+  "baseline": "agentszz",
+  "sample_id": "38",
+  "repository": "open-keychain/open-keychain",
+  "synthetic_fix_hash": "45bddf5b5c2d9df754f984fb1cf9bf6b6e254441",
+  "model": "claude-sonnet-5",
+  "base_url": "https://api.anthropic.com/v1/",
+  "per_run_cap_usd": "5",
+  "model_started": true,
+  "reported_cost_usd": "0.230800",
+  "duration_seconds": 77.8983209169819,
+  "predicted_bics": [
+    "d6e4936fa54dc3577296dbadaeb556178dcad2c3"
+  ],
+  "reasoning": "This commit (\"Introduce allowed keys table per API client\") bumped DATABASE_VERSION from 7 to 8 and added the switch-case migration block for the new api_allowed_keys table. However, it introduced a superfluous \"case 7: // consolidate\" case that falls through into \"case 8:\" without ever being tied to an actual database version bump — effectively adding an extra, non-functional case label into the fall-through chain. This caused every subsequent case number in the switch statement to be off-by-one relative to the actual DATABASE_VERSION progression, which is precisely the \"ridiculous database migration bug\" that commit 45bddf5b5c2d fixes by removing the stray \"case 7: // consolidate\" line and renumbering all following cases down by one.",
+  "confidence": "high",
+  "upstream_metrics": {
+    "case_elapsed_seconds": 77.64917,
+    "api_elapsed_seconds": 77.166409,
+    "tool_elapsed_seconds": 0.354923,
+    "other_elapsed_seconds": 0.127841,
+    "api_call_count": 9,
+    "tool_call_count": 8,
+    "prompt_tokens": 92360,
+    "completion_tokens": 4608,
+    "total_tokens": 96968,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "provider_calls": [
+    {
+      "input_tokens": 4577,
+      "output_tokens": 244,
+      "cost_usd_equivalent": "0.011594",
+      "elapsed_seconds": 6.899154292012099
+    },
+    {
+      "input_tokens": 6538,
+      "output_tokens": 255,
+      "cost_usd_equivalent": "0.015626",
+      "elapsed_seconds": 5.1684557080152445
+    },
+    {
+      "input_tokens": 7732,
+      "output_tokens": 1084,
+      "cost_usd_equivalent": "0.026304",
+      "elapsed_seconds": 15.747878250025678
+    },
+    {
+      "input_tokens": 10145,
+      "output_tokens": 772,
+      "cost_usd_equivalent": "0.02801",
+      "elapsed_seconds": 10.84613449999597
+    },
+    {
+      "input_tokens": 11417,
+      "output_tokens": 280,
+      "cost_usd_equivalent": "0.025634",
+      "elapsed_seconds": 5.233256834035274
+    },
+    {
+      "input_tokens": 11730,
+      "output_tokens": 569,
+      "cost_usd_equivalent": "0.02915",
+      "elapsed_seconds": 9.257350041996688
+    },
+    {
+      "input_tokens": 12024,
+      "output_tokens": 530,
+      "cost_usd_equivalent": "0.029348",
+      "elapsed_seconds": 8.873295874975156
+    },
+    {
+      "input_tokens": 13361,
+      "output_tokens": 437,
+      "cost_usd_equivalent": "0.031092",
+      "elapsed_seconds": 7.697422374971211
+    },
+    {
+      "input_tokens": 14836,
+      "output_tokens": 437,
+      "cost_usd_equivalent": "0.034042",
+      "elapsed_seconds": 7.434707415988669
+    }
+  ],
+  "source_provenance": {
+    "manifest_path": "/Users/user-01/research/workspaces/claude-szz/implementation/config/agentic-baseline-sources.json",
+    "manifest_sha256": "8fc7276c1bd2772698abeeaabfc6cc1a6bb24aac89db5601f27da49933147fb0",
+    "agentszz_source_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentszz-figshare-v2/replication_package/agentszz",
+    "agentszz_source_tree_sha256": "3436d1b781b11c9b2bf962105355f5f4ded84ede0ec599bda848e0cff9c72777",
+    "agentic_szz_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz",
+    "agentic_szz_commit": "0012a507b9087f15cdad340888a837f5618a3c29",
+    "agentic_szz_git_tree": "738bf1e17594df62dd198f7ffc220d728223b454",
+    "agentszz_python": {
+      "version": "3.11.11",
+      "modules": {
+        "openai": "2.16.0",
+        "git": "3.1.46"
+      },
+      "executable": "/Users/user-01/research/workspaces/claude-szz/baselines/venv/bin/python"
+    },
+    "agentic_szz_python": {
+      "version": "3.12.8",
+      "modules": {
+        "graphiti_core": "unknown",
+        "pydantic_ai": "2.31.1",
+        "neo4j": "6.2.0",
+        "git": "3.1.59",
+        "openai": "3.3.0"
+      },
+      "executable": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz-venv/bin/python"
+    },
+    "agentic_szz_requirements_path": "/Users/user-01/research/workspaces/claude-szz/implementation/config/llm-baselines/requirements-agentic-szz-python312.txt",
+    "agentic_szz_requirements_sha256": "e426ee65f956a8582aa195ac819d2c862d68abd66d20107d71558701ca313f22",
+    "neo4j": {
+      "reference": "neo4j:5.26.8-community",
+      "id": "sha256:c0f0ce3396c902c9ab6520d0c9d1c644a3aa83eed00036e609e5db10a84b2d92",
+      "repo_digests": [
+        "neo4j@sha256:5216b8f7bcca893448d5b4a809d91761609fc8aea900691d59531ada76c28c62"
+      ],
+      "architecture": "arm64",
+      "os": "linux"
+    }
+  },
+  "prompt_metadata_path": "/Users/user-01/research/workspaces/claude-szz/implementation/data/derived/subject-prompts-bfc-message-neutralized-final-v1/38.json",
+  "prompt_metadata_sha256": "f002cdd0715da281fb0898ad36a01d580a86ca312846d1e28456e20fe9f3b1e6",
+  "repository_before": {
+    "head": "45bddf5b5c2d9df754f984fb1cf9bf6b6e254441",
+    "head_matches_synthetic_fix": true,
+    "source_fix_absent": true,
+    "clean": true,
+    "no_remotes": true,
+    "no_object_alternates": true
+  },
+  "repository_after": {
+    "head": "45bddf5b5c2d9df754f984fb1cf9bf6b6e254441",
+    "head_matches_synthetic_fix": true,
+    "source_fix_absent": true,
+    "clean": true,
+    "no_remotes": true,
+    "no_object_alternates": true
+  },
+  "postflight_clean": true,
+  "error": null,
+  "limitations": [
+    "Sonnet 5 through Anthropic is a matched-backbone adaptation, not the original-model replication.",
+    "Both upstream methods emit a single primary BIC; multi-BIC recall is structurally capped.",
+    "Reported cost is reconstructed from token usage and the frozen Anthropic price snapshot, not provider billing records.",
+    "AgenticSZZ checks its conservative total-token limit between requests, so one in-flight request can cross the nominal trigger."
+  ]
+}

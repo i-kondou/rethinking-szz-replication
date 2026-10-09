@@ -1,0 +1,50 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (EA-79438) reorders two statements in the FileHistoryPanelImpl
+constructor: it moves `myPopupActions = createPopupActions();` to run BEFORE
+`createDualView();` (previously it ran after). The reason this ordering
+mattered in the buggy version is that, in files/buggy, `createDualView()`
+calls:
+
+    PopupHandler.installPopupHandler(myDualView.getTreeView(), myPopupActions, ...);
+    PopupHandler.installPopupHandler(myDualView.getFlatView(), myPopupActions, ...);
+
+This static utility method consumes the `myPopupActions` action group
+argument immediately/eagerly at call time. Since `createDualView()` was
+called before `myPopupActions` was assigned, it was passed as `null`,
+which triggers an IllegalArgumentException (IAE) inside
+`PopupHandler.installPopupHandler` — exactly matching the bug title
+"IAE: PopupHandler.installPopupHandler".
+
+In files/old, the constructor also calls `createDualView()` before
+`myPopupActions = createPopupActions();` (same relative order as the buggy
+version). However, the old `createDualView()` method does NOT call the
+static `PopupHandler.installPopupHandler(...)` utility at all. Instead it
+does:
+
+    myDualView.getTreeView().addMouseListener(new PopupHandler() {
+      public void invokePopup(Component comp, int x, int y) {
+        ActionPopupMenu popupMenu = ActionManager.getInstance()
+          .createActionPopupMenu(ActionPlaces.UPDATE_POPUP, myPopupActions);
+        ...
+      }
+    });
+
+Here `myPopupActions` is only read lazily, inside `invokePopup()`, which is
+only invoked later when the user actually right-clicks on the component —
+by which time the constructor has long finished and `myPopupActions` has
+been properly assigned. The anonymous `PopupHandler` subclass simply
+captures a reference to the outer `FileHistoryPanelImpl` instance and reads
+the field's current value at invocation time, not at construction time.
+Therefore, even though the statement order is superficially the same as the
+buggy version, the old code never dereferences a null `myPopupActions`
+during initialization, so the IAE cannot occur.
+
+This means the code was later refactored to use the eager
+`PopupHandler.installPopupHandler(...)` static helper (which requires the
+action group to be valid immediately), and that refactor is what introduced
+the initialization-order sensitivity that caused the bug. Since that eager
+call pattern does not exist in files/old, the bug is not present there.

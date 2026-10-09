@@ -1,0 +1,8 @@
+SELECTED: candidate_101
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes a single line in RemoveVmCommand.java's removeCinderDisks() method: inside the catch block for InterruptedException | ExecutionException, `failedRemoveCinderDisks.addAll(cinderDisks);` is replaced with `failedRemoveCinderDisks = cinderDisks;`. This is a NullPointerException fix (findbugs NPE), because `failedRemoveCinderDisks` is declared and initialized as `null` (`Collection<CinderDisk> failedRemoveCinderDisks = null;`) and is only assigned a non-null value on the success path (`failedRemoveCinderDisks = future.get().getActionReturnValue();`). If an InterruptedException or ExecutionException is thrown before that assignment completes, the catch block calls `.addAll()` on the still-null `failedRemoveCinderDisks`, causing an NPE.
+
+Candidate_101 is the commit that introduced this exact method, `removeCinderDisks()`, including the null initialization of `failedRemoveCinderDisks` and the buggy `failedRemoveCinderDisks.addAll(cinderDisks);` call inside the catch block — precisely the code pattern that the fix commit later corrects. No other candidate touches this method or variable (confirmed via search across all 102 candidates: only candidate_101 and candidate_102 reference `failedRemoveCinderDisks`, and candidate_102 is unrelated, a formatting/generics cleanup of a different method). Therefore candidate_101 is the bug-introducing commit.

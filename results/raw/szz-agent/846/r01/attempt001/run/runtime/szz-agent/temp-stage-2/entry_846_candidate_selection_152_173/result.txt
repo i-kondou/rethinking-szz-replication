@@ -1,0 +1,49 @@
+SELECTED: candidate_09
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit wraps a block of code in DisplayControlImpl.java with a new
+null check:
+
+    if (myDataChoices != null) {
+        if ((myDataChoices.size() > 0) && ...) {
+            ...
+        }
+    }
+
+Prior to the fix, the code called `myDataChoices.size()` directly without
+verifying that `myDataChoices` was non-null, which caused a
+NullPointerException when `myDataChoices` was null at that point in
+execution.
+
+Tracing this exact code block backward through the candidate diffs shows
+that it did not exist at all in candidates 01-08. It was first introduced
+in candidate_09, which added:
+
+    if(myDataChoices.size() > 0 && myDataChoices.get(0) instanceof DerivedDataChoice){
+        List cdcs = ((DerivedDataChoice)myDataChoices.get(0)).getChoices();
+        if(cdcs.size() > 0)  {
+            DataChoice dc = (DataChoice)cdcs.get(0);
+            DataSelection ds = dc.getDataSelection();
+            if(ds != null){
+                List dtimes = ds.getTimeDriverTimes();
+                Object ud1 = ds.getProperty(DataSelection.PROP_USESTIMEDRIVER);
+                if(dtimes != null && dtimes.size() > 0 && ud1 != null){
+                    this.usesTimeDriver = ((Boolean)ud1).booleanValue();
+                }
+            }
+        }
+    }
+
+This is precisely the code that lacked the null check on `myDataChoices`.
+Subsequent candidates (10, 19, 20) only reformatted this block or adjusted
+the inner condition on `ud1`/`dtimes`, but none of them added a null check
+on `myDataChoices` itself — the bug persisted unchanged through all later
+candidates until the fix commit finally added it.
+
+Note: candidate_22's diff is byte-for-byte identical to the provided
+fix_commit_diff.txt (same before/after blob hashes), indicating it is
+actually the fix commit itself rather than a true bug-introducing
+candidate. It was excluded from consideration since a fix commit cannot be
+the commit that introduced the bug it resolves.

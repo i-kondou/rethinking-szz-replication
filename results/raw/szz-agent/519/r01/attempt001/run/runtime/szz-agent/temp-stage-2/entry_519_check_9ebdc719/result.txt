@@ -1,0 +1,10 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The bug fixed in the target commit is in AbstractFile.onModification(): the buggy version unconditionally called validatePath(...) regardless of the `application.filesystem.unique.paths` configuration switch (validatePathUniqueness), while the fix wraps that call in an `if (validatePathUniqueness)` check, mirroring the pattern already used in onCreation().
+
+Examining files/old/AbstractFile.java shows a much earlier version of the class that predates this entire feature. It has no onModification() override, no validatePath()/validateAndRenameFileOnce() methods, no validatePathUniqueness field, and no reference to the APPLICATION_FILESYSTEM_UNIQUE_PATHS configuration setting at all. The class only overrides isValid(), getChildLinkType(), and getSiblingLinkType().
+
+Since the code path that contains the bug (the unconditional call to validatePath in onModification) does not exist yet in files/old/, the bug cannot be present in this version — the relevant functionality was introduced later in the project's history, after which the bug was introduced and eventually fixed.

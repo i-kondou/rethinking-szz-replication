@@ -1,0 +1,29 @@
+SELECTED: candidate_08
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix (fix_commit_diff.txt) adds a null check to CourseEvent.getSession():
+    public Session getSession() {
++       if (getRelatedCourses() == null) return null;
+        for (RelatedCourseInfo rc: getRelatedCourses())
+            return rc.getCourse().getInstructionalOffering().getSession();
+        return null;
+    }
+This fixes a NullPointerException that occurs when getSession() is called before the event's related courses are set (i.e. while the course-related event is still being created).
+
+Tracing the git blob hash of JavaSource/org/unitime/timetable/model/CourseEvent.java through the candidates shows a clean chain of edits to this file:
+- candidate_05: ... -> 059c026cb -> fbbd32ed2 (adds getStudentClassEnrollments(), no getSession())
+- candidate_06: fbbd32ed2 -> 71beaddaa (license header only)
+- candidate_07: 71beaddaa -> 4595f6250 (license header only)
+- candidate_08: 4595f6250 -> 37ae9e2e4 -- THIS COMMIT ADDS:
+      public Session getSession() {
+          for (RelatedCourseInfo rc: getRelatedCourses())
+              return rc.getCourse().getInstructionalOffering().getSession();
+          return null;
+      }
+  with NO null check on getRelatedCourses(). This is the exact "before" state (blob 37ae9e2e4) that fix_commit_diff.txt patches.
+- candidate_09: 4595f6250 -> 37ae9e2e4 (an identical duplicate of the same change to this file, appearing later in the candidate list)
+- candidate_10: 37ae9e2e4 -> 87c8fe676 -- this is the fix itself, byte-for-byte identical to fix_commit_diff.txt (adds the null check). It is not a bug-introducing candidate but the actual fix commit included among the candidates.
+
+candidate_08 is the first commit to introduce the unguarded getSession() method (iterating getRelatedCourses() without checking for null), which is precisely the code path that throws the NullPointerException described in the fix commit message ("CourseRelatedEvent.getSession() throws a null because the event is not fully created yet"). candidate_09 duplicates the same change but occurs later, so candidate_08 is the true origin of the bug.

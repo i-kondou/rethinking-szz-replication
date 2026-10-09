@@ -1,0 +1,43 @@
+SELECTED: candidate_13
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit removes a single dead-store line in AbstractStickyAssignor.generalAssign():
+
+    boolean isFreshAssignment = currentAssignment.isEmpty();
+
+This variable was declared but its value was no longer used anywhere, triggering a spotBugs
+"Dead store to isFreshAssignment" warning.
+
+Tracing the history of this variable:
+- In candidate_02, `isFreshAssignment` was introduced in StickyAssignor.assign() and was
+  actively used: it was passed into the `sortPartitions(currentAssignment, prevAssignment.keySet(),
+  isFreshAssignment, partition2AllPotentialConsumers, consumer2AllPotentialPartitions)` call, where
+  it affected which sorting strategy was used. At this point it was NOT a dead store.
+- Later commits (candidate_08, candidate_09, candidate_12) kept the variable in use as part of the
+  same sortPartitions() call, carrying the logic forward as the sticky assignor code evolved and was
+  eventually refactored into AbstractStickyAssignor (candidate_12).
+- candidate_13 performed a large refactor of AbstractStickyAssignor.generalAssign() to support the new
+  "constrained assign" fast path. As part of this refactor, the call:
+
+      List<TopicPartition> sortedPartitions = sortPartitions(
+          currentAssignment, prevAssignment.keySet(), isFreshAssignment,
+          partition2AllPotentialConsumers, consumer2AllPotentialPartitions);
+
+  was simplified to:
+
+      List<TopicPartition> sortedPartitions = sortPartitions(partition2AllPotentialConsumers);
+
+  This removed the only remaining use of `isFreshAssignment`, while the declaration line
+  `boolean isFreshAssignment = currentAssignment.isEmpty();` a few lines above was left untouched.
+  From this point on, the variable was computed but never read — i.e., candidate_13 is the commit
+  that turned a previously-used variable into a dead store.
+
+The fix commit (candidate_14 in this candidate set is identical byte-for-byte to the actual fix
+commit diff, effectively being the fix itself accidentally included in the list) simply deletes
+that now-unused declaration line, exactly undoing the dead code left behind by candidate_13.
+
+Because candidate_13 is the commit whose refactor caused the variable to become unused (the root
+cause of the spotBugs violation), it is the correct bug-introducing commit rather than candidate_02
+(where the variable was legitimately used) or candidate_14 (which is the fix itself).

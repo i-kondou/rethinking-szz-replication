@@ -1,0 +1,22 @@
+{
+  "fix_commit": "1084c112ee85c7269baadafa0defc319f6c7ffc0",
+  "bic": "8399707f054e5d387e1af18384efab4cd1b26e57",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "The commit \"ISSUE #527: Introduce backoff and retry utilities\" introduced the new OrderedScheduler class from scratch, including the TimedRunnable.safeRun() method that incorrectly calls `taskPendingStats.registerSuccessfulEvent(initNanos, TimeUnit.NANOSECONDS)`, passing the absolute start timestamp instead of the elapsed duration since initNanos (which the fix corrects via `MathUtils.elapsedNanos(initNanos)`). This is the same buggy line the fix modifies, and blame traces directly to this commit as the origin of the code and the flawed logic (subsequent blame hit on the same lines was only a cosmetic Object[] cleanup, not semantically relevant).",
+  "metrics": {
+    "case_elapsed_seconds": 10.403671,
+    "api_elapsed_seconds": 10.23961,
+    "tool_elapsed_seconds": 0.047493,
+    "other_elapsed_seconds": 0.116573,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 26540,
+    "completion_tokens": 777,
+    "total_tokens": 27317,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:29:06.112559"
+}

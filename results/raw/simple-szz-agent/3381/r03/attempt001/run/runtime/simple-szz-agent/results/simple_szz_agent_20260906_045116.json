@@ -1,0 +1,323 @@
+{
+  "metadata": {
+    "timestamp": "20260906_045116",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3381/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 54.63,
+      "max": 54.63,
+      "mean": 54.63,
+      "median": 54.63,
+      "total": 54.63,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 54.535,
+      "max": 54.535,
+      "mean": 54.535,
+      "median": 54.535,
+      "total": 54.535,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 11,
+      "max": 11,
+      "mean": 11,
+      "median": 11,
+      "total": 11,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 16,
+      "max": 16,
+      "mean": 16,
+      "median": 16,
+      "total": 16,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 4240,
+      "max": 4240,
+      "mean": 4240,
+      "median": 4240,
+      "total": 4240,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 21188,
+      "max": 21188,
+      "mean": 21188,
+      "median": 21188,
+      "total": 21188,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 106895,
+      "max": 106895,
+      "mean": 106895,
+      "median": 106895,
+      "total": 106895,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.2228445,
+      "max": 0.2228445,
+      "mean": 0.2228445,
+      "median": 0.2228445,
+      "total": 0.2228445,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 6,
+      "Glob": 1,
+      "Grep": 2,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 15,
+      "max": 15,
+      "mean": 15,
+      "median": 15,
+      "total": 15,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "3381",
+      "fix_commit_hash": "f03ca7e1753f67c63eaed8125a161a6bb743611a",
+      "ground_truth_bics": [
+        "5938ca78b6e6bd86364b6fdae7a84fcf7f65e761"
+      ],
+      "predicted_bics": [
+        "5938ca78b6e6bd86364b6fdae7a84fcf7f65e761"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "3381",
+      "fix_commit": "f03ca7e1753f67c63eaed8125a161a6bb743611a",
+      "ground_truth_bics": [
+        "5938ca78b6e6bd86364b6fdae7a84fcf7f65e761"
+      ],
+      "total_candidates": 15,
+      "gt_in_candidates": true,
+      "selected_commit": "5938ca78b6e6bd86364b6fdae7a84fcf7f65e761",
+      "selected_index": 12,
+      "confidence": "HIGH",
+      "explanation": "The fix commit modifies `ApplicationContextRequestMatcher.matches(HttpServletRequest)` so that concurrent callers never proceed to `matches(request, context)` before `initialized(context)` has finished running. Before the fix, the code used `AtomicBoolean.compareAndSet(false, true)` to guard the one-time `initialized(context)` call: ```java if (this.initialized.compareAndSet(false, true)) { initialized(context); } return matches(request, context); ```",
+      "is_correct": true,
+      "num_files_touched_by_fix": 2,
+      "num_source_files_touched_by_fix": 2,
+      "files_analyzed": [
+        "spring-boot-project/spring-boot/src/main/java/org/springframework/boot/security/servlet/ApplicationContextRequestMatcher.java",
+        "spring-boot-project/spring-boot/src/test/java/org/springframework/boot/security/servlet/ApplicationContextRequestMatcherTests.java"
+      ],
+      "call_stats": {
+        "duration_s": 54.63,
+        "duration_api_s": 54.535,
+        "num_turns": 11,
+        "input_tokens": 16,
+        "output_tokens": 4240,
+        "cache_creation_input_tokens": 21188,
+        "cache_read_input_tokens": 106895,
+        "total_cost_usd": 0.2228445,
+        "total_tool_calls": 10,
+        "tool_calls_by_name": {
+          "Read": 6,
+          "Glob": 1,
+          "Grep": 2,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3381/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3381_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3381/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3381_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3381/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3381_candidate_selection/fix_commit_diff.txt"
+                }
+              },
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 3566,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "ApplicationContextRequestMatcher",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 433,
+            "cache_read_input_tokens": 13250,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "compareAndSet|AtomicBoolean initialized|new file mode",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 906,
+            "cache_read_input_tokens": 13683,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3381/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3381_candidate_selection/candidates/candidate_13.diff",
+                  "offset": 180,
+                  "limit": 140
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3381/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3381_candidate_selection/candidates/candidate_15.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 6475,
+            "cache_read_input_tokens": 14589,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3381/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3381_candidate_selection/candidates/candidate_13.diff",
+                  "offset": 315,
+                  "limit": 60
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1881,
+            "cache_read_input_tokens": 21064,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3381/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3381_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_13\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit modifies `ApplicationContextRequestMatcher.matches(HttpServletRequest)` so that concurrent callers never proceed to `matches(request, context)` before `initialized(context)` has finished running. Before the fix, the code used `AtomicBoolean.compareAndSet(false, true)` to guard the one-time `initialized(context)` call:\n\n```java\nif (this.initialized.compareAndSet(false, true)) {\n    initialized(context);\n}\nreturn matches(request, context);\n```\n\nThe race is that `compareAndSet` only returns `true` for the single thread that performs the initialization; every other concurrent thread gets `false` and falls straight through to `return matches(request, context)` without waiting for the first thread's `initialized(context)` call to complete. This is exactly the \"concurrent calls to matches could trigger unexpected errors ... the second call proceeded before initialized had returned\" bug described in the fix commit message (gh-18211). The fix replaces this with a double-checked-locking `synchronized` block that forces later callers to block until initialization is complete.\n\nExamining candidate_13.diff, it rewrites `ApplicationContextRequestMatcher.java` and introduces exactly this problematic pattern. The pre-existing code (visible in the diff's removed lines) used a `synchronized (this.contextLock)` double-checked-locking pattern around a `Supplier<C> context` field that correctly blocked concurrent callers until context creation and `initialized()` had completed:\n\n```java\nif (this.context == null) {\n    synchronized (this.contextLock) {\n        if (this.context == null) {\n            Supplier<C> createdContext = createContext(request);\n            initialized(createdContext);\n            this.context = createdContext;\n        }\n    }\n}\nreturn this.context;\n```\n\nCandidate_13 replaced this safe, blocking design with the new `AtomicBoolean`/`compareAndSet` based `matches` implementation that does not block concurrent threads during initialization \u2014 introducing the race condition. No candidate between candidate_13 and the fix (checked via candidate_14) modifies this file or the initialization logic again, so candidate_13 is the first (and only) commit that introduces the buggy code path.\n\nNote: candidate_15.diff is textually identical to fix_commit_diff.txt (same before/after content and blob hashes ff1bc115cf..a56626e873), indicating it is effectively the fix commit itself rather than a bug-introducing candidate, so it was excluded from consideration as the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1641,
+            "cache_read_input_tokens": 22945,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

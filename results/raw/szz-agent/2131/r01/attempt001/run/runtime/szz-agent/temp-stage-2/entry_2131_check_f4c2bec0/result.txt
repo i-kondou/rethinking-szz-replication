@@ -1,0 +1,25 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (EA-79438) addresses an initialization order bug in FileHistoryPanelImpl's constructor. In the buggy version, `createDualView()` was called before `myPopupActions = createPopupActions();`. Critically, in the buggy version, `createDualView()` directly and synchronously calls:
+
+    PopupHandler.installPopupHandler(myDualView.getTreeView(), myPopupActions, ActionPlaces.UPDATE_POPUP, ActionManager.getInstance());
+    PopupHandler.installPopupHandler(myDualView.getFlatView(), myPopupActions, ActionPlaces.UPDATE_POPUP, ActionManager.getInstance());
+
+Since this call happens before `myPopupActions` is assigned, `myPopupActions` is `null` at the time `installPopupHandler` executes, causing an IllegalArgumentException (IAE). The fix simply reorders the two statements so `myPopupActions = createPopupActions();` runs before `createDualView();`.
+
+Examining `files/old/FileHistoryPanelImpl.java`, the constructor also calls `createDualView();` before `myPopupActions = createPopupActions();` (same superficial ordering as the buggy version). However, the implementation of `createDualView()` in the old version is fundamentally different: it does NOT call `PopupHandler.installPopupHandler(...)` directly with `myPopupActions` at construction time. Instead, it registers mouse listeners using anonymous `PopupHandler` subclasses:
+
+    myDualView.getTreeView().addMouseListener(new PopupHandler() {
+      public void invokePopup(Component comp, int x, int y) {
+        ActionPopupMenu popupMenu = ActionManager.getInstance()
+          .createActionPopupMenu(ActionPlaces.UPDATE_POPUP, myPopupActions);
+        popupMenu.getComponent().show(comp, x, y);
+      }
+    });
+
+Here, `myPopupActions` is only read lazily inside `invokePopup()`, which executes later at runtime when the user actually triggers a popup (e.g., right-click) — well after the constructor has finished and `myPopupActions` has already been assigned. There is no synchronous use of `myPopupActions` during `createDualView()` itself in the old version, so the null-pointer/IAE initialization-order bug cannot occur here regardless of the order of the two statements in the constructor.
+
+Since the specific code pattern that causes the bug (a direct, eager call to `PopupHandler.installPopupHandler` using the not-yet-initialized `myPopupActions` field) does not exist in the old version, the bug is not present in `files/old/`.

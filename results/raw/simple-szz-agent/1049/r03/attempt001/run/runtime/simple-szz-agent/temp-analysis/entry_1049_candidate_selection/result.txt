@@ -1,0 +1,42 @@
+SELECTED: candidate_08
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes ImplicitLinkedHashCollectionIterator.remove() in
+ImplicitLinkedHashCollection.java from:
+
+    removeFromList(head, elements, nextElement.prev());
+    size--;
+
+to:
+
+    ImplicitLinkedHashCollection.this.removeElementAtSlot(nextElement.prev());
+
+The fix commit message explains the bug precisely: the underlying hash table
+relies on a "denseness invariant" — when an element is removed, other elements
+may need to be shifted into the vacated slot to keep the table dense.
+removeElementAtSlot() performs this rehashing/compaction step, while
+removeFromList() only unlinks the element from the doubly-linked iteration
+list and does not fix up the hash table slots. Calling removeFromList()
+directly (plus manually decrementing size) leaves the hash table in an
+inconsistent state, breaking lookups (find/contains) for elements that should
+have been shifted into the freed slot.
+
+Examining the candidates, candidate_08 is the commit that introduced this
+exact bug. Prior to candidate_08 (as seen reconstructed from earlier
+candidates), the iterator's remove() method already correctly called
+`ImplicitLinkedHashCollection.this.removeElementAtSlot(lastReturnedSlot)`.
+candidate_08 refactored the iterator (introducing `lastReturned` and `index`
+fields, and adding new features like moveToEnd), and as part of that rewrite
+of remove(), it replaced the correct removeElementAtSlot() call with:
+
+    Element nextElement = indexToElement(head, elements, lastReturned.next());
+    removeFromList(head, elements, nextElement.prev());
+    size--;
+
+This is precisely the buggy code that the fix commit reverts back to using
+removeElementAtSlot(). candidate_09 is essentially the fix commit itself
+(identical diff), confirming that candidate_08 is the commit immediately
+preceding the fix that introduced the regression during its iterator
+refactor.

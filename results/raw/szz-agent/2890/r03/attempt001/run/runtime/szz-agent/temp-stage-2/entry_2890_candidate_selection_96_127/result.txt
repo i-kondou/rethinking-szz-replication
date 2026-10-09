@@ -1,0 +1,59 @@
+SELECTED: candidate_29
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds an `arena.inArena(p)` check to the condition that cancels food-level changes in `ArenaListener.onFoodLevelChange`, changing:
+
+    if (lockFoodLevel) {
+        event.setCancelled(true);
+    }
+
+to:
+
+    if (arena.inArena(p) && lockFoodLevel) {
+        event.setCancelled(true);
+    }
+
+This means the bug was that food-level locking applied to every player on the server whenever the arena was running and `lockFoodLevel` was enabled, instead of only to players actually inside the arena.
+
+Tracing the history of this method through the 32 candidates shows that prior to candidate_29, the method read:
+
+    public void onFoodLevelChange(FoodLevelChangeEvent event) {
+        if (!arena.isRunning())
+            return;
+
+        if (!(event.getEntity() instanceof Player) || !arena.inArena((Player) event.getEntity()))
+            return;
+
+        // If the food level is locked, cancel all changes.
+        if (lockFoodLevel)
+            event.setCancelled(true);
+    }
+
+This version correctly guarded the whole method with an early-return `!arena.inArena(...)` check, so only players actually in the arena were affected.
+
+candidate_29 rewrote this method (to add lobby/spectator food-lock behavior, per its changelog entry "Food levels no longer deplete for players in the lobby and spectator area") as:
+
+    public void onFoodLevelChange(FoodLevelChangeEvent event) {
+        if (!(event.getEntity() instanceof Player)) {
+            return;
+        }
+
+        Player p = (Player) event.getEntity();
+
+        if (arena.isRunning()) {
+            if (lockFoodLevel) {
+                event.setCancelled(true);
+            }
+        } else {
+            // Always locked in lobby/spec
+            if (arena.inLobby(p) || arena.inSpec(p)) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+In this refactor, the `arena.inArena(p)` guard that previously applied to the `arena.isRunning()` branch was dropped entirely — the new `if (arena.isRunning())` branch only checks `lockFoodLevel`, with no per-player membership check. This is precisely the bug the fix commit later corrects by re-adding `arena.inArena(p) &&` to that condition.
+
+The git blob hash chain across the candidates confirms this is the direct lineage leading to the fix: candidate_29 produces blob `aa8a64b`, candidate_30 (`aa8a64b..089d884`, an unrelated removal of `onBlockFromTo`) and candidate_31 (`089d884..9400d87`, an unrelated golem-damage fix) leave the food-level logic untouched, and the fix commit itself starts from blob `9400d87` (matching candidate_31's output) and produces `59c3b49` by adding the `arena.inArena(p)` check. No candidate between 29 and the fix modifies `onFoodLevelChange` again, and no candidate before 29 contains this bug (the pre-candidate_29 code already had the correct inArena guard). This makes candidate_29 unambiguously the commit that first introduced the bug.

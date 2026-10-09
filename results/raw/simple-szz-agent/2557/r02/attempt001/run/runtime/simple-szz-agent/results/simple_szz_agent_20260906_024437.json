@@ -1,0 +1,391 @@
+{
+  "metadata": {
+    "timestamp": "20260906_024437",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2557/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 70.524,
+      "max": 70.524,
+      "mean": 70.524,
+      "median": 70.524,
+      "total": 70.524,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 70.162,
+      "max": 70.162,
+      "mean": 70.162,
+      "median": 70.162,
+      "total": 70.162,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 19,
+      "max": 19,
+      "mean": 19,
+      "median": 19,
+      "total": 19,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 6904,
+      "max": 6904,
+      "mean": 6904,
+      "median": 6904,
+      "total": 6904,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 47859,
+      "max": 47859,
+      "mean": 47859,
+      "median": 47859,
+      "total": 47859,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 229231,
+      "max": 229231,
+      "mean": 229231,
+      "median": 229231,
+      "total": 229231,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.4595373,
+      "max": 0.4595373,
+      "mean": 0.4595373,
+      "median": 0.4595373,
+      "total": 0.4595373,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 10,
+      "Glob": 1,
+      "Grep": 6,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 6,
+      "max": 6,
+      "mean": 6,
+      "median": 6,
+      "total": 6,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2557",
+      "fix_commit_hash": "6cb1c62cb4b58db126b8fc76c1725f2503f38f58",
+      "ground_truth_bics": [
+        "e083434176737f98a640e166cb9d1f983535ada9"
+      ],
+      "predicted_bics": [
+        "c74c87e94e10420f559212db631d33ff37847c7c"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2557",
+      "fix_commit": "6cb1c62cb4b58db126b8fc76c1725f2503f38f58",
+      "ground_truth_bics": [
+        "e083434176737f98a640e166cb9d1f983535ada9"
+      ],
+      "total_candidates": 6,
+      "gt_in_candidates": true,
+      "selected_commit": "c74c87e94e10420f559212db631d33ff37847c7c",
+      "selected_index": 0,
+      "confidence": "HIGH",
+      "explanation": "The fix commit initializes the field `runningBatchKey` in `BddRunContext.java` with a default value: - private Optional<String> runningBatchKey; + // must be initialized for jbehave-junit-runner + private Optional<String> runningBatchKey = Optional.of(\"batch-1\"); The fix message explains that jbehave-junit-runner builds the JUnit execution tree before any actual story execution happens, and it knows nothing about Vividus batches. Because of this, `getRunningBatchKey()`/`getRunningBatch()` can be",
+      "is_correct": false,
+      "num_files_touched_by_fix": 2,
+      "num_source_files_touched_by_fix": 2,
+      "files_analyzed": [
+        "vividus-bdd-engine/src/main/java/org/vividus/bdd/context/BddRunContext.java",
+        "vividus-bdd-engine/src/test/java/org/vividus/bdd/context/BddRunContextTests.java"
+      ],
+      "call_stats": {
+        "duration_s": 70.524,
+        "duration_api_s": 70.162,
+        "num_turns": 19,
+        "input_tokens": 18,
+        "output_tokens": 6904,
+        "cache_creation_input_tokens": 47859,
+        "cache_read_input_tokens": 229231,
+        "total_cost_usd": 0.4595373,
+        "total_tool_calls": 18,
+        "tool_calls_by_name": {
+          "Read": 10,
+          "Glob": 1,
+          "Grep": 6,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2557/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2557_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 20,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2557/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2557_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2557/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2557_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1288,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 296,
+            "cache_read_input_tokens": 10972,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2557/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2557_candidate_selection/candidates/candidate_01.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2557/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2557_candidate_selection/candidates/candidate_02.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2557/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2557_candidate_selection/candidates/candidate_03.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2557/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2557_candidate_selection/candidates/candidate_04.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2557/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2557_candidate_selection/candidates/candidate_05.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2557/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2557_candidate_selection/candidates/candidate_06.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 32126,
+            "cache_read_input_tokens": 11268,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "runningBatchKey",
+                  "path": "candidates/candidate_06.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "runningBatchKey",
+                  "path": "candidates/candidate_05.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2064,
+            "cache_read_input_tokens": 43394,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "runningBatchKey",
+                  "path": "candidates/candidate_01.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "runningBatchKey",
+                  "path": "candidates/candidate_02.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "runningBatchKey",
+                  "path": "candidates/candidate_03.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "runningBatchKey",
+                  "path": "candidates/candidate_04.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1501,
+            "cache_read_input_tokens": 45458,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2557/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2557_candidate_selection/candidates/candidate_01.diff",
+                  "offset": 5600,
+                  "limit": 150
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 2857,
+            "cache_read_input_tokens": 46959,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2557/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2557_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_01\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit initializes the field `runningBatchKey` in `BddRunContext.java` with a default value:\n\n    - private Optional<String> runningBatchKey;\n    + // must be initialized for jbehave-junit-runner\n    + private Optional<String> runningBatchKey = Optional.of(\"batch-1\");\n\nThe fix message explains that jbehave-junit-runner builds the JUnit execution tree before any actual story execution happens, and it knows nothing about Vividus batches. Because of this, `getRunningBatchKey()`/`getRunningBatch()` can be called before `putRunningBatch()` is ever invoked, and since `runningBatchKey` was left uninitialized (null `Optional` reference), calling `.orElseThrow(...)` on it throws a NullPointerException instead of the intended `IllegalStateException`.\n\nTracing the field back through the candidates:\n- candidate_01 is the commit that creates `BddRunContext.java` from scratch (new file). It introduces the field exactly as:\n      private Optional<String> runningBatchKey;\n  with no initializer, and immediately uses it in `getRunningBatch()`:\n      String batchKey = runningBatchKey.orElseThrow(...);\n  This is the very first appearance of the buggy, uninitialized field.\n- candidate_02 does not touch `BddRunContext.java`/`runningBatchKey` at all.\n- candidate_03 refactors `getRunningBatch()` to extract a `getRunningBatchKey()` method, but the field declaration itself is untouched (still uninitialized).\n- candidate_04 shows the field declaration only as unchanged context while other parts of the batch-storage subsystem are refactored \u2014 the uninitialized field is inherited unchanged.\n- candidate_05 removes `getRunningBatch()`/`batchStorage` (unrelated cleanup) but again leaves `runningBatchKey` uninitialized as context.\n- candidate_06 is actually the fix commit itself (adds the default `Optional.of(\"batch-1\")` initializer and comment), matching `fix_commit_diff.txt` exactly.\n\nSince the uninitialized field was present from the moment the class was created and every intermediate candidate merely inherited it without addressing the initialization, candidate_01 is the commit that introduced the bug.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1441,
+            "cache_read_input_tokens": 49816,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

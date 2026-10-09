@@ -1,0 +1,294 @@
+{
+  "metadata": {
+    "timestamp": "20260906_004622",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2223/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 33.921,
+      "max": 33.921,
+      "mean": 33.921,
+      "median": 33.921,
+      "total": 33.921,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 33.844,
+      "max": 33.844,
+      "mean": 33.844,
+      "median": 33.844,
+      "total": 33.844,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 2491,
+      "max": 2491,
+      "mean": 2491,
+      "median": 2491,
+      "total": 2491,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 13251,
+      "max": 13251,
+      "mean": 13251,
+      "median": 13251,
+      "total": 13251,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 72159,
+      "max": 72159,
+      "mean": 72159,
+      "median": 72159,
+      "total": 72159,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.13856069999999998,
+      "max": 0.13856069999999998,
+      "mean": 0.13856069999999998,
+      "median": 0.13856069999999998,
+      "total": 0.13856069999999998,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 8,
+      "max": 8,
+      "mean": 8,
+      "median": 8,
+      "total": 8,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Glob": 1,
+      "Grep": 1,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 102,
+      "max": 102,
+      "mean": 102,
+      "median": 102,
+      "total": 102,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2223",
+      "fix_commit_hash": "ae33192d3183b81b9bd4268a6c281298139d90bd",
+      "ground_truth_bics": [
+        "1bfc9d0cc2e5e3a61fe3985d74b44efc6d6366a4"
+      ],
+      "predicted_bics": [
+        "1bfc9d0cc2e5e3a61fe3985d74b44efc6d6366a4"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2223",
+      "fix_commit": "ae33192d3183b81b9bd4268a6c281298139d90bd",
+      "ground_truth_bics": [
+        "1bfc9d0cc2e5e3a61fe3985d74b44efc6d6366a4"
+      ],
+      "total_candidates": 102,
+      "gt_in_candidates": true,
+      "selected_commit": "1bfc9d0cc2e5e3a61fe3985d74b44efc6d6366a4",
+      "selected_index": 100,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes a single line in RemoveVmCommand.java's removeCinderDisks() method: inside the catch block for InterruptedException | ExecutionException, `failedRemoveCinderDisks.addAll(cinderDisks);` is replaced with `failedRemoveCinderDisks = cinderDisks;`. This is a NullPointerException fix (findbugs NPE), because `failedRemoveCinderDisks` is declared and initialized as `null` (`Collection<CinderDisk> failedRemoveCinderDisks = null;`) and is only assigned a non-null value on the succes",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "backend/manager/modules/bll/src/main/java/org/ovirt/engine/core/bll/RemoveVmCommand.java"
+      ],
+      "call_stats": {
+        "duration_s": 33.921,
+        "duration_api_s": 33.844,
+        "num_turns": 9,
+        "input_tokens": 14,
+        "output_tokens": 2491,
+        "cache_creation_input_tokens": 13251,
+        "cache_read_input_tokens": 72159,
+        "total_cost_usd": 0.13856069999999998,
+        "total_tool_calls": 8,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Glob": 1,
+          "Grep": 1,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2223/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2223_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1415,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2223/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2223_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2223/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2223_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 969,
+            "cache_read_input_tokens": 9697,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1550,
+            "cache_read_input_tokens": 10666,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "failedRemoveCinderDisks",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 16,
+            "cache_creation_input_tokens": 195,
+            "cache_read_input_tokens": 12216,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2223/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2223_candidate_selection/candidates/candidate_101.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2223/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2223_candidate_selection/candidates/candidate_102.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 3078,
+            "cache_read_input_tokens": 12411,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2223/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2223_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_101\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes a single line in RemoveVmCommand.java's removeCinderDisks() method: inside the catch block for InterruptedException | ExecutionException, `failedRemoveCinderDisks.addAll(cinderDisks);` is replaced with `failedRemoveCinderDisks = cinderDisks;`. This is a NullPointerException fix (findbugs NPE), because `failedRemoveCinderDisks` is declared and initialized as `null` (`Collection<CinderDisk> failedRemoveCinderDisks = null;`) and is only assigned a non-null value on the success path (`failedRemoveCinderDisks = future.get().getActionReturnValue();`). If an InterruptedException or ExecutionException is thrown before that assignment completes, the catch block calls `.addAll()` on the still-null `failedRemoveCinderDisks`, causing an NPE.\n\nCandidate_101 is the commit that introduced this exact method, `removeCinderDisks()`, including the null initialization of `failedRemoveCinderDisks` and the buggy `failedRemoveCinderDisks.addAll(cinderDisks);` call inside the catch block \u2014 precisely the code pattern that the fix commit later corrects. No other candidate touches this method or variable (confirmed via search across all 102 candidates: only candidate_101 and candidate_102 reference `failedRemoveCinderDisks`, and candidate_102 is unrelated, a formatting/generics cleanup of a different method). Therefore candidate_101 is the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1160,
+            "cache_read_input_tokens": 15489,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

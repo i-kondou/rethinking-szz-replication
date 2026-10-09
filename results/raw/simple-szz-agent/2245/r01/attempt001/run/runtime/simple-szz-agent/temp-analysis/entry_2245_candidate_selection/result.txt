@@ -1,0 +1,22 @@
+SELECTED: candidate_38
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit addresses a race condition described as "Transactions were being looked up without the readLock and some of the controls for Read and Write lock were broken." The fix moves the JournalTransaction lookup (getTransactionInfo(txID)) and the transactions.remove(txID) calls (for commit/rollback) from the calling thread into the Runnable submitted to appendExecutor, i.e. so they happen only after journalLock.readLock() is acquired inside that Runnable, and additionally adds locking to getTransactionInfo() itself.
+
+Before candidate_38, JournalImpl used a fully synchronous model: appendAddRecordTransactional/appendUpdateRecordTransactional/appendDeleteRecordTransactional/appendCommitRecord/appendRollbackRecord all did:
+    journalLock.readLock().lock();
+    try {
+        ...
+        JournalTransaction tx = getTransactionInfo(txID);
+        lockAppend.lock();
+        try { ... } finally { lockAppend.unlock(); }
+    } finally {
+        journalLock.readLock().unlock();
+    }
+So the transaction map lookup always happened while journalLock.readLock() was held, safely serialized with the compactor's use of journalLock.writeLock().
+
+candidate_38 introduced an asynchronous append model backed by a new `appendExecutor` (ExecutorService). The refactor moved `journalLock.readLock().lock()` to run *inside* the submitted Runnable, but left the call `final JournalTransaction tx = getTransactionInfo(txID); tx.checkErrorCondition();` (and the `transactions.remove(txID)` for commit/rollback) in the calling thread, executed *before* the Runnable is even submitted — i.e. completely outside of any lock. This creates exactly the race with the compactor (which swaps/replaces the transactions map under journalLock.writeLock()) that the bug report and fix describe as causing "Missing records after compacting."
+
+This exact unlocked-lookup pattern persists unchanged through candidate_39, candidate_40, candidate_41, candidate_42, and candidate_43 (only the executor submission mechanics change, e.g. submit() -> execute() with SimpleFuture in candidate_39), confirming candidate_38 as the first commit to introduce the problematic code, which the fix commit later corrects by moving the lookup inside the locked Runnable and adding locking to getTransactionInfo().

@@ -1,0 +1,33 @@
+SELECTED: candidate_09
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a null check at the top of CourseEvent.getSession():
+    if (getRelatedCourses() == null) return null;
+before iterating over getRelatedCourses(). This prevents a NullPointerException
+that occurs when getSession() is called on a CourseEvent whose related courses
+have not yet been set (i.e., during event creation, before the event is fully
+persisted/populated).
+
+Tracing the CourseEvent.java history through the candidates:
+- Candidates 01 through 08 do not contain a getSession() method in
+  CourseEvent.java at all (the class only has getStudents(), getInstructors(),
+  getStudentIds(), getStudentClassEnrollments(), etc. up through that point).
+- candidate_09 is the commit that FIRST introduces the getSession() method into
+  CourseEvent.java:
+      public Session getSession() {
+          for (RelatedCourseInfo rc: getRelatedCourses())
+              return rc.getCourse().getInstructionalOffering().getSession();
+          return null;
+      }
+  This method unconditionally calls getRelatedCourses().iterator() without
+  checking for null, which is exactly the defect the fix addresses.
+- candidate_10's diff to CourseEvent.java is byte-for-byte identical to the
+  fix_commit_diff.txt (adding the null check), confirming that candidate_09
+  represents the exact pre-fix buggy state of this method and candidate_10 is
+  effectively the fix itself.
+
+Since the getSession() method (with its missing null check) was introduced
+for the first time in candidate_09, and no earlier candidate contains this
+code path, candidate_09 is the bug-introducing commit.

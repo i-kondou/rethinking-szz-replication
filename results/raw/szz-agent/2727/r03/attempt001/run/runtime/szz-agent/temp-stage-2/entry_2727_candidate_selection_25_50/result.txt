@@ -1,0 +1,44 @@
+SELECTED: candidate_24
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) adds the line `consoleProcess_ = consoleProcess;` immediately
+after the `IllegalArgumentException` check in the `ConsoleProgressDialog` constructor, with the
+comment "save console process so that we can compute interaction mode below". This is needed
+because the very next statement in the constructor is `if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)`,
+and `getInteractionMode()` reads the `consoleProcess_` field.
+
+Tracing the history of `src/gwt/.../ConsoleProgressDialog.java` through the candidates:
+
+- In candidates 01-23, the constructor always assigned `consoleProcess_ = consoleProcess;`
+  immediately after the `IllegalArgumentException` check, i.e. BEFORE the `getInteractionMode()`
+  check that follows it. This ordering was correct.
+
+- candidate_24 performs a refactor of the constructor: it REMOVES the line
+  `consoleProcess_ = consoleProcess;` from that early position, and instead only assigns it
+  inside a brand-new method `attachToProcess(ConsoleProcess consoleProcess)`, which is invoked
+  via `attachToProcess(consoleProcess);` at the very END of the constructor. However, the
+  constructor still calls `getInteractionMode()` earlier - both in
+  `if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)` and in
+  `if (getInteractionMode() == ConsoleProcessInfo.INTERACTION_ALWAYS)` - before
+  `attachToProcess()` (and therefore the `consoleProcess_` assignment) ever runs. Since Java
+  initializes reference fields to `null` before constructor logic runs, and there is no
+  compile-time flow-sensitivity across method calls, this compiles fine but is a runtime bug:
+  `consoleProcess_` is `null` at the time `getInteractionMode()` is evaluated, so it always
+  falls back to the "no console process" default, breaking interaction-mode-dependent UI setup
+  (e.g. history/shell-interaction configuration, and the special INTERACTION_ALWAYS shell sizing
+  logic).
+
+- candidate_25 further reorganizes the interaction-mode-dependent UI logic (moving it into
+  `attachToProcess`, index 459c6dc5db..dbedddd688), but the `consoleProcess_` assignment remains
+  confined to `attachToProcess`, so the early `getInteractionMode()` call in the constructor
+  (`if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)`) is still evaluated with a
+  null `consoleProcess_`. The bug persists unchanged.
+
+- candidate_26 is exactly the fix (index dbedddd688..0e5b0af8e6, identical to fix_commit_diff.txt):
+  it re-adds `consoleProcess_ = consoleProcess;` right after the `IllegalArgumentException` check,
+  restoring the correct ordering so `getInteractionMode()` sees the assigned console process.
+
+Since candidate_24 is the commit that first removed the early assignment and introduced the
+ordering bug (consoleProcess_ used before being set), it is the bug-introducing commit.

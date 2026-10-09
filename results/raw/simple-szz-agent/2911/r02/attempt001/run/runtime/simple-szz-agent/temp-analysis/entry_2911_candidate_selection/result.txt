@@ -1,0 +1,20 @@
+SELECTED: candidate_92
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit corrects a bug in OrderedScheduler.java (formerly OrderedSafeExecutor.java) where the "task_queued" duration stat was being recorded incorrectly. The buggy code was:
+
+    taskPendingStats.registerSuccessfulEvent(initNanos, TimeUnit.NANOSECONDS);
+
+which passes the raw timestamp captured when the task was submitted (`initNanos`) directly as the "duration" of the event, instead of computing the elapsed time since submission. The fix changes this to:
+
+    taskPendingStats.registerSuccessfulEvent(
+            MathUtils.elapsedNanos(initNanos),
+            TimeUnit.NANOSECONDS);
+
+Searching the 157 candidates for the string "taskPendingStats"/"initNanos"/"registerSuccessfulEvent" turned up five commits that touch this area: candidate_92, candidate_107, candidate_137, candidate_145, and candidate_157 (in chronological order). Examining candidate_92 (BOOKKEEPER-862: "Add tracing and stats to OrderedSafeExecutor for debugging slow tasks") shows this is the commit that originally introduced the `TimedRunnable` inner class along with the exact buggy line:
+
+    taskPendingStats.registerSuccessfulEvent(initNanos, TimeUnit.NANOSECONDS);
+
+This is a brand-new class/feature added by this commit (all lines are `+` additions, including the `initNanos` field, the `TimedRunnable` constructor, and the `safeRun()` method containing the flawed stats call). Since the buggy line was added here for the first time (not modified from prior correct code), and the later commits (107, 137, 145, 157) that also touch this file just moved/refactored surrounding code without introducing this specific defect, candidate_92 is the true bug-introducing commit — it is the first point in history where the problematic code pattern (recording a timestamp instead of an elapsed duration) exists.

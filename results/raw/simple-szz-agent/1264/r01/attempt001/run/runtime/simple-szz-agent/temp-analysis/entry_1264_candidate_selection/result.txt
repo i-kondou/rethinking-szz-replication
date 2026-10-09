@@ -1,0 +1,50 @@
+SELECTED: candidate_46
+
+CONFIDENCE: MEDIUM
+
+EXPLANATION:
+The fix commit changes RuleSet.java's getParents() override from:
+  return SConceptOperations.getAllSuperConcepts(nextConcept, false);
+back to:
+  return SConceptOperations.getDirectSuperConcepts(nextConcept, false);
+
+This getParents() method is used by SingleTermRules.computeRules() to do a
+BFS/queue-based walk up the concept hierarchy, calling allForConcept() at each
+node and adding that node's own getParents() result back into the queue. This
+walker inherently expects getParents() to return only the DIRECT
+superconcepts at each step, since it iterates the full transitive closure
+itself one level at a time. Returning getAllSuperConcepts (all transitive
+ancestors) at every step causes each ancestor to be re-enqueued redundantly
+at every level, and more importantly it causes the walk to skip/short-circuit
+the correct rule resolution order for overloaded-operator type rules (e.g.
+"String += char"), because rules that should only match a direct supertype
+end up being evaluated against the full transitive closure repeatedly,
+producing the wrong result for the "+=" operator with a char operand and
+triggering the reported type-system error.
+
+Tracing this exact code line through the candidate history:
+- candidate_44 first introduced the buggy line (getAllSuperConcepts) as part
+  of a large refactor converting RuleSet/SingleTermRules and related classes
+  from String-based (FQName) concept lookups to SAbstractConcept-based ones.
+- candidate_45 is an exact revert of that specific RuleSet.java portion
+  (and the related OverloadedOpsProvider_OneTypeSpecified changes), restoring
+  the original ConceptRegistry-based getParentsNames() implementation
+  (git blob hashes confirm this reverts RuleSet.java back to its pre-44 state).
+- candidate_46 re-applies the SAbstractConcept-based refactor project-wide
+  (touching many more files: AbstractInferenceRule_Runtime,
+  ComparisonRule_Runtime, InequationReplacementRule_Runtime,
+  MetaAdapterFactoryByName, ConceptDescendantsCache, ModelsScope, etc.), and
+  in doing so reintroduces the identical buggy getAllSuperConcepts line in
+  RuleSet.java (verified via matching blob hash to candidate_44's version).
+- candidate_47 modifies RuleSet.java only to add logging/error-handling
+  around addRuleSetItem; it does not touch the getParents() line.
+- candidate_48 (the fix) is the first subsequent change to that line,
+  replacing getAllSuperConcepts with getDirectSuperConcepts.
+
+Because the buggy line was removed (reverted) in candidate_45 and only
+reintroduced in candidate_46, the version of the code actually present
+immediately before the fix — and thus the commit that "blame" attributes the
+final introduction of the defect to — is candidate_46, not the original
+candidate_44 (whose change had already been undone). candidate_46 is
+therefore the most likely bug-introducing commit for the specific defect
+being fixed.

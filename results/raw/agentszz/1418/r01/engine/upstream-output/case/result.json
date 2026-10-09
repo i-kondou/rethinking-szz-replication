@@ -1,0 +1,22 @@
+{
+  "fix_commit": "b1c9edc398212a441cbee9a4bbb047a88f7fa8be",
+  "bic": "9501cccdbbeec3a4940dee8532b143ad5febe7c8",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit merged the previously separate `if (nonCombat...)` / `else if (!nonCombat...)` branches (which played distinct sounds for combat move vs non-combat move and correctly set `m_soundPlayedAlreadyCombatMove`) into a single combined condition `if ((nonCombat && !m_soundPlayedAlreadyNonCombatMove) || (!nonCombat && !m_soundPlayedAlreadyCombatMove))` that always plays `CLIP_PHASE_MOVE_NONCOMBAT` and never sets `m_soundPlayedAlreadyCombatMove`. This is precisely the buggy logic that the fix commit splits back into two separate `if` blocks, restoring correct combat-move sound handling.",
+  "metrics": {
+    "case_elapsed_seconds": 12.187279,
+    "api_elapsed_seconds": 11.997643,
+    "tool_elapsed_seconds": 0.073689,
+    "other_elapsed_seconds": 0.115953,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 17226,
+    "completion_tokens": 839,
+    "total_tokens": 18065,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:29:52.759187"
+}

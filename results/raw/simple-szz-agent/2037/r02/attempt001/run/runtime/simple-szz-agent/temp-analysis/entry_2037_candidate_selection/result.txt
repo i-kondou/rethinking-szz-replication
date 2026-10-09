@@ -1,0 +1,29 @@
+SELECTED: candidate_26
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit's message states that mCurPage should be set to null (updated to prevPage)
+immediately when the last page is popped, even if a transition animation is going to play.
+The fix diff moves `mContainerView.removeView(removedPage.getView());` and
+`mCurPage = prevPage;` out of `doFinalWorkForPopPageInternal` (which only runs after the
+animation's postDelayed callback fires, or immediately if there's no animation) and hoists
+them to execute unconditionally and immediately in `popPageInternal`, before the
+animation-duration branch.
+
+candidate_26 is exactly where this bug was introduced. Before this commit, the code set
+`mCurPage = prevPage;` immediately (right after `removedPage.onDetach()`), unconditionally,
+regardless of whether an animation would play afterward — i.e., the correct behavior. In
+candidate_26, this logic was refactored: `mContainerView.removeView(...)`, `onDetach()`,
+`onHidden()`, and `mCurPage = prevPage` were all consolidated into a new
+`doFinalWorkForPopPageInternal(removedPage, prevPage)` method, which is invoked either inside
+the `postDelayed` animation callback (i.e., only after the animation finishes) or immediately
+in the non-animated branch. This means that whenever a pop animation is playing,
+`mCurPage` is not updated to `prevPage` until the animation completes — reintroducing the
+exact stale-mCurPage bug that the fix commit later corrects by splitting the removeView/mCurPage
+assignment back out to run immediately, independent of the animation delay.
+
+candidate_29 contains a diff textually identical to the fix commit itself (it reverts exactly
+what candidate_26 changed), confirming candidate_26 as the true bug-introducing commit and
+candidate_29 as the fix being included among the candidates (not itself a plausible
+bug-introducing commit, since it corrects the bug rather than introduces it).

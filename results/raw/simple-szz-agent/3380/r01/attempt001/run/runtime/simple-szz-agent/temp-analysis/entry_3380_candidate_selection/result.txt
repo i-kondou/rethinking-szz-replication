@@ -1,0 +1,15 @@
+SELECTED: candidate_03
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit reverts the encoding-related property names in the EMMA report module back to `OUT_ENCODING` ("out.encoding") and introduces `IN_ENCODING` ("in.encoding"), while removing `OUTPUT_ENCODING` ("html.outputEncoding") and `SOURCE_ENCODING` ("html.sourceEncoding") along with their accessor methods (getOutputEncoding/setOutputEncoding, getSourceEncoding/setSourceEncoding) in IReportProperties.java and ReportProperties.java. It also updates every call site (html/txt/xml ReportGenerator.java) from `getOutputEncoding()`/`getSourceEncoding()` back to `getOutEncoding()`/`getInEncoding()`.
+
+candidate_03 is precisely the commit that introduced this problematic code. It is titled internally as "addition parameters by terry" and:
+1. Removes the working `setOutEncoding`/`getOutEncoding` accessors and the `OUT_ENCODING` usage in `getReportProperties`, replacing them with new `OUTPUT_ENCODING`/`SOURCE_ENCODING` constants mapped to different property key strings ("html.outputEncoding"/"html.sourceEncoding" instead of the existing "out.encoding").
+2. Adds new `m_outputEncoding`/`m_sourceEncoding` fields and getter/setter methods, and updates all ReportGenerator call sites (html, txt, xml) to use `getOutputEncoding()` instead of `getOutEncoding()`.
+3. Also changes source file reading from a raw `FileReader` to an `InputStreamReader` using `getSourceEncoding()`, introducing a new property key that doesn't match the previously established encoding property naming scheme.
+
+This renaming broke backward compatibility with the existing `out.encoding` report property (any user-configured `report.*.out.encoding` setting silently stopped working since the code now looked for a completely different, undocumented property `html.outputEncoding`), which is exactly what the fix commit corrects by restoring the original `OUT_ENCODING`/new `IN_ENCODING` naming and accessor methods.
+
+Note: candidate_05 (the newest/last candidate) contains a diff nearly identical to the fix itself, suggesting it is essentially a duplicate/near-duplicate of the actual fix commit rather than a distinct bug-introducing change. The remaining candidates (01, 02, 04) do not touch the OUTPUT_ENCODING/SOURCE_ENCODING code paths at all (candidate_02's "sourceEncoding" match was an unrelated Maven `pom.xml` `project.build.sourceEncoding` property). candidate_03 is therefore clearly and uniquely identified as the bug-introducing commit.

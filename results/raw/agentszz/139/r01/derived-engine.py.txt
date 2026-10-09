@@ -1,0 +1,583 @@
+#!/usr/bin/env python3
+"""Preflight or execute one AgentSZZ/AgenticSZZ same-79 subject.
+
+The default is read-only and makes no API request. ``--test-stub`` exercises
+the official execution path without a provider call and never produces a
+scientific result. Live execution requires explicit Anthropic billing and
+resource acknowledgements plus a fresh output directory.
+"""
+
+from __future__ import annotations
+
+import argparse
+import importlib
+import json
+import os
+import socket
+import subprocess
+import sys
+import time
+from decimal import Decimal
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Sequence
+
+from agentic_baseline_common import (
+    API_BILLING_ACKNOWLEDGEMENT,
+    BASELINES,
+    BASE_URL,
+    INPUT_USD_PER_MILLION,
+    MAX_OUTPUT_TOKENS,
+    MODEL,
+    OUTPUT_USD_PER_MILLION,
+    RESOURCE_ACKNOWLEDGEMENT,
+    BaselineError,
+    parse_positive_decimal,
+    remove_container,
+    sanitized_openrouter_environment,
+    validate_source_manifest,
+    wait_for_neo4j,
+)
+from llm_baseline_common import (
+    load_subject,
+    repository_snapshot,
+    sha256_file,
+    utc_now,
+    write_json,
+)
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_PROMPT_ROOT = PROJECT_ROOT / "data/derived/subject-prompts"
+DEFAULT_TIMEOUT_SECONDS = 3600
+
+
+def _free_port() -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return int(sock.getsockname()[1])
+
+
+def _model_cost(input_tokens: int, output_tokens: int) -> Decimal:
+    return (
+        Decimal(input_tokens) * INPUT_USD_PER_MILLION
+        + Decimal(output_tokens) * OUTPUT_USD_PER_MILLION
+    ) / Decimal(1_000_000)
+
+
+def _reported_cost_on_exit(
+    result: dict[str, object], model_started: bool
+) -> str | None:
+    value = result.get("reported_cost_usd")
+    if value is not None:
+        return str(value)
+    # A failed provider request may still have been billable even when no usage
+    # object reached the adapter. Preserve that as unknown so the full ledger
+    # charges its conservative per-run upper bound instead of recording zero.
+    return None if model_started else "0"
+
+
+class _BudgetedCompletions:
+    def __init__(
+        self,
+        inner,
+        cap: Decimal,
+        audit: list[dict[str, object]],
+        marker_path: Path,
+    ):
+        self.inner = inner
+        self.cap = cap
+        self.audit = audit
+        self.marker_path = marker_path
+        self.spent = Decimal("0")
+
+    def create(self, **kwargs):
+        kwargs["max_tokens"] = min(
+            int(kwargs.get("max_tokens", MAX_OUTPUT_TOKENS)), MAX_OUTPUT_TOKENS
+        )
+        request_bytes = len(
+            json.dumps(
+                {"messages": kwargs.get("messages"), "tools": kwargs.get("tools")},
+                ensure_ascii=False,
+                default=str,
+            ).encode("utf-8")
+        )
+        conservative_next = _model_cost(request_bytes, kwargs["max_tokens"])
+        if self.spent + conservative_next > self.cap:
+            raise RuntimeError(
+                "per-run cap would be exceeded before the next AgentSZZ request: "
+                f"spent={self.spent} conservative_next={conservative_next} cap={self.cap}"
+            )
+        write_json(
+            self.marker_path,
+            {
+                "model_request_started_at": utc_now(),
+                "request_number": len(self.audit) + 1,
+                "provider": "Anthropic",
+                "model": MODEL,
+            },
+        )
+        started = time.monotonic()
+        response = self.inner.create(**kwargs)
+        usage = getattr(response, "usage", None)
+        input_tokens = int(getattr(usage, "prompt_tokens", 0) or 0)
+        output_tokens = int(getattr(usage, "completion_tokens", 0) or 0)
+        cost = _model_cost(input_tokens, output_tokens)
+        self.spent += cost
+        self.audit.append(
+            {
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+                "cost_usd_equivalent": str(cost),
+                "elapsed_seconds": time.monotonic() - started,
+            }
+        )
+        return response
+
+
+class _BudgetedOpenAI:
+    def __init__(
+        self,
+        inner,
+        cap: Decimal,
+        audit: list[dict[str, object]],
+        marker_path: Path,
+    ):
+        self.chat = SimpleNamespace(
+            completions=_BudgetedCompletions(
+                inner.chat.completions, cap, audit, marker_path
+            )
+        )
+
+
+class _StubMessage:
+    def __init__(self, content: str):
+        self.content = content
+        self.tool_calls = []
+
+    def model_dump(self) -> dict[str, object]:
+        return {"role": "assistant", "content": self.content}
+
+
+def _stub_openai_factory(prediction: str):
+    class _StubCompletions:
+        def create(self, **_kwargs):
+            message = _StubMessage(
+                f"BIC: {prediction}\nConfidence: high\nType: fixture\nReasoning: test stub"
+            )
+            usage = SimpleNamespace(
+                prompt_tokens=0,
+                completion_tokens=0,
+                total_tokens=0,
+                prompt_tokens_details=None,
+                completion_tokens_details=None,
+            )
+            return SimpleNamespace(
+                choices=[SimpleNamespace(message=message)], usage=usage
+            )
+
+    return lambda **_kwargs: SimpleNamespace(
+        chat=SimpleNamespace(completions=_StubCompletions())
+    )
+
+
+def _import_upstream(source: Path, module_name: str):
+    source = source.resolve()
+    sys.path.insert(0, str(source))
+    try:
+        return importlib.import_module(module_name)
+    finally:
+        if sys.path and sys.path[0] == str(source):
+            sys.path.pop(0)
+
+
+def run_agentszz(
+    *,
+    source: Path,
+    subject: dict[str, object],
+    run_dir: Path,
+    cap: Decimal,
+    test_stub: bool,
+) -> dict[str, object]:
+    original_cwd = Path.cwd()
+    original_env = os.environ.copy()
+    audit: list[dict[str, object]] = []
+    marker_path = run_dir / "model-started.json"
+    clean_env = sanitized_openrouter_environment()
+    os.environ.clear()
+    os.environ.update(clean_env)
+    os.chdir(source)
+    try:
+        run_agent = _import_upstream(source, "run_agent")
+        run_agent.MODEL = MODEL
+        run_agent.BASE_URL = BASE_URL
+        if test_stub:
+            run_agent.OpenAI = _stub_openai_factory(subject["oracle_bics"][0])
+        else:
+            from openai import OpenAI
+
+            real = OpenAI(
+                base_url=BASE_URL,
+                api_key=os.environ["ANTHROPIC_API_KEY"], max_retries=0, default_headers=workspace_headers(),
+            )
+            run_agent.OpenAI = lambda **_kwargs: _BudgetedOpenAI(
+                real, cap, audit, marker_path
+            )
+        output = run_dir / "upstream-output"
+        result = run_agent.run_agentszz(
+            str(subject["repo"]),
+            str(subject["synthetic_fix"]),
+            str(output),
+            commit_subdir="case",
+        )
+    finally:
+        os.chdir(original_cwd)
+        os.environ.clear()
+        os.environ.update(original_env)
+    if result.get("error"):
+        raise BaselineError(f"AgentSZZ failed: {result['error']}")
+    prediction = str(result.get("bic", "")).strip()
+    return {
+        "predicted_bics": [prediction] if prediction else [],
+        "reasoning": result.get("reasoning", ""),
+        "confidence": result.get("confidence", ""),
+        "upstream_metrics": result.get("metrics", {}),
+        "provider_calls": audit,
+        "reported_cost_usd": str(
+            sum((Decimal(str(row["cost_usd_equivalent"])) for row in audit), Decimal("0"))
+        ),
+        "model_started": marker_path.is_file(),
+    }
+
+
+def _start_neo4j(image: str, container: str, port: int) -> None:
+    remove_container(container)
+    result = subprocess.run(
+        [
+            "docker",
+            "run",
+            "-d",
+            "--name",
+            container,
+            "-p",
+            f"127.0.0.1:{port}:7687",
+            "-e",
+            "NEO4J_AUTH=neo4j/claudeszz-agentic-szz",
+            image,
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise BaselineError(f"could not start Neo4j: {result.stderr.strip()}")
+    wait_for_neo4j(container)
+
+
+def run_agentic_szz(
+    *,
+    source: Path,
+    subject: dict[str, object],
+    run_dir: Path,
+    cap: Decimal,
+    image: str,
+    test_stub: bool,
+) -> dict[str, object]:
+    container = os.environ["FINAL_V2_NEO4J_CONTAINER"]
+    port = _free_port()
+    _start_neo4j(image, container, port)
+    original_cwd = Path.cwd()
+    original_env = os.environ.copy()
+    try:
+        clean_env = sanitized_openrouter_environment()
+        os.environ.clear()
+        os.environ.update(clean_env)
+        os.chdir(source)
+        os.environ["LLM_MODEL"] = MODEL
+        os.environ["LLM_BASE_URL"] = BASE_URL
+        os.environ["NEO4J_URI"] = f"bolt://127.0.0.1:{port}"
+        os.environ["NEO4J_USER"] = "neo4j"
+        os.environ["NEO4J_PASSWORD"] = "claudeszz-agentic-szz"
+        # Graphiti constructs an OpenAI client even though this package writes and
+        # queries nodes directly. A dummy key prevents constructor-time failure;
+        # the test-stub path makes no embedding or model API call.
+        os.environ["OPENAI_API_KEY"] = "adapter-no-openai-call"
+        settings = _import_upstream(source, "agentic_szz.config.settings")
+        config = settings.get_config(refresh=True)
+        config.llm.model = MODEL
+        config.llm.base_url = BASE_URL
+        config.llm.api_key = (
+            "test-stub" if test_stub else os.environ["ANTHROPIC_API_KEY"]
+        )
+        config.llm.max_tokens = MAX_OUTPUT_TOKENS
+        settings.LLM_PRICING[MODEL] = {
+            "input": float(INPUT_USD_PER_MILLION / Decimal(1_000_000)),
+            "cached": float(INPUT_USD_PER_MILLION / Decimal(1_000_000)),
+            "output": float(OUTPUT_USD_PER_MILLION / Decimal(1_000_000)),
+        }
+        pipeline = _import_upstream(source, "agentic_szz.pipeline")
+        szz = pipeline.AgenticSZZ(
+            str(subject["repo"]),
+            config=config,
+            db_config={
+                "uri": f"bolt://127.0.0.1:{port}",
+                "user": "neo4j",
+                "password": "claudeszz-agentic-szz",
+            },
+            context_expand_lines=2,
+        )
+        if test_stub:
+            # Exercise blame, TKG construction, direct graph queries, and the
+            # isolated Neo4j lifecycle without entering the model agent.
+            result = szz.predict(
+                str(subject["synthetic_fix"]),
+                skip_tkg=False,
+                skip_agent=True,
+                cleanup_after=True,
+                save_trajectory=False,
+            )
+            model_started = False
+        else:
+            # Conservative all-token-at-output-rate ceiling. Pydantic AI checks
+            # this usage limit between requests; max output is separately bounded.
+            usage = importlib.import_module("pydantic_ai.usage")
+            original_limits = usage.UsageLimits
+            total_token_limit = max(
+                1,
+                int(cap / OUTPUT_USD_PER_MILLION * Decimal(1_000_000))
+                - MAX_OUTPUT_TOKENS,
+            )
+            usage.UsageLimits = lambda request_limit=30, **_kwargs: original_limits(
+                request_limit=request_limit,
+                total_tokens_limit=total_token_limit,
+            )
+            agent_module = importlib.import_module(
+                "agentic_szz.agent.bic_search_agent"
+            )
+            original_model_settings = agent_module.BICSearchAgent._model_settings
+            agent_module.BICSearchAgent._model_settings = lambda _self: {
+                "max_tokens": MAX_OUTPUT_TOKENS
+            }
+            pydantic_ai = importlib.import_module("pydantic_ai")
+            original_agent_run = pydantic_ai.Agent.run
+
+            async def audited_agent_run(agent_self, *run_args, **run_kwargs):
+                write_json(
+                    run_dir / "model-started.json",
+                    {
+                        "model_request_started_at": utc_now(),
+                        "provider": "Anthropic",
+                        "model": MODEL,
+                    },
+                )
+                return await original_agent_run(agent_self, *run_args, **run_kwargs)
+
+            pydantic_ai.Agent.run = audited_agent_run
+            try:
+                result = szz.predict(
+                    str(subject["synthetic_fix"]),
+                    cleanup_after=True,
+                    save_trajectory=True,
+                    trajectory_dir=str(run_dir / "trajectories"),
+                    case_id=f"SAME79_{subject['sample_id']}",
+                )
+                model_started = (run_dir / "model-started.json").is_file()
+            finally:
+                usage.UsageLimits = original_limits
+                agent_module.BICSearchAgent._model_settings = original_model_settings
+                pydantic_ai.Agent.run = original_agent_run
+        prediction = str(result.predicted_bic or "").strip()
+        if not test_stub and str(result.reasoning).startswith("Agent error:"):
+            raise BaselineError(str(result.reasoning))
+        return {
+            "predicted_bics": [prediction] if prediction else [],
+            "reasoning": result.reasoning,
+            "confidence": result.confidence,
+            "upstream_metrics": {
+                "total_time_ms": result.total_time_ms,
+                "blame_time_ms": result.blame_time_ms,
+                "tkg_time_ms": result.tkg_time_ms,
+                "agent_time_ms": result.agent_time_ms,
+                "tokens_input": result.tokens_input,
+                "tokens_output": result.tokens_output,
+                "tokens_cached": result.tokens_cached,
+                "cost_usd": result.cost_usd,
+                "agent_steps": result.agent_steps,
+            },
+            "provider_calls": [],
+            "reported_cost_usd": str(result.cost_usd),
+            "model_started": model_started,
+            "neo4j": {"image": image, "container_removed_after_run": True},
+        }
+    finally:
+        os.chdir(original_cwd)
+        os.environ.clear()
+        os.environ.update(original_env)
+        remove_container(container)
+
+
+def preflight(
+    baseline: str, subject: dict[str, object], sources: dict[str, object]
+) -> dict[str, object]:
+    return {
+        "schema_version": 1,
+        "kind": "claude-szz-agentic-baseline-subject-preflight",
+        "valid": True,
+        "mode": "preflight-only",
+        "baseline": baseline,
+        "model": MODEL,
+        "base_url": BASE_URL,
+        "model_invoked": False,
+        "api_key_present": bool(os.environ.get("ANTHROPIC_API_KEY")),
+        "sample_id": subject["sample_id"],
+        "repository": subject["repository"],
+        "synthetic_fix_hash": subject["synthetic_fix"],
+        "repository_checks": subject["snapshot"],
+        "source_provenance": sources,
+        "execution_requirements": {
+            "separate_anthropic_billing": True,
+            "explicit_acknowledgements": [
+                RESOURCE_ACKNOWLEDGEMENT,
+                API_BILLING_ACKNOWLEDGEMENT,
+            ],
+            "fresh_run_directory": True,
+            "positive_per_run_cap_usd": True,
+            "normal_completion_only": True,
+        },
+    }
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--baseline", choices=BASELINES, required=True)
+    parser.add_argument("--sample-id", required=True)
+    parser.add_argument("--prompt-metadata", type=Path)
+    parser.add_argument("--source-manifest", type=Path)
+    parser.add_argument("--model", default=MODEL)
+    parser.add_argument("--per-run-cap-usd")
+    parser.add_argument("--timeout-seconds", type=int, default=DEFAULT_TIMEOUT_SECONDS)
+    parser.add_argument("--run-dir", type=Path)
+    parser.add_argument("--execute", action="store_true")
+    parser.add_argument("--test-stub", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--acknowledge-resource-use")
+    parser.add_argument("--acknowledge-api-billing")
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    if args.model != MODEL:
+        raise BaselineError(f"matched condition requires {MODEL}")
+    metadata = args.prompt_metadata or DEFAULT_PROMPT_ROOT / f"{args.sample_id}.json"
+    subject = load_subject(metadata, args.sample_id)
+    sources = validate_source_manifest(
+        args.source_manifest or Path(__file__).parents[1] / "config/agentic-baseline-sources.json"
+    )
+    if not args.execute:
+        print(json.dumps(preflight(args.baseline, subject, sources), indent=2))
+        return 0
+    cap = parse_positive_decimal(args.per_run_cap_usd, "--per-run-cap-usd")
+    if cap is None:
+        raise BaselineError("--execute requires --per-run-cap-usd")
+    if args.timeout_seconds <= 0:
+        raise BaselineError("--timeout-seconds must be positive")
+    if args.acknowledge_resource_use != RESOURCE_ACKNOWLEDGEMENT:
+        raise BaselineError("resource-use acknowledgement is missing")
+    if not args.test_stub and args.acknowledge_api_billing != API_BILLING_ACKNOWLEDGEMENT:
+        raise BaselineError("Anthropic API billing acknowledgement is missing")
+    if not args.test_stub and not os.environ.get("ANTHROPIC_API_KEY"):
+        raise BaselineError("ANTHROPIC_API_KEY is required for live execution")
+    if args.run_dir is None:
+        raise BaselineError("--execute requires --run-dir")
+    run_dir = args.run_dir.expanduser().resolve()
+    run_dir.mkdir(parents=True, exist_ok=False)
+    before = repository_snapshot(
+        Path(subject["repo"]), str(subject["synthetic_fix"]), str(subject["source_fix"])
+    )
+    started = time.monotonic()
+    state = "running"
+    result: dict[str, object] = {}
+    error: str | None = None
+    model_started = False
+    try:
+        if args.baseline == "agentszz":
+            result = run_agentszz(
+                source=Path(sources["agentszz_source_path"]),
+                subject=subject,
+                run_dir=run_dir,
+                cap=cap,
+                test_stub=args.test_stub,
+            )
+        else:
+            image = str(sources["neo4j"]["reference"])
+            result = run_agentic_szz(
+                source=Path(sources["agentic_szz_path"]),
+                subject=subject,
+                run_dir=run_dir,
+                cap=cap,
+                image=image,
+                test_stub=args.test_stub,
+            )
+        model_started = bool(result.get("model_started"))
+        state = "completed_stub" if args.test_stub else "completed"
+    except Exception as exc:
+        error = f"{type(exc).__name__}: {exc}"
+        state = "failed"
+        model_started = (run_dir / "model-started.json").is_file()
+    after = repository_snapshot(
+        Path(subject["repo"]), str(subject["synthetic_fix"]), str(subject["source_fix"])
+    )
+    postflight_clean = before == after and all(
+        value for key, value in after.items() if key != "head"
+    )
+    if not postflight_clean and state.startswith("completed"):
+        state = "failed"
+        error = "sanitized subject repository changed during execution"
+    manifest = {
+        "schema_version": 1,
+        "kind": "claude-szz-agentic-baseline-subject-run",
+        "created_at": utc_now(),
+        "state": state,
+        "scientific_result": state == "completed" and not args.test_stub,
+        "test_stub": args.test_stub,
+        "baseline": args.baseline,
+        "sample_id": subject["sample_id"],
+        "repository": subject["repository"],
+        "synthetic_fix_hash": subject["synthetic_fix"],
+        "model": MODEL,
+        "base_url": BASE_URL,
+        "per_run_cap_usd": str(cap),
+        "model_started": model_started,
+        "reported_cost_usd": _reported_cost_on_exit(result, model_started),
+        "duration_seconds": time.monotonic() - started,
+        "predicted_bics": result.get("predicted_bics", []),
+        "reasoning": result.get("reasoning", ""),
+        "confidence": result.get("confidence", ""),
+        "upstream_metrics": result.get("upstream_metrics", {}),
+        "provider_calls": result.get("provider_calls", []),
+        "source_provenance": sources,
+        "prompt_metadata_path": str(metadata.expanduser().resolve()),
+        "prompt_metadata_sha256": sha256_file(metadata.expanduser().resolve()),
+        "repository_before": before,
+        "repository_after": after,
+        "postflight_clean": postflight_clean,
+        "error": error,
+        "limitations": [
+            "Sonnet 5 through Anthropic is a matched-backbone adaptation, not the original-model replication.",
+            "Both upstream methods emit a single primary BIC; multi-BIC recall is structurally capped.",
+            "Reported cost is reconstructed from token usage and the frozen Anthropic price snapshot, not provider billing records.",
+            "AgenticSZZ checks its conservative total-token limit between requests, so one in-flight request can cross the nominal trigger.",
+        ],
+    }
+    write_json(run_dir / "run.json", manifest)
+    print(json.dumps(manifest, indent=2))
+    return 0 if state.startswith("completed") else 1
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except BaselineError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        raise SystemExit(2)

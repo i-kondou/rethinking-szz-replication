@@ -1,0 +1,367 @@
+{
+  "metadata": {
+    "timestamp": "20260906_033431",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/975/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 58.247,
+      "max": 58.247,
+      "mean": 58.247,
+      "median": 58.247,
+      "total": 58.247,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 57.746,
+      "max": 57.746,
+      "mean": 57.746,
+      "median": 57.746,
+      "total": 57.746,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 4715,
+      "max": 4715,
+      "mean": 4715,
+      "median": 4715,
+      "total": 4715,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 35982,
+      "max": 35982,
+      "mean": 35982,
+      "median": 35982,
+      "total": 35982,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 202200,
+      "max": 202200,
+      "mean": 202200,
+      "median": 202200,
+      "total": 202200,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.347337,
+      "max": 0.347337,
+      "mean": 0.347337,
+      "median": 0.347337,
+      "total": 0.347337,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 13,
+      "max": 13,
+      "mean": 13,
+      "median": 13,
+      "total": 13,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 6,
+      "Glob": 1,
+      "Grep": 5,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "975",
+      "fix_commit_hash": "522101e32778b0f66dbfaeb6d6b5d38df50954f7",
+      "ground_truth_bics": [
+        "f6e9e9d4db7a0992ab7e58f46298e65060440b00"
+      ],
+      "predicted_bics": [
+        "f6e9e9d4db7a0992ab7e58f46298e65060440b00"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "975",
+      "fix_commit": "522101e32778b0f66dbfaeb6d6b5d38df50954f7",
+      "ground_truth_bics": [
+        "f6e9e9d4db7a0992ab7e58f46298e65060440b00"
+      ],
+      "total_candidates": 10,
+      "gt_in_candidates": true,
+      "selected_commit": "f6e9e9d4db7a0992ab7e58f46298e65060440b00",
+      "selected_index": 7,
+      "confidence": "HIGH",
+      "explanation": "The fix commit adds a single line to CourseEvent.java: public Session getSession() { +       if (getRelatedCourses() == null) return null; for (RelatedCourseInfo rc: getRelatedCourses()) return rc.getCourse().getInstructionalOffering().getSession(); return null; }",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "JavaSource/org/unitime/timetable/model/CourseEvent.java"
+      ],
+      "call_stats": {
+        "duration_s": 58.247,
+        "duration_api_s": 57.746,
+        "num_turns": 14,
+        "input_tokens": 20,
+        "output_tokens": 4715,
+        "cache_creation_input_tokens": 35982,
+        "cache_read_input_tokens": 202200,
+        "total_cost_usd": 0.347337,
+        "total_tool_calls": 13,
+        "tool_calls_by_name": {
+          "Read": 6,
+          "Glob": 1,
+          "Grep": 5,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/975/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_975_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1416,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/975/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_975_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/975/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_975_candidate_selection/fix_commit_diff.txt"
+                }
+              },
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1068,
+            "cache_read_input_tokens": 9696,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getSession|getRelatedCourses|CourseEvent",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 339,
+            "cache_read_input_tokens": 10764,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "public Session getSession",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-A": 5,
+                  "-B": 2
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 9,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 11103,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/.claude/projects/-Users-user-01-research-workspaces-claude-szz-implementation-experiments-runs-llm-baselines-simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10-975-r03-attempt001-run-runtime-simple-szz-a-1yc9mc/9aa0b823-397c-4a2d-9f02-0bb6acaab616/tool-results/toolu_01TmCPGmpvjhzAHAbZfW1Y3C.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 22328,
+            "cache_read_input_tokens": 12506,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "diff --git",
+                  "path": "candidates/candidate_08.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "diff --git",
+                  "path": "candidates/candidate_09.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1183,
+            "cache_read_input_tokens": 34834,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/975/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_975_candidate_selection/candidates/candidate_08.diff",
+                  "offset": 408,
+                  "limit": 17
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/975/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_975_candidate_selection/candidates/candidate_09.diff",
+                  "offset": 408,
+                  "limit": 17
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1350,
+            "cache_read_input_tokens": 36017,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "public Session getSession",
+                  "path": "candidates/candidate_07.diff",
+                  "output_mode": "content"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 7,
+            "cache_creation_input_tokens": 868,
+            "cache_read_input_tokens": 37367,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/975/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_975_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_08\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit adds a single line to CourseEvent.java:\n\n    public Session getSession() {\n+       if (getRelatedCourses() == null) return null;\n        for (RelatedCourseInfo rc: getRelatedCourses())\n            return rc.getCourse().getInstructionalOffering().getSession();\n        return null;\n    }\n\nThis guards against a NullPointerException when getRelatedCourses() returns null, which happens when a CourseEvent is not yet fully created (matching the fix commit message: \"fixed a Null exception when creating a course-related event ... CourseRelatedEvent.getSession() throws a null because the event is not fully created yet\").\n\nSearching all 10 candidates for the introduction of this getSession() method in JavaSource/org/unitime/timetable/model/CourseEvent.java:\n\n- candidate_07 and earlier: no getSession() method exists yet in CourseEvent.java.\n- candidate_08: introduces the method for the first time, as a new addition:\n      +\tpublic Session getSession() {\n      +\t\tfor (RelatedCourseInfo rc: getRelatedCourses())\n      +\t\t\treturn rc.getCourse().getInstructionalOffering().getSession();\n      +\t\treturn null;\n      +\t}\n  with no null check on getRelatedCourses() \u2014 exactly the buggy code the fix later patches.\n- candidate_09: contains an essentially identical diff hunk (same blob transition 4595f6250..37ae9e2e4) for the same file, appearing to be a duplicate/near-duplicate of candidate_08's change.\n\nSince candidates are ordered chronologically from oldest to newest, and the buggy code is absent before candidate_08 and present starting there, candidate_08 is the commit that first introduced the unguarded getRelatedCourses() iteration, i.e., the bug fixed later by the null check.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1145,
+            "cache_read_input_tokens": 38235,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

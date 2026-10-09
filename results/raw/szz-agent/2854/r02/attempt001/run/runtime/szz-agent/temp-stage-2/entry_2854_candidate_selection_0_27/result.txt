@@ -1,0 +1,14 @@
+SELECTED: candidate_27
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds the line `workflow.getSerializer().setClassloader(classLoader);` immediately after the workflow instance is created via `classLoader.loadClass(experiment.getClassName()).getConstructor(Mode.class).newInstance(mode)` in CrossflowHandler.java's startExperiment method. This line ensures that the dynamically-loaded workflow's XStream-based Serializer uses the custom URLClassLoader that was used to load the experiment's classes, which is required so that XStream can correctly deserialize/resolve classes belonging to the dynamically-loaded experiment jar (otherwise it uses the default classloader and can fail with ClassNotFoundException at runtime when messages carrying experiment-specific types are deserialized).
+
+Tracing the history of this exact code region:
+- candidate_11 introduced the URLClassLoader-based dynamic class loading (`ClassLoader classLoader = new URLClassLoader(...)`) together with `workflow.getConstructor(Mode.class).newInstance(mode)` AND explicitly called `workflow.getSerializer().setClassloader(classLoader);` right after — i.e., the classloader propagation was correctly handled at that point.
+- Some commit between candidate_11 and candidate_27 refactored the Workflow constructor to accept the ClassLoader directly (`getConstructor(Mode.class, ClassLoader.class).newInstance(mode, classLoader)`), presumably setting the serializer's classloader internally within the Workflow constructor itself, replacing the explicit CrossflowHandler-side call.
+- candidate_27 then changes this constructor invocation back to `getConstructor(Mode.class).newInstance(mode)` (dropping the `ClassLoader.class`/`classLoader` argument entirely, as part of what looks like a broader refactor/simplification of the Workflow class hierarchy), but does NOT reinstate the explicit `workflow.getSerializer().setClassloader(classLoader);` call. This silently breaks the classloader propagation to the serializer — the workflow is instantiated with the correct classLoader for the `Class.forName`/reflection lookup, but the Serializer used for JMS message (de)serialization is left using the default/parent classloader.
+- This regression persists unchanged through candidate_28 (identical to the fix's pre-image), until the fix commit restores the explicit call.
+
+Since candidate_27 is the exact commit where the classloader-to-serializer wiring was lost (going from an implicit constructor-based propagation to nothing), it is the bug-introducing commit.

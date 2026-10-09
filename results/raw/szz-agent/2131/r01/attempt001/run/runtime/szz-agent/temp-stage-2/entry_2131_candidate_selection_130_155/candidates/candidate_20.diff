@@ -1,0 +1,68 @@
+diff --git a/platform/platform-api/src/com/intellij/util/ui/StatusText.java b/platform/platform-api/src/com/intellij/util/ui/StatusText.java
+index 19a5edbd2c7..a206ffaccf6 100644
+--- a/platform/platform-api/src/com/intellij/util/ui/StatusText.java
++++ b/platform/platform-api/src/com/intellij/util/ui/StatusText.java
+@@ -30,6 +30,7 @@ import java.util.ArrayList;
+ 
+ public abstract class StatusText {
+   public static final SimpleTextAttributes DEFAULT_ATTRIBUTES = SimpleTextAttributes.GRAYED_ATTRIBUTES;
++  public static final String DEFAULT_EMPTY_TEXT = UIBundle.message("message.nothingToShow");
+ 
+   @Nullable
+   private Component myOwner;
+@@ -76,7 +77,7 @@ public abstract class StatusText {
+ 
+     myComponent.setOpaque(false);
+     myComponent.setFont(UIUtil.getLabelFont());
+-    setText(UIBundle.message("message.nothingToShow"), DEFAULT_ATTRIBUTES);
++    setText(DEFAULT_EMPTY_TEXT, DEFAULT_ATTRIBUTES);
+     myIsDefaultText = true;
+   }
+ 
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+index 50230c3a5b4..383634fa588 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+@@ -68,6 +68,7 @@ import com.intellij.ui.table.TableView;
+ import com.intellij.util.*;
+ import com.intellij.util.text.DateFormatUtil;
+ import com.intellij.util.ui.ColumnInfo;
++import com.intellij.util.ui.StatusText;
+ import com.intellij.util.ui.TableViewModel;
+ import com.intellij.util.ui.UIUtil;
+ import org.jetbrains.annotations.NonNls;
+@@ -540,6 +541,10 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+     refreshRevisionsOrder();
+     HistoryAsTreeProvider treeHistoryProvider = session.getHistoryAsTreeProvider();
+ 
++    if (myHistorySession.getRevisionList().isEmpty()) {
++      adjustEmptyText();
++    }
++
+     if (treeHistoryProvider != null) {
+       myDualView.setRoot(new TreeNodeOnVcsRevision(null,
+         treeHistoryProvider.createTreeOn(myHistorySession.getRevisionList())), myTargetSelection);
+@@ -554,6 +559,23 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+     myDualView.repaint();
+   }
+ 
++  private void adjustEmptyText() {
++    VirtualFile virtualFile = myFilePath.getVirtualFile();
++    if (virtualFile == null || !virtualFile.isValid()) {
++      if (!myFilePath.getIOFile().exists()) {
++        String emptyText = "File " + myFilePath.getName() + " not found";
++        setEmptyText(emptyText);
++        return;
++      }
++    }
++    setEmptyText(StatusText.DEFAULT_EMPTY_TEXT);
++  }
++
++  private void setEmptyText(String emptyText) {
++    myDualView.getFlatView().getEmptyText().setText(emptyText);
++    myDualView.getTreeView().getEmptyText().setText(emptyText);
++  }
++
+   protected void addActionsTo(DefaultActionGroup group) {
+     addToGroup(false, group);
+   }

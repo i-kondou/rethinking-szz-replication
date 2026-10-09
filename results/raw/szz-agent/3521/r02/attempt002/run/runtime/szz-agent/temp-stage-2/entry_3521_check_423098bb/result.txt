@@ -1,0 +1,13 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a second (block/position) invocation-convention implementation to the various `IS_DISTINCT_FROM` operators (Array, Map, Row, Json, Char, and all primitive-type operators such as Bigint/Boolean/Double/Integer/etc.), replacing/augmenting the older `NULL_FLAG`-convention implementations that relied on `readNativeValue`/boxing. The "bug" being fixed is essentially a performance issue: the distinct-from operators previously always went through the slow, boxing `NULL_FLAG` convention.
+
+Examining `files/old/`, the relevant code is not merely "using the old NULL_FLAG convention" — it doesn't exist at all in this old snapshot:
+- `files/old/.../type/BigintOperators.java` has no `isDistinctFrom` method whatsoever (no `IS_DISTINCT_FROM` operator, no `IsNull`/`Convention` imports), whereas both `files/buggy/` and `files/fixed/` versions of this file implement `IS_DISTINCT_FROM`.
+- `files/old/.../metadata/FunctionRegistry.java` is a substantially earlier version of the file: it lacks imports/registrations for `ArrayDistinctFromOperator`, `MapDistinctFromOperator`, and `RowDistinctFromOperator` (only `ROW_EQUAL`/`ROW_NOT_EQUAL` are registered, no `ROW_DISTINCT_FROM`), and it uses an entirely different, pre-`Convention`/`ArgumentProperty` architecture for `ScalarFunctionImplementation`.
+- `files/old/.../operator/scalar/ArrayDistinctFromOperator.java` (same file path) actually contains the unrelated `ArrayEqualOperator` class content, confirming this file path was created fresh later for the distinct-from feature; at the `old` snapshot it held different code entirely.
+
+This shows the `old` snapshot predates the introduction of the `IS_DISTINCT_FROM` operator (and its underlying `Convention`/`NULL_FLAG` invocation mechanism) for these types. Since the specific buggy pattern (NULL_FLAG-only distinct-from implementations lacking the block/position optimization) requires that mechanism to exist in the first place, and it does not exist in `old/`, the bug cannot be present there. Per the task instructions, when the relevant code section doesn't exist in the old version, the bug cannot be present.

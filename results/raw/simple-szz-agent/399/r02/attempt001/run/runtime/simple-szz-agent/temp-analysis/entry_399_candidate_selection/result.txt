@@ -1,0 +1,28 @@
+SELECTED: candidate_08
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit corrects a double-escaping bug in KVMPhysicalDisk.java where the rbd mon_host/port
+separator was written as the Java string literal "\\\\:" (which produces the two characters `\\`
+followed by `:`, i.e. a double-escaped backslash) instead of the intended "\\:" (a single escaped
+backslash followed by `:`). The fix changes `rbdOpts += "\\\\:" + monPort;` to
+`rbdOpts += "\\:" + monPort;`, and updates the corresponding unit test expectation from
+"...mon_host=ceph-monitor\\\\:8000..." to "...mon_host=ceph-monitor\\:8000...".
+
+Tracing the history of this code across the candidates:
+- Candidates 01-07 contain no reference to RBDStringBuilder or rbdOpts at all — the feature does
+  not yet exist.
+- candidate_08 introduces the `RBDStringBuilder` method for the first time in
+  agent/src/com/cloud/agent/storage/KVMPhysicalDisk.java, as entirely new code (all `+` lines):
+      rbdOpts += ":mon_host=" + monHost + "\\\\:" + monPort;
+  This is exactly the buggy double-escaped literal that the fix commit later corrects.
+- Later candidates (11, 12, 13, 14, 16, 19) only refactor surrounding logic (e.g., splitting the
+  mon_host/port concatenation, changing the `monPort != 6789` condition to `monPort > 0`,
+  moving code between files) while preserving the same buggy "\\\\:" literal inherited from
+  candidate_08.
+- candidate_20 is the fix commit itself (identical to fix_commit_diff.txt), changing "\\\\:" to
+  "\\:" and updating the test — it fixes the bug rather than introducing it.
+
+Since candidate_08 is the first commit where the problematic double-escaped separator was
+introduced, it is the bug-introducing commit.

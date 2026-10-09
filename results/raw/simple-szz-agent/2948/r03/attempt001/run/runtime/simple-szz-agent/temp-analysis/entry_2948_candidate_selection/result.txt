@@ -1,0 +1,31 @@
+SELECTED: candidate_439
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the loop condition in NativeND2Reader.java's metadata-parsing
+code from:
+
+    while (sb.charAt(sb.length() - 1) != ':' && sb.indexOf("_") < 0 && i < lines.length) {
+
+to:
+
+    while ((sb.length() == 0 || sb.charAt(sb.length() - 1) != ':') && sb.indexOf("_") < 0 && i < lines.length) {
+
+This guards against calling `charAt(sb.length() - 1)` on an empty StringBuffer, which
+throws a StringIndexOutOfBoundsException.
+
+candidate_439 is the commit that introduced this exact vulnerable line. Prior to this
+commit, the same logic used a plain String `key` and the loop condition was
+`!key.endsWith(":")`, which is safe even when `key` is an empty string (it simply
+returns false rather than throwing). candidate_439 refactored this code (and similar
+string-concatenation patterns across several other readers) to use StringBuffer for
+performance, and in doing so replaced the safe `.endsWith(":")` check with
+`sb.charAt(sb.length() - 1) != ':'`, which is unsafe when `sb` can be empty (e.g. when
+`lines[i]` is an empty token from the `textString.split(" ")` call, producing runs of
+empty strings that get appended into an otherwise-empty StringBuffer).
+
+candidate_440 in the candidate set is actually identical to the fix commit itself
+(the one-line guard fix), confirming that the bug was live in the code from
+candidate_439 onward until it was patched. Thus candidate_439 is the first commit
+that introduced the problematic code pattern.

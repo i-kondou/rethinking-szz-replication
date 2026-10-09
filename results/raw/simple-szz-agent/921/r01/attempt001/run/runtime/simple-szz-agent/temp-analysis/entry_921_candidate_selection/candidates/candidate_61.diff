@@ -1,0 +1,3122 @@
+diff --git a/Documentation/Database/MySQL/Changes/144 Examination Status.sql b/Documentation/Database/MySQL/Changes/144 Examination Status.sql
+new file mode 100644
+index 00000000..ce946bb9
+--- /dev/null
++++ b/Documentation/Database/MySQL/Changes/144 Examination Status.sql	
+@@ -0,0 +1,80 @@
++/*
++ * Licensed to The Apereo Foundation under one or more contributor license
++ * agreements. See the NOTICE file distributed with this work for
++ * additional information regarding copyright ownership.
++ *
++ * The Apereo Foundation licenses this file to you under the Apache License,
++ * Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License. You may obtain a copy of the License at:
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ * 
++*/
++create table exam_status (
++	session_id decimal(20,0) not null,
++	type_id decimal(20,0) not null,
++	status_id decimal(20,0),
++	primary key(session_id, type_id)
++	) engine = INNODB;
++	
++alter table exam_status add constraint fk_xstatus_session foreign key (session_id)
++	references sessions (uniqueid) on delete cascade;
++	
++alter table exam_status add constraint fk_xstatus_type foreign key (type_id)
++	references exam_type (uniqueid) on delete cascade;
++	
++alter table exam_status add constraint fk_xstatus_status foreign key (status_id)
++	references dept_status_type (uniqueid) on delete set null;
++
++create table exam_managers (
++	session_id decimal(20,0) not null,
++	type_id decimal(20,0) not null,
++	manager_id decimal(20,0) not null,
++	primary key (session_id, type_id, manager_id)
++	) engine = INNODB;
++
++alter table exam_managers add constraint fk_xmanagers_status foreign key (session_id, type_id)
++	references exam_status (session_id, type_id) on delete cascade;
++
++alter table exam_managers add constraint fk_xmanagers_manager foreign key (manager_id)
++	references timetable_manager (uniqueid) on delete cascade;
++
++select 32767 * next_hi into @id from hibernate_unique_key;
++
++select max(ord) + 1 into @ord from dept_status_type;
++
++insert into dept_status_type
++	(uniqueid, reference, label, status, apply, ord) values
++	(@id+0, 'exam_disabled', 'Examination Disabled', 0, 4, @ord+0),
++	(@id+1, 'exam_edit', 'Examination Data Entry', 1536, 4, @ord+1),
++	(@id+2, 'exam_timetabling', 'Examination Timetabling', 3584, 4, @ord+2),
++	(@id+3, 'exam_publish', 'Examination Published', 12800, 4, @ord+3);
++
++update hibernate_unique_key set next_hi=next_hi+1;
++
++insert into rights (role_id, value)
++	select distinct r.role_id, 'ExaminationStatuses'
++	from roles r, rights g where g.role_id = r.role_id and g.value = 'CourseTypes';
++
++insert into rights (role_id, value)
++	select distinct r.role_id, 'ExaminationStatusEdit'
++	from roles r, rights g where g.role_id = r.role_id and g.value = 'CourseTypeEdit';
++	
++insert into rights (role_id, value)
++	select distinct r.role_id, 'ExaminationView'
++	from roles r, rights g where g.role_id = r.role_id and g.value in ('Examinations', 'ExaminationSchedule');
++
++/*
++ * Update database version
++ */
++
++update application_config set value='144' where name='tmtbl.db.version';
++
++commit;
+diff --git a/Documentation/Database/Oracle/Changes/144 Examination Status.sql b/Documentation/Database/Oracle/Changes/144 Examination Status.sql
+new file mode 100644
+index 00000000..7f6e5b18
+--- /dev/null
++++ b/Documentation/Database/Oracle/Changes/144 Examination Status.sql	
+@@ -0,0 +1,90 @@
++/*
++ * Licensed to The Apereo Foundation under one or more contributor license
++ * agreements. See the NOTICE file distributed with this work for
++ * additional information regarding copyright ownership.
++ *
++ * The Apereo Foundation licenses this file to you under the Apache License,
++ * Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License. You may obtain a copy of the License at:
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ * 
++*/
++create table exam_status (
++	session_id number(20,0) constraint nn_xstatus_session not null,
++	type_id number(20,0) constraint nn_xstatus_type not null,
++	status_id number(20,0)
++	);
++
++alter table exam_status add constraint pk_exam_status primary key (session_id, type_id);
++
++alter table exam_status add constraint fk_xstatus_session foreign key (session_id)
++	references sessions (uniqueid) on delete cascade;
++	
++alter table exam_status add constraint fk_xstatus_type foreign key (type_id)
++	references exam_type (uniqueid) on delete cascade;
++	
++alter table exam_status add constraint fk_xstatus_status foreign key (status_id)
++	references dept_status_type (uniqueid) on delete set null;
++
++create table exam_managers (
++	session_id number(20,0) constraint nn_xmanagers_session not null,
++	type_id number(20,0) constraint nn_xmanagers_type not null,
++	manager_id number(20,0) constraint nn_xmanagers_manager not null
++	);
++
++alter table exam_managers add constraint pk_exam_managers primary key (session_id, type_id, manager_id);
++
++alter table exam_managers add constraint fk_xmanagers_status foreign key (session_id, type_id)
++	references exam_status (session_id, type_id) on delete cascade;
++
++alter table exam_managers add constraint fk_xmanagers_manager foreign key (manager_id)
++	references timetable_manager (uniqueid) on delete cascade;
++
++insert into dept_status_type
++	(uniqueid, reference, label, status, apply, ord) values
++	(ref_table_seq.nextval, 'exam_disabled', 'Examination Disabled', 0, 4, 1000);
++
++insert into dept_status_type
++	(uniqueid, reference, label, status, apply, ord) values
++	(ref_table_seq.nextval, 'exam_edit', 'Examination Data Entry', 1536, 4, 1001);
++
++insert into dept_status_type
++	(uniqueid, reference, label, status, apply, ord) values
++	(ref_table_seq.nextval, 'exam_timetabling', 'Examination Timetabling', 3584, 4, 1002);
++
++insert into dept_status_type
++	(uniqueid, reference, label, status, apply, ord) values
++	(ref_table_seq.nextval, 'exam_publish', 'Examination Published', 12800, 4, 1003);
++
++insert into rights (role_id, value)
++	select distinct r.role_id, 'ExaminationStatuses'
++	from roles r, rights g where g.role_id = r.role_id and g.value = 'CourseTypes';
++
++insert into rights (role_id, value)
++	select distinct r.role_id, 'ExaminationStatusEdit'
++	from roles r, rights g where g.role_id = r.role_id and g.value = 'CourseTypeEdit';
++	
++insert into rights (role_id, value)
++	select distinct r.role_id, 'ExaminationView'
++	from roles r, rights g where g.role_id = r.role_id and g.value in ('Examinations', 'ExaminationSchedule');
++
++merge into dept_status_type t
++	using (select uniqueid, row_number() over (order by ord, uniqueid) rnum from dept_status_type) s
++	on (t.uniqueid = s.uniqueid)
++	when matched then update set t.ord = s.rnum;
++
++/*
++ * Update database version
++ */
++
++update application_config set value='144' where name='tmtbl.db.version';
++
++commit;
+diff --git a/JavaSource/Event.hbm.xml b/JavaSource/Event.hbm.xml
+index 4dd5e6b1..133bdeae 100644
+--- a/JavaSource/Event.hbm.xml
++++ b/JavaSource/Event.hbm.xml
+@@ -118,6 +118,13 @@
+             type="java.util.Date"
+             not-null="false"/>
+ 
++		<property
++			name="examStatus"
++			type="java.lang.Integer"
++			not-null="false"
++			lazy="true"
++			formula=" ( select t.status from %SCHEMA%.exam x, %SCHEMA%.exam_status s, %SCHEMA%.dept_status_type t where x.uniqueid = exam_id and s.session_id = x.session_id and s.type_id = x.exam_type_id and s.status_id = t.uniqueid) "/>
++
+         <subclass
+             name="ClassEvent"
+             abstract="false"
+@@ -190,8 +197,6 @@
+             	discriminator-value="5"/>
+ 
+         </subclass>
+-
+-
+     </class>
+ 
+ </hibernate-mapping>
+diff --git a/JavaSource/ExamStatus.hbm.xml b/JavaSource/ExamStatus.hbm.xml
+new file mode 100644
+index 00000000..f9fc3472
+--- /dev/null
++++ b/JavaSource/ExamStatus.hbm.xml
+@@ -0,0 +1,62 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
++
++<!-- 
++ * Licensed to The Apereo Foundation under one or more contributor license
++ * agreements. See the NOTICE file distributed with this work for
++ * additional information regarding copyright ownership.
++ *
++ * The Apereo Foundation licenses this file to you under the Apache License,
++ * Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License. You may obtain a copy of the License at:
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ * 
++ -->
++<hibernate-mapping package="org.unitime.timetable.model">
++    <class name="ExamStatus" table="exam_status">
++        <cache include="non-lazy" usage="transactional"/>
++        
++        <composite-id>
++            <key-many-to-one
++                name="session"
++            	class="Session"
++            	column="session_id"
++	            foreign-key="fk_xstatus_session"/>
++
++            <key-many-to-one
++                name="type"
++            	class="ExamType"
++            	column="type_id"
++            	foreign-key="fk_xstatus_type"/>
++        </composite-id>
++
++        <many-to-one
++            name="status"
++            class="DepartmentStatusType"
++            column="status_id"
++            not-null="false"
++            foreign-key="fk_xstatus_status"/>
++
++        <set
++            name="managers"
++            table="exam_managers"
++            inverse="false"
++            lazy="true">
++
++            <cache include="non-lazy" usage="transactional"/>
++            <key foreign-key="fk_xmanagers_status">
++            	<column name="session_id"/>
++            	<column name="type_id"/>
++            </key>
++            <many-to-many class="TimetableManager" column="manager_id" foreign-key="fk_xmanagers_manager"/>
++        </set>
++	</class>
++</hibernate-mapping>
+\ No newline at end of file
+diff --git a/JavaSource/PreferenceGroup.hbm.xml b/JavaSource/PreferenceGroup.hbm.xml
+index 7c4640c7..9a6692a1 100644
+--- a/JavaSource/PreferenceGroup.hbm.xml
++++ b/JavaSource/PreferenceGroup.hbm.xml
+@@ -1083,6 +1083,11 @@
+                 not-null="false"
+                 length="20"/>
+ 
++			<many-to-one
++                name="statusType"
++                class="DepartmentStatusType"
++                lazy="proxy"
++                formula=" ( select s.status_id from %SCHEMA%.exam_status s where s.session_id = session_id and s.type_id = exam_type_id ) "/>
+         </union-subclass>
+     </class>
+ </hibernate-mapping>
+diff --git a/JavaSource/dbupdate.xml b/JavaSource/dbupdate.xml
+index cac9dfec..798065a6 100644
+--- a/JavaSource/dbupdate.xml
++++ b/JavaSource/dbupdate.xml
+@@ -9962,4 +9962,110 @@
+ 		</sql>
+ 		<sql>alter table %SCHEMA%.date_pattern modify nr_weeks float</sql>
+ 	</update>
++	<update version="144" date="30-Mar-2015" comment="Examination Status">
++		<plsql>
++			create table %SCHEMA%.exam_status (
++				session_id number(20,0) constraint nn_xstatus_session not null,
++				type_id number(20,0) constraint nn_xstatus_type not null,
++				status_id number(20,0)
++			)
++		</plsql>
++		<plsql>alter table %SCHEMA%.exam_status add constraint pk_exam_status primary key (session_id, type_id)</plsql>
++		<mysql>
++			create table %SCHEMA%.exam_status (
++				session_id decimal(20,0) not null,
++				type_id decimal(20,0) not null,
++				status_id decimal(20,0),
++				primary key(session_id, type_id)
++			) engine = INNODB
++		</mysql>
++		<sql>
++			alter table %SCHEMA%.exam_status add constraint fk_xstatus_session foreign key (session_id)
++			references %SCHEMA%.sessions (uniqueid) on delete cascade
++		</sql>
++		<sql>
++			alter table %SCHEMA%.exam_status add constraint fk_xstatus_type foreign key (type_id)
++			references %SCHEMA%.exam_type (uniqueid) on delete cascade
++		</sql>
++		<sql>
++			alter table %SCHEMA%.exam_status add constraint fk_xstatus_status foreign key (status_id)
++			references %SCHEMA%.dept_status_type (uniqueid) on delete set null
++		</sql>
++		<plsql>
++			create table %SCHEMA%.exam_managers (
++				session_id number(20,0) constraint nn_xmanagers_session not null,
++				type_id number(20,0) constraint nn_xmanagers_type not null,
++				manager_id number(20,0) constraint nn_xmanagers_manager not null
++			)
++		</plsql>
++		<plsql>alter table %SCHEMA%.exam_managers add constraint pk_exam_managers primary key (session_id, type_id, manager_id)</plsql>
++		<mysql>
++			create table %SCHEMA%.exam_managers (
++				session_id decimal(20,0) not null,
++				type_id decimal(20,0) not null,
++				manager_id decimal(20,0) not null,
++				primary key (session_id, type_id, manager_id)
++			) engine = INNODB
++		</mysql>
++		<sql>
++			alter table %SCHEMA%.exam_managers add constraint fk_xmanagers_status foreign key (session_id, type_id)
++			references %SCHEMA%.exam_status (session_id, type_id) on delete cascade
++		</sql>
++		<sql>
++			alter table %SCHEMA%.exam_managers add constraint fk_xmanagers_manager foreign key (manager_id)
++			references %SCHEMA%.timetable_manager (uniqueid) on delete cascade
++		</sql>
++		<mysql into="ID">
++			select 32767 * next_hi from %SCHEMA%.hibernate_unique_key			
++		</mysql>
++		<sql into="ORD">
++			select max(ord) + 1 from %SCHEMA%.dept_status_type			
++		</sql>
++		<mysql>
++			insert into %SCHEMA%.dept_status_type
++			(uniqueid, reference, label, status, apply, ord) values
++			(%ID%+0, 'exam_disabled', 'Examination Disabled', 0, 4, %ORD%+0),
++			(%ID%+1, 'exam_edit', 'Examination Data Entry', 1536, 4, %ORD%+1),
++			(%ID%+2, 'exam_timetabling', 'Examination Timetabling', 3584, 4, %ORD%+2),
++			(%ID%+3, 'exam_publish', 'Examination Published', 12800, 4, %ORD%+3)
++		</mysql>
++		<mysql>
++			update %SCHEMA%.hibernate_unique_key set next_hi=next_hi+1
++		</mysql>
++		<plsql>
++			insert into %SCHEMA%.dept_status_type
++			(uniqueid, reference, label, status, apply, ord) values
++			(%SCHEMA%.ref_table_seq.nextval, 'exam_disabled', 'Examination Disabled', 0, 4, %ORD%+0)
++		</plsql>
++		<plsql>
++			insert into %SCHEMA%.dept_status_type
++			(uniqueid, reference, label, status, apply, ord) values
++			(%SCHEMA%.ref_table_seq.nextval, 'exam_edit', 'Examination Data Entry', 1536, 4, %ORD%+1)
++		</plsql>
++		<plsql>
++			insert into %SCHEMA%.dept_status_type
++			(uniqueid, reference, label, status, apply, ord) values
++			(%SCHEMA%.ref_table_seq.nextval, 'exam_timetabling', 'Examination Timetabling', 3584, 4, %ORD%+2)
++		</plsql>
++		<plsql>
++			insert into %SCHEMA%.dept_status_type
++			(uniqueid, reference, label, status, apply, ord) values
++			(%SCHEMA%.ref_table_seq.nextval, 'exam_publish', 'Examination Published', 12800, 4, %ORD%+3)
++		</plsql>
++		<sql>
++			insert into %SCHEMA%.rights (role_id, value)
++			select distinct r.role_id, 'ExaminationStatuses'
++			from %SCHEMA%.roles r, %SCHEMA%.rights g where g.role_id = r.role_id and g.value = 'CourseTypes'
++		</sql>
++		<sql>
++			insert into %SCHEMA%.rights (role_id, value)
++			select distinct r.role_id, 'ExaminationStatusEdit'
++			from %SCHEMA%.roles r, %SCHEMA%.rights g where g.role_id = r.role_id and g.value = 'CourseTypeEdit'
++		</sql>
++		<sql>
++			insert into %SCHEMA%.rights (role_id, value)
++			select distinct r.role_id, 'ExaminationView'
++			from %SCHEMA%.roles r, %SCHEMA%.rights g where g.role_id = r.role_id and g.value in ('Examinations', 'ExaminationSchedule')
++		</sql>
++	</update>
+ </dbupdate>
+\ No newline at end of file
+diff --git a/JavaSource/hibernate.cfg.xml b/JavaSource/hibernate.cfg.xml
+index b34b0cbe..3d871053 100644
+--- a/JavaSource/hibernate.cfg.xml
++++ b/JavaSource/hibernate.cfg.xml
+@@ -211,5 +211,6 @@
+ 	<mapping resource="MessageLog.hbm.xml"/>
+ 	<mapping resource="Script.hbm.xml"/>
+ 	<mapping resource="ClusterDiscovery.hbm.xml"/>
++	<mapping resource="ExamStatus.hbm.xml"/>
+ </session-factory>
+ </hibernate-configuration>
+diff --git a/JavaSource/menu.xml b/JavaSource/menu.xml
+index 627ca741..7764394e 100644
+--- a/JavaSource/menu.xml
++++ b/JavaSource/menu.xml
+@@ -626,6 +626,12 @@
+ 				</condition>
+ 			</item>
+ 			<separator/>
++			<item name="Examination Statuses" page="admin" type="gwt">
++				<parameter name="type">examStatus</parameter>
++				<condition>
++					<hasPermission name="ExaminationStatuses"/>
++				</condition>
++			</item>
+ 			<item name="Examination Periods" page="examPeriodEdit.do">
+ 				<condition>
+ 					<hasPermission name="ExaminationPeriods"/>
+diff --git a/JavaSource/org/unitime/timetable/action/AssignedExamsAction.java b/JavaSource/org/unitime/timetable/action/AssignedExamsAction.java
+index 7c1489a0..9ea6b27a 100644
+--- a/JavaSource/org/unitime/timetable/action/AssignedExamsAction.java
++++ b/JavaSource/org/unitime/timetable/action/AssignedExamsAction.java
+@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
+ import org.unitime.commons.Debug;
+ import org.unitime.commons.web.WebTable;
+ import org.unitime.timetable.form.ExamReportForm;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.Exam;
+ import org.unitime.timetable.model.PreferenceLevel;
+ import org.unitime.timetable.model.Session;
+@@ -112,7 +113,7 @@ public class AssignedExamsAction extends Action {
+         if (request.getParameter("backId")!=null)
+             request.setAttribute("hash", request.getParameter("backId"));
+         
+-        LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++        LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamTimetable);
+ 
+         return mapping.findForward("showReport");
+ 	}
+diff --git a/JavaSource/org/unitime/timetable/action/DeptStatusTypeEditAction.java b/JavaSource/org/unitime/timetable/action/DeptStatusTypeEditAction.java
+index 4e72c7ca..59d18995 100644
+--- a/JavaSource/org/unitime/timetable/action/DeptStatusTypeEditAction.java
++++ b/JavaSource/org/unitime/timetable/action/DeptStatusTypeEditAction.java
+@@ -233,12 +233,17 @@ public class DeptStatusTypeEditAction extends Action {
+         	String rights = "";
+             String apply = "";
+             if (s.applyDepartment()) {
+-                if (s.applySession())
+-                    apply = "Both";
+-                else
++                if (s.applySession()) {
++                	if (s.applyExamStatus())
++                		apply = "All";
++                	else
++                		apply = "Session &amp; Department";
++                } else
+                     apply = "Department";
+             } else if (s.applySession())
+                 apply = "Session";
++            else if (s.applyExamStatus())
++            	apply = "Examinations";
+             if (s.isAllowRollForward()) {
+             	if (rights.length()>0) rights+="; ";
+                 rights += "roll-forward";
+diff --git a/JavaSource/org/unitime/timetable/action/ExamAssignmentReportAction.java b/JavaSource/org/unitime/timetable/action/ExamAssignmentReportAction.java
+index 7e071b56..bd8f9ece 100644
+--- a/JavaSource/org/unitime/timetable/action/ExamAssignmentReportAction.java
++++ b/JavaSource/org/unitime/timetable/action/ExamAssignmentReportAction.java
+@@ -51,6 +51,7 @@ import org.unitime.commons.web.WebTable;
+ import org.unitime.timetable.defaults.ApplicationProperty;
+ import org.unitime.timetable.defaults.UserProperty;
+ import org.unitime.timetable.form.ExamAssignmentReportForm;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.DepartmentalInstructor;
+ import org.unitime.timetable.model.Exam;
+ import org.unitime.timetable.model.ExamOwner;
+@@ -156,7 +157,7 @@ public class ExamAssignmentReportAction extends Action {
+         if (request.getParameter("backId")!=null)
+             request.setAttribute("hash", request.getParameter("backId"));
+         
+-        LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++        LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamTimetable);
+ 
+         return mapping.findForward("show");
+ 	}
+diff --git a/JavaSource/org/unitime/timetable/action/ExamChangesAction.java b/JavaSource/org/unitime/timetable/action/ExamChangesAction.java
+index 17fbaa02..40ae9448 100644
+--- a/JavaSource/org/unitime/timetable/action/ExamChangesAction.java
++++ b/JavaSource/org/unitime/timetable/action/ExamChangesAction.java
+@@ -27,7 +27,6 @@ import java.util.Vector;
+ import javax.servlet.http.HttpServletRequest;
+ import javax.servlet.http.HttpServletResponse;
+ 
+-
+ import org.apache.struts.action.Action;
+ import org.apache.struts.action.ActionForm;
+ import org.apache.struts.action.ActionForward;
+@@ -38,6 +37,7 @@ import org.springframework.stereotype.Service;
+ import org.unitime.commons.Debug;
+ import org.unitime.commons.web.WebTable;
+ import org.unitime.timetable.form.ExamChangesForm;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.Exam;
+ import org.unitime.timetable.model.Location;
+ import org.unitime.timetable.model.PreferenceLevel;
+@@ -142,7 +142,7 @@ public class ExamChangesAction extends Action {
+         if (request.getParameter("backId")!=null)
+             request.setAttribute("hash", request.getParameter("backId"));
+         
+-        LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++        LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamTimetable);
+ 
+         return mapping.findForward("showReport");
+ 	}
+diff --git a/JavaSource/org/unitime/timetable/action/ExamDetailAction.java b/JavaSource/org/unitime/timetable/action/ExamDetailAction.java
+index c9d512ca..e4de912c 100644
+--- a/JavaSource/org/unitime/timetable/action/ExamDetailAction.java
++++ b/JavaSource/org/unitime/timetable/action/ExamDetailAction.java
+@@ -46,6 +46,7 @@ import org.unitime.timetable.gwt.resources.GwtConstants;
+ import org.unitime.timetable.model.ChangeLog;
+ import org.unitime.timetable.model.Class_;
+ import org.unitime.timetable.model.CourseOffering;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.DepartmentalInstructor;
+ import org.unitime.timetable.model.DistributionPref;
+ import org.unitime.timetable.model.Exam;
+@@ -305,7 +306,7 @@ public class ExamDetailAction extends PreferencesAction {
+             LookupTables.setupRoomFeatures(request, exam); // Preference Levels
+             LookupTables.setupRoomGroups(request, exam);   // Room Groups
+             
+-            LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++            LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamTimetable, DepartmentStatusType.Status.ExamView);
+             
+             return mapping.findForward("showExamDetail");
+             
+diff --git a/JavaSource/org/unitime/timetable/action/ExamDistributionPrefsAction.java b/JavaSource/org/unitime/timetable/action/ExamDistributionPrefsAction.java
+index 5be2e32d..ddd64105 100644
+--- a/JavaSource/org/unitime/timetable/action/ExamDistributionPrefsAction.java
++++ b/JavaSource/org/unitime/timetable/action/ExamDistributionPrefsAction.java
+@@ -45,6 +45,7 @@ import org.unitime.timetable.form.DistributionPrefsForm;
+ import org.unitime.timetable.form.ExamDistributionPrefsForm;
+ import org.unitime.timetable.model.ChangeLog;
+ import org.unitime.timetable.model.CourseOffering;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.DistributionObject;
+ import org.unitime.timetable.model.DistributionPref;
+ import org.unitime.timetable.model.DistributionType;
+@@ -95,7 +96,10 @@ public class ExamDistributionPrefsAction extends Action {
+         
+ 		String op = frm.getOp();
+ 		if(op==null || op.trim().length()==0) {
+-		    op = "view";
++			if (deleteType!=null && deleteType.length()>0)
++				op = "delete";
++			else
++				op = "view";
+ 		    frm.setOp(op);
+ 		}
+ 		
+@@ -111,11 +115,13 @@ public class ExamDistributionPrefsAction extends Action {
+ 		// Set lookup tables lists
+         //LookupTables.setupPrefLevels(request);	 // Preference Levels
+         LookupTables.setupExamDistribTypes(request, sessionContext); // Distribution Types
+-        LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId()); // Exam Types
++        LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamTimetable, DepartmentStatusType.Status.ExamView); // Exam Types
++        request.setAttribute("examTypesAdd", ExamType.findAllApplicable(sessionContext.getUser(), DepartmentStatusType.Status.ExamTimetable, DepartmentStatusType.Status.ExamEdit));
+ 
+         // Add / Update distribution pref
+         if(op.equals(rsc.getMessage("button.save")) || op.equals(rsc.getMessage("button.update")) ) {
+             Debug.debug("Saving distribution pref ...");
++            sessionContext.setAttribute(SessionAttribute.ExamType, frm.getExamType());
+             errors = frm.validate(mapping, request);
+             if(errors.size()==0) {
+             	try {
+@@ -138,7 +144,7 @@ public class ExamDistributionPrefsAction extends Action {
+         }
+         
+         // Delete distribution object / pref
+-        if(op.equals(rsc.getMessage("button.delete"))) {
++        if(op.equals(rsc.getMessage("button.delete")) || op.equals("delete")) {
+             if(deleteType.equals("distObject")) {
+                 frm.deleteExam(Integer.parseInt(deleteId));
+             }
+@@ -149,6 +155,9 @@ public class ExamDistributionPrefsAction extends Action {
+                 if (BackTracker.doBack(request, response)) return null;
+ 	            op = "view"; //in case no back is available
+             }
++            if (deleteType.equals("examType")) {
++            	sessionContext.setAttribute(SessionAttribute.ExamType, frm.getExamType());
++            }
+         }
+         
+         // Add new class - redirect from SchedulingSubpartEdit / ClassEdit
+@@ -258,12 +267,14 @@ public class ExamDistributionPrefsAction extends Action {
+         
+         request.setAttribute(DistributionPrefsForm.LIST_SIZE_ATTR, ""+(frm.getSubjectArea().size()-1));
+         
+-        if (sessionContext.getAttribute(SessionAttribute.ExamType) != null)
+-        	frm.setExamType((Long)sessionContext.getAttribute(SessionAttribute.ExamType));
+         if (frm.getExamType() == null) {
+-			TreeSet<ExamType> types = ExamType.findAllUsed(sessionContext.getUser().getCurrentAcademicSessionId());
+-			if (!types.isEmpty())
+-				frm.setExamType(types.first().getUniqueId());
++            if (sessionContext.getAttribute(SessionAttribute.ExamType) != null)
++            	frm.setExamType((Long)sessionContext.getAttribute(SessionAttribute.ExamType));
++            else {
++            	TreeSet<ExamType> types = ExamType.findAllUsed(sessionContext.getUser().getCurrentAcademicSessionId());
++            	if (!types.isEmpty())
++            		frm.setExamType(types.first().getUniqueId());
++            }
+         }
+         
+         frm.setFilterSubjectAreas(SubjectArea.getUserSubjectAreas(sessionContext.getUser(), false));
+@@ -286,7 +297,7 @@ public class ExamDistributionPrefsAction extends Action {
+         	        frm.setFilterSubjectAreaId(Constants.ALL_OPTION_VALUE);        	        
+         	}
+         	
+-        	if (frm.getFilterSubjectAreaId()!=null && frm.getFilterSubjectAreaId().length()>0) {
++        	if (frm.getFilterSubjectAreaId()!=null && frm.getFilterSubjectAreaId().length()>0 && !"null".equals(frm.getFilterSubjectAreaId())) {
+         	    String html = tbl.getDistPrefsTable(request, sessionContext, (Constants.ALL_OPTION_VALUE.equals(frm.getFilterSubjectAreaId())?null:Long.valueOf(frm.getFilterSubjectAreaId())), frm.getFilterCourseNbr(), frm.getExamType());
+         	    if (html!=null)
+         	        request.setAttribute(DistributionPref.DIST_PREF_REQUEST_ATTR, html);
+diff --git a/JavaSource/org/unitime/timetable/action/ExamEditAction.java b/JavaSource/org/unitime/timetable/action/ExamEditAction.java
+index ffd906be..f35fdcdc 100644
+--- a/JavaSource/org/unitime/timetable/action/ExamEditAction.java
++++ b/JavaSource/org/unitime/timetable/action/ExamEditAction.java
+@@ -46,6 +46,7 @@ import org.unitime.timetable.model.ChangeLog;
+ import org.unitime.timetable.model.Class_;
+ import org.unitime.timetable.model.CourseOffering;
+ import org.unitime.timetable.model.Department;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.DepartmentalInstructor;
+ import org.unitime.timetable.model.DistributionPref;
+ import org.unitime.timetable.model.Exam;
+@@ -280,7 +281,7 @@ public class ExamEditAction extends PreferencesAction {
+             
+             setupInstructors(request, frm, exam);
+             
+-            LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++            LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamTimetable, DepartmentStatusType.Status.ExamEdit);
+             
+             if (exam!=null) {
+                 LookupTables.setupRooms(request, exam);      // Room Prefs
+diff --git a/JavaSource/org/unitime/timetable/action/ExamGridAction.java b/JavaSource/org/unitime/timetable/action/ExamGridAction.java
+index e59fecd2..0b5f6981 100644
+--- a/JavaSource/org/unitime/timetable/action/ExamGridAction.java
++++ b/JavaSource/org/unitime/timetable/action/ExamGridAction.java
+@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.stereotype.Service;
+ import org.unitime.timetable.form.ExamGridForm;
+ import org.unitime.timetable.interfaces.RoomAvailabilityInterface;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.ExamPeriod;
+ import org.unitime.timetable.model.ExamType;
+ import org.unitime.timetable.model.Session;
+@@ -110,7 +111,7 @@ public class ExamGridAction extends Action {
+ 
+         myForm.setOp("Change");
+         
+-        LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++        LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamTimetable);
+         
+         return mapping.findForward("showGrid");
+ 	}
+diff --git a/JavaSource/org/unitime/timetable/action/ExamListAction.java b/JavaSource/org/unitime/timetable/action/ExamListAction.java
+index a39ff0d2..8f38ec35 100644
+--- a/JavaSource/org/unitime/timetable/action/ExamListAction.java
++++ b/JavaSource/org/unitime/timetable/action/ExamListAction.java
+@@ -23,6 +23,7 @@ import java.awt.Image;
+ import java.util.Collection;
+ import java.util.Enumeration;
+ import java.util.Iterator;
++import java.util.List;
+ import java.util.TreeSet;
+ import java.util.Vector;
+ 
+@@ -42,6 +43,7 @@ import org.unitime.timetable.defaults.SessionAttribute;
+ import org.unitime.timetable.defaults.UserProperty;
+ import org.unitime.timetable.form.ExamListForm;
+ import org.unitime.timetable.model.BuildingPref;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.DepartmentalInstructor;
+ import org.unitime.timetable.model.DistributionPref;
+ import org.unitime.timetable.model.ExamType;
+@@ -101,9 +103,9 @@ public class ExamListAction extends Action {
+         	myForm.setExamType((Long)sessionContext.getAttribute(SessionAttribute.ExamType));
+         }
+         if (myForm.getExamType() == null) {
+-			TreeSet<ExamType> types = ExamType.findAllUsed(sessionContext.getUser().getCurrentAcademicSessionId());
++			List<ExamType> types = ExamType.findAllUsedApplicable(sessionContext.getUser(), DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
+ 			if (!types.isEmpty())
+-				myForm.setExamType(types.first().getUniqueId());
++				myForm.setExamType(types.get(0).getUniqueId());
+         }
+         
+         WebTable.setOrder(sessionContext, "ExamList.ord", request.getParameter("ord"), 1);
+@@ -176,7 +178,7 @@ public class ExamListAction extends Action {
+                         ")", 
+                     true, true);
+         
+-        LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++        LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
+ 
+         return mapping.findForward("list");
+     }
+diff --git a/JavaSource/org/unitime/timetable/action/ExamPdfReportAction.java b/JavaSource/org/unitime/timetable/action/ExamPdfReportAction.java
+index 246112a3..9e84952e 100644
+--- a/JavaSource/org/unitime/timetable/action/ExamPdfReportAction.java
++++ b/JavaSource/org/unitime/timetable/action/ExamPdfReportAction.java
+@@ -37,6 +37,7 @@ import org.unitime.commons.web.WebTable;
+ import org.unitime.commons.web.WebTable.WebTableLine;
+ import org.unitime.timetable.defaults.ApplicationProperty;
+ import org.unitime.timetable.form.ExamPdfReportForm;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.SubjectArea;
+ import org.unitime.timetable.model.dao.SessionDAO;
+ import org.unitime.timetable.security.SessionContext;
+@@ -105,7 +106,7 @@ public class ExamPdfReportAction extends Action {
+         	request.setAttribute("table", table.printTable(WebTable.getOrder(sessionContext,"examPdfReport.ord")));
+         }
+         
+-        LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++        LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
+         
+         return mapping.findForward("show");
+ 	}
+diff --git a/JavaSource/org/unitime/timetable/action/ExamSolverAction.java b/JavaSource/org/unitime/timetable/action/ExamSolverAction.java
+index f8ace7c0..ec36504e 100644
+--- a/JavaSource/org/unitime/timetable/action/ExamSolverAction.java
++++ b/JavaSource/org/unitime/timetable/action/ExamSolverAction.java
+@@ -27,7 +27,6 @@ import java.util.List;
+ import javax.servlet.http.HttpServletRequest;
+ import javax.servlet.http.HttpServletResponse;
+ 
+-
+ import org.apache.struts.action.Action;
+ import org.apache.struts.action.ActionForm;
+ import org.apache.struts.action.ActionForward;
+@@ -38,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.stereotype.Service;
+ import org.unitime.timetable.defaults.ApplicationProperty;
+ import org.unitime.timetable.form.ExamSolverForm;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.Session;
+ import org.unitime.timetable.model.dao.SessionDAO;
+ import org.unitime.timetable.security.SessionContext;
+@@ -88,7 +88,7 @@ public class ExamSolverAction extends Action {
+         
+         RoomAvailability.setAvailabilityWarning(request, acadSession, (solver==null?myForm.getExamType():solver.getExamTypeId()), true, false);
+         
+-        LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++        LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamTimetable);
+ 
+         if (op==null) {
+         	myForm.init("y".equals(request.getParameter("reload")));
+diff --git a/JavaSource/org/unitime/timetable/action/ExamsAction.java b/JavaSource/org/unitime/timetable/action/ExamsAction.java
+index 4131a986..70cad61e 100644
+--- a/JavaSource/org/unitime/timetable/action/ExamsAction.java
++++ b/JavaSource/org/unitime/timetable/action/ExamsAction.java
+@@ -43,7 +43,9 @@ import org.unitime.localization.impl.Localization;
+ import org.unitime.localization.messages.CourseMessages;
+ import org.unitime.timetable.defaults.ApplicationProperty;
+ import org.unitime.timetable.form.ExamsForm;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.Exam;
++import org.unitime.timetable.model.ExamStatus;
+ import org.unitime.timetable.model.ExamType;
+ import org.unitime.timetable.model.Session;
+ import org.unitime.timetable.model.SubjectArea;
+@@ -138,8 +140,9 @@ public class ExamsAction extends Action {
+         
+         if (myForm.getSession()!=null && myForm.getSubjectArea()!=null && myForm.getSubjectArea().length()>0 && myForm.getExamType() != null) {
+             org.unitime.timetable.model.Session session = new SessionDAO().get(myForm.getSession());
+-            if ((myForm.isFinals() && session.getStatusType().canNoRoleReportExamFinal()) ||
+-                (!myForm.isFinals() && session.getStatusType().canNoRoleReportExamMidterm())) {
++            ExamStatus status = ExamStatus.findStatus(myForm.getSession(), myForm.getExamType());
++            DepartmentStatusType type = (status == null || status.getStatus() == null ? session.getStatusType() : status.getStatus());
++            if (type != null && type.can(myForm.isFinals() ? DepartmentStatusType.Status.ReportExamsFinal : DepartmentStatusType.Status.ReportExamsMidterm)) {
+                 List exams = null;
+                 if ("--ALL--".equals(myForm.getSubjectArea())) 
+                     exams = Exam.findAll(myForm.getSession(), myForm.getExamType());
+diff --git a/JavaSource/org/unitime/timetable/action/PersonalizedExamReportAction.java b/JavaSource/org/unitime/timetable/action/PersonalizedExamReportAction.java
+index 4ad7878c..afa62f67 100644
+--- a/JavaSource/org/unitime/timetable/action/PersonalizedExamReportAction.java
++++ b/JavaSource/org/unitime/timetable/action/PersonalizedExamReportAction.java
+@@ -37,7 +37,6 @@ import java.util.TreeSet;
+ import javax.servlet.http.HttpServletRequest;
+ import javax.servlet.http.HttpServletResponse;
+ 
+-
+ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
+ import org.apache.struts.action.Action;
+@@ -65,6 +64,7 @@ import org.unitime.timetable.model.ClassInstructor;
+ import org.unitime.timetable.model.Class_;
+ import org.unitime.timetable.model.CourseOffering;
+ import org.unitime.timetable.model.DatePattern;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.DepartmentalInstructor;
+ import org.unitime.timetable.model.Exam;
+ import org.unitime.timetable.model.ExamOwner;
+@@ -73,7 +73,6 @@ import org.unitime.timetable.model.Location;
+ import org.unitime.timetable.model.Meeting;
+ import org.unitime.timetable.model.PreferenceLevel;
+ import org.unitime.timetable.model.Session;
+-import org.unitime.timetable.model.Solution;
+ import org.unitime.timetable.model.Student;
+ import org.unitime.timetable.model.StudentClassEnrollment;
+ import org.unitime.timetable.model.dao.DepartmentalInstructorDAO;
+@@ -298,24 +297,23 @@ public class PersonalizedExamReportAction extends Action {
+                             "(o.ownerType="+ExamOwner.sOwnerTypeClass+" and o.ownerId=c.uniqueId) "+
+                             ")").
+                             setLong("studentId", student.getUniqueId()).setCacheable(true).list());
+-            if (!student.getSession().getStatusType().canNoRoleReportExamFinal()) {
+-                for (Iterator<ExamOwner> i=studentExams.iterator();i.hasNext();) {
+-                    if (i.next().getExam().getExamType().getType() == ExamType.sExamTypeFinal) i.remove();
+-                }
+-            }
+-            if (!student.getSession().getStatusType().canNoRoleReportExamMidterm()) {
+-                for (Iterator<ExamOwner> i=studentExams.iterator();i.hasNext();) {
+-                    if (i.next().getExam().getExamType().getType() == ExamType.sExamTypeMidterm) i.remove();
+-                }
++            for (Iterator<ExamOwner> i=studentExams.iterator();i.hasNext();) {
++            	Exam exam = i.next().getExam();
++            	DepartmentStatusType type = exam.effectiveStatusType();
++            	if (type == null || !type.can(exam.getExamType().getType() == ExamType.sExamTypeFinal ? DepartmentStatusType.Status.ReportExamsFinal : DepartmentStatusType.Status.ReportExamsMidterm))
++            		i.remove();
+             }
+         }
+         
+         HashSet<Exam> instructorExams = new HashSet<Exam>();
+         if (instructor!=null) {
+-            if (instructor.getDepartment().getSession().getStatusType().canNoRoleReportExamMidterm())
+-                instructorExams.addAll(instructor.getExams(ExamType.sExamTypeMidterm));
+-            if (instructor.getDepartment().getSession().getStatusType().canNoRoleReportExamFinal())
+-                instructorExams.addAll(instructor.getExams(ExamType.sExamTypeFinal));
++        	instructorExams.addAll(instructor.getAllExams());
++        	for (Iterator<Exam> i=instructorExams.iterator();i.hasNext();) {
++        		Exam exam = i.next();
++        		DepartmentStatusType type = exam.effectiveStatusType();
++        		if (type == null || !type.can(exam.getExamType().getType() == ExamType.sExamTypeFinal ? DepartmentStatusType.Status.ReportExamsFinal : DepartmentStatusType.Status.ReportExamsMidterm))
++        			i.remove();
++        	}
+         }
+         
+         WebTable.setOrder(sessionContext,"exams.o0",request.getParameter("o0"),1);
+@@ -328,7 +326,7 @@ public class PersonalizedExamReportAction extends Action {
+         WebTable.setOrder(sessionContext,"exams.o7",request.getParameter("o7"),1);
+         
+         boolean hasClasses = false;
+-        if (student!=null && student.getSession().getStatusType().canNoRoleReportClass() && !student.getClassEnrollments().isEmpty()) {
++        if (student!=null && student.getSession().canNoRoleReportClass() && !student.getClassEnrollments().isEmpty()) {
+             PdfWebTable table =  getStudentClassSchedule(true, student);
+             if (!table.getLines().isEmpty()) {
+                 request.setAttribute("clsschd", table.printTable(WebTable.getOrder(sessionContext,"exams.o6")));
+@@ -336,7 +334,7 @@ public class PersonalizedExamReportAction extends Action {
+                 myForm.setCanExport(true);
+             }
+         }
+-        if (instructor!=null && instructor.getDepartment().getSession().getStatusType().canNoRoleReportClass()) {
++        if (instructor!=null && instructor.getDepartment().getSession().canNoRoleReportClass()) {
+             PdfWebTable table = getInstructorClassSchedule(true, instructor);
+             if (!table.getLines().isEmpty()) {
+                 request.setAttribute("iclsschd", table.printTable(Math.abs(WebTable.getOrder(sessionContext,"exams.o7"))));
+@@ -384,7 +382,7 @@ public class PersonalizedExamReportAction extends Action {
+                         InstructorExamReport.sModeNormal, out, instructor.getDepartment().getSession(),
+                         null, null, exams);
+                 ir.setM2d(true); ir.setDirect(true);
+-                ir.setClassSchedule(instructor.getDepartment().getSession().getStatusType().canNoRoleReportClass());
++                ir.setClassSchedule(instructor.getDepartment().getSession().canNoRoleReportClass());
+                 ir.printHeader();
+                 ir.printReport(ExamInfo.createInstructorInfo(instructor), exams);
+                 ir.lastPage();
+@@ -403,7 +401,7 @@ public class PersonalizedExamReportAction extends Action {
+                         StudentExamReport.sModeNormal, out, student.getSession(),
+                         null, null, exams);
+                 sr.setM2d(true); sr.setBtb(true); sr.setDirect(true);
+-                sr.setClassSchedule(student.getSession().getStatusType().canNoRoleReportClass());
++                sr.setClassSchedule(student.getSession().canNoRoleReportClass());
+                 sr.printHeader();
+                 sr.printReport(student, sections);
+                 sr.lastPage();
+@@ -414,7 +412,7 @@ public class PersonalizedExamReportAction extends Action {
+                             InstructorExamReport.sModeNormal, out, instructor.getDepartment().getSession(),
+                             null, null, new TreeSet<ExamAssignmentInfo>());
+                     ir.setM2d(true); ir.setDirect(true);
+-                    ir.setClassSchedule(instructor.getDepartment().getSession().getStatusType().canNoRoleReportClass());
++                    ir.setClassSchedule(instructor.getDepartment().getSession().canNoRoleReportClass());
+                     ir.printHeader();
+                     ir.printReport(ExamInfo.createInstructorInfo(instructor), new TreeSet<ExamAssignmentInfo>());
+                     ir.lastPage();
+@@ -424,7 +422,7 @@ public class PersonalizedExamReportAction extends Action {
+                             StudentExamReport.sModeNormal, out, student.getSession(),
+                             null, null, new TreeSet<ExamAssignmentInfo>());
+                     sr.setM2d(true); sr.setBtb(true); sr.setDirect(true);
+-                    sr.setClassSchedule(student.getSession().getStatusType().canNoRoleReportClass());
++                    sr.setClassSchedule(student.getSession().canNoRoleReportClass());
+                     sr.printHeader();
+                     sr.printReport(student, new TreeSet<ExamSectionInfo>());
+                     sr.lastPage();
+@@ -497,9 +495,9 @@ public class PersonalizedExamReportAction extends Action {
+     
+     public static boolean canDisplay(Session session) {
+         if (session.getStatusType()==null) return false;
+-        if (session.getStatusType().canNoRoleReportExamFinal() && Exam.hasTimetable(session.getUniqueId(),ExamType.sExamTypeFinal)) return true;
+-        if (session.getStatusType().canNoRoleReportExamMidterm() && Exam.hasTimetable(session.getUniqueId(),ExamType.sExamTypeMidterm)) return true;
+-        if (session.getStatusType().canNoRoleReportClass() && Solution.hasTimetable(session.getUniqueId())) return true;
++        if (session.canNoRoleReportExamFinal()) return true;
++        if (session.canNoRoleReportExamMidterm()) return true;
++        if (session.canNoRoleReportClass()) return true;
+         return false;
+     }
+     
+@@ -1553,7 +1551,7 @@ public class PersonalizedExamReportAction extends Action {
+             out.println("X-WR-CALNAME:"+student.getName(DepartmentalInstructor.sNameFormatLastFist));
+             out.println("X-WR-TIMEZONE:"+TimeZone.getDefault().getID());
+             out.println("PRODID:-//UniTime "+Constants.getVersion()+"/UniTime Personal Schedule//NONSGML v1.0//EN");
+-            if (student.getSession().getStatusType().canNoRoleReportClass()) {
++            if (student.getSession().canNoRoleReportClass()) {
+                 for (Iterator i=student.getClassEnrollments().iterator();i.hasNext();) {
+                     StudentClassEnrollment sce = (StudentClassEnrollment)i.next();
+                     if (sce.getClazz().getEvent()!=null) {
+@@ -1619,7 +1617,7 @@ public class PersonalizedExamReportAction extends Action {
+             out.println("X-WR-CALNAME:"+instructor.getName(DepartmentalInstructor.sNameFormatLastFist));
+             out.println("X-WR-TIMEZONE:"+TimeZone.getDefault().getID());
+             out.println("PRODID:-//UniTime "+Constants.getVersion()+"/UniTime Personal Schedule//NONSGML v1.0//EN");
+-            if (instructor.getDepartment().getSession().getStatusType().canNoRoleReportClass()) {
++            if (instructor.getDepartment().getSession().canNoRoleReportClass()) {
+                 for (Iterator i=DepartmentalInstructor.getAllForInstructor(instructor, instructor.getDepartment().getSession().getUniqueId()).iterator();i.hasNext();) {
+                     DepartmentalInstructor di = (DepartmentalInstructor)i.next();
+                     for (Iterator j=di.getClasses().iterator();j.hasNext();) {
+diff --git a/JavaSource/org/unitime/timetable/action/RoomAvailabilityAction.java b/JavaSource/org/unitime/timetable/action/RoomAvailabilityAction.java
+index 48062c87..abf25994 100644
+--- a/JavaSource/org/unitime/timetable/action/RoomAvailabilityAction.java
++++ b/JavaSource/org/unitime/timetable/action/RoomAvailabilityAction.java
+@@ -45,6 +45,7 @@ import org.unitime.commons.web.WebTable;
+ import org.unitime.timetable.form.RoomAvailabilityForm;
+ import org.unitime.timetable.interfaces.RoomAvailabilityInterface;
+ import org.unitime.timetable.interfaces.RoomAvailabilityInterface.TimeBlock;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.Exam;
+ import org.unitime.timetable.model.ExamPeriod;
+ import org.unitime.timetable.model.ExamType;
+@@ -124,7 +125,7 @@ public class RoomAvailabilityAction extends Action {
+         if (request.getParameter("backId")!=null)
+             request.setAttribute("hash", request.getParameter("backId"));
+         
+-        LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++        LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
+ 
+         return mapping.findForward("showReport");
+     }
+diff --git a/JavaSource/org/unitime/timetable/action/RoomFeatureAddAction.java b/JavaSource/org/unitime/timetable/action/RoomFeatureAddAction.java
+index 914c0808..9c3bbef5 100644
+--- a/JavaSource/org/unitime/timetable/action/RoomFeatureAddAction.java
++++ b/JavaSource/org/unitime/timetable/action/RoomFeatureAddAction.java
+@@ -40,6 +40,7 @@ import org.unitime.timetable.form.RoomFeatureEditForm;
+ import org.unitime.timetable.model.ChangeLog;
+ import org.unitime.timetable.model.Department;
+ import org.unitime.timetable.model.DepartmentRoomFeature;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.GlobalRoomFeature;
+ import org.unitime.timetable.model.RoomFeature;
+ import org.unitime.timetable.model.dao.DepartmentRoomFeatureDAO;
+@@ -110,7 +111,7 @@ public class RoomFeatureAddAction extends Action {
+ 		
+ 		//get depts owned by user
+ 		LookupTables.setupDepartments(request, sessionContext, false);
+-		LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++		LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
+ 		request.setAttribute("featureTypes", RoomFeatureTypeDAO.getInstance().findAll(Order.asc("label")));
+ 		
+         //set default department
+diff --git a/JavaSource/org/unitime/timetable/action/RoomFeatureListAction.java b/JavaSource/org/unitime/timetable/action/RoomFeatureListAction.java
+index ac488e69..c7c0d1cb 100644
+--- a/JavaSource/org/unitime/timetable/action/RoomFeatureListAction.java
++++ b/JavaSource/org/unitime/timetable/action/RoomFeatureListAction.java
+@@ -41,6 +41,7 @@ import org.unitime.timetable.defaults.SessionAttribute;
+ import org.unitime.timetable.form.RoomFeatureListForm;
+ import org.unitime.timetable.model.Department;
+ import org.unitime.timetable.model.DepartmentRoomFeature;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.ExamType;
+ import org.unitime.timetable.model.GlobalRoomFeature;
+ import org.unitime.timetable.model.Location;
+@@ -123,7 +124,7 @@ public class RoomFeatureListAction extends Action {
+ 
+ 		//set request attribute for department
+ 		LookupTables.setupDepartments(request, sessionContext, true);
+-		LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++		LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
+ 
+ 		// Validation fails
+ 		if (errors.size() > 0) {
+diff --git a/JavaSource/org/unitime/timetable/action/RoomFeatureSearchAction.java b/JavaSource/org/unitime/timetable/action/RoomFeatureSearchAction.java
+index d872fa2d..b55cdfcd 100644
+--- a/JavaSource/org/unitime/timetable/action/RoomFeatureSearchAction.java
++++ b/JavaSource/org/unitime/timetable/action/RoomFeatureSearchAction.java
+@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.stereotype.Service;
+ import org.unitime.timetable.defaults.SessionAttribute;
+ import org.unitime.timetable.form.RoomFeatureListForm;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.security.SessionContext;
+ import org.unitime.timetable.security.rights.Right;
+ import org.unitime.timetable.util.ExportUtils;
+@@ -108,7 +109,7 @@ public class RoomFeatureSearchAction extends Action {
+ 			}
+ 			
+ 			LookupTables.setupDepartments(request, sessionContext, true);
+-			LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++			LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
+ 			
+ 			return mapping.findForward("showRoomFeatureSearch");
+ 		}
+diff --git a/JavaSource/org/unitime/timetable/action/RoomGroupListAction.java b/JavaSource/org/unitime/timetable/action/RoomGroupListAction.java
+index 31c32409..bc0dd56d 100644
+--- a/JavaSource/org/unitime/timetable/action/RoomGroupListAction.java
++++ b/JavaSource/org/unitime/timetable/action/RoomGroupListAction.java
+@@ -39,6 +39,7 @@ import org.unitime.commons.web.WebTable;
+ import org.unitime.timetable.defaults.SessionAttribute;
+ import org.unitime.timetable.form.RoomGroupListForm;
+ import org.unitime.timetable.model.Department;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.ExamType;
+ import org.unitime.timetable.model.Location;
+ import org.unitime.timetable.model.RoomDept;
+@@ -115,7 +116,7 @@ public class RoomGroupListAction extends Action {
+ 
+ 		//set request attribute for department
+ 		LookupTables.setupDepartments(request, sessionContext, true);
+-		LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++		LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
+ 		
+ 		// Validate input
+ 		errors = roomGroupListForm.validate(mapping, request);
+diff --git a/JavaSource/org/unitime/timetable/action/RoomGroupSearchAction.java b/JavaSource/org/unitime/timetable/action/RoomGroupSearchAction.java
+index 80d7f847..85117401 100644
+--- a/JavaSource/org/unitime/timetable/action/RoomGroupSearchAction.java
++++ b/JavaSource/org/unitime/timetable/action/RoomGroupSearchAction.java
+@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.stereotype.Service;
+ import org.unitime.timetable.defaults.SessionAttribute;
+ import org.unitime.timetable.form.RoomGroupListForm;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.security.SessionContext;
+ import org.unitime.timetable.security.rights.Right;
+ import org.unitime.timetable.util.ExportUtils;
+@@ -108,7 +109,7 @@ public class RoomGroupSearchAction extends Action {
+ 			}
+ 			
+ 			LookupTables.setupDepartments(request, sessionContext, true);
+-			LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++			LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
+ 			
+ 			return mapping.findForward("showRoomGroupSearch");
+ 		}
+diff --git a/JavaSource/org/unitime/timetable/action/RoomListAction.java b/JavaSource/org/unitime/timetable/action/RoomListAction.java
+index e176c80e..7d527054 100644
+--- a/JavaSource/org/unitime/timetable/action/RoomListAction.java
++++ b/JavaSource/org/unitime/timetable/action/RoomListAction.java
+@@ -37,7 +37,6 @@ import java.util.TreeSet;
+ import javax.servlet.http.HttpServletRequest;
+ import javax.servlet.http.HttpServletResponse;
+ 
+-
+ import org.apache.struts.action.Action;
+ import org.apache.struts.action.ActionForm;
+ import org.apache.struts.action.ActionForward;
+@@ -66,6 +65,7 @@ import org.unitime.timetable.form.RoomListForm;
+ import org.unitime.timetable.model.Building;
+ import org.unitime.timetable.model.Department;
+ import org.unitime.timetable.model.DepartmentRoomFeature;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.ExamType;
+ import org.unitime.timetable.model.MidtermPeriodPreferenceModel;
+ import org.unitime.timetable.model.GlobalRoomFeature;
+@@ -160,7 +160,7 @@ public class RoomListAction extends Action {
+ 		
+ 		//set request attribute for department
+ 		LookupTables.setupDepartments(request, sessionContext, true);
+-		LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++		LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
+ 
+ 		// Validate input
+ 		errors = roomListForm.validate(mapping, request);
+@@ -208,7 +208,7 @@ public class RoomListAction extends Action {
+ 	public void lookupRooms(RoomListForm form, String op) {
+ 		String from = "Location l" +
+ 				" left join l.roomDepts rd" +
+-				" left join fetch l.examTypes xt" +
++				" left join l.examTypes xt" +
+ 				" left join fetch l.features f" +
+ 				" left join fetch l.roomGroups g" +
+ 				" left join fetch l.roomType t";
+diff --git a/JavaSource/org/unitime/timetable/action/RoomSearchAction.java b/JavaSource/org/unitime/timetable/action/RoomSearchAction.java
+index db1fdb9f..85a24d7b 100644
+--- a/JavaSource/org/unitime/timetable/action/RoomSearchAction.java
++++ b/JavaSource/org/unitime/timetable/action/RoomSearchAction.java
+@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.stereotype.Service;
+ import org.unitime.timetable.defaults.SessionAttribute;
+ import org.unitime.timetable.form.RoomListForm;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.security.SessionContext;
+ import org.unitime.timetable.security.rights.Right;
+ import org.unitime.timetable.util.LookupTables;
+@@ -96,7 +97,7 @@ public class RoomSearchAction extends Action {
+ 			}
+ 			
+ 			LookupTables.setupDepartments(request, sessionContext, true);
+-			LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++			LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
+ 			
+ 			return mapping.findForward("showRoomSearch");
+ 		}
+diff --git a/JavaSource/org/unitime/timetable/action/UnassignedExamsAction.java b/JavaSource/org/unitime/timetable/action/UnassignedExamsAction.java
+index 6fe6748d..ca24479c 100644
+--- a/JavaSource/org/unitime/timetable/action/UnassignedExamsAction.java
++++ b/JavaSource/org/unitime/timetable/action/UnassignedExamsAction.java
+@@ -36,6 +36,7 @@ import org.unitime.commons.Debug;
+ import org.unitime.commons.web.WebTable;
+ import org.unitime.timetable.form.ExamReportForm;
+ import org.unitime.timetable.model.BuildingPref;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.DistributionPref;
+ import org.unitime.timetable.model.ExamType;
+ import org.unitime.timetable.model.MidtermPeriodPreferenceModel;
+@@ -124,7 +125,7 @@ public class UnassignedExamsAction extends Action {
+         if (request.getParameter("backId")!=null)
+             request.setAttribute("hash", request.getParameter("backId"));
+         
+-        LookupTables.setupExamTypes(request, sessionContext.getUser().getCurrentAcademicSessionId());
++        LookupTables.setupExamTypes(request, sessionContext.getUser(), DepartmentStatusType.Status.ExamTimetable);
+         
+         return mapping.findForward("showReport");
+ 	}
+diff --git a/JavaSource/org/unitime/timetable/events/EventFilterBackend.java b/JavaSource/org/unitime/timetable/events/EventFilterBackend.java
+index 35468825..a718c04c 100644
+--- a/JavaSource/org/unitime/timetable/events/EventFilterBackend.java
++++ b/JavaSource/org/unitime/timetable/events/EventFilterBackend.java
+@@ -46,9 +46,9 @@ import org.unitime.timetable.model.Event;
+ import org.unitime.timetable.model.EventContact;
+ import org.unitime.timetable.model.FinalExamEvent;
+ import org.unitime.timetable.model.MidtermExamEvent;
+-import org.unitime.timetable.model.Session;
+ import org.unitime.timetable.model.SpecialEvent;
+ import org.unitime.timetable.model.UnavailableEvent;
++import org.unitime.timetable.model.DepartmentStatusType.Status;
+ import org.unitime.timetable.model.dao.EventDAO;
+ import org.unitime.timetable.model.dao.SessionDAO;
+ import org.unitime.timetable.security.rights.Right;
+@@ -195,6 +195,7 @@ public class EventFilterBackend extends FilterBoxBackend<EventFilterRpcRequest>
+ 		Date today = cal.getTime();
+ 		
+ 		if (!context.hasPermission(Right.HasRole)) {
++			/*
+ 			Session session = SessionDAO.getInstance().get(request.getSessionId());
+ 			String prohibitedTypes = null;
+ 			if (!session.getStatusType().canNoRoleReportClass())
+@@ -204,7 +205,16 @@ public class EventFilterBackend extends FilterBoxBackend<EventFilterRpcRequest>
+ 			if (!session.getStatusType().canNoRoleReportExamMidterm())
+ 				prohibitedTypes = (prohibitedTypes == null ? "MidtermExamEvent": prohibitedTypes + ",MidtermExamEvent");
+ 			if (prohibitedTypes != null)
+-				query.addWhere("xtype", "e.class not in (" + prohibitedTypes + ")");						
++				query.addWhere("xtype", "e.class not in (" + prohibitedTypes + ")");
++			*/
++			query.addWhere("xstatus",
++					"(e.class != ClassEvent or bit_and(s.statusType.status, :XstClass) > 0) and " +
++					"(e.class != FinalExamEvent or (e.examStatus is null and bit_and(s.statusType.status, :XstFinal) > 0) or bit_and(e.examStatus, :XstFinal) > 0) and " +
++					"(e.class != MidtermExamEvent or (e.examStatus is null and bit_and(s.statusType.status, :XstMidtr) > 0) or bit_and(e.examStatus, :XstMidtr) > 0)"
++					);
++			query.addParameter("xstatus", "XstClass", Status.ReportClasses.toInt());
++			query.addParameter("xstatus", "XstFinal", Status.ReportExamsFinal.toInt());
++			query.addParameter("xstatus", "XstMidtr", Status.ReportExamsMidterm.toInt());
+ 		}
+ 		
+ 		if (request.getText() != null && !request.getText().isEmpty()) {
+@@ -463,7 +473,7 @@ public class EventFilterBackend extends FilterBoxBackend<EventFilterRpcRequest>
+ 			String from = "";
+ 			for (Map.Entry<String, String> entry: iFrom.entrySet()) {
+ 				if (excludeOption != null && excludeOption.contains(entry.getKey())) continue;
+-				from += ", " + entry.getValue();
++				from += (entry.getValue().startsWith("inner join") || entry.getValue().startsWith("left outer join") ? " " : ", ") + entry.getValue();
+ 			}
+ 			return from;
+ 		}
+diff --git a/JavaSource/org/unitime/timetable/events/EventLookupBackend.java b/JavaSource/org/unitime/timetable/events/EventLookupBackend.java
+index 9f09d607..fd94aa66 100644
+--- a/JavaSource/org/unitime/timetable/events/EventLookupBackend.java
++++ b/JavaSource/org/unitime/timetable/events/EventLookupBackend.java
+@@ -52,7 +52,6 @@ import org.unitime.timetable.model.Class_;
+ import org.unitime.timetable.model.CourseEvent;
+ import org.unitime.timetable.model.CourseOffering;
+ import org.unitime.timetable.model.Department;
+-import org.unitime.timetable.model.DepartmentStatusType.Status;
+ import org.unitime.timetable.model.DepartmentalInstructor;
+ import org.unitime.timetable.model.Event;
+ import org.unitime.timetable.model.EventContact;
+@@ -490,10 +489,6 @@ public class EventLookupBackend extends EventAction<EventLookupRpcRequest, GwtRp
+ 					
+ 					break;
+ 				case PERSON:
+-					boolean overrideStatus = context.hasPermission(Right.EventLookupSchedule); 
+-					boolean canViewFinalExams = overrideStatus || session.getStatusType().canNoRoleReportExamFinal();
+-					boolean canViewMidtermExams = overrideStatus || session.getStatusType().canNoRoleReportExamMidterm();
+-					boolean canViewClasses = overrideStatus || session.getStatusType().canNoRoleReportClass();
+ 					boolean allSessions = request.getEventFilter().hasOption("flag") && request.getEventFilter().getOptions("flag").contains("All Sessions");
+ 					curriculumCourses = new HashSet<Long>();
+ 					if (allSessions) {
+@@ -513,30 +508,17 @@ public class EventLookupBackend extends EventAction<EventLookupRpcRequest, GwtRp
+ 					}
+ 					meetings = new ArrayList<Meeting>();
+ 
+-					if (allSessions && !overrideStatus) {
+-						if (overrideStatus) {
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query.select("distinct m").type("ClassEvent").from("inner join e.clazz.studentEnrollments enrl")
+-										.where("enrl.student.externalUniqueId = :externalId").where("enrl.student.session.uniqueId = s.uniqueId")
+-										.set("externalId", request.getResourceExternalId())
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query.select("distinct m").type("ClassEvent").from("inner join e.clazz.classInstructors ci")
+-										.where("ci.instructor.externalUniqueId = :externalId").where("ci.instructor.department.session.uniqueId = s.uniqueId")
+-										.set("externalId", request.getResourceExternalId()).limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-						} else {
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query.select("distinct m").type("ClassEvent").from("inner join e.clazz.studentEnrollments enrl")
+-										.where("enrl.student.externalUniqueId = :externalId").where("enrl.student.session.uniqueId = s.uniqueId")
+-										.where("bit_and(s.statusType.status, :flag) > 0").set("flag", Status.ReportClasses.toInt())
+-										.set("externalId", request.getResourceExternalId()).limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query.select("distinct m").type("ClassEvent").from("inner join e.clazz.classInstructors ci")
+-										.where("ci.instructor.externalUniqueId = :externalId").where("ci.instructor.department.session.uniqueId = s.uniqueId")
+-										.where("bit_and(s.statusType.status, :flag) > 0").set("flag", Status.ReportClasses.toInt())
+-										.set("externalId", request.getResourceExternalId()).limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-						}
+-					} else if (canViewClasses) {
++					if (allSessions) {
++						if (limit <= 0 || meetings.size() < limit)
++							meetings.addAll(query.select("distinct m").type("ClassEvent").from("inner join e.clazz.studentEnrollments enrl")
++									.where("enrl.student.externalUniqueId = :externalId").where("enrl.student.session.uniqueId = s.uniqueId")
++									.set("externalId", request.getResourceExternalId())
++									.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
++						if (limit <= 0 || meetings.size() < limit)
++							meetings.addAll(query.select("distinct m").type("ClassEvent").from("inner join e.clazz.classInstructors ci")
++									.where("ci.instructor.externalUniqueId = :externalId").where("ci.instructor.department.session.uniqueId = s.uniqueId")
++									.set("externalId", request.getResourceExternalId()).limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
++					} else {
+ 						if (limit <= 0 || meetings.size() < limit)
+ 							meetings.addAll(query.select("distinct m").type("ClassEvent").from("inner join e.clazz.studentEnrollments enrl")
+ 									.where("enrl.student.externalUniqueId = :externalId").set("externalId", request.getResourceExternalId())
+@@ -550,194 +532,70 @@ public class EventLookupBackend extends EventAction<EventLookupRpcRequest, GwtRp
+ 					}
+ 
+ 					if (allSessions) {
+-						if (overrideStatus) {
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query
+-										.select("distinct m")
+-										.type("ExamEvent")
+-										.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.courseOffering co")
+-										.where("enrl.student.externalUniqueId = :externalId")
+-										.set("externalId", request.getResourceExternalId())
+-										.where("o.ownerType = :type and o.ownerId = co.uniqueId")
+-										.set("type", ExamOwner.sOwnerTypeCourse)
+-										.where("enrl.student.session.uniqueId = s.uniqueId")
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query
+-										.select("distinct m")
+-										.type("ExamEvent")
+-										.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.courseOffering co")
+-										.where("enrl.student.externalUniqueId = :externalId")
+-										.set("externalId", request.getResourceExternalId())
+-										.where("o.ownerType = :type and o.ownerId = co.instructionalOffering.uniqueId")
+-										.set("type", ExamOwner.sOwnerTypeOffering)
+-										.where("enrl.student.session.uniqueId = s.uniqueId")
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query
+-										.select("distinct m")
+-										.type("ExamEvent")
+-										.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.clazz c inner join c.schedulingSubpart.instrOfferingConfig.instructionalOffering.courseOfferings co")
+-										.where("enrl.student.externalUniqueId = :externalId")
+-										.set("externalId", request.getResourceExternalId())
+-										.where("o.ownerType = :type and o.ownerId = c.uniqueId")
+-										.set("type", ExamOwner.sOwnerTypeClass)
+-										.where("enrl.student.session.uniqueId = s.uniqueId")
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query
+-										.select("distinct m")
+-										.type("ExamEvent")
+-										.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.clazz c inner join c.schedulingSubpart.instrOfferingConfig cfg")
+-										.where("enrl.student.externalUniqueId = :externalId")
+-										.set("externalId", request.getResourceExternalId())
+-										.where("o.ownerType = :type and o.ownerId = cfg.uniqueId")
+-										.set("type", ExamOwner.sOwnerTypeConfig)
+-										.where("enrl.student.session.uniqueId = s.uniqueId")
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query
+-										.select("distinct m")
+-										.type("ExamEvent")
+-										.from("inner join e.exam.instructors i")
+-										.where("i.externalUniqueId = :externalId")
+-										.set("externalId", request.getResourceExternalId())
+-										.where("i.department.session.uniqueId = s.uniqueId")
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-						} else {
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query
+-										.select("distinct m")
+-										.type("FinalExamEvent")
+-										.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.courseOffering co")
+-										.where("enrl.student.externalUniqueId = :externalId")
+-										.set("externalId", request.getResourceExternalId())
+-										.where("o.ownerType = :type and o.ownerId = co.uniqueId")
+-										.set("type", ExamOwner.sOwnerTypeCourse)
+-										.where("enrl.student.session.uniqueId = s.uniqueId")
+-										.where("bit_and(s.statusType.status, :flag) > 0").set("flag", Status.ReportExamsFinal.toInt())
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query
+-										.select("distinct m")
+-										.type("MidtermExamEvent")
+-										.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.courseOffering co")
+-										.where("enrl.student.externalUniqueId = :externalId")
+-										.set("externalId", request.getResourceExternalId())
+-										.where("o.ownerType = :type and o.ownerId = co.uniqueId")
+-										.set("type", ExamOwner.sOwnerTypeCourse)
+-										.where("enrl.student.session.uniqueId = s.uniqueId")
+-										.where("bit_and(s.statusType.status, :flag) > 0").set("flag", Status.ReportExamsMidterm.toInt())
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query
+-										.select("distinct m")
+-										.type("FinalExamEvent")
+-										.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.courseOffering co")
+-										.where("enrl.student.externalUniqueId = :externalId")
+-										.set("externalId", request.getResourceExternalId())
+-										.where("o.ownerType = :type and o.ownerId = co.instructionalOffering.uniqueId")
+-										.set("type", ExamOwner.sOwnerTypeOffering)
+-										.where("enrl.student.session.uniqueId = s.uniqueId")
+-										.where("bit_and(s.statusType.status, :flag) > 0").set("flag", Status.ReportExamsFinal.toInt())
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query
+-										.select("distinct m")
+-										.type("MidtermExamEvent")
+-										.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.courseOffering co")
+-										.where("enrl.student.externalUniqueId = :externalId")
+-										.set("externalId", request.getResourceExternalId())
+-										.where("o.ownerType = :type and o.ownerId = co.instructionalOffering.uniqueId")
+-										.set("type", ExamOwner.sOwnerTypeOffering)
+-										.where("enrl.student.session.uniqueId = s.uniqueId")
+-										.where("bit_and(s.statusType.status, :flag) > 0").set("flag", Status.ReportExamsMidterm.toInt())
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query
+-										.select("distinct m")
+-										.type("FinalExamEvent")
+-										.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.clazz c inner join c.schedulingSubpart.instrOfferingConfig.instructionalOffering.courseOfferings co")
+-										.where("enrl.student.externalUniqueId = :externalId")
+-										.set("externalId", request.getResourceExternalId())
+-										.where("o.ownerType = :type and o.ownerId = c.uniqueId")
+-										.set("type", ExamOwner.sOwnerTypeClass)
+-										.where("enrl.student.session.uniqueId = s.uniqueId")
+-										.where("bit_and(s.statusType.status, :flag) > 0").set("flag", Status.ReportExamsFinal.toInt())
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query
+-										.select("distinct m")
+-										.type("MidtermExamEvent")
+-										.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.clazz c inner join c.schedulingSubpart.instrOfferingConfig.instructionalOffering.courseOfferings co")
+-										.where("enrl.student.externalUniqueId = :externalId")
+-										.set("externalId", request.getResourceExternalId())
+-										.where("o.ownerType = :type and o.ownerId = c.uniqueId")
+-										.set("type", ExamOwner.sOwnerTypeClass)
+-										.where("enrl.student.session.uniqueId = s.uniqueId")
+-										.where("bit_and(s.statusType.status, :flag) > 0").set("flag", Status.ReportExamsMidterm.toInt())
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-							
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query
+-										.select("distinct m")
+-										.type("FinalExamEvent")
+-										.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.clazz c inner join c.schedulingSubpart.instrOfferingConfig cfg")
+-										.where("enrl.student.externalUniqueId = :externalId")
+-										.set("externalId", request.getResourceExternalId())
+-										.where("o.ownerType = :type and o.ownerId = cfg.uniqueId")
+-										.set("type", ExamOwner.sOwnerTypeConfig)
+-										.where("enrl.student.session.uniqueId = s.uniqueId")
+-										.where("bit_and(s.statusType.status, :flag) > 0").set("flag", Status.ReportExamsFinal.toInt())
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query
+-										.select("distinct m")
+-										.type("MidtermExamEvent")
+-										.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.clazz c inner join c.schedulingSubpart.instrOfferingConfig cfg")
+-										.where("enrl.student.externalUniqueId = :externalId")
+-										.set("externalId", request.getResourceExternalId())
+-										.where("o.ownerType = :type and o.ownerId = cfg.uniqueId")
+-										.set("type", ExamOwner.sOwnerTypeConfig)
+-										.where("enrl.student.session.uniqueId = s.uniqueId")
+-										.where("bit_and(s.statusType.status, :flag) > 0").set("flag", Status.ReportExamsMidterm.toInt())
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
++						if (limit <= 0 || meetings.size() < limit)
++							meetings.addAll(query
++									.select("distinct m")
++									.type("ExamEvent")
++									.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.courseOffering co")
++									.where("enrl.student.externalUniqueId = :externalId")
++									.set("externalId", request.getResourceExternalId())
++									.where("o.ownerType = :type and o.ownerId = co.uniqueId")
++									.set("type", ExamOwner.sOwnerTypeCourse)
++									.where("enrl.student.session.uniqueId = s.uniqueId")
++									.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
++						if (limit <= 0 || meetings.size() < limit)
++							meetings.addAll(query
++									.select("distinct m")
++									.type("ExamEvent")
++									.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.courseOffering co")
++									.where("enrl.student.externalUniqueId = :externalId")
++									.set("externalId", request.getResourceExternalId())
++									.where("o.ownerType = :type and o.ownerId = co.instructionalOffering.uniqueId")
++									.set("type", ExamOwner.sOwnerTypeOffering)
++									.where("enrl.student.session.uniqueId = s.uniqueId")
++									.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
++						if (limit <= 0 || meetings.size() < limit)
++							meetings.addAll(query
++									.select("distinct m")
++									.type("ExamEvent")
++									.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.clazz c inner join c.schedulingSubpart.instrOfferingConfig.instructionalOffering.courseOfferings co")
++									.where("enrl.student.externalUniqueId = :externalId")
++									.set("externalId", request.getResourceExternalId())
++									.where("o.ownerType = :type and o.ownerId = c.uniqueId")
++									.set("type", ExamOwner.sOwnerTypeClass)
++									.where("enrl.student.session.uniqueId = s.uniqueId")
++									.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
++						if (limit <= 0 || meetings.size() < limit)
++							meetings.addAll(query
++									.select("distinct m")
++									.type("ExamEvent")
++									.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.clazz c inner join c.schedulingSubpart.instrOfferingConfig cfg")
++									.where("enrl.student.externalUniqueId = :externalId")
++									.set("externalId", request.getResourceExternalId())
++									.where("o.ownerType = :type and o.ownerId = cfg.uniqueId")
++									.set("type", ExamOwner.sOwnerTypeConfig)
++									.where("enrl.student.session.uniqueId = s.uniqueId")
++									.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+ 
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query
+-										.select("distinct m")
+-										.type("FinalExamEvent")
+-										.from("inner join e.exam.instructors i")
+-										.where("i.externalUniqueId = :externalId")
+-										.set("externalId", request.getResourceExternalId())
+-										.where("i.department.session.uniqueId = s.uniqueId")
+-										.where("bit_and(s.statusType.status, :flag) > 0").set("flag", Status.ReportExamsFinal.toInt())
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-							if (limit <= 0 || meetings.size() < limit)
+-								meetings.addAll(query
+-										.select("distinct m")
+-										.type("MidtermExamEvent")
+-										.from("inner join e.exam.instructors i")
+-										.where("i.externalUniqueId = :externalId")
+-										.set("externalId", request.getResourceExternalId())
+-										.where("i.department.session.uniqueId = s.uniqueId")
+-										.where("bit_and(s.statusType.status, :flag) > 0").set("flag", Status.ReportExamsMidterm.toInt())
+-										.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+-						}
+-					} else if (canViewFinalExams || canViewMidtermExams) {
+-						String table = (canViewFinalExams ? canViewMidtermExams ? "ExamEvent" : "FinalExamEvent" : "MidtermExamEvent");
+ 						if (limit <= 0 || meetings.size() < limit)
+-							meetings.addAll(query.select("distinct m").type(table)
++							meetings.addAll(query
++									.select("distinct m")
++									.type("ExamEvent")
++									.from("inner join e.exam.instructors i")
++									.where("i.externalUniqueId = :externalId")
++									.set("externalId", request.getResourceExternalId())
++									.where("i.department.session.uniqueId = s.uniqueId")
++									.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
++					} else {
++						if (limit <= 0 || meetings.size() < limit)
++							meetings.addAll(query.select("distinct m").type("ExamEvent")
+ 									.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.courseOffering co")
+ 									.where("enrl.student.externalUniqueId = :externalId").set("externalId", request.getResourceExternalId())
+ 									.where("o.ownerType = :type and o.ownerId = co.uniqueId").set("type", ExamOwner.sOwnerTypeCourse)
+ 									.where("e.exam.session = s")
+ 									.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+ 						if (limit <= 0 || meetings.size() < limit)
+-							meetings.addAll(query.select("distinct m").type(table)
++							meetings.addAll(query.select("distinct m").type("ExamEvent")
+ 									.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.courseOffering co")
+ 									.where("enrl.student.externalUniqueId = :externalId").set("externalId", request.getResourceExternalId())
+ 									.where("o.ownerType = :type and o.ownerId = co.instructionalOffering.uniqueId").set("type", ExamOwner.sOwnerTypeOffering)
+@@ -745,8 +603,7 @@ public class EventLookupBackend extends EventAction<EventLookupRpcRequest, GwtRp
+ 									.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+ 						if (limit <= 0 || meetings.size() < limit)
+ 							meetings.addAll(query
+-									.select("distinct m")
+-									.type(table)
++									.select("distinct m").type("ExamEvent")
+ 									.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.clazz c inner join c.schedulingSubpart.instrOfferingConfig.instructionalOffering.courseOfferings co")
+ 									.where("enrl.student.externalUniqueId = :externalId").set("externalId", request.getResourceExternalId())
+ 									.where("o.ownerType = :type and o.ownerId = c.uniqueId").set("type", ExamOwner.sOwnerTypeClass)
+@@ -754,8 +611,7 @@ public class EventLookupBackend extends EventAction<EventLookupRpcRequest, GwtRp
+ 									.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+ 						if (limit <= 0 || meetings.size() < limit)
+ 							meetings.addAll(query
+-									.select("distinct m")
+-									.type(table)
++									.select("distinct m").type("ExamEvent")
+ 									.from("inner join e.exam.owners o, StudentClassEnrollment enrl inner join enrl.clazz c inner join c.schedulingSubpart.instrOfferingConfig cfg")
+ 									.where("enrl.student.externalUniqueId = :externalId").set("externalId", request.getResourceExternalId())
+ 									.where("o.ownerType = :type and o.ownerId = cfg.uniqueId").set("type", ExamOwner.sOwnerTypeConfig)
+@@ -763,7 +619,7 @@ public class EventLookupBackend extends EventAction<EventLookupRpcRequest, GwtRp
+ 									.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+ 
+ 						if (limit <= 0 || meetings.size() < limit)
+-							meetings.addAll(query.select("distinct m").type(table).from("inner join e.exam.instructors i")
++							meetings.addAll(query.select("distinct m").type("ExamEvent").from("inner join e.exam.instructors i")
+ 									.where("i.externalUniqueId = :externalId").set("externalId", request.getResourceExternalId())
+ 									.where("e.exam.session = s")
+ 									.limit(limit <= 0 ? -1 : 1 + limit - meetings.size()).query(hibSession).list());
+@@ -1841,7 +1697,7 @@ public class EventLookupBackend extends EventAction<EventLookupRpcRequest, GwtRp
+ 				if ((!request.getEventFilter().hasOptions("type") || request.getEventFilter().getOptions("type").contains("Class")) &&
+ 					!request.getEventFilter().hasOptions("from") && !request.getEventFilter().hasOptions("to") && !request.getEventFilter().hasOptions("requested") &&
+ 					!request.getEventFilter().hasOptions("day") && !request.getEventFilter().hasOptions("after") && !request.getEventFilter().hasOptions("before") &&
+-					(context.hasPermission(Right.HasRole) || session.getStatusType().canNoRoleReportClass()) && Solution.hasTimetable(session.getUniqueId())) {
++					(context.hasPermission(Right.HasRole) || session.canNoRoleReportClass()) && Solution.hasTimetable(session.getUniqueId())) {
+ 					List<Class_> arrageHourClasses = null; 
+ 					switch (request.getResourceType()) {
+ 					case SUBJECT:
+diff --git a/JavaSource/org/unitime/timetable/events/ListAcademicSessions.java b/JavaSource/org/unitime/timetable/events/ListAcademicSessions.java
+index 9bf71eed..430a927f 100644
+--- a/JavaSource/org/unitime/timetable/events/ListAcademicSessions.java
++++ b/JavaSource/org/unitime/timetable/events/ListAcademicSessions.java
+@@ -32,10 +32,7 @@ import org.unitime.timetable.gwt.command.server.GwtRpcImplementation;
+ import org.unitime.timetable.gwt.command.server.GwtRpcImplements;
+ import org.unitime.timetable.gwt.resources.GwtConstants;
+ import org.unitime.timetable.gwt.resources.GwtMessages;
+-import org.unitime.timetable.model.Exam;
+-import org.unitime.timetable.model.ExamType;
+ import org.unitime.timetable.model.Session;
+-import org.unitime.timetable.model.Solution;
+ import org.unitime.timetable.model.dao.SessionDAO;
+ import org.unitime.timetable.security.SessionContext;
+ import org.unitime.timetable.security.context.UniTimeUserContext;
+@@ -106,11 +103,11 @@ public class ListAcademicSessions implements GwtRpcImplementation<AcademicSessio
+ 					session.getAcademicTerm() + session.getAcademicYear() + session.getAcademicInitiative(),
+ 					df.format(session.getEventBeginDate()) + " - " + df.format(session.getEventEndDate()),
+ 					session.equals(selected));
+-			if (session.getStatusType().canNoRoleReportClass() && Solution.hasTimetable(session.getUniqueId()))
++			if (session.canNoRoleReportClass())
+ 				acadSession.set(AcademicSession.Flag.HasClasses);
+-			if (session.getStatusType().canNoRoleReportExamFinal() && Exam.hasTimetable(session.getUniqueId(), ExamType.sExamTypeFinal))
++			if (session.canNoRoleReportExamFinal())
+ 				acadSession.set(AcademicSession.Flag.HasFinalExams);
+-			if (session.getStatusType().canNoRoleReportExamMidterm() && Exam.hasTimetable(session.getUniqueId(), ExamType.sExamTypeMidterm))
++			if (session.canNoRoleReportExamMidterm())
+ 				acadSession.set(AcademicSession.Flag.HasMidtermExams);
+ 			if (context.hasPermissionAnyAuthority(session, Right.Events, new SimpleQualifier("Session", session.getUniqueId())))
+ 				acadSession.set(AcademicSession.Flag.HasEvents);
+diff --git a/JavaSource/org/unitime/timetable/form/DeptStatusTypeEditForm.java b/JavaSource/org/unitime/timetable/form/DeptStatusTypeEditForm.java
+index 4055be3b..2fec8d52 100644
+--- a/JavaSource/org/unitime/timetable/form/DeptStatusTypeEditForm.java
++++ b/JavaSource/org/unitime/timetable/form/DeptStatusTypeEditForm.java
+@@ -136,7 +136,9 @@ public class DeptStatusTypeEditForm extends ActionForm {
+         Vector options = new Vector();
+         options.add(new IdValue(new Long(DepartmentStatusType.Apply.Session.toInt()), "Session"));
+         options.add(new IdValue(new Long(DepartmentStatusType.Apply.Department.toInt()), "Department"));
+-        options.add(new IdValue(new Long(DepartmentStatusType.Apply.Session.toInt() | DepartmentStatusType.Apply.Department.toInt()), "Both"));
++        options.add(new IdValue(new Long(DepartmentStatusType.Apply.ExamStatus.toInt()), "Examinations"));
++        options.add(new IdValue(new Long(DepartmentStatusType.Apply.Session.toInt() | DepartmentStatusType.Apply.Department.toInt()), "Session & Department"));
++        options.add(new IdValue(new Long(DepartmentStatusType.Apply.Session.toInt() | DepartmentStatusType.Apply.Department.toInt() | DepartmentStatusType.Apply.ExamStatus.toInt()), "All"));
+         return options;
+     }
+     public void setCanManagerView(boolean canManagerView) { iCanManagerView = canManagerView; }
+diff --git a/JavaSource/org/unitime/timetable/form/ExamEditForm.java b/JavaSource/org/unitime/timetable/form/ExamEditForm.java
+index 459dadb9..a8ca376f 100644
+--- a/JavaSource/org/unitime/timetable/form/ExamEditForm.java
++++ b/JavaSource/org/unitime/timetable/form/ExamEditForm.java
+@@ -34,6 +34,7 @@ import org.apache.struts.action.ActionMapping;
+ import org.apache.struts.action.ActionMessage;
+ import org.unitime.timetable.model.Class_;
+ import org.unitime.timetable.model.CourseOffering;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.DepartmentalInstructor;
+ import org.unitime.timetable.model.Exam;
+ import org.unitime.timetable.model.ExamOwner;
+@@ -147,8 +148,8 @@ public class ExamEditForm extends PreferencesForm {
+         if (request.getSession().getAttribute("Exam.Type")!=null)
+         	examType = (Long)request.getSession().getAttribute("Exam.Type");
+         if (examType == null) {
+-        	TreeSet<ExamType> types = ExamType.findAllUsed(HttpSessionContext.getSessionContext(request.getSession().getServletContext()).getUser().getCurrentAcademicSessionId());
+-        	if (!types.isEmpty()) examType = types.first().getUniqueId();
++        	List<ExamType> types = ExamType.findAllUsedApplicable(HttpSessionContext.getSessionContext(request.getSession().getServletContext()).getUser(), DepartmentStatusType.Status.ExamEdit, DepartmentStatusType.Status.ExamTimetable);
++        	if (!types.isEmpty()) examType = types.get(0).getUniqueId();
+         }
+         clone = false;
+         accommodation = null;
+diff --git a/JavaSource/org/unitime/timetable/form/ExamGridForm.java b/JavaSource/org/unitime/timetable/form/ExamGridForm.java
+index 37bc1732..cab986d6 100644
+--- a/JavaSource/org/unitime/timetable/form/ExamGridForm.java
++++ b/JavaSource/org/unitime/timetable/form/ExamGridForm.java
+@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
+ 
+ import org.apache.struts.action.ActionForm;
+ import org.apache.struts.action.ActionMapping;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.ExamPeriod;
+ import org.unitime.timetable.model.ExamType;
+ import org.unitime.timetable.model.Session;
+@@ -123,7 +124,7 @@ public class ExamGridForm extends ActionForm {
+         iSessionBeginDate = session.getSessionBeginDateTime();
+         iExamBeginDate = session.getExamBeginDate();
+         iPeriods.clear();
+-        for (ExamType type: ExamType.findAllUsed(context.getUser().getCurrentAcademicSessionId())) {
++        for (ExamType type: ExamType.findAllUsedApplicable(context.getUser(), DepartmentStatusType.Status.ExamTimetable)) {
+         	iPeriods.put(type.getUniqueId().toString(), ExamPeriod.findAll(session.getUniqueId(), type.getUniqueId()));
+         	setDate(type.getUniqueId().toString(), Integer.parseInt(context.getUser().getProperty("ExamGrid.date."+type.getUniqueId(), String.valueOf(Integer.MIN_VALUE))));
+         	setStartTime(type.getUniqueId().toString(), Integer.parseInt(context.getUser().getProperty("ExamGrid.start."+type.getUniqueId(), String.valueOf(getFirstStart(type.getUniqueId().toString())))));
+@@ -140,7 +141,7 @@ public class ExamGridForm extends ActionForm {
+     }
+     
+     public void save(SessionContext context) throws Exception {
+-    	for (ExamType type: ExamType.findAllUsed(context.getUser().getCurrentAcademicSessionId())) {
++    	for (ExamType type: ExamType.findAllUsedApplicable(context.getUser(), DepartmentStatusType.Status.ExamTimetable)) {
+     		context.getUser().setProperty("ExamGrid.date."+type.getUniqueId(), String.valueOf(getDate(type.getUniqueId().toString())));
+     		context.getUser().setProperty("ExamGrid.start."+type.getUniqueId(), String.valueOf(getStartTime(type.getUniqueId().toString())));
+     		context.getUser().setProperty("ExamGrid.end."+type.getUniqueId(), String.valueOf(getEndTime(type.getUniqueId().toString())));
+diff --git a/JavaSource/org/unitime/timetable/form/ExamsForm.java b/JavaSource/org/unitime/timetable/form/ExamsForm.java
+index e757e2ec..e5568419 100644
+--- a/JavaSource/org/unitime/timetable/form/ExamsForm.java
++++ b/JavaSource/org/unitime/timetable/form/ExamsForm.java
+@@ -107,7 +107,7 @@ public class ExamsForm extends ActionForm {
+         boolean hasSession = false;
+ 	    for (Iterator i=Session.getAllSessions().iterator();i.hasNext();) {
+ 	        Session s = (Session)i.next();
+-	        if (s.getStatusType()!=null && (s.getStatusType().canNoRoleReportExamFinal() || s.getStatusType().canNoRoleReportExamMidterm()) && Exam.hasTimetable(s.getUniqueId())) {
++	        if (s.getStatusType()!=null && (s.canNoRoleReportExamFinal() || s.canNoRoleReportExamMidterm()) && Exam.hasTimetable(s.getUniqueId())) {
+ 	            if (s.getUniqueId().equals(getSession())) hasSession = true;
+ 	            iSessions.add(new ComboBoxLookup(s.getLabel(),s.getUniqueId().toString()));
+ 	        }
+diff --git a/JavaSource/org/unitime/timetable/gwt/client/admin/SimpleEditPage.java b/JavaSource/org/unitime/timetable/gwt/client/admin/SimpleEditPage.java
+index df7e1027..46e931b4 100644
+--- a/JavaSource/org/unitime/timetable/gwt/client/admin/SimpleEditPage.java
++++ b/JavaSource/org/unitime/timetable/gwt/client/admin/SimpleEditPage.java
+@@ -1087,8 +1087,8 @@ public class SimpleEditPage extends Composite {
+ 					break;
+ 				case multi:
+ 					final ListBox multi = new ListBox(true);
+-					multi.setStyleName("unitime-TextBox");
+-					multi.setVisibleItemCount(3);
++					multi.setStyleName("unitime-TextArea");
++					multi.setVisibleItemCount(5);
+ 					for (ListItem item: field.getValues())
+ 						multi.addItem(item.getText(), item.getValue());
+ 					String[] vals = record.getValues(index);
+diff --git a/JavaSource/org/unitime/timetable/gwt/resources/GwtMessages.java b/JavaSource/org/unitime/timetable/gwt/resources/GwtMessages.java
+index b7d8d1e2..511f8cb4 100644
+--- a/JavaSource/org/unitime/timetable/gwt/resources/GwtMessages.java
++++ b/JavaSource/org/unitime/timetable/gwt/resources/GwtMessages.java
+@@ -1865,6 +1865,12 @@ public interface GwtMessages extends Messages {
+ 	@DefaultMessage("Class Duration Types")
+ 	String pageDurationTypes();
+ 	
++	@DefaultMessage("Examination Status")
++	String pageExaminationStatus();
++
++	@DefaultMessage("Examination Statuses")
++	String pageExaminationStatuses();
++	
+ 	@DefaultMessage("Add Curriculum")
+ 	String pageAddCurriculum();
+ 	
+@@ -3124,4 +3130,7 @@ public interface GwtMessages extends Messages {
+ 	
+ 	@DefaultMessage("Or you can download an iCalendar file by clicking the {0} button below. While it is often easier to import an iCalendar file, such a&nbsp;calendar will not get updated automatically.")
+ 	String exportICalendarDownload(String button);
++	
++	@DefaultMessage("Session Default")
++	String examStatusDefault();
+ }
+\ No newline at end of file
+diff --git a/JavaSource/org/unitime/timetable/gwt/server/CalendarServlet.java b/JavaSource/org/unitime/timetable/gwt/server/CalendarServlet.java
+index fae29fe6..a70ba744 100644
+--- a/JavaSource/org/unitime/timetable/gwt/server/CalendarServlet.java
++++ b/JavaSource/org/unitime/timetable/gwt/server/CalendarServlet.java
+@@ -58,9 +58,11 @@ import org.unitime.timetable.model.Assignment;
+ import org.unitime.timetable.model.ClassInstructor;
+ import org.unitime.timetable.model.Class_;
+ import org.unitime.timetable.model.CourseOffering;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.DepartmentalInstructor;
+ import org.unitime.timetable.model.Event;
+ import org.unitime.timetable.model.Exam;
++import org.unitime.timetable.model.ExamStatus;
+ import org.unitime.timetable.model.ExamType;
+ import org.unitime.timetable.model.Location;
+ import org.unitime.timetable.model.Meeting;
+@@ -225,14 +227,17 @@ public class CalendarServlet extends HttpServlet {
+                 		"where i.externalUniqueId = :externalId and i.department.session.uniqueId = :sessionId").
+                 		setLong("sessionId", sessionId).setString("externalId", userId).list()) {
+                 	if (!PersonalizedExamReportAction.canDisplay(instructor.getDepartment().getSession())) continue;
+-                    if (instructor.getDepartment().getSession().getStatusType().canNoRoleReportExamMidterm())
+-                    	for (Exam exam: instructor.getExams(ExamType.sExamTypeMidterm)) {
+-                    		printExam(exam, ical);
+-                    	}
+-                    if (instructor.getDepartment().getSession().getStatusType().canNoRoleReportExamFinal())
+-                    	for (Exam exam: instructor.getExams(ExamType.sExamTypeFinal)) {
+-                    		printExam(exam, ical);
+-                    	}
++                	for (ExamType t: ExamType.findAll(hibSession)) {
++                		ExamStatus status = ExamStatus.findStatus(hibSession, instructor.getSession().getUniqueId(), t.getUniqueId());
++                		DepartmentStatusType type = (status == null || status.getStatus() == null ? instructor.getSession().getStatusType() : status.getStatus());
++                		if (t.getType() == ExamType.sExamTypeFinal && type.canNoRoleReportExamFinal()) {
++                			for (Exam exam: instructor.getExams(t))
++                				printExam(exam, ical);
++                		} else if (t.getType() == ExamType.sExamTypeMidterm && type.canNoRoleReportExamMidterm()) {
++                			for (Exam exam: instructor.getExams(t))
++                				printExam(exam, ical);
++                		}
++                	}
+                     if (instructor.getDepartment().getSession().getStatusType().canNoRoleReportClass()) {
+                         for (ClassInstructor ci: instructor.getClasses()) {
+                             printClass(ci.getClassInstructing().getSchedulingSubpart().getInstrOfferingConfig().getControllingCourseOffering(), ci.getClassInstructing(), ical);
+@@ -243,13 +248,16 @@ public class CalendarServlet extends HttpServlet {
+                 		"s.externalUniqueId=:externalId and s.session.uniqueId = :sessionId").
+                 		setLong("sessionId", sessionId).setString("externalId", userId).list()) {
+                 	if (!PersonalizedExamReportAction.canDisplay(student.getSession())) continue;
+-                	if (student.getSession().getStatusType().canNoRoleReportExamFinal()) {
+-                		for (Exam exam: student.getExams(ExamType.sExamTypeFinal))
+-                			printExam(exam, ical);
+-                	}
+-                	if (student.getSession().getStatusType().canNoRoleReportExamMidterm()) {
+-                		for (Exam exam: student.getExams(ExamType.sExamTypeMidterm))
+-                			printExam(exam, ical);
++                	for (ExamType t: ExamType.findAll(hibSession)) {
++                		ExamStatus status = ExamStatus.findStatus(hibSession, student.getSession().getUniqueId(), t.getUniqueId());
++                		DepartmentStatusType type = (status == null || status.getStatus() == null ? student.getSession().getStatusType() : status.getStatus());
++                		if (t.getType() == ExamType.sExamTypeFinal && type.canNoRoleReportExamFinal()) {
++                			for (Exam exam: student.getExams(t))
++                				printExam(exam, ical);
++                		} else if (t.getType() == ExamType.sExamTypeMidterm && type.canNoRoleReportExamMidterm()) {
++                			for (Exam exam: student.getExams(t))
++                				printExam(exam, ical);
++                		}
+                 	}
+                     if (student.getSession().getStatusType().canNoRoleReportClass()) {
+                         for (Iterator i=student.getClassEnrollments().iterator();i.hasNext();) {
+diff --git a/JavaSource/org/unitime/timetable/model/ClassWaitList.java b/JavaSource/org/unitime/timetable/model/ClassWaitList.java
+index 4db4d84e..f3afb5ba 100644
+--- a/JavaSource/org/unitime/timetable/model/ClassWaitList.java
++++ b/JavaSource/org/unitime/timetable/model/ClassWaitList.java
+@@ -46,7 +46,8 @@ public class ClassWaitList extends BaseClassWaitList {
+ /*[CONSTRUCTOR MARKER END]*/
+ 
+ 	public static enum Type {
+-		LOCKED
++		LOCKED,
++		LEGACY,
+ 	}
+ 
+ }
+diff --git a/JavaSource/org/unitime/timetable/model/DepartmentStatusType.java b/JavaSource/org/unitime/timetable/model/DepartmentStatusType.java
+index c41a4c4e..67bb3146 100644
+--- a/JavaSource/org/unitime/timetable/model/DepartmentStatusType.java
++++ b/JavaSource/org/unitime/timetable/model/DepartmentStatusType.java
+@@ -63,7 +63,8 @@ public class DepartmentStatusType extends BaseDepartmentStatusType implements Co
+ 	
+ 	public static enum Apply {
+ 		Session,
+-		Department;
++		Department,
++		ExamStatus;
+ 		
+ 		public int toInt() { return 1 << ordinal(); }
+ 	}
+@@ -242,6 +243,10 @@ public class DepartmentStatusType extends BaseDepartmentStatusType implements Co
+ 		return apply(Apply.Department.toInt());
+ 	}
+ 	
++	public boolean applyExamStatus() {
++		return apply(Apply.ExamStatus.toInt());
++	}
++	
+ 	public boolean isAllowNoRole() {
+ 		return can(Status.AllowNoRole);
+ 	}
+diff --git a/JavaSource/org/unitime/timetable/model/DepartmentalInstructor.java b/JavaSource/org/unitime/timetable/model/DepartmentalInstructor.java
+index ca966128..0fe7e2a2 100644
+--- a/JavaSource/org/unitime/timetable/model/DepartmentalInstructor.java
++++ b/JavaSource/org/unitime/timetable/model/DepartmentalInstructor.java
+@@ -478,6 +478,24 @@ public class DepartmentalInstructor extends BaseDepartmentalInstructor implement
+         }
+     }
+     
++    public List<Exam> getAllExams() {
++        if (getExternalUniqueId()!=null) {
++            return (new DepartmentalInstructorDAO()).getSession()
++                .createQuery("select distinct x from Exam x inner join x.instructors i where " +
++                		"(i.uniqueId=:instructorId or (i.externalUniqueId=:externalId and i.department.session.uniqueId=:sessionId))")
++                .setLong("instructorId", getUniqueId())
++                .setLong("sessionId", getDepartment().getSession().getUniqueId())
++                .setString("externalId", getExternalUniqueId())
++                .setCacheable(true).list();
++        } else {
++            return (new DepartmentalInstructorDAO()).getSession()
++            .createQuery("select distinct x from Exam x inner join x.instructors i where i.uniqueId=:instructorId")
++            .setLong("instructorId", getUniqueId())
++            .setCacheable(true).list();
++            
++        }
++    }
++    
+     public Collection<Assignment> getCommitedAssignments() {
+     	return new DepartmentalInstructorDAO().getSession().createQuery(
+                 "select a from Assignment a inner join a.instructors i where " +
+diff --git a/JavaSource/org/unitime/timetable/model/Exam.java b/JavaSource/org/unitime/timetable/model/Exam.java
+index 7d03209b..85343888 100644
+--- a/JavaSource/org/unitime/timetable/model/Exam.java
++++ b/JavaSource/org/unitime/timetable/model/Exam.java
+@@ -1288,5 +1288,14 @@ public class Exam extends BaseExam implements Comparable<Exam> {
+ 
+ 	@Override
+ 	public Department getDepartment() { return null; }
++	
++	public DepartmentStatusType effectiveStatusType() {
++		return getStatusType() == null ? getSession().getStatusType() : getStatusType();
++	}
++	
++	public boolean canView() {
++		DepartmentStatusType type = effectiveStatusType();
++		return type != null && (getExamType().getType() == ExamType.sExamTypeFinal ? type.canNoRoleReportExamFinal() : type.canNoRoleReportExamMidterm());
++	}
+ 
+ }
+diff --git a/JavaSource/org/unitime/timetable/model/ExamStatus.java b/JavaSource/org/unitime/timetable/model/ExamStatus.java
+new file mode 100644
+index 00000000..15035f01
+--- /dev/null
++++ b/JavaSource/org/unitime/timetable/model/ExamStatus.java
+@@ -0,0 +1,62 @@
++/*
++ * Licensed to The Apereo Foundation under one or more contributor license
++ * agreements. See the NOTICE file distributed with this work for
++ * additional information regarding copyright ownership.
++ *
++ * The Apereo Foundation licenses this file to you under the Apache License,
++ * Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License. You may obtain a copy of the License at:
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ * 
++*/
++package org.unitime.timetable.model;
++
++import java.util.List;
++
++import org.unitime.timetable.model.base.BaseExamStatus;
++import org.unitime.timetable.model.dao.ExamStatusDAO;
++
++public class ExamStatus extends BaseExamStatus {
++	private static final long serialVersionUID = 1L;
++
++	public ExamStatus() {
++		super();
++	}
++	
++	public static ExamStatus findStatus(Long sessionId, Long typeId) {
++		return findStatus(null, sessionId, typeId);
++	}
++	
++	public static ExamStatus findStatus(org.hibernate.Session hibSession, Long sessionId, Long typeId) {
++		return (ExamStatus)(hibSession != null ? hibSession : ExamStatusDAO.getInstance().getSession()).createQuery(
++				"from ExamStatus where session.uniqueId = :sessionId and type.uniqueId = :typeId")
++				.setLong("sessionId", sessionId)
++				.setLong("typeId", typeId)
++				.setCacheable(true)
++				.uniqueResult();
++	}
++	
++	public static List<ExamStatus> findAll(Long sessionId) {
++		return findAll(null, sessionId);
++	}
++	
++	public static List<ExamStatus> findAll(org.hibernate.Session hibSession, Long sessionId) {
++		return (List<ExamStatus>)(hibSession != null ? hibSession : ExamStatusDAO.getInstance().getSession()).createQuery(
++				"from ExamStatus where session.uniqueId = :sessionId and type.uniqueId = :typeId")
++				.setLong("sessionId", sessionId)
++				.setCacheable(true)
++				.list();
++	}
++	
++	public DepartmentStatusType effectiveStatus() {
++		return getStatus() == null ? getSession().getStatusType() : getStatus();
++	}
++}
+diff --git a/JavaSource/org/unitime/timetable/model/ExamType.java b/JavaSource/org/unitime/timetable/model/ExamType.java
+index 394fcc76..79266886 100644
+--- a/JavaSource/org/unitime/timetable/model/ExamType.java
++++ b/JavaSource/org/unitime/timetable/model/ExamType.java
+@@ -19,6 +19,7 @@
+ */
+ package org.unitime.timetable.model;
+ 
++import java.util.ArrayList;
+ import java.util.List;
+ import java.util.TreeSet;
+ 
+@@ -27,6 +28,9 @@ import org.unitime.localization.impl.Localization;
+ import org.unitime.localization.messages.ExaminationMessages;
+ import org.unitime.timetable.model.base.BaseExamType;
+ import org.unitime.timetable.model.dao.ExamTypeDAO;
++import org.unitime.timetable.security.UserAuthority;
++import org.unitime.timetable.security.UserContext;
++import org.unitime.timetable.security.permissions.SimpleExaminationPermission;
+ 
+ /**
+  * @author Tomas Muller
+@@ -65,8 +69,50 @@ public class ExamType extends BaseExamType implements Comparable<ExamType> {
+ 				.setLong("sessionId", sessionId).setCacheable(true).list());
+ 	}
+ 
++	public static List<ExamType> findAllApplicable(UserContext user, DepartmentStatusType.Status... status) {
++		List<ExamType> types = new ArrayList<ExamType>();
++		UserAuthority authority = (user == null ? null : user.getCurrentAuthority());
++		if (authority == null) return types;
++		SimpleExaminationPermission p = new SimpleExaminationPermission();
++		
++		for (ExamType type: findAll()) {
++			ExamStatus examStatus = ExamStatus.findStatus(user.getCurrentAcademicSessionId(), type.getUniqueId());
++			if (examStatus != null) {
++				if (p.checkManager(authority, examStatus, status) && p.checkStatus(authority, examStatus.effectiveStatus(), status))
++					types.add(type);
++			} else {
++				types.add(type);
++			}
++		}
++		
++		return types;
++	}
++	
++	public static List<ExamType> findAllUsedApplicable(UserContext user, DepartmentStatusType.Status... status) {
++		List<ExamType> types = new ArrayList<ExamType>();
++		UserAuthority authority = (user == null ? null : user.getCurrentAuthority());
++		if (authority == null) return types;
++		SimpleExaminationPermission p = new SimpleExaminationPermission();
++		
++		for (ExamType type: findAllUsed(user.getCurrentAcademicSessionId())) {
++			ExamStatus examStatus = ExamStatus.findStatus(user.getCurrentAcademicSessionId(), type.getUniqueId());
++			if (examStatus != null) {
++				if (p.checkManager(authority, examStatus, status) && p.checkStatus(authority, examStatus.effectiveStatus(), status))
++					types.add(type);
++			} else {
++				types.add(type);
++			}
++		}
++		
++		return types;
++	}
++	
+ 	public static List<ExamType> findAll() {
+-		return (List<ExamType>)ExamTypeDAO.getInstance().getSession().createQuery(
++		return findAll(null);
++	}
++
++	public static List<ExamType> findAll(org.hibernate.Session hibSession) {
++		return (List<ExamType>)(hibSession != null ? hibSession : ExamTypeDAO.getInstance().getSession()).createQuery(
+ 				"from ExamType order by type, label")
+ 				.setCacheable(true).list();
+ 	}
+diff --git a/JavaSource/org/unitime/timetable/model/Session.java b/JavaSource/org/unitime/timetable/model/Session.java
+index a33c434d..242f8f36 100644
+--- a/JavaSource/org/unitime/timetable/model/Session.java
++++ b/JavaSource/org/unitime/timetable/model/Session.java
+@@ -696,4 +696,40 @@ public class Session extends BaseSession implements Comparable, Qualifiable {
+ 	
+ 	@Override
+ 	public Department getDepartment() { return null; }
++	
++	public boolean canNoRoleReportExamFinal() {
++		return ((Number)new ExamDAO().getSession().
++                createQuery("select count(x) from Exam x " +
++                		"where x.session.uniqueId = :sessionId and x.assignedPeriod != null and x.examType.type = :examType and " +
++                		"((x.statusType is null and bit_and(x.session.statusType.status, :flag) > 0) or bit_and(x.statusType.status, :flag) > 0)"
++                		)
++                .setLong("sessionId", getUniqueId())
++                .setInteger("examType", ExamType.sExamTypeFinal)
++                .setInteger("flag", DepartmentStatusType.Status.ReportExamsFinal.toInt())
++                .setCacheable(true).uniqueResult()).longValue() > 0;
++	}
++	
++	public boolean canNoRoleReportExamMidterm() {
++		return ((Number)new ExamDAO().getSession().
++                createQuery("select count(x) from Exam x " +
++                		"where x.session.uniqueId = :sessionId and x.assignedPeriod != null and x.examType.type = :examType and " +
++                		"((x.statusType is null and bit_and(x.session.statusType.status, :flag) > 0) or bit_and(x.statusType.status, :flag) > 0)"
++                		)
++                .setLong("sessionId", getUniqueId())
++                .setInteger("examType", ExamType.sExamTypeMidterm)
++                .setInteger("flag", DepartmentStatusType.Status.ReportExamsMidterm.toInt())
++                .setCacheable(true).uniqueResult()).longValue() > 0;
++	}
++	
++	public boolean canNoRoleReportClass() {
++		return getStatusType() != null && getStatusType().can(DepartmentStatusType.Status.ReportClasses) && Solution.hasTimetable(getUniqueId());
++	}
++	
++    public boolean canNoRoleReportExam() {
++        return canNoRoleReportExamFinal() || canNoRoleReportExamMidterm();
++    }
++
++    public boolean canNoRoleReport() {
++        return canNoRoleReportClass() || canNoRoleReportExam();
++    }
+ }
+diff --git a/JavaSource/org/unitime/timetable/model/Student.java b/JavaSource/org/unitime/timetable/model/Student.java
+index 3153179c..144349d3 100644
+--- a/JavaSource/org/unitime/timetable/model/Student.java
++++ b/JavaSource/org/unitime/timetable/model/Student.java
+@@ -118,6 +118,7 @@ public class Student extends BaseStudent implements Comparable<Student>, NameInt
+ 
+     }
+ 
++    @Deprecated
+     public Set<Exam> getExams(Integer examType) {
+         HashSet exams = new HashSet();
+         exams.addAll(new StudentDAO().getSession().createQuery(
+@@ -155,6 +156,43 @@ public class Student extends BaseStudent implements Comparable<Student>, NameInt
+         return exams;
+     }
+     
++    public Set<Exam> getExams(ExamType examType) {
++        HashSet exams = new HashSet();
++        exams.addAll(new StudentDAO().getSession().createQuery(
++                "select distinct o.exam from ExamOwner o, StudentClassEnrollment e "+
++                "where e.student.uniqueId=:studentId and o.ownerType=:ownerType and o.ownerId=e.clazz.uniqueId and o.exam.examType.uniqueId=:examType")
++                .setLong("studentId", getUniqueId())
++                .setInteger("ownerType", ExamOwner.sOwnerTypeClass)
++                .setLong("examType", examType.getUniqueId())
++                .setCacheable(true)
++                .list());
++        exams.addAll(new StudentDAO().getSession().createQuery(
++                "select distinct o.exam from ExamOwner o, StudentClassEnrollment e "+
++                "where e.student.uniqueId=:studentId and o.ownerType=:ownerType and o.ownerId=e.clazz.schedulingSubpart.instrOfferingConfig.uniqueId and o.exam.examType.uniqueId=:examType")
++                .setLong("studentId", getUniqueId())
++                .setInteger("ownerType", ExamOwner.sOwnerTypeConfig)
++                .setLong("examType", examType.getUniqueId())
++                .setCacheable(true)
++                .list());
++        exams.addAll(new StudentDAO().getSession().createQuery(
++                "select distinct o.exam from ExamOwner o, StudentClassEnrollment e "+
++                "where e.student.uniqueId=:studentId and o.ownerType=:ownerType and o.ownerId=e.courseOffering.uniqueId and o.exam.examType.uniqueId=:examType")
++                .setLong("studentId", getUniqueId())
++                .setInteger("ownerType", ExamOwner.sOwnerTypeCourse)
++                .setLong("examType", examType.getUniqueId())
++                .setCacheable(true)
++                .list());
++        exams.addAll(new StudentDAO().getSession().createQuery(
++                "select distinct o.exam from ExamOwner o, StudentClassEnrollment e "+
++                "where e.student.uniqueId=:studentId and o.ownerType=:ownerType and o.ownerId=e.courseOffering.instructionalOffering.uniqueId and o.exam.examType.uniqueId=:examType")
++                .setLong("studentId", getUniqueId())
++                .setInteger("ownerType", ExamOwner.sOwnerTypeOffering)
++                .setLong("examType", examType.getUniqueId())
++                .setCacheable(true)
++                .list());
++        return exams;
++    }
++    
+     public String getName(String instructorNameFormat) {
+     	return NameFormat.fromReference(instructorNameFormat).format(this);
+     }
+diff --git a/JavaSource/org/unitime/timetable/model/base/BaseEvent.java b/JavaSource/org/unitime/timetable/model/base/BaseEvent.java
+index 01c2e0d7..949c92b1 100644
+--- a/JavaSource/org/unitime/timetable/model/base/BaseEvent.java
++++ b/JavaSource/org/unitime/timetable/model/base/BaseEvent.java
+@@ -43,6 +43,7 @@ public abstract class BaseEvent implements Serializable {
+ 	private Integer iMaxCapacity;
+ 	private String iEmail;
+ 	private Date iExpirationDate;
++	private Integer iExamStatus;
+ 
+ 	private EventContact iMainContact;
+ 	private SponsoringOrganization iSponsoringOrganization;
+@@ -86,6 +87,9 @@ public abstract class BaseEvent implements Serializable {
+ 	public Date getExpirationDate() { return iExpirationDate; }
+ 	public void setExpirationDate(Date expirationDate) { iExpirationDate = expirationDate; }
+ 
++	public Integer getExamStatus() { return iExamStatus; }
++	public void setExamStatus(Integer examStatus) { iExamStatus = examStatus; }
++
+ 	public EventContact getMainContact() { return iMainContact; }
+ 	public void setMainContact(EventContact mainContact) { iMainContact = mainContact; }
+ 
+diff --git a/JavaSource/org/unitime/timetable/model/base/BaseExam.java b/JavaSource/org/unitime/timetable/model/base/BaseExam.java
+index 1fbd8259..85fd8396 100644
+--- a/JavaSource/org/unitime/timetable/model/base/BaseExam.java
++++ b/JavaSource/org/unitime/timetable/model/base/BaseExam.java
+@@ -23,6 +23,7 @@ import java.io.Serializable;
+ import java.util.HashSet;
+ import java.util.Set;
+ 
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.DepartmentalInstructor;
+ import org.unitime.timetable.model.Exam;
+ import org.unitime.timetable.model.ExamConflict;
+@@ -54,6 +55,7 @@ public abstract class BaseExam extends PreferenceGroup implements Serializable {
+ 	private Session iSession;
+ 	private ExamPeriod iAssignedPeriod;
+ 	private ExamType iExamType;
++	private DepartmentStatusType iStatusType;
+ 	private Set<ExamOwner> iOwners;
+ 	private Set<Location> iAssignedRooms;
+ 	private Set<DepartmentalInstructor> iInstructors;
+@@ -120,6 +122,9 @@ public abstract class BaseExam extends PreferenceGroup implements Serializable {
+ 	public ExamType getExamType() { return iExamType; }
+ 	public void setExamType(ExamType examType) { iExamType = examType; }
+ 
++	public DepartmentStatusType getStatusType() { return iStatusType; }
++	public void setStatusType(DepartmentStatusType statusType) { iStatusType = statusType; }
++
+ 	public Set<ExamOwner> getOwners() { return iOwners; }
+ 	public void setOwners(Set<ExamOwner> owners) { iOwners = owners; }
+ 	public void addToowners(ExamOwner examOwner) {
+diff --git a/JavaSource/org/unitime/timetable/model/base/BaseExamStatus.java b/JavaSource/org/unitime/timetable/model/base/BaseExamStatus.java
+new file mode 100644
+index 00000000..12da606b
+--- /dev/null
++++ b/JavaSource/org/unitime/timetable/model/base/BaseExamStatus.java
+@@ -0,0 +1,92 @@
++/*
++ * Licensed to The Apereo Foundation under one or more contributor license
++ * agreements. See the NOTICE file distributed with this work for
++ * additional information regarding copyright ownership.
++ *
++ * The Apereo Foundation licenses this file to you under the Apache License,
++ * Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License. You may obtain a copy of the License at:
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ * 
++*/
++package org.unitime.timetable.model.base;
++
++import java.io.Serializable;
++import java.util.HashSet;
++import java.util.Set;
++
++import org.unitime.timetable.model.DepartmentStatusType;
++import org.unitime.timetable.model.ExamStatus;
++import org.unitime.timetable.model.ExamType;
++import org.unitime.timetable.model.Session;
++import org.unitime.timetable.model.TimetableManager;
++
++/**
++ * Do not change this class. It has been automatically generated using ant create-model.
++ * @see org.unitime.commons.ant.CreateBaseModelFromXml
++ */
++public abstract class BaseExamStatus implements Serializable {
++	private static final long serialVersionUID = 1L;
++
++	private Session iSession;
++	private ExamType iType;
++
++	private DepartmentStatusType iStatus;
++	private Set<TimetableManager> iManagers;
++
++
++	public BaseExamStatus() {
++		initialize();
++	}
++
++	protected void initialize() {}
++
++	public Session getSession() { return iSession; }
++	public void setSession(Session session) { iSession = session; }
++
++	public ExamType getType() { return iType; }
++	public void setType(ExamType type) { iType = type; }
++
++	public DepartmentStatusType getStatus() { return iStatus; }
++	public void setStatus(DepartmentStatusType status) { iStatus = status; }
++
++	public Set<TimetableManager> getManagers() { return iManagers; }
++	public void setManagers(Set<TimetableManager> managers) { iManagers = managers; }
++	public void addTomanagers(TimetableManager timetableManager) {
++		if (iManagers == null) iManagers = new HashSet<TimetableManager>();
++		iManagers.add(timetableManager);
++	}
++
++	public boolean equals(Object o) {
++		if (o == null || !(o instanceof ExamStatus)) return false;
++		ExamStatus examStatus = (ExamStatus)o;
++		if (getSession() == null || examStatus.getSession() == null || !getSession().equals(examStatus.getSession())) return false;
++		if (getType() == null || examStatus.getType() == null || !getType().equals(examStatus.getType())) return false;
++		return true;
++	}
++
++	public int hashCode() {
++		if (getSession() == null || getType() == null) return super.hashCode();
++		return getSession().hashCode() ^ getType().hashCode();
++	}
++
++	public String toString() {
++		return "ExamStatus[" + getSession() + ", " + getType() + "]";
++	}
++
++	public String toDebugString() {
++		return "ExamStatus[" +
++			"\n	Session: " + getSession() +
++			"\n	Status: " + getStatus() +
++			"\n	Type: " + getType() +
++			"]";
++	}
++}
+diff --git a/JavaSource/org/unitime/timetable/model/base/BaseExamStatusDAO.java b/JavaSource/org/unitime/timetable/model/base/BaseExamStatusDAO.java
+new file mode 100644
+index 00000000..4160ffb5
+--- /dev/null
++++ b/JavaSource/org/unitime/timetable/model/base/BaseExamStatusDAO.java
+@@ -0,0 +1,50 @@
++/*
++ * Licensed to The Apereo Foundation under one or more contributor license
++ * agreements. See the NOTICE file distributed with this work for
++ * additional information regarding copyright ownership.
++ *
++ * The Apereo Foundation licenses this file to you under the Apache License,
++ * Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License. You may obtain a copy of the License at:
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ * 
++*/
++package org.unitime.timetable.model.base;
++
++import java.io.Serializable;
++import java.util.List;
++
++import org.unitime.timetable.model.ExamStatus;
++import org.unitime.timetable.model.dao._RootDAO;
++import org.unitime.timetable.model.dao.ExamStatusDAO;
++
++/**
++ * Do not change this class. It has been automatically generated using ant create-model.
++ * @see org.unitime.commons.ant.CreateBaseModelFromXml
++ */
++public abstract class BaseExamStatusDAO extends _RootDAO<ExamStatus,Serializable> {
++
++	private static ExamStatusDAO sInstance;
++
++	public static ExamStatusDAO getInstance() {
++		if (sInstance == null) sInstance = new ExamStatusDAO();
++		return sInstance;
++	}
++
++	public Class<ExamStatus> getReferenceClass() {
++		return ExamStatus.class;
++	}
++
++	@SuppressWarnings("unchecked")
++	public List<ExamStatus> findByStatus(org.hibernate.Session hibSession, Long statusId) {
++		return hibSession.createQuery("from ExamStatus x where x.status.uniqueId = :statusId").setLong("statusId", statusId).list();
++	}
++}
+diff --git a/JavaSource/org/unitime/timetable/model/dao/ExamStatusDAO.java b/JavaSource/org/unitime/timetable/model/dao/ExamStatusDAO.java
+new file mode 100644
+index 00000000..24e63885
+--- /dev/null
++++ b/JavaSource/org/unitime/timetable/model/dao/ExamStatusDAO.java
+@@ -0,0 +1,28 @@
++/*
++ * Licensed to The Apereo Foundation under one or more contributor license
++ * agreements. See the NOTICE file distributed with this work for
++ * additional information regarding copyright ownership.
++ *
++ * The Apereo Foundation licenses this file to you under the Apache License,
++ * Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License. You may obtain a copy of the License at:
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ * 
++*/
++package org.unitime.timetable.model.dao;
++
++import org.unitime.timetable.model.base.BaseExamStatusDAO;
++
++public class ExamStatusDAO extends BaseExamStatusDAO {
++
++	public ExamStatusDAO() {}
++
++}
+diff --git a/JavaSource/org/unitime/timetable/security/permissions/ExaminationPermissions.java b/JavaSource/org/unitime/timetable/security/permissions/ExaminationPermissions.java
+index 6b7ea8e4..fa0b2167 100644
+--- a/JavaSource/org/unitime/timetable/security/permissions/ExaminationPermissions.java
++++ b/JavaSource/org/unitime/timetable/security/permissions/ExaminationPermissions.java
+@@ -25,9 +25,11 @@ import org.unitime.timetable.model.DistributionObject;
+ import org.unitime.timetable.model.DistributionPref;
+ import org.unitime.timetable.model.Exam;
+ import org.unitime.timetable.model.ExamOwner;
++import org.unitime.timetable.model.ExamStatus;
+ import org.unitime.timetable.model.ExamType;
+ import org.unitime.timetable.model.Session;
+ import org.unitime.timetable.model.SubjectArea;
++import org.unitime.timetable.security.UserAuthority;
+ import org.unitime.timetable.security.UserContext;
+ import org.unitime.timetable.security.rights.Right;
+ 
+@@ -38,7 +40,7 @@ public class ExaminationPermissions {
+ 
+ 	@PermissionForRight(Right.Examinations)
+ 	public static class Examinations implements Permission<Session> {
+-		@Autowired PermissionSession permissionSession;
++		@Autowired PermissionExamination permissionExaminationStatus;
+ 
+ 		@Override
+ 		public boolean check(UserContext user, Session source) {
+@@ -47,9 +49,9 @@ public class ExaminationPermissions {
+ 			if (ExamType.findAllUsed(source.getUniqueId()).isEmpty()) return false;
+ 			
+ 			if (user.getCurrentAuthority().hasRight(Right.DepartmentIndependent))
+-				return permissionSession.check(user, source, DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
++				return permissionExaminationStatus.check(user, source, null, DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
+ 			else
+-				return permissionSession.check(user, source, DepartmentStatusType.Status.ExamView);
++				return permissionExaminationStatus.check(user, source, null, DepartmentStatusType.Status.ExamView);
+ 		}
+ 
+ 		@Override
+@@ -57,18 +59,45 @@ public class ExaminationPermissions {
+ 		
+ 	}
+ 	
++	@PermissionForRight(Right.ExaminationView)
++	public static class ExaminationView implements Permission<Exam> {
++		@Autowired PermissionExamination permissionExaminationStatus;
++
++		@Override
++		public boolean check(UserContext user, Exam source) {
++			SimpleExaminationPermission p = new SimpleExaminationPermission() {
++				@Override
++				public boolean checkManager(UserAuthority authority, ExamStatus examStatus, DepartmentStatusType.Status... status) {
++					return true;
++				}
++			};
++			if (user.getCurrentAuthority().hasRight(Right.DepartmentIndependent))
++				return p.check(user, source.getSession(), source.getExamType(), DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
++			else {
++				for (ExamOwner owner: source.getOwners()) {
++					if (p.check(user, owner.getCourse().getSubjectArea().getDepartment(), source.getExamType(), DepartmentStatusType.Status.ExamView))
++						return true;
++				}
++				return false;
++			}
++		}
++
++		@Override
++		public Class<Exam> type() { return Exam.class; }
++		
++	}
++	
+ 	@PermissionForRight(Right.ExaminationDetail)
+ 	public static class ExaminationDetail implements Permission<Exam> {
+-		@Autowired PermissionSession permissionSession;
+-		@Autowired PermissionDepartment permissionDepartment;
++		@Autowired PermissionExamination permissionExaminationStatus;
+ 
+ 		@Override
+ 		public boolean check(UserContext user, Exam source) {
+ 			if (user.getCurrentAuthority().hasRight(Right.DepartmentIndependent))
+-				return permissionSession.check(user, source.getSession(), DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
++				return permissionExaminationStatus.check(user, source.getSession(), source.getExamType(), DepartmentStatusType.Status.ExamView, DepartmentStatusType.Status.ExamTimetable);
+ 			else {
+ 				for (ExamOwner owner: source.getOwners()) {
+-					if (permissionDepartment.check(user, owner.getCourse().getSubjectArea().getDepartment(), DepartmentStatusType.Status.ExamView))
++					if (permissionExaminationStatus.check(user, owner.getCourse().getSubjectArea().getDepartment(), source.getExamType(), DepartmentStatusType.Status.ExamView))
+ 						return true;
+ 				}
+ 				return false;
+@@ -82,16 +111,16 @@ public class ExaminationPermissions {
+ 	
+ 	@PermissionForRight(Right.ExaminationAdd)
+ 	public static class AddExamination implements Permission<Session> {
+-		@Autowired PermissionSession permissionSession;
++		@Autowired PermissionExamination permissionExaminationStatus;
+ 
+ 		@Override
+ 		public boolean check(UserContext user, Session source) {
+ 			if (ExamType.findAllUsed(source.getUniqueId()).isEmpty()) return false;
+ 			
+ 			if (user.getCurrentAuthority().hasRight(Right.DepartmentIndependent))
+-				return permissionSession.check(user, source, DepartmentStatusType.Status.ExamTimetable);
++				return permissionExaminationStatus.check(user, source, null, DepartmentStatusType.Status.ExamTimetable);
+ 			else
+-				return permissionSession.check(user, source, DepartmentStatusType.Status.ExamEdit);
++				return permissionExaminationStatus.check(user, source, null, DepartmentStatusType.Status.ExamEdit);
+ 		}
+ 
+ 		@Override
+@@ -101,17 +130,15 @@ public class ExaminationPermissions {
+ 	
+ 	@PermissionForRight(Right.ExaminationEdit)
+ 	public static class EditExamination implements Permission<Exam> {
+-		@Autowired PermissionSession permissionSession;
++		@Autowired PermissionExamination permissionExaminationStatus;
+ 		
+-		@Autowired PermissionDepartment permissionDepartment;
+-
+ 		@Override
+ 		public boolean check(UserContext user, Exam source) {
+ 			if (user.getCurrentAuthority().hasRight(Right.DepartmentIndependent))
+-				return permissionSession.check(user, source.getSession(), DepartmentStatusType.Status.ExamTimetable);
++				return permissionExaminationStatus.check(user, source.getSession(), source.getExamType(), DepartmentStatusType.Status.ExamTimetable);
+ 			else {
+ 				for (ExamOwner owner: source.getOwners()) {
+-					if (permissionDepartment.check(user, owner.getCourse().getDepartment(), DepartmentStatusType.Status.ExamEdit))
++					if (permissionExaminationStatus.check(user, owner.getCourse().getDepartment(), source.getExamType(), DepartmentStatusType.Status.ExamEdit))
+ 						return true;
+ 				}
+ 				return false;
+@@ -137,12 +164,12 @@ public class ExaminationPermissions {
+ 	
+ 	@PermissionForRight(Right.ExaminationAssignment)
+ 	public static class ExaminationAssignment implements Permission<Exam> {
+-		@Autowired PermissionSession permissionSession;
++		@Autowired PermissionExamination permissionExaminationStatus;
+ 
+ 		@Override
+ 		public boolean check(UserContext user, Exam source) {
+ 			return user.getCurrentAuthority().hasRight(Right.DepartmentIndependent) &&
+-				 permissionSession.check(user, source.getSession(), DepartmentStatusType.Status.ExamTimetable);
++				 permissionExaminationStatus.check(user, source.getSession(), source.getExamType(), DepartmentStatusType.Status.ExamTimetable);
+ 		}
+ 
+ 		@Override
+@@ -152,12 +179,11 @@ public class ExaminationPermissions {
+ 
+ 	@PermissionForRight(Right.ExaminationSchedule)
+ 	public static class ExaminationSchedule implements Permission<Session> {
+-		
+-		@Autowired PermissionSession permissionSession;
++		@Autowired PermissionExamination permissionExaminationStatus;
+ 
+ 		@Override
+ 		public boolean check(UserContext user, Session source) {
+-			return permissionSession.check(user, source, DepartmentStatusType.Status.ReportExamsFinal, DepartmentStatusType.Status.ReportExamsMidterm);
++			return permissionExaminationStatus.check(user, source, null, DepartmentStatusType.Status.ReportExamsFinal, DepartmentStatusType.Status.ReportExamsMidterm);
+ 		}
+ 
+ 		@Override
+diff --git a/JavaSource/org/unitime/timetable/security/permissions/ExaminationTimetablingPermissions.java b/JavaSource/org/unitime/timetable/security/permissions/ExaminationTimetablingPermissions.java
+index 5e8f61ee..ef9af25d 100644
+--- a/JavaSource/org/unitime/timetable/security/permissions/ExaminationTimetablingPermissions.java
++++ b/JavaSource/org/unitime/timetable/security/permissions/ExaminationTimetablingPermissions.java
+@@ -35,11 +35,11 @@ public class ExaminationTimetablingPermissions {
+ 
+ 	@PermissionForRight(Right.ExaminationTimetabling)
+ 	public static class ExaminationTimetabling implements Permission<Session> {
+-		@Autowired PermissionSession permissionSession;
++		@Autowired PermissionExamination permissionExaminationStatus;
+ 
+ 		@Override
+ 		public boolean check(UserContext user, Session source) {
+-			return permissionSession.check(user, source, DepartmentStatusType.Status.ExamTimetable) &&
++			return permissionExaminationStatus.check(user, source, null, DepartmentStatusType.Status.ExamTimetable) &&
+ 					(Exam.hasFinalExams(source.getUniqueId()) || Exam.hasMidtermExams(source.getUniqueId()));
+ 		}
+ 
+@@ -77,7 +77,7 @@ public class ExaminationTimetablingPermissions {
+ 
+ 	@PermissionForRight(Right.ExaminationPdfReports)
+ 	public static class ExaminationPdfReports implements Permission<Session> {
+-		@Autowired PermissionSession permissionSession;
++		@Autowired PermissionExamination permissionExaminationStatus;
+ 
+ 		@Override
+ 		public boolean check(UserContext user, Session source) {
+@@ -85,7 +85,7 @@ public class ExaminationTimetablingPermissions {
+ 			
+ 			if (ExamType.findAllUsed(source.getUniqueId()).isEmpty()) return false;
+ 
+-			return permissionSession.check(user, source);
++			return permissionExaminationStatus.check(user, source, null, DepartmentStatusType.Status.ExamView);
+ 		}
+ 
+ 		@Override
+diff --git a/JavaSource/org/unitime/timetable/security/permissions/Permission.java b/JavaSource/org/unitime/timetable/security/permissions/Permission.java
+index 08df6646..ee8c8a9f 100644
+--- a/JavaSource/org/unitime/timetable/security/permissions/Permission.java
++++ b/JavaSource/org/unitime/timetable/security/permissions/Permission.java
+@@ -21,6 +21,7 @@ package org.unitime.timetable.security.permissions;
+ 
+ import org.unitime.timetable.model.Department;
+ import org.unitime.timetable.model.DepartmentStatusType;
++import org.unitime.timetable.model.ExamType;
+ import org.unitime.timetable.model.Session;
+ import org.unitime.timetable.security.UserContext;
+ 
+@@ -40,4 +41,9 @@ public interface Permission<T> {
+ 	public static interface PermissionSession extends Permission<Session> {
+ 		public boolean check(UserContext user, Session session, DepartmentStatusType.Status... status);
+ 	}
++	
++	public static interface PermissionExamination extends Permission<Session> {
++		public boolean check(UserContext user, Session session, ExamType examType, DepartmentStatusType.Status... status);
++		public boolean check(UserContext user, Department department, ExamType examType, DepartmentStatusType.Status... status);
++	}
+ }
+diff --git a/JavaSource/org/unitime/timetable/security/permissions/SimpleExaminationPermission.java b/JavaSource/org/unitime/timetable/security/permissions/SimpleExaminationPermission.java
+new file mode 100644
+index 00000000..c6435415
+--- /dev/null
++++ b/JavaSource/org/unitime/timetable/security/permissions/SimpleExaminationPermission.java
+@@ -0,0 +1,144 @@
++/*
++ * Licensed to The Apereo Foundation under one or more contributor license
++ * agreements. See the NOTICE file distributed with this work for
++ * additional information regarding copyright ownership.
++ *
++ * The Apereo Foundation licenses this file to you under the Apache License,
++ * Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License. You may obtain a copy of the License at:
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ * 
++*/
++package org.unitime.timetable.security.permissions;
++
++import org.springframework.stereotype.Service;
++import org.unitime.timetable.model.Department;
++import org.unitime.timetable.model.DepartmentStatusType;
++import org.unitime.timetable.model.ExamStatus;
++import org.unitime.timetable.model.ExamType;
++import org.unitime.timetable.model.Session;
++import org.unitime.timetable.model.TimetableManager;
++import org.unitime.timetable.security.UserAuthority;
++import org.unitime.timetable.security.UserContext;
++import org.unitime.timetable.security.permissions.Permission.PermissionExamination;
++import org.unitime.timetable.security.rights.Right;
++
++@Service("permissionExaminationStatus")
++public class SimpleExaminationPermission implements PermissionExamination {
++
++	@Override
++	public boolean check(UserContext user, Session session) {
++		return check(user, session, null, new DepartmentStatusType.Status[] {});
++	}
++	
++	@Override
++	public boolean check(UserContext user, Session session, ExamType examType, DepartmentStatusType.Status... status) {
++		// Not authenticated or no authority -> no permission
++		if (user == null || user.getCurrentAuthority() == null || session == null) return false;
++		
++		UserAuthority authority = user.getCurrentAuthority();
++		
++		// Academic session check
++		if (!authority.hasRight(Right.SessionIndependent) && !authority.hasQualifier(session))
++			return false;
++		
++		// Test session check
++		if (!authority.hasRight(Right.AllowTestSessions) && (session.getStatusType() == null || session.getStatusType().isTestSession()))
++			return false;
++		
++		// Check examination status
++		if (examType == null) {
++			// Check all examination types
++			boolean checkDefaultStatus = false;
++			for (ExamType et: ExamType.findAllUsed(session.getUniqueId())) {
++				ExamStatus examStatus = ExamStatus.findStatus(session.getUniqueId(), et.getUniqueId());
++				if (examStatus != null) {
++					if (checkManager(authority, examStatus, status) && checkStatus(authority, examStatus.effectiveStatus(), status))
++						return true;
++				} else {
++					checkDefaultStatus = true;
++				}
++			}
++			// All examination types have a status associated with -> fail
++			if (!checkDefaultStatus) return false;
++		}
++		
++		// Check examination status of the given type (or the default one when null)
++		ExamStatus examStatus = (examType == null ? null : ExamStatus.findStatus(session.getUniqueId(), examType.getUniqueId()));
++		DepartmentStatusType type = (examStatus == null ? session.getStatusType() : examStatus.effectiveStatus());
++		return checkManager(authority, examStatus, status) && checkStatus(authority, type, status);
++	}
++	
++	@Override
++	public boolean check(UserContext user, Department department, ExamType examType, DepartmentStatusType.Status... status) {
++		if (!check(user, department.getSession(), examType, status))
++			return false;
++		
++		UserAuthority authority = user.getCurrentAuthority();
++		
++		// Department check
++		if (!authority.hasRight(Right.DepartmentIndependent) && !authority.hasQualifier(department))
++			return false;
++
++		// Check department status
++		if (status.length > 0 && !authority.hasRight(Right.StatusIndependent)) {
++			DepartmentStatusType type = department.getStatusType();
++			if (type != null) {
++				for (DepartmentStatusType.Status s: status) {
++					if (type.can(s)) return true;
++				}
++				return false;
++			}
++		}
++		
++		return true;
++	}
++
++	@Override
++	public Class<Session> type() {
++		return Session.class;
++	}
++	
++	public boolean checkManager(UserAuthority authority, ExamStatus examStatus, DepartmentStatusType.Status... status) {
++		if (examStatus == null || authority.hasRight(Right.SessionIndependent) || !authority.hasRight(Right.ExaminationSolver)) return true;
++		
++		/*
++		// skip check for view permissions
++		if (status.length > 0)
++			for (DepartmentStatusType.Status s: status) {
++				if (s == DepartmentStatusType.Status.ExamView)
++					return true;
++			}
++		*/
++		
++		if (!examStatus.getManagers().isEmpty()) {
++			for (TimetableManager m: examStatus.getManagers()) {
++				if (authority.hasQualifier(m))
++					return true;
++			}
++			return false;
++		}
++		
++		return true;
++	}
++	
++	public boolean checkStatus(UserAuthority authority, DepartmentStatusType type, DepartmentStatusType.Status... status) {
++		if (authority.hasRight(Right.StatusIndependent) || status.length == 0) return true;
++		
++		if (type != null) {
++			for (DepartmentStatusType.Status s: status) {
++				if (type.can(s)) return true;
++			}
++		}
++		
++		return false;
++	}
++}
+\ No newline at end of file
+diff --git a/JavaSource/org/unitime/timetable/security/rights/Right.java b/JavaSource/org/unitime/timetable/security/rights/Right.java
+index 8f636788..525dcc6a 100644
+--- a/JavaSource/org/unitime/timetable/security/rights/Right.java
++++ b/JavaSource/org/unitime/timetable/security/rights/Right.java
+@@ -268,6 +268,7 @@ public enum Right {
+ 	
+ 	Examinations(Session.class),
+ 
++	ExaminationView(Exam.class),
+     ExaminationDetail(Exam.class),
+     ExaminationEdit(Exam.class),
+     ExaminationEditClearPreferences(Exam.class),
+@@ -505,6 +506,9 @@ public enum Right {
+ 	DurationTypes,
+ 	DurationTypeEdit,
+ 	
++	ExaminationStatuses,
++	ExaminationStatusEdit,
++	
+ 	/** Administration: Defaults */
+ 	
+ 	ApplicationConfig,
+diff --git a/JavaSource/org/unitime/timetable/server/admin/ExaminationStatuses.java b/JavaSource/org/unitime/timetable/server/admin/ExaminationStatuses.java
+new file mode 100644
+index 00000000..42cf8513
+--- /dev/null
++++ b/JavaSource/org/unitime/timetable/server/admin/ExaminationStatuses.java
+@@ -0,0 +1,175 @@
++/*
++ * Licensed to The Apereo Foundation under one or more contributor license
++ * agreements. See the NOTICE file distributed with this work for
++ * additional information regarding copyright ownership.
++ *
++ * The Apereo Foundation licenses this file to you under the Apache License,
++ * Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License. You may obtain a copy of the License at:
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ * 
++*/
++package org.unitime.timetable.server.admin;
++
++import java.util.ArrayList;
++import java.util.HashSet;
++import java.util.List;
++import java.util.Set;
++
++import org.cpsolver.ifs.util.ToolBox;
++import org.hibernate.Session;
++import org.springframework.security.access.prepost.PreAuthorize;
++import org.springframework.stereotype.Service;
++import org.unitime.localization.impl.Localization;
++import org.unitime.timetable.defaults.UserProperty;
++import org.unitime.timetable.gwt.resources.GwtMessages;
++import org.unitime.timetable.gwt.shared.SimpleEditInterface;
++import org.unitime.timetable.gwt.shared.SimpleEditInterface.Field;
++import org.unitime.timetable.gwt.shared.SimpleEditInterface.FieldType;
++import org.unitime.timetable.gwt.shared.SimpleEditInterface.Flag;
++import org.unitime.timetable.gwt.shared.SimpleEditInterface.ListItem;
++import org.unitime.timetable.gwt.shared.SimpleEditInterface.PageName;
++import org.unitime.timetable.gwt.shared.SimpleEditInterface.Record;
++import org.unitime.timetable.model.ChangeLog;
++import org.unitime.timetable.model.DepartmentStatusType;
++import org.unitime.timetable.model.ExamStatus;
++import org.unitime.timetable.model.ExamType;
++import org.unitime.timetable.model.ChangeLog.Operation;
++import org.unitime.timetable.model.ChangeLog.Source;
++import org.unitime.timetable.model.TimetableManager;
++import org.unitime.timetable.model.dao.DepartmentStatusTypeDAO;
++import org.unitime.timetable.model.dao.ExamStatusDAO;
++import org.unitime.timetable.model.dao.ExamTypeDAO;
++import org.unitime.timetable.model.dao.SessionDAO;
++import org.unitime.timetable.model.dao.TimetableManagerDAO;
++import org.unitime.timetable.security.SessionContext;
++import org.unitime.timetable.security.rights.Right;
++import org.unitime.timetable.util.NameFormat;
++
++/**
++ * @author Tomas Muller
++ */
++@Service("gwtAdminTable[type=examStatus]")
++public class ExaminationStatuses implements AdminTable {
++	protected static final GwtMessages MESSAGES = Localization.create(GwtMessages.class);
++	
++	@Override
++	public PageName name() {
++		return new PageName(MESSAGES.pageExaminationStatus(), MESSAGES.pageExaminationStatuses());
++	}
++
++	@Override
++	@PreAuthorize("checkPermission('ExaminationStatuses')")
++	public SimpleEditInterface load(SessionContext context, Session hibSession) {
++		Long sessionId = context.getUser().getCurrentAcademicSessionId();
++		List<ListItem> managers = new ArrayList<ListItem>();
++		NameFormat nf = NameFormat.fromReference(context.getUser().getProperty(UserProperty.NameFormat));
++		for (TimetableManager m: (List<TimetableManager>)ExamStatusDAO.getInstance().getSession().createQuery(
++				"select distinct m from TimetableManager m inner join m.departments d inner join m.managerRoles mr " +
++				"where d.session.uniqueId = :sessionId and mr.role.enabled = true "+
++				"and :prmExMgr in elements(mr.role.rights) and :prmAdmin not in elements(mr.role.rights) " +
++				"order by m.lastName, m.firstName")
++				.setLong("sessionId", sessionId)
++				.setString("prmExMgr", Right.ExaminationSolver.name())
++				.setString("prmAdmin", Right.StatusIndependent.name())
++				.setCacheable(true).list()) {
++			managers.add(new ListItem(m.getUniqueId().toString(), nf.format(m)));
++		}
++		List<ListItem> states = new ArrayList<ListItem>();
++		states.add(new ListItem("-1", MESSAGES.examStatusDefault()));
++		for (DepartmentStatusType t: DepartmentStatusType.findAll(DepartmentStatusType.Apply.ExamStatus.toInt())) {
++			states.add(new ListItem(t.getUniqueId().toString(), t.getLabel()));
++		}
++		SimpleEditInterface data = new SimpleEditInterface(
++				new Field(MESSAGES.fieldType(), FieldType.text, 160, 60, Flag.READ_ONLY),
++				new Field(MESSAGES.fieldStatus(), FieldType.list, 250, states),
++				new Field(MESSAGES.fieldManager(), FieldType.multi, 300, managers)
++				);
++		data.setSortBy(0);
++		data.setAddable(false);
++		for (ExamType xtype: ExamTypeDAO.getInstance().findAll()) {
++			Record r = data.addRecord(xtype.getUniqueId(), false);
++			ExamStatus s = ExamStatus.findStatus(sessionId, xtype.getUniqueId());
++			r.setField(0, xtype.getLabel());
++			r.setField(1, s == null || s.getStatus() == null ? "-1" : s.getStatus().getUniqueId().toString());
++			if (s != null)
++				for (TimetableManager m: s.getManagers())
++					r.addToField(2, m.getUniqueId().toString());
++		}
++		data.setEditable(context.hasPermission(Right.ExaminationStatusEdit));
++		return data;
++	}
++
++	@Override
++	@PreAuthorize("checkPermission('ExaminationStatusEdit')")
++	public void save(SimpleEditInterface data, SessionContext context, Session hibSession) {
++		for (ExamType type: ExamTypeDAO.getInstance().findAll(hibSession)) {
++			Record r = data.getRecord(type.getUniqueId());
++			if (r != null)
++				update(type, r, context, hibSession);
++		}
++	}
++
++	@Override
++	@PreAuthorize("checkPermission('ExaminationStatusEdit')")
++	public void save(Record record, SessionContext context, Session hibSession) {		
++	}
++	
++	protected void update(ExamType type, Record record, SessionContext context, Session hibSession) {
++		if (type == null) return;
++		ExamStatus status = ExamStatus.findStatus(context.getUser().getCurrentAcademicSessionId(), type.getUniqueId());
++		boolean changed = false;
++		if (status == null) {
++			status = new ExamStatus();
++			status.setType(type);
++			status.setSession(SessionDAO.getInstance().get(context.getUser().getCurrentAcademicSessionId()));
++			status.setManagers(new HashSet<TimetableManager>());
++			changed = true;
++		}
++		if (!ToolBox.equals(status.getStatus() == null ? "-1" : status.getStatus().getUniqueId().toString(), record.getField(1))) {
++			status.setStatus("-1".equals(record.getField(1)) ? null : DepartmentStatusTypeDAO.getInstance().get(Long.valueOf(record.getField(1))));
++			changed = true;
++		}
++		Set<TimetableManager> managers = new HashSet<TimetableManager>(status.getManagers());
++		for (String id: record.getValues(2)) {
++			TimetableManager m = TimetableManagerDAO.getInstance().get(Long.valueOf(id));
++			if (!managers.remove(m)) {
++				status.getManagers().add(m);
++				changed = true;
++			}
++		}
++		if (!managers.isEmpty()) {
++			status.getManagers().removeAll(managers);
++			changed = true;
++		}
++		if (!changed) return;
++		hibSession.saveOrUpdate(status);
++		ChangeLog.addChange(hibSession,
++				context,
++				status.getType(),
++				status.getType().getLabel() + (status.getStatus() == null ? "" : ": " + status.getStatus().getLabel()),
++				Source.SIMPLE_EDIT, 
++				Operation.UPDATE,
++				null,
++				null);
++	}
++
++	@Override
++	@PreAuthorize("checkPermission('ExaminationStatusEdit')")
++	public void update(Record record, SessionContext context, Session hibSession) {
++		update(ExamTypeDAO.getInstance().get(record.getUniqueId(), hibSession), record, context, hibSession);
++	}
++	
++	@Override
++	@PreAuthorize("checkPermission('ExaminationStatusEdit')")
++	public void delete(Record record, SessionContext context, Session hibSession) {
++	}
++}
+diff --git a/JavaSource/org/unitime/timetable/tags/Exams.java b/JavaSource/org/unitime/timetable/tags/Exams.java
+index 6e44eee1..811f55a3 100644
+--- a/JavaSource/org/unitime/timetable/tags/Exams.java
++++ b/JavaSource/org/unitime/timetable/tags/Exams.java
+@@ -113,6 +113,10 @@ public class Exams extends BodyTagSupport {
+             Long objectId = Long.parseLong(objectIdStr);
+             
+             List exams = Exam.findAllRelated(getType(),objectId);
++            for (Iterator<Exam> i = exams.iterator(); i.hasNext(); ) {
++            	if (!getSessionContext().hasPermission(i.next(), Right.ExaminationView))
++            		i.remove();
++            }
+             if (exams==null || exams.isEmpty()) {
+                 if (!iAdd || !getSessionContext().hasPermission(Right.ExaminationAdd)) return EVAL_PAGE;
+             }
+diff --git a/JavaSource/org/unitime/timetable/util/LookupTables.java b/JavaSource/org/unitime/timetable/util/LookupTables.java
+index 2214ae18..a46aa805 100644
+--- a/JavaSource/org/unitime/timetable/util/LookupTables.java
++++ b/JavaSource/org/unitime/timetable/util/LookupTables.java
+@@ -40,6 +40,7 @@ import org.unitime.timetable.model.CourseCreditUnitType;
+ import org.unitime.timetable.model.CourseOffering;
+ import org.unitime.timetable.model.DatePattern;
+ import org.unitime.timetable.model.Department;
++import org.unitime.timetable.model.DepartmentStatusType;
+ import org.unitime.timetable.model.DepartmentalInstructor;
+ import org.unitime.timetable.model.DistributionType;
+ import org.unitime.timetable.model.ExamPeriod;
+@@ -375,6 +376,10 @@ public class LookupTables {
+     	request.setAttribute("examTypes", sessionId == null ? ExamType.findAll() : ExamType.findAllUsed(sessionId));
+     }
+     
++    public static void setupExamTypes(HttpServletRequest request, UserContext user, DepartmentStatusType.Status... status) {
++    	request.setAttribute("examTypes", ExamType.findAllApplicable(user, status));
++    }
++    
+     public static void setupCourseTypes(HttpServletRequest request) {
+     	request.setAttribute("courseTypes", CourseTypeDAO.getInstance().findAll(Order.asc("reference")));
+     }
+diff --git a/JavaSource/org/unitime/timetable/webutil/InstructorListBuilder.java b/JavaSource/org/unitime/timetable/webutil/InstructorListBuilder.java
+index af397956..5f33b42d 100644
+--- a/JavaSource/org/unitime/timetable/webutil/InstructorListBuilder.java
++++ b/JavaSource/org/unitime/timetable/webutil/InstructorListBuilder.java
+@@ -44,6 +44,7 @@ import org.unitime.timetable.model.TimePref;
+ import org.unitime.timetable.model.comparators.ClassComparator;
+ import org.unitime.timetable.model.comparators.ClassInstructorComparator;
+ import org.unitime.timetable.security.SessionContext;
++import org.unitime.timetable.security.rights.Right;
+ import org.unitime.timetable.util.Constants;
+ 
+ 
+@@ -222,6 +223,7 @@ public class InstructorListBuilder {
+ 				String examsStr = "";
+ 				for (Iterator i=exams.iterator();i.hasNext();) {
+ 				    Exam exam = (Exam)i.next();
++				    if (!context.hasPermission(exam, Right.ExaminationView)) continue;
+                     String examName = exam.getLabel();
+                     if (exam.getExamType().getType()==ExamType.sExamTypeMidterm) {
+                         examsStr += "<span title='"+examName+" "+MSG.titleMidtermExamination()+"'>"+examName+"</span>";
+diff --git a/JavaSource/org/unitime/timetable/webutil/WebInstructionalOfferingTableBuilder.java b/JavaSource/org/unitime/timetable/webutil/WebInstructionalOfferingTableBuilder.java
+index a896a9eb..fae297ea 100644
+--- a/JavaSource/org/unitime/timetable/webutil/WebInstructionalOfferingTableBuilder.java
++++ b/JavaSource/org/unitime/timetable/webutil/WebInstructionalOfferingTableBuilder.java
+@@ -1252,6 +1252,10 @@ public class WebInstructionalOfferingTableBuilder {
+     	if (isShowExam()) {
+     	    if (prefGroup instanceof Class_) {
+     	        TreeSet exams = getExams((Class_)prefGroup);
++    	        for (Iterator<Exam> i = exams.iterator(); i.hasNext(); ) {
++                	if (!context.hasPermission(i.next(), Right.ExaminationView))
++                		i.remove();
++                }
+     	        if (isShowExamName()) {
+     	            row.addContent(this.buildExamName(exams, isEditable));
+     	        }
+@@ -1441,6 +1445,10 @@ public class WebInstructionalOfferingTableBuilder {
+         	
+             if (isShowExam()) {
+                 TreeSet exams = new TreeSet(Exam.findAll(ExamOwner.sOwnerTypeConfig,ioc.getUniqueId()));
++                for (Iterator<Exam> i = exams.iterator(); i.hasNext(); ) {
++                	if (!context.hasPermission(i.next(), Right.ExaminationView))
++                		i.remove();
++                }
+                 if (isShowExamName()) {
+                     row.addContent(this.buildExamName(exams, isEditable));
+                 }
+@@ -1672,6 +1680,10 @@ public class WebInstructionalOfferingTableBuilder {
+                     exams.addAll(Exam.findAll(ExamOwner.sOwnerTypeConfig,ioc.getUniqueId()));
+                 }
+             }
++            for (Iterator<Exam> i = exams.iterator(); i.hasNext(); ) {
++            	if (!context.hasPermission(i.next(), Right.ExaminationView))
++            		i.remove();
++            }
+             if (isShowExamName()) {
+                 row.addContent(this.buildExamName(exams, isEditable));
+             }
+diff --git a/JavaSource/org/unitime/timetable/webutil/pdf/PdfInstructionalOfferingTableBuilder.java b/JavaSource/org/unitime/timetable/webutil/pdf/PdfInstructionalOfferingTableBuilder.java
+index 72d05e4a..6211ad70 100644
+--- a/JavaSource/org/unitime/timetable/webutil/pdf/PdfInstructionalOfferingTableBuilder.java
++++ b/JavaSource/org/unitime/timetable/webutil/pdf/PdfInstructionalOfferingTableBuilder.java
+@@ -1154,6 +1154,10 @@ public class PdfInstructionalOfferingTableBuilder extends WebInstructionalOfferi
+             if (prefGroup instanceof Class_) {
+                 exams = getExams((Class_)prefGroup);
+             }
++            for (Iterator<Exam> i = exams.iterator(); i.hasNext(); ) {
++            	if (!context.hasPermission(i.next(), Right.ExaminationView))
++            		i.remove();
++            }
+             if (isShowExamName()) {
+                 iPdfTable.addCell(pdfBuildExamName(exams, isEditable));
+             }
+@@ -1298,6 +1302,10 @@ public class PdfInstructionalOfferingTableBuilder extends WebInstructionalOfferi
+                 if (isShowExamName()) {
+                     iPdfTable.addCell(pdfBuildExamName(exams, isEditable));
+                 }
++                for (Iterator<Exam> i = exams.iterator(); i.hasNext(); ) {
++                	if (!context.hasPermission(i.next(), Right.ExaminationView))
++                		i.remove();
++                }
+                 if (isShowExamTimetable()) {
+                     iPdfTable.addCell(pdfBuildExamPeriod(examAssignment, exams, isEditable));
+                     iPdfTable.addCell(pdfBuildExamRoom(examAssignment, exams, isEditable));
+@@ -1481,6 +1489,10 @@ public class PdfInstructionalOfferingTableBuilder extends WebInstructionalOfferi
+                     exams.addAll(Exam.findAll(ExamOwner.sOwnerTypeConfig,ioc.getUniqueId()));
+                 }
+             }
++            for (Iterator<Exam> i = exams.iterator(); i.hasNext(); ) {
++            	if (!context.hasPermission(i.next(), Right.ExaminationView))
++            		i.remove();
++            }
+             if (isShowExamName()) {
+                 iPdfTable.addCell(pdfBuildExamName(exams, isEditable));
+             }
+diff --git a/WebContent/help/Release-Notes.xml b/WebContent/help/Release-Notes.xml
+index 9db82f17..0c6a415a 100644
+--- a/WebContent/help/Release-Notes.xml
++++ b/WebContent/help/Release-Notes.xml
+@@ -63,6 +63,27 @@
+ 			</description>
+ 		</item>
+ 	</category>
++	<category>
++		<title>Examination Timetabling</title>
++		<item>
++			<name>Examination Status</name>
++			<description>
++				<line>Added ability to set examination status individually for each examination type.
++					<line>This examination status, if set, overrides the academic session status (for all users).</line>
++					<line>Examination statues can be defined on the Administration > Other > Status Types page (Apply: Examinations).</line>
++					<line>Following statuses are created by default: Examination Distabled, Examination Data Entry, Examination Timetabling, and Examination Published.</line>
++					<line>Examination statuses can be set on the Administration > Academic Sessions > Examination Statuses page.</line>
++				</line>
++				<line>This allows for each examination problem to be viewed, edited, timetabled, and published at a different time.</line>
++				<line>It is also possible to attach examination managers to each examination type (for the current academic session).
++					<line>If this relation is defined, only the selected manager(s) can view, edit, or timetable the given examination problem (based on the status).</line>
++					<line>If this relation is NOT defined, all examination managers can view, edit, or timetable all examination problems.</line>
++					<line>This relation is also to be edited on the Administration > Academic Sessions > Examination Statuses page.</line>
++					<line>Only managers with a role that is academic session dependent and that allows to access the examination solver are listed.</line>
++				</line>
++			</description>
++		</item>
++	</category>
+ 	<category>
+ 		<title>Batch Student Scheduling</title>
+ 		<item>
+diff --git a/WebContent/user/examDistributionPrefs.jsp b/WebContent/user/examDistributionPrefs.jsp
+index 33c694bb..6bd92831 100644
+--- a/WebContent/user/examDistributionPrefs.jsp
++++ b/WebContent/user/examDistributionPrefs.jsp
+@@ -41,7 +41,6 @@
+ 
+ 	<TABLE width="100%" border="0" cellspacing="0" cellpadding="3">
+ 		<% if (request.getAttribute(DistributionPref.DIST_PREF_REQUEST_ATTR)==null) { %>	
+-		<html:hidden property="examType"/>
+ 		<TR>
+ 			<TD valign="middle" colspan='3'>
+ 				<tt:section-header>
+@@ -111,6 +110,26 @@
+ 		</TR>
+ 		</logic:messagesPresent>
+ 		
++		<TR>
++			<TD nowrap valign='top'>Type: <font class="reqField">*</font></TD>
++			<TD colspan='2' width='100%'>
++				<logic:empty name="examDistributionPrefsForm" property="distPrefId">
++					<html:select property="examType" onchange="javascript: doDel('examType', this.value); submit();">
++						<html:options collection="examTypesAdd" property="uniqueId" labelProperty="label"/>
++					</html:select>
++				</logic:empty>
++				<logic:notEmpty name="examDistributionPrefsForm" property="distPrefId">
++					<html:hidden property="examType"/>
++					<logic:iterate name="examTypes" scope="request" id="type">
++						<bean:define name="type" property="uniqueId" id="typeId" type="Long"/>
++						<logic:equal name="examDistributionPrefsForm" property="examType" value="<%=typeId.toString()%>">
++							<bean:write name="type" property="label"/>
++						</logic:equal>
++					</logic:iterate>
++				</logic:notEmpty>
++			</TD>
++		</TR>
++		
+ 		<TR>
+ 			<TD nowrap valign='top'>Distribution Type: <font class="reqField">*</font></TD>
+ 			<TD colspan='2' width='100%'>

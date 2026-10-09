@@ -1,0 +1,42 @@
+SELECTED: candidate_47
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit message states "fixed some compilations issues and added more type information."
+The fix_commit_diff.txt shows the core compilation fix is in
+src/soot/jimple/toolkits/infoflow/SimpleMethodInfoFlowAnalysis.java, where four occurrences of
+the Java 7+ diamond operator:
+
+    Pair<EquivalentValue,EquivalentValue> pair = new Pair<>(sinkEqVal, sourceEqVal);
+
+are replaced with the explicit-generics form:
+
+    Pair<EquivalentValue,EquivalentValue> pair = new Pair<EquivalentValue,EquivalentValue>(
+            sinkEqVal, sourceEqVal);
+
+The diamond operator (`<>`) requires Java 7 or later; if the project was being compiled with an
+older Java source/target level (or a stricter/older compiler config), this construct would fail
+to compile, exactly matching the "compilations issues" mentioned in the fix message.
+
+Searching all 48 candidates for the literal pattern `Pair<>(` shows it appears in only two
+candidates: candidate_47 and candidate_48. Inspecting candidate_47's diff shows it is the commit
+that actually introduces this code for the first time: it converts SimpleMethodInfoFlowAnalysis.java
+from raw types to generics as part of a large "add generics/type information" refactor, and in doing
+so writes:
+
+    -   Pair pair = new Pair(sinkEqVal, sourceEqVal);
+    +   Pair<EquivalentValue,EquivalentValue> pair = new Pair<>(sinkEqVal, sourceEqVal);
+
+at all four sites later touched by the fix. This is precisely the problematic diamond-operator
+usage that the fix removes.
+
+candidate_48's diff is in fact identical (same file set: CallLocalityContext.java,
+ClassInfoFlowAnalysis.java, ClassLocalObjectsAnalysis.java, InfoFlowAnalysis.java,
+SimpleMethodInfoFlowAnalysis.java, TestDominance.java) to fix_commit_diff.txt itself — i.e.
+candidate_48 appears to be the fix commit included in the candidate list — so it cannot be the
+bug-introducing commit; it is the resolution.
+
+Therefore candidate_47, which first introduced the `new Pair<>(...)` diamond-operator usage while
+generifying SimpleMethodInfoFlowAnalysis.java, is the commit that introduced the compilation issue
+later corrected by the fix commit.

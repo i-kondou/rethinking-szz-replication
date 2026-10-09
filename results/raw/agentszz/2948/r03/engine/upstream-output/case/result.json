@@ -1,0 +1,22 @@
+{
+  "fix_commit": "0b59466d102d0a56a80e8059846bc4fdd8ffdb9c",
+  "bic": "7b5f4095ea0f87f61540ec01a9c3f8bba6dc1890",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "The fix corrects a StringBuffer-based version of the \"key parsing\" loop in NativeND2Reader.parseText, guarding against calling charAt(0) on an empty buffer (equivalent to key.endsWith(\":\") being falsely true/false on an empty string). Blaming the buggy `while` line traces to commit b48fd4a88c59 which merely refactored the original `String key`/`+=` concatenation into a `StringBuffer` for FindBugs compliance (SBSC_USE_STRINGBUFFER_CONCATENATION) \u2014 a pure non-semantic refactor. Tracing further back through renames (bio-formats -> formats-gpl) shows the original `while (!key.endsWith(\":\") && key.indexOf(\"_\") < 0 && ...)` loop, which lacks any check for an empty/zero-length key string, was first introduced in commit 7b5f4095ea0f87f61540ec01a9c3f8bba6dc1890 (\"ND2: parse true Y and Z physical sizes\"). This commit added the entire key/value text-block parsing loop that later gets refactored (never fixed for the empty-string edge case) until the 2017 fix commit finally added the `sb.length() == 0` check. This is the true origin of the missing empty-string guard.",
+  "metrics": {
+    "case_elapsed_seconds": 58.262712,
+    "api_elapsed_seconds": 57.224635,
+    "tool_elapsed_seconds": 0.917139,
+    "other_elapsed_seconds": 0.120941,
+    "api_call_count": 12,
+    "tool_call_count": 11,
+    "prompt_tokens": 105954,
+    "completion_tokens": 2907,
+    "total_tokens": 108861,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:35:09.834985"
+}

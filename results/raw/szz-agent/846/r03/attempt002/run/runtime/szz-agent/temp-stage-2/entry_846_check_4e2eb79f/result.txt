@@ -1,0 +1,25 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a `myDataChoices != null` null-check around a block in
+`DisplayControlImpl.init(...)` that inspects `myDataChoices.get(0)` (checking
+if it's a `DerivedDataChoice`, then reading `usesTimeDriver` from a nested
+`DataChoice`'s `DataSelection`). In the buggy version, this block runs
+unconditionally after `init(myDataChoices)`, so if `myDataChoices` is null a
+`NullPointerException` occurs at `myDataChoices.size() > 0`.
+
+In `files/old/src/ucar/unidata/idv/control/DisplayControlImpl.java`, the
+`init(String displayId, ...)` method has no such block at all: right after
+the `if (!init(myDataChoices)) { ... return; }` check, the code goes directly
+to the "Check if we have been removed" block (around line 986-992), with no
+`myDataChoices.size() > 0 && ... instanceof DerivedDataChoice` logic, no
+`DerivedDataChoice`/`usesTimeDriver`/`PROP_USESTIMEDRIVER` code anywhere
+nearby. This entire code section — including the unguarded `myDataChoices`
+access that the fix commit patches — was introduced later in the project's
+history, after the point represented by `files/old/`.
+
+Since the specific buggy code (the unguarded call to
+`myDataChoices.size()`) does not exist yet in `files/old/`, the bug cannot be
+present in this version.

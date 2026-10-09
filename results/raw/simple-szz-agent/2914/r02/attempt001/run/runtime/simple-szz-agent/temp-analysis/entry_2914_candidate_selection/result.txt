@@ -1,0 +1,43 @@
+SELECTED: candidate_52
+
+CONFIDENCE: MEDIUM
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) changes two statements in
+`Input.parseRFC8601DateTime()` in src/main/java/com/jaamsim/input/Input.java,
+both of the form:
+
+    return ret;
+=>  return ret * 1e-6;
+
+The first change is inside the `isextendtime` branch, which parses plain
+duration strings in the format 'hh:mm:ss' (as opposed to full RFC8601
+date-times). The second is inside the `isextendfull` branch, which parses
+'hh:mm:ss.ssssss'. In both branches, `ret` is accumulated as a value in
+microseconds (`hh * usPerHr + mm * usPerMin + ss * usPerSec [+ us]`), but the
+function was returning that raw microsecond value instead of converting it
+to seconds, causing values to be off by a factor of 1,000,000 for these two
+duration formats.
+
+Tracing when each buggy branch was introduced:
+
+- `candidate_52` is the commit that first adds the `isextendtime` pattern
+  and its parsing branch, ending with the un-converted `return ret;` for the
+  'hh:mm:ss' format. This is the first appearance of the exact defect the
+  fix addresses.
+- `candidate_94` later adds the `isextendfull` branch (for the
+  'hh:mm:ss.ssssss' format with fractional seconds), copying the same
+  missing-conversion pattern (`return ret;`) from the code already present
+  since candidate_52.
+- No candidate between or after these modifies either `return ret;`
+  statement before the fix commit, so the defect persisted unchanged from
+  its point of introduction.
+
+Since the fix's own commit message explicitly references both formats
+('hh:mm:ss' and 'hh:mm:ss.ssssss') as a single logical bug, and candidate_52
+is the first commit where this missing-unit-conversion pattern was written
+(with candidate_94 merely duplicating it for the second format), candidate_52
+is selected as the root bug-introducing commit. Confidence is MEDIUM rather
+than HIGH because candidate_94 independently reproduces the same defect in a
+newly added code path, and either commit is a plausible single answer given
+the fix touches both.

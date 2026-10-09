@@ -1,0 +1,14 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit ("Add block/position convention to all distinct from operators") adds a second, BLOCK_POSITION-based implementation of the IS_DISTINCT_FROM operator to many type-operator classes so that container types (arrays, maps, rows) can invoke it without extracting/boxing native values from Blocks, resolving a performance issue.
+
+Comparing the provided files/buggy and files/fixed versions of BigintOperators.java:
+- buggy: contains a single isDistinctFrom(long left, boolean leftNull, long right, boolean rightNull) method using the NULL_FLAG convention only.
+- fixed: wraps this same method inside a new nested class BigintDistinctFromOperator and adds a second overload isDistinctFrom(Block left, int leftPosition, Block right, int rightPosition) using the BLOCK_POSITION convention (reading values via BIGINT.getLong(...)).
+
+Examining files/old/BigintOperators.java shows this is a much older revision of the file: it has no IS_DISTINCT_FROM import, no isDistinctFrom method of any kind, and uses an older package structure (com.facebook.presto.operator.scalar.ScalarOperator, com.facebook.presto.metadata.OperatorType) that predates the IS_DISTINCT_FROM operator's introduction entirely.
+
+Since the relevant code (the isDistinctFrom operator, in either its NULL_FLAG-only buggy form or its later BLOCK_POSITION-augmented fixed form) does not exist at all in files/old/, the specific bug/missing-optimization being addressed by this fix commit cannot be present in the old version. Per the task instructions, when the relevant code section doesn't exist in old/, the bug cannot be present.

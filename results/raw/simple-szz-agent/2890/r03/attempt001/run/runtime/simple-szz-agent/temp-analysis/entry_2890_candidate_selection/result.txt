@@ -1,0 +1,37 @@
+SELECTED: candidate_125
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes `ArenaListener.onFoodLevelChange`:
+
+    if (arena.isRunning()) {
+-       if (lockFoodLevel) {
++       if (arena.inArena(p) && lockFoodLevel) {
+            event.setCancelled(true);
+        }
+    } else {
+
+i.e. it adds a missing `arena.inArena(p)` check so that the food-level lock only applies to players who are actually in the arena, instead of everyone on the server while the arena is running.
+
+candidate_125 is a refactor of the exact same method. Before this commit, `onFoodLevelChange` began with:
+
+    if (!arena.isRunning()) return;
+    if (!(event.getEntity() instanceof Player) || !arena.inArena((Player) event.getEntity())) return;
+    if (lockFoodLevel) event.setCancelled(true);
+
+which correctly guarded the lock behind an `inArena` check. candidate_125 restructured this to add lobby/spectator handling (per its changelog entry "Food levels no longer deplete for players in the lobby and spectator area"), but in doing so it dropped the `inArena` check from the `arena.isRunning()` branch entirely:
+
+    if (!(event.getEntity() instanceof Player)) return;
+    Player p = (Player) event.getEntity();
+    if (arena.isRunning()) {
+        if (lockFoodLevel) {
+            event.setCancelled(true);
+        }
+    } else {
+        if (arena.inLobby(p) || arena.inSpec(p)) {
+            event.setCancelled(true);
+        }
+    }
+
+This is precisely the buggy code the fix commit later patches by adding back `arena.inArena(p) &&` to the `isRunning()` branch. No candidate between 125 and the fix reintroduces or removes this check (candidate_128 is the fix itself, mistakenly included among the diffs, and only re-adds the missing check). Therefore candidate_125 is the commit that introduced the bug.

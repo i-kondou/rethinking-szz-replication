@@ -1,0 +1,1292 @@
+diff --git a/src/main/java/algorithm/GroupedViewAggregator.java b/src/main/java/algorithm/GroupedViewAggregator.java
+index 2909cc8..68d44f5 100644
+--- a/src/main/java/algorithm/GroupedViewAggregator.java
++++ b/src/main/java/algorithm/GroupedViewAggregator.java
+@@ -63,11 +63,11 @@ public class GroupedViewAggregator
+ 		
+ 	public class Action <E extends Entity>{
+ 		ActionType actionType;
+-		Class<E> entityClass;
++		Class<? extends E> entityClass;
+ 		E instance;
+ 		private OpService ops;
+ 		
+-		Action(ActionType at, Class<E> entityClass, E instance){
++		Action(ActionType at, Class<? extends E> entityClass, E instance){
+ 			this.actionType = at;
+ 			this.entityClass = entityClass;
+ 			this.instance = instance;
+@@ -205,7 +205,7 @@ public class GroupedViewAggregator
+ 		PICK_BRIGHTEST, AVERAGE, PICK_SPECIFIC
+ 	}
+ 	
+-	public <E extends Entity> void addAction(ActionType at, Class<E> entityClass, E instance)
++	public <E extends Entity> void addAction(ActionType at, Class<? extends E> entityClass, E instance)
+ 	{
+ 		Action<E> newAc = new Action<E>( at, entityClass, instance );
+ 		actions.add(newAc);
+diff --git a/src/main/java/algorithm/SpimDataFilteringAndGrouping.java b/src/main/java/algorithm/SpimDataFilteringAndGrouping.java
+new file mode 100644
+index 0000000..dec3115
+--- /dev/null
++++ b/src/main/java/algorithm/SpimDataFilteringAndGrouping.java
+@@ -0,0 +1,359 @@
++package algorithm;
++
++
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.Collection;
++import java.util.HashMap;
++import java.util.HashSet;
++import java.util.Iterator;
++import java.util.List;
++import java.util.Map;
++import java.util.Set;
++
++import javax.swing.JLabel;
++
++import algorithm.GroupedViewAggregator.ActionType;
++import fiji.util.gui.GenericDialogPlus;
++import mpicbg.spim.data.generic.AbstractSpimData;
++import mpicbg.spim.data.generic.base.Entity;
++import mpicbg.spim.data.generic.base.NamedEntity;
++import mpicbg.spim.data.generic.sequence.BasicViewDescription;
++import mpicbg.spim.data.generic.sequence.BasicViewSetup;
++import mpicbg.spim.data.sequence.Angle;
++import mpicbg.spim.data.sequence.Channel;
++import mpicbg.spim.data.sequence.Illumination;
++import mpicbg.spim.data.sequence.Tile;
++import mpicbg.spim.data.sequence.TimePoint;
++import net.imglib2.util.Pair;
++import net.imglib2.util.ValuePair;
++import spim.fiji.spimdata.SpimDataTools;
++import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
++import spim.fiji.spimdata.explorer.GroupedRowWindow;
++
++public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
++{
++	
++	static List<Class<? extends Entity>> entityClasses = new ArrayList<>();
++	static 
++	{
++		entityClasses.add( TimePoint.class );
++		entityClasses.add( Channel.class );
++		entityClasses.add( Illumination.class );
++		entityClasses.add( Angle.class );
++		entityClasses.add( Tile.class );
++	}
++	
++	Set<Class<? extends Entity>> groupingFactors; // attributes by which views are grouped first
++	Set<Class<? extends Entity>> axesOfApplication; // axes of application -> we want to process within single instances (e.g. each TimePoint separately)
++	Set<Class<? extends Entity>> axesOfComparison; // axes we want to compare
++	Map<Class<? extends Entity>, List<? extends Entity>> filters; // filters for the different attributes
++	AS data;
++	GroupedViewAggregator gva;
++	
++	public SpimDataFilteringAndGrouping(AS data)
++	{
++		groupingFactors = new HashSet<>();
++		axesOfApplication = new HashSet<>();
++		axesOfComparison = new HashSet<>();
++		filters = new HashMap<>();
++		this.data = data;
++		gva = new GroupedViewAggregator();
++	}
++	
++	public AS getSpimData()
++	{
++		return data;
++	}
++	
++	public GroupedViewAggregator getGroupedViewAggregator()
++	{
++		return gva;
++	}
++	
++	public void addGroupingFactor(Class<? extends Entity> factor ) {
++		groupingFactors.add(factor);
++	}
++		
++	public void addFilter(Class<? extends Entity> cl, List<? extends Entity> instances){
++		filters.put(cl, instances);
++	}
++	
++	public void addApplicationAxis(Class<? extends Entity> axis ) {
++		axesOfApplication.add(axis);
++	}
++	
++	public void addComparisonAxis(Class<? extends Entity> axis ) {
++		axesOfComparison.add(axis);
++	}
++	
++	
++	public void clearGroupingFactors()
++	{
++		groupingFactors.clear();
++	}
++	public void clearFilters()
++	{
++		filters.clear();
++	}
++	public void clearApplicationAxes()
++	{
++		axesOfApplication.clear();
++	}
++	public void clearComparisonAxes()
++	{
++		axesOfComparison.clear();
++	}
++	
++	public Set< Class< ? extends Entity > > getGroupingFactors()
++	{
++		return groupingFactors;
++	}
++
++
++	public Set< Class< ? extends Entity > > getAxesOfApplication()
++	{
++		return axesOfApplication;
++	}
++
++
++	public Set< Class< ? extends Entity > > getAxesOfComparison()
++	{
++		return axesOfComparison;
++	}
++
++
++	public Map< Class< ? extends Entity >, List< ? extends Entity > > getFilters()
++	{
++		return filters;
++	}
++	
++	
++	protected List<Pair<List< BasicViewDescription< ? extends BasicViewSetup > >, List< BasicViewDescription< ? extends BasicViewSetup >>>> getComparisons()
++	{
++		final List<Pair<List< BasicViewDescription< ? extends BasicViewSetup > >, List< BasicViewDescription< ? extends BasicViewSetup >>>> res = new ArrayList<>();
++		
++		// filter first
++		final List<BasicViewDescription< ? > > ungroupedElements =
++				SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), filters);
++		// then group
++		final List< List< BasicViewDescription< ?  > >> groupedElements = 
++				SpimDataTools.groupByAttributes(ungroupedElements, groupingFactors);
++		
++		// go through possible group pairs
++		for (int i = 0; i < groupedElements.size(); ++i)
++			for(int j = i+1; j < groupedElements.size(); ++j)
++			{
++				// we will want to process the pair if:
++				// the groups do not differ along an axis along which we want to treat elements individually (e.g. Angle)
++				// but they differ along an axis that we want to register (e.g Tile)
++				if (!groupsDifferByAny( groupedElements.get( i ), groupedElements.get( j ), axesOfApplication ) 
++						&& groupsDifferByAny( groupedElements.get( i ), groupedElements.get( j ), axesOfComparison ))
++					res.add(new ValuePair<>(groupedElements.get( i ), groupedElements.get( j )));
++			}
++	
++		return res;		
++	}
++	
++	private static boolean groupsDifferByAny(List< BasicViewDescription< ?  > > vds1, List< BasicViewDescription< ?  > > vds2, Set<Class<? extends Entity>> entities)
++	{
++		for (Class<? extends Entity> entity : entities)
++		{
++			for ( BasicViewDescription< ?  > vd1 : vds1)
++				for ( BasicViewDescription< ?  > vd2 : vds2)
++				{
++					if (entity == TimePoint.class)
++					{
++						if (!vd1.getTimePoint().equals( vd2.getTimePoint() ))
++							return true;
++					}
++					else
++					{
++						if (!vd1.getViewSetup().getAttribute( entity ).equals( vd2.getViewSetup().getAttribute( entity ) ) )
++							return true;
++					}
++					
++				}
++		}
++		
++		return false;
++	}
++
++
++	public static Set<Entity> getInstancesOfAttributeGrouped(Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > vds, Class<? extends Entity> cl)
++	{
++		Set<Entity> res = new HashSet<>();
++		for (List< BasicViewDescription< ? extends BasicViewSetup > > vdl1 : vds)
++			for (BasicViewDescription< ? extends BasicViewSetup > vd : vdl1)
++				if (cl == TimePoint.class)
++					res.add( vd.getTimePoint() );
++				else
++					res.add( vd.getViewSetup().getAttribute( cl ) );
++		return res;
++	}
++	
++	public static List<? extends Entity> getInstancesInAllGroups(Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > vds, Class<? extends Entity> cl)
++	{
++		Set<Entity> res = new HashSet<>();
++		Iterator< List< BasicViewDescription< ? extends BasicViewSetup > > > it = vds.iterator();
++		for (BasicViewDescription< ? extends BasicViewSetup > vd : it.next())
++			if (cl == TimePoint.class)
++				res.add( vd.getTimePoint() );
++			else
++				res.add( vd.getViewSetup().getAttribute( cl ) );
++		
++		it.forEachRemaining( ( vdli ) -> 
++		{
++			Set<Entity> resI = new HashSet<>();
++			for (BasicViewDescription< ? extends BasicViewSetup > vd : vdli)
++				if (cl == TimePoint.class)
++					resI.add( vd.getTimePoint() );
++				else
++					resI.add( vd.getViewSetup().getAttribute( cl ) );
++			
++			for (Entity e : res)
++			{
++				if(!resI.contains( e ))
++					res.remove( e );
++			}
++		}
++		);
++		return new ArrayList<>(res);
++	}
++	
++	
++	public static <AS extends AbstractSpimData< ? > > SpimDataFilteringAndGrouping< AS> askUserForGrouping(FilteredAndGroupedExplorerPanel< AS, ?> panel)
++	{
++		
++		
++		SpimDataFilteringAndGrouping< AS > res = new SpimDataFilteringAndGrouping< AS >( panel.getSpimData() );
++		
++		Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > selectedRowsGroups = ((GroupedRowWindow)panel).selectedRowsGroups();		
++		GenericDialogPlus gdp1 = new GenericDialogPlus( "Select Views To Process" );
++		
++		gdp1.addMessage( "<html><strong>Select wether you want to process all instances of an attribute <br>"
++				+ " or just the currently selected Views</strong> <br>"
++				+ "NOTE: use 'all' or a specific ID (TODO) if you plan to call this from a macro.</html>" ) ;
++		
++		String[] viewSelectionChoices = new String[] {"all", "selected"};
++		
++		for (Class<? extends Entity> cl : entityClasses)
++		{
++			boolean allSelected = (getInstancesOfAttributeGrouped( selectedRowsGroups, cl ).containsAll(SpimDataTools.getInstancesOfAttribute( panel.getSpimData().getSequenceDescription(), cl )));
++			gdp1.addChoice( cl.getSimpleName(), viewSelectionChoices, allSelected ? viewSelectionChoices[0] : viewSelectionChoices[1] );			
++		}
++		
++		gdp1.showDialog();
++		if (gdp1.wasCanceled())
++			return null;
++		
++		for (Class<? extends Entity> cl : entityClasses)
++		{
++			boolean useCurrent = gdp1.getNextChoiceIndex() == 1;
++			if (useCurrent)
++				res.addFilter( cl, new ArrayList<>(getInstancesOfAttributeGrouped( selectedRowsGroups, cl )) );
++		}
++		
++		
++		
++		
++		
++		GenericDialogPlus gdp2 = new GenericDialogPlus( "Select How to Process Views" );
++		
++		gdp2.addMessage( "<html><strong>Select how to process the different attributes </strong> <br>"
++				+ "<strong>COMPARE:</strong> calculate pairwise shift between instances <br>"
++				+ "<strong>GROUP:</strong> combine all instances into one view<br>"
++				+ "<strong>TREAT INDIVIDUALLY:</strong> process instances one after the other, but do not compare or group <br> </html>");
++
++		
++		System.err.println( panel.getTableModel().getFilters() );
++		
++		String[] computeChoices = new String[] {"compare", "group", "treat individually"};
++		for (Class<? extends Entity> cl : entityClasses)
++		{
++			boolean isGrouping = panel.getTableModel().getGroupingFactors().contains( cl );
++			boolean isFilterOrSingleton = panel.getTableModel().getFilters().keySet().contains( cl ) || getInstancesOfAttributeGrouped( selectedRowsGroups, cl ).size() <= 1;
++			int idx = isGrouping ? 1 : isFilterOrSingleton ? 2 : 0;
++			gdp2.addChoice( cl.getSimpleName(), computeChoices, computeChoices[idx] );
++		}
++		
++		gdp2.showDialog();
++		if (gdp2.wasCanceled())
++			return null;
++		
++		for (Class<? extends Entity> cl : entityClasses)
++		{
++			int selection = gdp2.getNextChoiceIndex();
++			if (selection == 0)
++				res.addComparisonAxis( cl );
++			else if (selection == 1)
++				res.addGroupingFactor( cl );
++			else
++				res.addApplicationAxis( cl );
++		}
++		
++		
++		
++		// ask what to do with grouped views
++		
++		GenericDialogPlus gdp3 = new GenericDialogPlus( "Select How to Treat Grouped Views" );
++		
++		gdp3.addMessage( "<html><strong>Select which instances of attributes to use in Grouped Views </strong> <br></html>");
++		
++		
++		// filter first
++		final List<BasicViewDescription< ? > > ungroupedElements =
++						SpimDataTools.getFilteredViewDescriptions( panel.getSpimData().getSequenceDescription(), res.getFilters());
++		// then group
++		final List< List< BasicViewDescription< ?  > >> groupedElements = 
++						SpimDataTools.groupByAttributes(ungroupedElements, res.getGroupingFactors());
++		
++		for (Class<? extends Entity> cl : res.getGroupingFactors())
++		{
++			List<String> selection = new ArrayList<>();
++			selection.add( "average" );
++			selection.add(  "pick prightest" );
++			List< ? extends Entity > instancesInAllGroups = getInstancesInAllGroups( groupedElements, cl );
++			instancesInAllGroups.forEach( ( e ) -> 
++			{
++				if (e instanceof NamedEntity)
++					selection.add( ((NamedEntity)e).getName());
++				else
++					selection.add( Integer.toString( e.getId() ));
++			});
++			
++			String[] selectionArray = selection.toArray( new String[selection.size()] );
++			gdp3.addChoice( cl.getSimpleName(), selectionArray, selectionArray[0] );
++		}
++		
++		gdp3.showDialog();
++		if (gdp3.wasCanceled())
++			return null;
++		
++		for (Class<? extends Entity> cl : res.getGroupingFactors())
++		{
++			List< ? extends Entity > instancesInAllGroups = getInstancesInAllGroups( groupedElements, cl );
++			int nextChoiceIndex = gdp3.getNextChoiceIndex();
++			if (nextChoiceIndex == 0)
++				res.getGroupedViewAggregator().addAction( ActionType.AVERAGE, cl, null );
++			else if (nextChoiceIndex == 1)
++				res.getGroupedViewAggregator().addAction( ActionType.PICK_BRIGHTEST, cl, null );
++			else
++				res.getGroupedViewAggregator().addAction( ActionType.PICK_SPECIFIC, cl, instancesInAllGroups.get( nextChoiceIndex - 2 ) );
++		}
++		
++		System.out.println("Filters: " + res.getFilters() );
++		System.out.println("Grouping: " + res.getGroupingFactors() );
++		System.out.println("Application: " + res.getAxesOfApplication() );
++		System.out.println("Comparison: " + res.getAxesOfComparison() );
++		
++		System.out.println( res.getComparisons() );
++		System.out.println( res.getGroupedViewAggregator() );
++		
++		return null;
++	}
++	
++	
++	
++
++}
+diff --git a/src/main/java/algorithm/globalopt/GlobalTileOptimization.java b/src/main/java/algorithm/globalopt/GlobalTileOptimization.java
+index 290cbbf..c5ca0a8 100644
+--- a/src/main/java/algorithm/globalopt/GlobalTileOptimization.java
++++ b/src/main/java/algorithm/globalopt/GlobalTileOptimization.java
+@@ -7,9 +7,13 @@ import java.util.Collections;
+ import java.util.Date;
+ import java.util.HashMap;
+ import java.util.HashSet;
++import java.util.Iterator;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
++import java.util.function.BiPredicate;
++
++import com.google.common.collect.Iterators;
+ 
+ import algorithm.TransformTools;
+ import algorithm.VectorUtil;
+@@ -21,6 +25,7 @@ import mpicbg.models.Model;
+ import mpicbg.models.NotEnoughDataPointsException;
+ import mpicbg.models.Point;
+ import mpicbg.models.PointMatch;
++import mpicbg.models.SimilarityModel3D;
+ import mpicbg.models.Tile;
+ import mpicbg.models.TileConfiguration;
+ import mpicbg.models.TranslationModel2D;
+@@ -50,34 +55,34 @@ public class GlobalTileOptimization
+ 	 * @param params 
+ 	 * @return a mapping of view identifieres to locations in global space
+ 	 */
+-	public static < C extends Comparable< C >> Map<C, AffineGet> twoRoundGlobalOptimization(
+-			final int numDimensions,
+-			final List< ? extends C > views,
+-			final Collection< C > fixedViews,
++	public static < C extends Comparable< C >, M extends AbstractAffineModel3D<M>> Map<Set<C>, AffineGet> twoRoundGlobalOptimization(
++			final M model,
++			final List< Set< C > > views,
++			final Collection< Set<C> > fixedViews,
+ 			final Map<C, AffineGet> initialTransforms,
+ 			final Collection<PairwiseStitchingResult< C >> pairwiseResults,
+ 			final GlobalOptimizationParameters params)
+ 	{
+ 		
+-		Collections.sort( views );
++		//Collections.sort( views );
+ 		
+ 		// create strong links for all pairs with valid pairwise results
+-		List<Link<C>> strongLinks = new ArrayList<>();
++		List<Link< Set<C> >> strongLinks = new ArrayList<>();
+ 		for (PairwiseStitchingResult< C > res : pairwiseResults)
+ 		{
+ 			// only consider Pairs that were also selected
+ 			if (res.r() > params.correlationT && views.contains( res.pair().getA()) && views.contains( res.pair().getB()))
+ 			{
+-				strongLinks.add( new Link< C >( res.pair().getA(), res.pair().getB(), res.getTransform(), LinkType.STRONG ) );
+-//				System.out.println( "added strong link between " + ((ViewId) res.pair().getA()).getViewSetupId() + " and " + ((ViewId) res.pair().getB()).getViewSetupId() + ": " + res.getTransform() );
++				strongLinks.add( new Link< Set<C> >( res.pair().getA(), res.pair().getB(), res.getTransform(), LinkType.STRONG ) );
++			//	System.out.println( "added strong link between " + ((ViewId) res.pair().getA()).getViewSetupId() + " and " + ((ViewId) res.pair().getB()).getViewSetupId() + ": " + res.getTransform() );
+ 			}
+ 		}
+ 		
+-		List< Set< C > > connectedComponents = Link.getConnectedComponents( strongLinks, LinkType.STRONG );
++		List< Set< Set<C> > > connectedComponents = Link.getConnectedComponents( strongLinks, LinkType.STRONG );
+ 		
+ 		// create weak links between every pair of views that are not both in a conn.comp.
+ 		// TODO: we should only connect tiles within a reasonable radius to each other (for performance reasons)
+-		List<Link<C>> weakLinks = new ArrayList<>();
++		List<Link<Set<C>>> weakLinks = new ArrayList<>();
+ 		for (int i = 0; i < views.size(); i++)
+ 		{
+ 			for(int j = i+1; j < views.size(); j++)
+@@ -86,12 +91,13 @@ public class GlobalTileOptimization
+ 				if(!(anyContains( views.get( i), connectedComponents ) && 
+ 						anyContains( views.get( j), connectedComponents ) ) )
+ 				{
+-					AffineGet mapBack = TransformTools.mapBackTransform( initialTransforms.get( views.get( j ) ),
+-							initialTransforms.get( views.get( i ) ));
++					// TODO: is it okay to just use the first view here?
++					AffineGet mapBack = TransformTools.mapBackTransform( initialTransforms.get( views.get( j ).iterator().next() ),
++							initialTransforms.get( views.get( i ).iterator().next() ));
+ 					
+ 					System.out.println( "added weak link between " + views.get( i ) + " and " + views.get( j ) + ": " + mapBack );
+ //					System.out.println( "added weak link between " + ((ViewId)views.get( i )).getViewSetupId() + " and " + ((ViewId)views.get( j )).getViewSetupId() + ": " + mapBack );
+-					weakLinks.add( new Link< C >( views.get( i ), views.get( j ), mapBack, LinkType.WEAK ) );
++					weakLinks.add( new Link< Set<C> >( views.get( i ), views.get( j ), mapBack, LinkType.WEAK ) );
+ 				}
+ 				
+ 			}
+@@ -119,8 +125,8 @@ public class GlobalTileOptimization
+ 		{
+ 		
+ 		*/
+-			Pair< TileConfiguration, Map< C, Tile< TranslationModel3D > > > tc = prepareTileConfiguration( new TranslationModel3D(), null, strongLinks, fixedViews, null, null );
+-			Map< C, AffineGet > optimizeResult1 = optimize(numDimensions, tc.getA(), tc.getB(), params, null );
++			Pair< TileConfiguration, Map< Set<C>, Tile< M > > > tc = prepareTileConfiguration( model.copy(), null, strongLinks, fixedViews, null, null );
++			Map< Set<C>, AffineGet > optimizeResult1 = optimize( tc.getA(), tc.getB(), params, null );
+ 			
+ 			optimizeResult1.forEach( (x, y) -> System.out.println( x + ": " + y ) );
+ 		
+@@ -130,8 +136,8 @@ public class GlobalTileOptimization
+ 			if (weakLinks.size() == 0)
+ 				return optimizeResult1;
+ 		
+-			Pair< TileConfiguration, Map< C, Tile< TranslationModel3D > > > tc2 = prepareTileConfiguration( new TranslationModel3D(), views, weakLinks, fixedViews, connectedComponents, optimizeResult1 );
+-			Map< C, AffineGet > optimizeResult2 = optimize(numDimensions, tc2.getA(), tc2.getB(), new GlobalOptimizationParameters( 0.0, Double.MAX_VALUE, Double.MAX_VALUE ), optimizeResult1 );
++			Pair< TileConfiguration, Map< Set<C>, Tile< M > > > tc2 = prepareTileConfiguration( model.copy(), views, weakLinks, fixedViews, connectedComponents, optimizeResult1 );
++			Map< Set<C>, AffineGet > optimizeResult2 = optimize( tc2.getA(), tc2.getB(), new GlobalOptimizationParameters( 0.0, Double.MAX_VALUE, Double.MAX_VALUE ), optimizeResult1 );
+ 			
+ 			return optimizeResult2;
+ 		//}
+@@ -140,21 +146,21 @@ public class GlobalTileOptimization
+ 
+ 	
+ 	
+-	public static < M extends Model< M > , C extends Comparable< C >> Pair<TileConfiguration, Map<C, Tile<M>>>  prepareTileConfiguration(
++	public static < M extends AbstractAffineModel3D< M >, C> Pair<TileConfiguration, Map<Set<C>, Tile<M>>>  prepareTileConfiguration(
+ 			final M model,
+-			final Collection< ? extends C > views,
+-			final List< Link<C> > links,
+-			final Collection< C > fixedViews,
+-			final List< Set< C > > groups,
+-			final Map<C, AffineGet> initialTransforms)
++			final Collection< Set<C> > views,
++			final List< Link<Set<C>> > links,
++			final Collection< Set<C> > fixedViews,
++			final List< Set< Set<C> > > groups,
++			final Map<Set<C>, AffineGet> initialTransforms)
+ 	{
+ 				
+-		final List< C > actualViews;
++		final List< Set<C> > actualViews;
+ 		
+ 		// no list of views was given, assemble from links
+ 		if (views == null){
+-			final HashSet< C > tmpSet = new HashSet<>();
+-			for ( Link<C> l : links )
++			final HashSet< Set<C> > tmpSet = new HashSet<>();
++			for ( Link<Set<C>> l : links )
+ 			{
+ 				tmpSet.add( l.getFirst() );
+ 				tmpSet.add( l.getSecond() );
+@@ -169,14 +175,14 @@ public class GlobalTileOptimization
+ 			actualViews.addAll( views );
+ 		}
+ 		 
+-		Collections.sort( actualViews );
++		//Collections.sort( actualViews );
+ 		
+ 		// assign ViewIds to the individual Tiles (either one tile per view or one tile per group)
+-		final Map< C, Tile< M > > map = assignViewsToTiles( model, actualViews, groups );
++		final Map< Set<C>, Tile< M > > map = assignViewsToTiles( model, actualViews, groups );
+ 		
+ 		
+ 		// assign the pointmatches to all the tiles
+-		for ( Link<C> link : links )
++		for ( Link<Set<C>> link : links )
+ 			addPointMatches( link, map.get(link.getFirst() ), map.get( link.getSecond() ), initialTransforms);
+ 
+ 		// add and fix tiles as defined in the GlobalOptimizationType
+@@ -185,8 +191,7 @@ public class GlobalTileOptimization
+ 		return new ValuePair<>(tc, map);
+ 	}
+ 	
+-	public static <M extends AbstractAffineModel3D<M>, C extends Comparable< C >> Map<C, AffineGet> optimize(
+-			int numD,
++	public static <M extends AbstractAffineModel3D<M>, C > Map<C, AffineGet> optimize(
+ 			TileConfiguration tc, 
+ 			Map<C, Tile<M>> map,
+ 			GlobalOptimizationParameters params,
+@@ -252,7 +257,7 @@ public class GlobalTileOptimization
+ //			shift = VectorUtil.getVectorSum( shift, initialTransforms.get( viewId ) );
+ 			
+ 			AffineTransform3D t = new AffineTransform3D();
+-			t.set( tile.getModel().getMatrix( null ) );
++			t.set( ( tile.getModel() ).getMatrix( null ) );
+ 			
+ 			if (initialTransforms != null && initialTransforms.containsKey( viewId ))
+ 				t.concatenate( initialTransforms.get( viewId ) );
+@@ -265,7 +270,7 @@ public class GlobalTileOptimization
+ 	}
+ 	
+ 	
+-	protected static < M extends Model< M >, C extends Comparable< C >> HashMap< C, Tile< M > > assignViewsToTiles(
++	protected static < M extends AbstractAffineModel3D< M >, C> HashMap< C, Tile< M > > assignViewsToTiles(
+ 			final M model,
+ 			final List< C > views,
+ 			final List< Set < C > > groups )
+@@ -316,11 +321,11 @@ public class GlobalTileOptimization
+ 		return map;
+ 	}
+ 	
+-	protected static <C extends Comparable< C >> void addPointMatches( 
+-			final Link<C> pair, 
+-			final Tile<?> tileA, 
+-			final Tile<?> tileB,
+-			final Map<C, AffineGet> initialTransforms
++	protected static <C, M extends AbstractAffineModel3D< M >> void addPointMatches( 
++			final Link<Set<C>> pair, 
++			final Tile<M> tileA, 
++			final Tile<M> tileB,
++			final Map<Set<C>, AffineGet> initialTransforms
+ 			)
+ 	{
+ 		final ArrayList< PointMatch > pm = new ArrayList< PointMatch >();
+@@ -397,13 +402,13 @@ public class GlobalTileOptimization
+ 		tileB.addConnectedTile( tileA );
+ 	}
+ 	
+-	protected static < M extends Model< M >, C extends Comparable< C >> TileConfiguration addAndFixTiles(
+-			final List< C > views,
+-			final Map< C, Tile< M > > map,
+-			final Collection< C > fixedViews)
++	protected static < M extends Model< M >, C> TileConfiguration addAndFixTiles(
++			final List< Set<C> > views,
++			final Map< Set<C>, Tile< M > > map,
++			final Collection< Set<C> > fixedViews)
+ 	{
+ 		// if no fixed tiles are given, fix the tile of the first view
+-		final Collection< C > fixedViewsActual;
++		final Collection< Set<C> > fixedViewsActual;
+ 		if (fixedViews == null)
+ 		{
+ 			fixedViewsActual = new ArrayList<>();
+@@ -421,7 +426,7 @@ public class GlobalTileOptimization
+ 		// assemble a list of all tiles and set them fixed if desired
+ 		final HashSet< Tile< M > > tiles = new HashSet< Tile< M > >();
+ 		
+-		for ( final C viewId : views )
++		for ( final Set<C> viewId : views )
+ 		{
+ 			final Tile< M > tile = map.get( viewId );
+ 
+@@ -493,8 +498,18 @@ public class GlobalTileOptimization
+ 	public static void main(String[] args)
+ 	{
+ 		
+-		List<Integer> views = Arrays.asList( new Integer[] {1,2,-1, 3} );
+-		List<Integer> fixedViews = Arrays.asList( new Integer[] {1} );
++		List<Set<Integer>> views = new ArrayList<>();
++		for (int i : new int[] {1,2,3,-1})
++		{
++			HashSet< Integer > hashSet = new HashSet<Integer>();
++			hashSet.add( i );
++			views.add( hashSet );
++		}
++		
++		List<Set< Integer>> fixedViews = new ArrayList<>();
++		HashSet< Integer > hashSet = new HashSet<Integer>();
++		hashSet.add( 1 );
++		fixedViews.add( hashSet );
+ 		
+ 		Map<Integer, AffineGet> initialTransforms = new HashMap<>();
+ 		initialTransforms.put( 1, new Translation3D( 0, 0, 0 ) );
+@@ -503,13 +518,71 @@ public class GlobalTileOptimization
+ 		initialTransforms.put( 3, new Translation3D( 2.25, 0, 0 ) );
+ 		
+ 		List<PairwiseStitchingResult< Integer >> pairwiseResults = new ArrayList<>();
+-		pairwiseResults.add( new PairwiseStitchingResult<>( new ValuePair<>( 1, 2 ), new Translation3D(1,0,0), 1.0 ) );
+ 		
+-		Map< Integer, AffineGet > res = twoRoundGlobalOptimization( 3, views, fixedViews, initialTransforms, pairwiseResults, new GlobalOptimizationParameters() );
++		HashSet< Integer > s1 = new HashSet<Integer>();
++		HashSet< Integer > s2 = new HashSet<Integer>();
++		s1.add( 1 );
++		s2.add( 2 );
++		
++		pairwiseResults.add( new PairwiseStitchingResult<>( new ValuePair<>(s1, s2 ), new Translation3D(1,0,0), 1.0 ) );
++		
++		Map< Set<Integer>, AffineGet > res = twoRoundGlobalOptimization( new AffineModel3D(), views, fixedViews, initialTransforms, pairwiseResults, new GlobalOptimizationParameters() );
+ 		
+ 		res.forEach( ( x, y ) -> System.out.println( x + ": " + y ));
+ 	
+ 	}
+ 	
+ 	
++	public static <V, T> Map<Pair<Set<V>, Set<V>>, T> expandToLinksSubset(Collection<Set<V>> views, Map<Pair<Set<V>, Set<V>>, T> links, BiPredicate< Set<V>, Set<V> > check)
++	{
++		Map<Pair<Set<V>, Set<V>>, T> res = new HashMap<>();
++		Iterator< Set< V > > it1 = views.iterator();
++		while ( it1.hasNext() )
++		{
++			Set< V > viewSet1 = it1.next();
++			Iterator< Set< V > > it2 = views.iterator();
++			while (it2.hasNext())
++			{
++				Set< V > viewSet2 = it2.next();
++				for (Pair<Set<V>, Set<V>> linkPair : links.keySet())
++				{
++					if (check.test( viewSet1, linkPair.getA()) && check.test( viewSet2, linkPair.getB()))
++					{
++						res.put( new ValuePair< Set<V>, Set<V> >( viewSet1, viewSet2 ), links.get( linkPair ) );
++					}
++				}
++			}
++			
++		}
++		
++		return res;
++		
++	}
++	
++	// check if first Set is a subset of second Set
++	public class SubsetCheck <V> implements BiPredicate< Set<V>, Set<V> >
++	{
++
++		@Override
++		public boolean test(Set< V > t, Set< V > u)
++		{
++			return u.containsAll( t );
++		}
++		
++	}
++	
++	// check if second Set contains any of the elements of first Set (they intersect)
++	public class IntersectCheck <V> implements BiPredicate< Set<V>, Set<V> >
++	{
++
++		@Override
++		public boolean test(Set< V > t, Set< V > u)
++		{
++			for (V ti : t)
++				if (u.contains( ti ))
++					return true;
++			return false;
++		}
++		
++	}
+ }
+diff --git a/src/main/java/algorithm/globalopt/Link.java b/src/main/java/algorithm/globalopt/Link.java
+index 6f7febb..358b6f2 100644
+--- a/src/main/java/algorithm/globalopt/Link.java
++++ b/src/main/java/algorithm/globalopt/Link.java
+@@ -2,13 +2,14 @@ package algorithm.globalopt;
+ 
+ import java.util.ArrayList;
+ import java.util.Collection;
++import java.util.HashSet;
+ import java.util.List;
+ import java.util.Set;
+ import java.util.TreeSet;
+ 
+ import net.imglib2.realtransform.AffineGet;
+ 
+-public class Link<T extends Comparable<T>>
++public class Link<T>
+ {
+ 		
+ 	private final T first;
+@@ -64,7 +65,7 @@ public class Link<T extends Comparable<T>>
+ 		return "("+ first.toString() + ", " + second.toString() + ")";		
+ 	}
+ 	
+-	public static <T extends Comparable<T>> List<Set<T>> 
++	public static <T> List<Set<T>> 
+ 			getConnectedComponents(Collection<Link<T>> links, LinkType linkType)
+ 	{
+ 		
+@@ -77,11 +78,11 @@ public class Link<T extends Comparable<T>>
+ 			if (l.getLinkType() == linkType){
+ 				
+ 				// put every endpoint in a separate component first
+-				Set<T> newComponent1 = new TreeSet<>();
++				Set<T> newComponent1 = new HashSet<>();
+ 				newComponent1.add( l.getFirst() );
+ 				connectedNodes.add( newComponent1 );
+ 				
+-				Set<T> newComponent2 = new TreeSet<>();
++				Set<T> newComponent2 = new HashSet<>();
+ 				newComponent2.add( l.getSecond() );
+ 				connectedNodes.add( newComponent2 );
+ 				
+@@ -115,13 +116,13 @@ public class Link<T extends Comparable<T>>
+ 				}
+ 				if (!firstFound)
+ 				{
+-					Set<T> newComponent1 = new TreeSet<>();
++					Set<T> newComponent1 = new HashSet<>();
+ 					newComponent1.add( l.getFirst() );
+ 					connectedNodes.add( newComponent1 );
+ 				}
+ 				if (!secondFound)
+ 				{
+-					Set<T> newComponent2 = new TreeSet<>();
++					Set<T> newComponent2 = new HashSet<>();
+ 					newComponent2.add( l.getSecond() );
+ 					connectedNodes.add( newComponent2 );
+ 				}
+@@ -133,7 +134,7 @@ public class Link<T extends Comparable<T>>
+ 		return connectedNodes;		
+ 	}
+ 	
+-	public static <T extends Comparable<T>> List<List<Link<T>>> 
++	public static <T> List<List<Link<T>>> 
+ 		getLinksConnectedComponents(List<Set<T>> components, Collection<Link<T>> links,  LinkType linkType)
+ 	{
+ 		List<List<Link<T>>> res = new ArrayList<>();
+diff --git a/src/main/java/algorithm/globalopt/TransformationTools.java b/src/main/java/algorithm/globalopt/TransformationTools.java
+index e3355bd..52d3567 100644
+--- a/src/main/java/algorithm/globalopt/TransformationTools.java
++++ b/src/main/java/algorithm/globalopt/TransformationTools.java
+@@ -8,7 +8,9 @@ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.Date;
+ import java.util.HashMap;
++import java.util.HashSet;
+ import java.util.List;
++import java.util.Set;
+ import java.util.concurrent.Callable;
+ import java.util.concurrent.ExecutorService;
+ import java.util.concurrent.Executors;
+@@ -195,9 +197,23 @@ public class TransformationTools
+ 				resT.translate( result.getB().getA() );
+ 				resT.preConcatenate( mapBack );
+ 				
++				
++				Pair<Set<ViewId>, Set<ViewId>> setPair = new ValuePair< Set<ViewId>, Set<ViewId> >( new HashSet<>(), new HashSet<>() );
++				if (result.getA().getA() instanceof GroupedViews)
++				{ 
++					setPair.getA().addAll( ((GroupedViews)result.getA().getA()).getViewIds() );
++					setPair.getB().addAll( ((GroupedViews)result.getA().getB()).getViewIds() );
++				}
++				else
++				{
++					setPair.getA().add( result.getA().getA() );
++					setPair.getA().add( result.getA().getB() );
++				}
++				
++				
+ 				// TODO: when does that really happen?
+ 				if ( result.getB() != null)
+-					results.add( new PairwiseStitchingResult< ViewId >( result.getA(), resT, result.getB().getB() ) );
++					results.add( new PairwiseStitchingResult< ViewId >(setPair, resT, result.getB().getB() ) );
+ 			}
+ 		}
+ 		catch ( final Exception e )
+diff --git a/src/main/java/gui/StitchingExplorerPanel.java b/src/main/java/gui/StitchingExplorerPanel.java
+index 6c9cfef..e1f920e 100644
+--- a/src/main/java/gui/StitchingExplorerPanel.java
++++ b/src/main/java/gui/StitchingExplorerPanel.java
+@@ -15,6 +15,7 @@ import java.util.Collection;
+ import java.util.Collections;
+ import java.util.HashSet;
+ import java.util.List;
++import java.util.Set;
+ import java.util.Vector;
+ 
+ import javax.swing.BoxLayout;
+@@ -67,6 +68,7 @@ import gui.overlay.LinkOverlay;
+ import gui.popup.ApplyBDVTransformationPopup;
+ import gui.popup.BDVPopupStitching;
+ import gui.popup.CalculatePCPopup;
++import gui.popup.CalculatePCPopupExpertBatch;
+ import gui.popup.OptimizeGloballyPopup;
+ import gui.popup.ResavePopup;
+ import gui.popup.SimpleRemoveLinkPopup;
+@@ -505,6 +507,10 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
+ 		calculatePCPopup.setStitchingResults( stitchingResults );
+ 		popups.add( calculatePCPopup );
+ 		
++		CalculatePCPopupExpertBatch calculatePCPopupExpert = new CalculatePCPopupExpertBatch();
++		calculatePCPopupExpert.setStitchingResults( stitchingResults );
++		popups.add( calculatePCPopupExpert );
++		
+ 		OptimizeGloballyPopup optimizePopup = new OptimizeGloballyPopup();
+ 		optimizePopup.setStitchingResults( stitchingResults );
+ 		popups.add( optimizePopup );
+@@ -560,11 +566,11 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
+ 		List< List< BasicViewDescription< ? > > > elements = tableModel.getElements();
+ 		
+ 		// get all pairwise results which involve the views of the selected row
+-		ViewId selectedVid = selectedRow.get( 0 );
+-		ArrayList< PairwiseStitchingResult< ViewId > > resultsForId = stitchingResults.getAllPairwiseResultsForViewId( selectedVid );
++		Set<ViewId> selectedVids = new HashSet<>(selectedRow );
++		ArrayList< PairwiseStitchingResult< ViewId > > resultsForId = stitchingResults.getAllPairwiseResultsForViewId( selectedVids );
+ 		
+ 		// get the Translations of first View
+-		ViewRegistration selectedVr = data.getViewRegistrations().getViewRegistration(selectedVid);
++		ViewRegistration selectedVr = data.getViewRegistrations().getViewRegistration(selectedVids.iterator().next());
+ 		AffineGet selectedModel = selectedVr.getModel();
+ 		
+ 		
+@@ -578,7 +584,7 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
+ 		
+ 		resetBDVManualTransformations(bdvPopup().bdv);
+ 		
+-		ArrayList< Pair<ViewId, ViewId> > activeLinks = new ArrayList<>();
++		ArrayList< Pair<Set<ViewId>, Set<ViewId>> > activeLinks = new ArrayList<>();
+ 		
+ 		for (PairwiseStitchingResult< ViewId > psr: resultsForId)
+ 		{
+@@ -592,7 +598,7 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
+ 			for (List<BasicViewDescription< ? >> group : elements)
+ 			{
+ 				// there is a link selected -> other
+-				if (psr.pair().getA().equals( selectedVid ) &&  group.contains( psr.pair().getB()))
++				if (psr.pair().getA().equals( selectedVids ) &&  group.contains( psr.pair().getB()))
+ 				{
+ 					// set all views of the other group visible
+ 					for ( final BasicViewDescription< ? >  vd : group )
+@@ -627,7 +633,7 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
+ 				}
+ 				
+ 				// there is a link other -> selected
+-				if (psr.pair().getB().equals( selectedVid ) && group.contains( psr.pair().getA()))
++				if (psr.pair().getB().equals( selectedVids ) && group.contains( psr.pair().getA()))
+ 				{
+ 					// set all views of the other group visible
+ 					for ( final BasicViewDescription< ? >  vd : group )
+@@ -665,8 +671,9 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
+ 			}
+ 		}
+ 		
+-		linkOverlay.setActiveLinks( activeLinks, selectedVid );
+-		getLinkExplorer().setActiveLinks( activeLinks );
++		// FIXME
++		//linkOverlay.setActiveLinks( activeLinks, selectedVid );
++		//getLinkExplorer().setActiveLinks( activeLinks );
+ 		
+ 		setVisibleSources( bdvPopup().bdv.getViewer().getVisibilityAndGrouping(), active );
+ 
+diff --git a/src/main/java/gui/StitchingTableModelDecorator.java b/src/main/java/gui/StitchingTableModelDecorator.java
+index 4f18d62..19a8cec 100644
+--- a/src/main/java/gui/StitchingTableModelDecorator.java
++++ b/src/main/java/gui/StitchingTableModelDecorator.java
+@@ -4,7 +4,9 @@ import java.math.RoundingMode;
+ import java.text.DecimalFormat;
+ import java.util.ArrayList;
+ import java.util.Arrays;
++import java.util.HashSet;
+ import java.util.List;
++import java.util.Map;
+ import java.util.Set;
+ 
+ import javax.swing.event.TableModelListener;
+@@ -102,7 +104,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
+ 		// get avg. correlation
+ 		else if (columnIndex - decorated.getColumnCount() == 1)
+ 		{
+-			final ViewId vid = decorated.getElements().get(rowIndex).get(0);
++			final Set<ViewId> vid = new HashSet<>(decorated.getElements().get(rowIndex));
+ 
+ 			DecimalFormat df = new DecimalFormat( "#.###" );
+ 			df.setRoundingMode( RoundingMode.HALF_UP );
+@@ -114,7 +116,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
+ 		//get no. of links
+ 		else if (columnIndex - decorated.getColumnCount() == 2)
+ 		{
+-			final ViewId vid = decorated.getElements().get(rowIndex).get(0);
++			final Set<ViewId> vid = new HashSet<>(decorated.getElements().get(rowIndex));
+ 			return(res.getAllPairwiseResultsForViewId( vid ).size());
+ 		}
+ 		
+@@ -122,7 +124,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
+ 		//get errors
+ 		else if (columnIndex - decorated.getColumnCount() == 3)
+ 		{
+-			final ViewId vid = decorated.getElements().get(rowIndex).get(0);
++			final Set<ViewId> vid = new HashSet<>(decorated.getElements().get(rowIndex));
+ 			final ArrayList< Double > errors = res.getErrors( vid );
+ 			DecimalFormat df = new DecimalFormat( "#.###" );
+ 			df.setRoundingMode( RoundingMode.HALF_UP );
+@@ -211,4 +213,10 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
+ 	@Override
+ 	public Set< Class< ? extends Entity > > getGroupingFactors(){return decorated.getGroupingFactors();}
+ 
++	@Override
++	public Map< Class< ? extends Entity >, List< ? extends Entity > > getFilters()
++	{
++		return decorated.getFilters();
++	}
++
+ }
+diff --git a/src/main/java/gui/overlay/LinkOverlay.java b/src/main/java/gui/overlay/LinkOverlay.java
+index b343ed6..b01be48 100644
+--- a/src/main/java/gui/overlay/LinkOverlay.java
++++ b/src/main/java/gui/overlay/LinkOverlay.java
+@@ -5,7 +5,7 @@ import java.awt.Graphics;
+ import java.awt.Graphics2D;
+ import java.util.ArrayList;
+ import java.util.List;
+-
++import java.util.Set;
+ 
+ import mpicbg.spim.data.generic.AbstractSpimData;
+ import mpicbg.spim.data.registration.ViewTransform;
+@@ -102,7 +102,7 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
+ 		
+ 		//System.out.println( activeLinks );
+ 		
+-		for (Pair< ViewId, ViewId > p : stitchingResults.getPairwiseResults().keySet())
++		for (Pair< Set<ViewId>, Set<ViewId> > p : stitchingResults.getPairwiseResults().keySet())
+ 		{
+ 			if (activeLinks.size() > 0 && !(activeLinks.contains( p )))
+ 				continue;
+@@ -113,9 +113,9 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
+ 			spimData.getSequenceDescription().getViewDescriptions().get( p.getB() ).getViewSetup().getSize().dimensions( sizeB );
+ 			
+ 			//ViewTransform vt1 = spimData.getViewRegistrations().getViewRegistration( p.getA() ).getTransformList().get( 1 );
+-			AffineTransform3D vt1 = spimData.getViewRegistrations().getViewRegistration( p.getA() ).getModel();
++			AffineTransform3D vt1 = spimData.getViewRegistrations().getViewRegistration( p.getA().iterator().next() ).getModel();
+ 			//ViewTransform vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB() ).getTransformList().get( 1 );
+-			AffineTransform3D vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB() ).getModel();
++			AffineTransform3D vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB().iterator().next() ).getModel();
+ 			
+ 			final AffineTransform3D transform = new AffineTransform3D();
+ 			transform.preConcatenate( viewerTransform );
+diff --git a/src/main/java/gui/popup/CalculatePCPopup.java b/src/main/java/gui/popup/CalculatePCPopup.java
+index af0e896..0c26369 100644
+--- a/src/main/java/gui/popup/CalculatePCPopup.java
++++ b/src/main/java/gui/popup/CalculatePCPopup.java
+@@ -6,7 +6,9 @@ import java.text.DecimalFormat;
+ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.HashMap;
++import java.util.HashSet;
+ import java.util.List;
++import java.util.Set;
+ 
+ import javax.swing.JComponent;
+ import javax.swing.JMenuItem;
+@@ -259,17 +261,17 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
+ 					{
+ 						// find the ViewId of the GroupedViews that the results
+ 						// belong to
+-						ViewId gvA = null;
+-						ViewId gvB = null;
++						Set<ViewId> gvA = new HashSet<>();
++						Set<ViewId> gvB = new HashSet<>();
+ 						for ( GroupedViews g : viewIds )
+ 						{
+-							if ( g.getViewIds().contains( psr.pair().getA() ) )
++							if ( g.getViewIds().containsAll( psr.pair().getA() ) )
+ 							{
+-								gvA = g;
++								gvA.addAll( g.getViewIds() );
+ 							}
+-							if ( g.getViewIds().contains( psr.pair().getB() ) )
++							if ( g.getViewIds().containsAll( psr.pair().getB() ) )
+ 							{
+-								gvB = g;
++								gvB.addAll( g.getViewIds() );
+ 							}
+ 						}
+ 
+diff --git a/src/main/java/gui/popup/CalculatePCPopupExpertBatch.java b/src/main/java/gui/popup/CalculatePCPopupExpertBatch.java
+new file mode 100644
+index 0000000..989b7b0
+--- /dev/null
++++ b/src/main/java/gui/popup/CalculatePCPopupExpertBatch.java
+@@ -0,0 +1,80 @@
++package gui.popup;
++
++import java.awt.event.ActionEvent;
++import java.awt.event.ActionListener;
++import java.util.ArrayList;
++
++import javax.swing.JComponent;
++import javax.swing.JMenuItem;
++
++import algorithm.PairwiseStitchingParameters;
++import algorithm.SpimDataFilteringAndGrouping;
++import algorithm.globalopt.TransformationTools;
++import gui.StitchingResultsSettable;
++import mpicbg.spim.data.generic.AbstractSpimData;
++import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
++import mpicbg.spim.data.sequence.ViewId;
++import spim.fiji.spimdata.explorer.ExplorerWindow;
++import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
++import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
++import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
++import spim.fiji.spimdata.stitchingresults.StitchingResults;
++
++public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable
++{
++
++	private StitchingResults stitchingResults;
++	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
++	
++	@Override
++	public void setStitchingResults(StitchingResults res)
++	{
++		this.stitchingResults = res;		
++	}
++
++	@Override
++	public JComponent setExplorerWindow(
++			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
++	{
++		this.panel = panel;
++		return this;
++	}
++	
++	public CalculatePCPopupExpertBatch()
++	{
++		super( "Calculate Pairwise Shift (Expert/Batch mode)" );
++		this.addActionListener( new MyActionListener() );
++	}
++
++	public class MyActionListener implements ActionListener
++	{
++
++		@Override
++		public void actionPerformed(ActionEvent e)
++		{
++
++			new Thread( new Runnable()
++			{
++				@Override
++				public void run()
++				{
++					
++					SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 
++							SpimDataFilteringAndGrouping.askUserForGrouping( (FilteredAndGroupedExplorerPanel< ? extends AbstractSpimData< ? >, ? > ) panel);
++					
++					
++					PairwiseStitchingParameters params = PairwiseStitchingParameters.askUserForParameters();
++					
++					
++					final ArrayList< PairwiseStitchingResult< ViewId > > results = TransformationTools.computePairs(
++							pairs, params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
++							filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
++							downSamplingFactors );
++
++					
++					
++				}
++			}).run();
++		}
++	}
++}
+diff --git a/src/main/java/gui/popup/OptimizeGloballyPopup.java b/src/main/java/gui/popup/OptimizeGloballyPopup.java
+index b5cf056..e966ac7 100644
+--- a/src/main/java/gui/popup/OptimizeGloballyPopup.java
++++ b/src/main/java/gui/popup/OptimizeGloballyPopup.java
+@@ -5,8 +5,10 @@ import java.awt.event.ActionListener;
+ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.HashMap;
++import java.util.HashSet;
+ import java.util.List;
+ import java.util.Map;
++import java.util.Set;
+ 
+ import javax.swing.JComponent;
+ import javax.swing.JMenuItem;
+@@ -77,31 +79,31 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
+ 			
+ 			final AbstractSpimData< ? > d =  panel.getSpimData();
+ 			
+-			final ArrayList< GroupedViews > viewIds = new ArrayList<>();			
++			final ArrayList< Set<ViewId> > viewIds = new ArrayList<>();			
+ 			for (List<ViewId> vidl : ((GroupedRowWindow)panel).selectedRowsViewIdGroups())
+-				viewIds.add( new GroupedViews( vidl ) );
++				viewIds.add( new HashSet<ViewId>( vidl ) );
+ 			
+-			Collections.sort( viewIds );
++			//Collections.sort( viewIds );
+ 			
+ 			// define fixed tiles
+ 			// the first selected Tile will be fixed
+-			final ArrayList< ViewId > fixedViews = new ArrayList< ViewId >();
++			final ArrayList< Set<ViewId> > fixedViews = new ArrayList<>();
+ 			fixedViews.add( viewIds.get( 0 ) );
+ 
+ 			
+ 			final ArrayList< PairwiseStitchingResult<ViewId> > results = new ArrayList<>(stitchingResults.getPairwiseResults().values());
+ 			final Map<ViewId, AffineGet> translations = new HashMap<>();
+ 			
+-			for (ViewId id : viewIds){
+-				AffineGet a3d = d.getViewRegistrations().getViewRegistration( id ).getModel();
++			for (Set<ViewId> id : viewIds){
++				AffineGet a3d = d.getViewRegistrations().getViewRegistration( id.iterator().next() ).getModel();
+ //				Translation3D tr = new Translation3D( a3d.get( 0, 3 ),
+ //						a3d.get( 1, 3 ), a3d.get( 2, 3 ) );
+-				translations.put( id, a3d );
++				translations.put( id.iterator().next(), a3d );
+ 			}
+ 			
+ 			
+-			Map< ViewId, AffineGet > models = GlobalTileOptimization.twoRoundGlobalOptimization( 
+-														3,
++			Map< Set< ViewId >, AffineGet > models = GlobalTileOptimization.twoRoundGlobalOptimization( 
++														new TranslationModel3D(),
+ 														viewIds,
+ 														fixedViews,
+ 														translations,
+@@ -112,66 +114,66 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
+ 			
+ 			// view transformation of the first fixed view - every result will be relative to this
+ 			AffineGet vtFixed = new AffineTransform3D();
+-			( (AffineTransform3D) vtFixed ).set( panel.getSpimData().getViewRegistrations().getViewRegistration( fixedViews.get( 0 ) ).getModel().getRowPackedCopy());
++			( (AffineTransform3D) vtFixed ).set( panel.getSpimData().getViewRegistrations().getViewRegistration( fixedViews.get( 0 ).iterator().next() ).getModel().getRowPackedCopy());
+ 			
+ 		//			(AffineGet) panel.getSpimData().getViewRegistrations().getViewRegistration( fixedViews.get( 0 ) ).getModel().copy();
+ 			
+-			for (ViewId vid : models.keySet())
++			for (Set<ViewId> vid : models.keySet())
+ 			{
+ 				// the transformation determined by stitching
+ 				AffineGet ag = models.get( vid );//.getModel().getTranslation();
+ 				AffineTransform3D at = new AffineTransform3D();
+ 				at.set(ag.getRowPackedCopy() );
+ 				
+-				// the original view transform of this tile
+-				AffineGet transformOriginal = new AffineTransform3D();
+-				( (AffineTransform3D) transformOriginal ).set( panel.getSpimData().getViewRegistrations().getViewRegistration( vid ).getModel().getRowPackedCopy());
+-				
+-				// transformation from fixed to original
+-				AffineGet mapBackToFixed = TransformTools.mapBackTransform( vtFixed, transformOriginal );
+-				// difference to transformation determined by optimization -> result
+-				AffineTransform3D mapBackToOriginal = new AffineTransform3D();
+-				mapBackToOriginal.set( TransformTools.mapBackTransform( mapBackToFixed, at.inverse() ).getRowPackedCopy());
+-				
+-				
+-				System.out.println( "viewID: " + vid.getViewSetupId() );
+-				System.out.println( "original:" + transformOriginal );
+-				System.out.println( "tranform determined by optim:" + at );
+-				System.out.println( "mapback to original:" + mapBackToOriginal );
+-				System.out.println( "mapback to fixed:" + mapBackToFixed );
+-				
+-				//at.preConcatenate( mapBackToFixed );
+-				
+-				
+-				//ViewTransform vt = new ViewTransformAffine( "Translation", at);
+-				
+-				// set the shift in stitchingResults
+-				stitchingResults.getGlobalShifts().put( vid, ag );
+-				
+-				// find the GroupedViews that contains vid, update Registrations for all viewIDs in group
+-				for (ViewId groupVid : viewIds){
+-					if (((GroupedViews) groupVid).getViewIds().contains( vid ))
+-					{
+-						for (ViewId vid2 : ((GroupedViews) groupVid).getViewIds()){
+-							
+-							
+-							ViewRegistration vr = d.getViewRegistrations().getViewRegistration( vid2 );
++				for (ViewId vidi : vid)
++				{
++					
++					// the original view transform of this tile
++					AffineGet transformOriginal = new AffineTransform3D();
++					( (AffineTransform3D) transformOriginal ).set( panel.getSpimData().getViewRegistrations().getViewRegistration( vidi ).getModel().getRowPackedCopy());
++					
++					// transformation from fixed to original
++					AffineGet mapBackToFixed = TransformTools.mapBackTransform( vtFixed, transformOriginal );
++					// difference to transformation determined by optimization -> result
++					AffineTransform3D mapBackToOriginal = new AffineTransform3D();
++					mapBackToOriginal.set( TransformTools.mapBackTransform( mapBackToFixed, at.inverse() ).getRowPackedCopy());
++					
++					
++					System.out.println( "viewID: " + vid.iterator().next().getViewSetupId() );
++					System.out.println( "original:" + transformOriginal );
++					System.out.println( "tranform determined by optim:" + at );
++					System.out.println( "mapback to original:" + mapBackToOriginal );
++					System.out.println( "mapback to fixed:" + mapBackToFixed );
++					
++					//at.preConcatenate( mapBackToFixed );
++					
++					
++					//ViewTransform vt = new ViewTransformAffine( "Translation", at);
++					
++					// set the shift in stitchingResults
++					stitchingResults.getGlobalShifts().put( vid.iterator().next(), ag );
++					
++					
+ 							
+-//							AffineTransform3D atI = at.copy();
+-//							atI.set( atI.get( 0, 3 ) - vr.getModel().get( 0, 3 ), 0, 3  );
+-//							atI.set( atI.get( 1, 3 ) - vr.getModel().get( 1, 3 ), 1, 3  );
+-//							atI.set( atI.get( 2, 3 ) - vr.getModel().get( 2, 3 ), 2, 3  );
++								
++								
++								ViewRegistration vr = d.getViewRegistrations().getViewRegistration( vidi );
++								
++	//							AffineTransform3D atI = at.copy();
++	//							atI.set( atI.get( 0, 3 ) - vr.getModel().get( 0, 3 ), 0, 3  );
++	//							atI.set( atI.get( 1, 3 ) - vr.getModel().get( 1, 3 ), 1, 3  );
++	//							atI.set( atI.get( 2, 3 ) - vr.getModel().get( 2, 3 ), 2, 3  );
++								
++								ViewTransform vt = new ViewTransformAffine( "stitching transformation", mapBackToOriginal );
++								//if (d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().size() < 2)
++									d.getViewRegistrations().getViewRegistration( vidi ).preconcatenateTransform( vt );
++								//else
++								//	d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().set( 1 , vt);
++								d.getViewRegistrations().getViewRegistration( vidi ).updateModel();
+ 							
+-							ViewTransform vt = new ViewTransformAffine( "stitching transformation", mapBackToOriginal );
+-							//if (d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().size() < 2)
+-								d.getViewRegistrations().getViewRegistration( vid2 ).preconcatenateTransform( vt );
+-							//else
+-							//	d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().set( 1 , vt);
+-							d.getViewRegistrations().getViewRegistration( vid2 ).updateModel();
+-						}
+-					}
+-				}				
++					
+ 				
++				}
+ 			}
+ 			
+ 			panel.bdvPopup().updateBDV();

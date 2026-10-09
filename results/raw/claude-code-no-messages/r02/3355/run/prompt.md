@@ -1,0 +1,48 @@
+This repository contains a bug that was introduced at some point in the past
+and later fixed. Below is the bug-fixing commit information.
+
+Your task is to identify the commit(s) that introduced the bug, and explain
+your reasoning.
+
+[Bug-Fixing Commit]
+- Commit hash: e3a257701e34af2d9326a7ae19d8da53e4e92139
+- Commit message: 
+- Diff:
+```
+commit e3a257701e34af2d9326a7ae19d8da53e4e92139
+Author: Thomas Lemberger <lembergerth@gmail.com>
+Date:   Wed Jun 13 22:37:23 2018 +0200
+---
+ org.eclipse.cpacep/src/org/eclipse/cpacep/util/FileHandler.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/org.eclipse.cpacep/src/org/eclipse/cpacep/util/FileHandler.java b/org.eclipse.cpacep/src/org/eclipse/cpacep/util/FileHandler.java
+index 4230f52..5277ace 100644
+--- a/org.eclipse.cpacep/src/org/eclipse/cpacep/util/FileHandler.java
++++ b/org.eclipse.cpacep/src/org/eclipse/cpacep/util/FileHandler.java
+@@ -23,7 +23,7 @@ public class FileHandler {
+ 			public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+ 				Path fileName = path.getFileName();
+ 				if (pathMatcher.matches(fileName)) {
+-					String tempPath = fileName.toString();
++					String tempPath = location.relativize(path).toString();
+ 
+ 					if (glob.contains(CPACEPConnector.SPEC_FILE_TYPE)) {
+ 						matchedList.add(tempPath.replace(CPACEPConnector.SPEC_FILE_TYPE, ""));
+```
+
+Investigate the repository using local tools. Do not use web search.
+
+When you have identified the bug-introducing commit(s), conclude your
+response with the following two sections:
+
+## Bug-Introducing Commits
+BIC: <hash1>, <hash2>, ... (or "BIC: NONE")
+
+## Reasoning
+Explain:
+(1) How you investigated and what led you to this candidate.
+(2) What specific change in this commit you believe introduced the bug.
+(3) What evidence in the repository supports this conclusion.
+
+Be honest about uncertainty if any.

@@ -1,0 +1,10 @@
+SELECTED: candidate_40
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (matched exactly by candidate_49) changes StitchingExplorerPanel.java so that the line `savedFilteringAndGrouping = null;`, which previously ran unconditionally right after `globalOptPopup.doClick();`, is moved into an `else` branch so it only runs when NOT doing global optimization. The fix comment explains the bug precisely: "if we discard it right now, but want to do global opt (which runs asynchronously) it would not work." I.e. the saved SpimDataFilteringAndGrouping was being nulled out immediately, before the asynchronously-running global optimization popup handler had a chance to read it via getSavedFilteringAndGrouping().
+
+Tracing this code back through the candidates, candidate_40 is the commit that originally introduced this entire feature: it added the `savedFilteringAndGrouping` field, the `getSavedFilteringAndGrouping()`/`setSavedFilteringAndGrouping()` accessors, the doGlobalOpt flow in StitchingExplorerPanel.java (calling `globalOptPopup.doClick()` then immediately `savedFilteringAndGrouping = null;` with no guard), and the corresponding read of `getSavedFilteringAndGrouping()` in OptimizeGloballyPopupExpertBatch.java. This is the exact unconditional null-out statement (lines 109-116 of candidate_40's diff) that the fix commit later wraps in an `else` block.
+
+Candidate_45 later refactored OptimizeGloballyPopupExpertBatch.java to run its logic inside a new Thread (making the optimization properly asynchronous), which is what actually exposed/triggered the race condition described in the fix — but it did not touch or introduce the buggy null-assignment itself; that line was already present, unchanged, from candidate_40. No candidate between 40 and 49 modifies the discard logic in StitchingExplorerPanel.java. Therefore candidate_40 is the commit that introduced the underlying bug (the premature/unconditional discard of savedFilteringAndGrouping).

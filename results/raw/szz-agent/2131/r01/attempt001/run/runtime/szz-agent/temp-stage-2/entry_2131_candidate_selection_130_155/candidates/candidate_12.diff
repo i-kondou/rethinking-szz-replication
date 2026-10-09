@@ -1,0 +1,935 @@
+diff --git a/platform/vcs-api/src/com/intellij/openapi/vcs/history/DiffFromHistoryHandler.java b/platform/vcs-api/src/com/intellij/openapi/vcs/history/DiffFromHistoryHandler.java
+new file mode 100644
+index 00000000000..4b20ec7cb0f
+--- /dev/null
++++ b/platform/vcs-api/src/com/intellij/openapi/vcs/history/DiffFromHistoryHandler.java
+@@ -0,0 +1,50 @@
++/*
++ * Copyright 2000-2012 JetBrains s.r.o.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package com.intellij.openapi.vcs.history;
++
++import com.intellij.openapi.actionSystem.AnActionEvent;
++import com.intellij.openapi.vcs.FilePath;
++import org.jetbrains.annotations.NotNull;
++
++/**
++ * This handler is called when the user selects one or two revisions in the file history and invokes "Show Diff'.
++ * Default handler is implemented in {@code vcs-impl}.
++ * Custom handlers should be returned via {@link VcsHistoryProvider#getHistoryDiffHandler()}.
++ *
++ * @author Kirill Likhodedov
++ */
++public interface DiffFromHistoryHandler {
++
++  /**
++   * Show diff when a single revision is selected in the file history panel.
++   *
++   * @param e        AnActionEvent which happened, when user invoked "Show Diff".
++   * @param filePath the file which history is shown.
++   * @param revision the revision selected in the file history panel.
++   */
++  void showDiff(@NotNull AnActionEvent e, @NotNull FilePath filePath, @NotNull VcsFileRevision revision);
++
++  /**
++   * Show diff for 2 revisions selected from the file history panel.
++   * The order of selected revisions is not defined.
++   *
++   * @param filePath  the file which history is shown.
++   * @param revision1 one of the selected revisions.
++   * @param revision2 another selected revision.
++   */
++  void showDiff(@NotNull FilePath filePath, @NotNull VcsFileRevision revision1, @NotNull VcsFileRevision revision2);
++
++}
+diff --git a/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsHistoryProvider.java b/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsHistoryProvider.java
+index 5022363b310..b12aed67d7b 100644
+--- a/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsHistoryProvider.java
++++ b/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsHistoryProvider.java
+@@ -56,4 +56,12 @@ public interface VcsHistoryProvider extends VcsProviderMarker {
+   void reportAppendableHistory(final FilePath path, final VcsAppendableHistorySessionPartner partner) throws VcsException;
+ 
+   boolean supportsHistoryForDirectories();
++
++  /**
++   * The returned {@link DiffFromHistoryHandler} will be called, when user calls "Show Diff" from the file history panel.
++   * If {@code null} is returned, the standard handler will be used, which is suitable for most cases.
++   */
++  @Nullable
++  DiffFromHistoryHandler getHistoryDiffHandler();
++
+ }
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+index 0cf2de38b4a..68dee6a11e8 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+@@ -100,6 +100,7 @@ import java.util.List;
+ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+   private static final Logger LOG = Logger.getInstance("#com.intellij.cvsSupport2.ui.FileHistoryDialog");
+ 
++  @NotNull private final Project myProject;
+   private final JEditorPane myComments;
+   private JComponent myAdditionalDetails;
+   private Consumer<VcsFileRevision> myListener;
+@@ -115,6 +116,8 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+   private VcsFileRevision myBottomRevisionForShowDiff;
+   private final DualView myDualView;
+ 
++  @NotNull private final DiffFromHistoryHandler myDiffHandler;
++
+   private final Alarm myUpdateAlarm;
+ 
+   private volatile boolean myInRefresh;
+@@ -126,6 +129,7 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+ 
+   private final Map<VcsRevisionNumber, Integer> myRevisionsOrder;
+   private boolean myIsStaticAndEmbedded;
++  private final Splitter myDetailsSplitter = new Splitter(false, 0.5f);
+ 
+   private final Comparator<VcsFileRevision> myRevisionsInOrderComparator = new Comparator<VcsFileRevision>() {
+     @Override
+@@ -175,7 +179,6 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+     }
+ 
+   };
+-  private final Splitter myDetailsSplitter = new Splitter(false, 0.5f);
+ 
+   public void scheduleRefresh() {
+     ApplicationManager.getApplication().invokeLater(new Runnable() {
+@@ -350,6 +353,7 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+                               VcsHistoryProvider provider,
+                               ContentManager contentManager, final FileHistoryRefresherI refresherI, final boolean isStaticEmbedded) {
+     super(contentManager, provider.getHelpId() != null ? provider.getHelpId() : "reference.versionControl.toolwindow.history", ! isStaticEmbedded);
++    myProject = vcs.getProject();
+     myIsStaticAndEmbedded = false;
+     myVcs = vcs;
+     myProvider = provider;
+@@ -358,6 +362,9 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+     myHistorySession = session;         
+     myFilePath = filePath;
+ 
++    DiffFromHistoryHandler customDiffHandler = provider.getHistoryDiffHandler();
++    myDiffHandler = customDiffHandler == null ? new StandardDiffFromHistoryHandler() : customDiffHandler;
++
+     final DualViewColumnInfo[] columns = createColumnList(myVcs.getProject(), provider, session);
+ 
+     myComments = new JEditorPane(UIUtil.HTML_MIME, "");
+@@ -643,43 +650,6 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+   }
+ 
+ 
+-  private void showDifferences(final Project project, final VcsFileRevision revision1, final VcsFileRevision revision2) {
+-    new Task.Backgroundable(project, "Loading revisions to compare") {
+-      @Override
+-      public void run(@NotNull ProgressIndicator indicator) {
+-        VcsFileRevision left = revision1;
+-        VcsFileRevision right = revision2;
+-        if (VcsHistoryUtil.compare(revision1, revision2) > 0) {
+-          left = revision2;
+-          right = revision1;
+-        }
+-
+-        try {
+-          final String leftTitle = left.getRevisionNumber().asString() +
+-                                   (left instanceof CurrentRevision ? " (" + VcsBundle.message("diff.title.local") + ")" : "");
+-          final String rightTitle = right.getRevisionNumber().asString() +
+-                                    (right instanceof CurrentRevision ? " (" + VcsBundle.message("diff.title.local") + ")" : "");
+-          VcsHistoryUtil.showDiff(project, myFilePath, left, right, leftTitle, rightTitle);
+-        }
+-        catch (final VcsException e) {
+-          LOG.info(e);
+-          WaitForProgressToShow.runOrInvokeLaterAboveProgress(new Runnable() {
+-            public void run() {
+-              Messages.showErrorDialog(VcsBundle.message("message.text.cannot.show.differences", e.getLocalizedMessage()),
+-                                       VcsBundle.message("message.title.show.differences"));
+-            }
+-          }, null, project);
+-        }
+-        catch (IOException e) {
+-          LOG.info(e);
+-        }
+-        catch (ProcessCanceledException ex) {
+-          LOG.info(ex);
+-        }
+-      }
+-    }.queue();
+-  }
+-
+   protected JComponent createCenterPanel() {
+     mySplitter = new Splitter(true, getSplitterProportion());
+     mySplitter.setDividerWidth(4);
+@@ -854,22 +824,17 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+             FileHistoryPanelImpl.this);
+     }
+ 
+-    protected void actionPerformed() {
++    protected void executeAction(AnActionEvent e) {
+       List<TreeNodeOnVcsRevision> sel = getSelection();
+ 
+       int selectionSize = sel.size();
+       if (selectionSize > 1) {
+-        showDifferences(myVcs.getProject(), sel.get(0), sel.get(sel.size() - 1));
++        myDiffHandler.showDiff(e, myFilePath, sel.get(0).getRevision());
+       }
+       else if (selectionSize == 1) {
+-        final TableView<TreeNodeOnVcsRevision> flatView = myDualView.getFlatView();
+-        final int selectedRow = flatView.getSelectedRow();
+-        if (selectedRow == (flatView.getRowCount() - 1)) {
+-          // no previous
+-          showDifferences(myVcs.getProject(), myBottomRevisionForShowDiff != null ? myBottomRevisionForShowDiff : VcsFileRevision.NULL,
+-                          getFirstSelectedRevision());
+-        } else {
+-          showDifferences(myVcs.getProject(), flatView.getRow(selectedRow + 1), getFirstSelectedRevision());
++        VcsFileRevision revision = getFirstSelectedRevision();
++        if (revision != null) {
++          myDiffHandler.showDiff(e, myFilePath, revision);
+         }
+       }
+     }
+@@ -905,13 +870,16 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+     }
+ 
+     @Override
+-    protected void actionPerformed() {
++    protected void executeAction(AnActionEvent e) {
+       final List<TreeNodeOnVcsRevision> selection = getSelection();
+       if (selection.size() != 1) return;
+       if (ChangeListManager.getInstance(myVcs.getProject()).isFreezedWithNotification(null)) return;
+       final VcsRevisionNumber currentRevisionNumber = myHistorySession.getCurrentRevisionNumber();
+       if (currentRevisionNumber != null) {
+-        showDifferences(myVcs.getProject(), getFirstSelectedRevision(), new CurrentRevision(myFilePath.getVirtualFile(), currentRevisionNumber));
++        VcsHistoryUtil.showDifferencesInBackground(myVcs.getProject(), myFilePath,
++                                                   getFirstSelectedRevision(),
++                                                   new CurrentRevision(myFilePath.getVirtualFile(), currentRevisionNumber),
++                                                   true);
+       }
+     }
+ 
+@@ -953,7 +921,7 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+       return true;
+     }
+ 
+-    protected void actionPerformed() {
++    protected void executeAction(AnActionEvent e) {
+       if (ChangeListManager.getInstance(myVcs.getProject()).isFreezedWithNotification(null)) return;
+       final VcsFileRevision revision = getFirstSelectedRevision();
+       if (getVirtualFile() != null) {
+@@ -1431,7 +1399,7 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+       mySelectionProvider = tableProvider;
+     }
+ 
+-    protected abstract void actionPerformed();
++    protected abstract void executeAction(AnActionEvent e);
+ 
+     public boolean isEnabled() {
+       return mySelectionProvider.getSelection().size() == mySuitableSelectedElements;
+@@ -1439,7 +1407,7 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+ 
+     public void actionPerformed(AnActionEvent e) {
+       if (!isEnabled()) return;
+-      actionPerformed();
++      executeAction(e);
+     }
+ 
+     public void update(AnActionEvent e) {
+@@ -1798,4 +1766,30 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+       e.getPresentation().setEnabled(enabled);
+     }
+   }
++
++  /**
++   * @author Kirill Likhodedov
++   */
++  private class StandardDiffFromHistoryHandler implements DiffFromHistoryHandler {
++
++    @Override
++    public void showDiff(@NotNull AnActionEvent e, @NotNull FilePath filePath, @NotNull VcsFileRevision revision) {
++      final TableView<TreeNodeOnVcsRevision> flatView = myDualView.getFlatView();
++      final int selectedRow = flatView.getSelectedRow();
++      if (selectedRow == (flatView.getRowCount() - 1)) {
++        // no previous
++        VcsHistoryUtil.showDifferencesInBackground(myVcs.getProject(), filePath,
++                                                   myBottomRevisionForShowDiff != null ? myBottomRevisionForShowDiff : VcsFileRevision.NULL,
++                                                   revision, true);
++      } else {
++        VcsHistoryUtil.showDifferencesInBackground(myVcs.getProject(), myFilePath, flatView.getRow(selectedRow + 1), revision, true);
++      }
++    }
++
++    @Override
++    public void showDiff(@NotNull FilePath filePath, @NotNull VcsFileRevision revision1, @NotNull VcsFileRevision revision2) {
++      VcsHistoryUtil.showDifferencesInBackground(myProject, myFilePath, revision1, revision2, true);
++    }
++  }
++
+ }
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/VcsHistoryUtil.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/VcsHistoryUtil.java
+index 27e5bac31e1..0cf2c513dd9 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/VcsHistoryUtil.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/VcsHistoryUtil.java
+@@ -17,14 +17,20 @@ package com.intellij.openapi.vcs.history;
+ 
+ import com.intellij.openapi.Disposable;
+ import com.intellij.openapi.application.ApplicationManager;
++import com.intellij.openapi.diagnostic.Logger;
+ import com.intellij.openapi.diff.*;
+ import com.intellij.openapi.editor.Document;
+ import com.intellij.openapi.fileTypes.FileType;
++import com.intellij.openapi.progress.ProcessCanceledException;
++import com.intellij.openapi.progress.ProgressIndicator;
++import com.intellij.openapi.progress.Task;
+ import com.intellij.openapi.project.Project;
++import com.intellij.openapi.ui.Messages;
+ import com.intellij.openapi.util.Disposer;
+ import com.intellij.openapi.util.Ref;
+ import com.intellij.openapi.util.io.FileUtil;
+ import com.intellij.openapi.vcs.FilePath;
++import com.intellij.openapi.vcs.VcsBundle;
+ import com.intellij.openapi.vcs.VcsException;
+ import com.intellij.openapi.vfs.CharsetToolkit;
+ import com.intellij.openapi.vfs.LocalFileSystem;
+@@ -32,6 +38,7 @@ import com.intellij.openapi.vfs.VirtualFile;
+ import com.intellij.openapi.vfs.encoding.EncodingManager;
+ import com.intellij.openapi.vfs.encoding.EncodingProjectManager;
+ import com.intellij.util.WaitForProgressToShow;
++import org.jetbrains.annotations.NotNull;
+ import org.jetbrains.annotations.Nullable;
+ 
+ import java.io.File;
+@@ -41,6 +48,8 @@ import java.nio.charset.Charset;
+ 
+ public class VcsHistoryUtil {
+ 
++  private static final Logger LOG = Logger.getInstance(VcsHistoryUtil.class);
++
+   private VcsHistoryUtil() {
+   }
+ 
+@@ -77,7 +86,9 @@ public class VcsHistoryUtil {
+    * @throws com.intellij.openapi.vcs.VcsException
+    * @throws java.io.IOException
+    */
+-  public static void showDiff(final Project project, FilePath filePath, VcsFileRevision revision1, VcsFileRevision revision2, String title1, String title2) throws VcsException, IOException {
++  public static void showDiff(@NotNull final Project project, @NotNull FilePath filePath,
++                              @NotNull VcsFileRevision revision1, @NotNull VcsFileRevision revision2,
++                              @NotNull String title1, @NotNull String title2) throws VcsException, IOException {
+     final byte[] content1 = loadRevisionContent(revision1);
+     final byte[] content2 = loadRevisionContent(revision2);
+ 
+@@ -139,7 +150,7 @@ public class VcsHistoryUtil {
+     }, null, project);
+   }
+ 
+-    public static byte[] loadRevisionContent(VcsFileRevision revision) throws VcsException, IOException {
++    public static byte[] loadRevisionContent(@NotNull VcsFileRevision revision) throws VcsException, IOException {
+     byte[] content = revision.getContent();
+     if (content == null) {
+       revision.loadContent();
+@@ -149,7 +160,7 @@ public class VcsHistoryUtil {
+     return content;
+   }
+ 
+-  public static String loadRevisionContentGuessEncoding(final VcsFileRevision revision, @Nullable final VirtualFile file,
++  public static String loadRevisionContentGuessEncoding(@NotNull final VcsFileRevision revision, @Nullable final VirtualFile file,
+                                                         @Nullable final Project project) throws VcsException, IOException {
+     final byte[] bytes = loadRevisionContent(revision);
+     if (file != null) {
+@@ -183,4 +194,54 @@ public class VcsHistoryUtil {
+     return revision instanceof CurrentRevision;
+   }
+ 
++
++  /**
++   * Shows difference between two revisions of a file in a diff tool.
++   * The content of revisions is queried in a background thread.
++   * If {@code findOlderNewer} is set to {@code true}, revisions may be specified in any order:
++   * this method will sort them so that the older revision is at the left, and the newer one is at the right.
++   * @param findOlderNewer specify {@code true} to let method compare revisions, and put the older revision at the left, and newer revision
++   *                       at the right.<br/>
++   *                       Specify {@code false} to put {@code revision1} at the left, and {@code revision2} at the right.
++   * @see #showDiff(Project, FilePath, VcsFileRevision, VcsFileRevision, String, String)
++   */
++  public static void showDifferencesInBackground(@NotNull final Project project, @NotNull final FilePath filePath,
++                                                 @NotNull final VcsFileRevision revision1, @NotNull final VcsFileRevision revision2,
++                                                 final boolean findOlderNewer) {
++    new Task.Backgroundable(project, "Loading revisions to compare") {
++      @Override
++      public void run(@NotNull ProgressIndicator indicator) {
++        VcsFileRevision left = revision1;
++        VcsFileRevision right = revision2;
++        if (findOlderNewer && compare(revision1, revision2) > 0) {
++          left = revision2;
++          right = revision1;
++        }
++
++        try {
++          final String leftTitle = left.getRevisionNumber().asString() +
++                                   (left instanceof CurrentRevision ? " (" + VcsBundle.message("diff.title.local") + ")" : "");
++          final String rightTitle = right.getRevisionNumber().asString() +
++                                    (right instanceof CurrentRevision ? " (" + VcsBundle.message("diff.title.local") + ")" : "");
++          showDiff(project, filePath, left, right, leftTitle, rightTitle);
++        }
++        catch (final VcsException e) {
++          LOG.info(e);
++          WaitForProgressToShow.runOrInvokeLaterAboveProgress(new Runnable() {
++            public void run() {
++              Messages.showErrorDialog(VcsBundle.message("message.text.cannot.show.differences", e.getLocalizedMessage()),
++                                       VcsBundle.message("message.title.show.differences"));
++            }
++          }, null, project);
++        }
++        catch (IOException e) {
++          LOG.info(e);
++        }
++        catch (ProcessCanceledException ex) {
++          LOG.info(ex);
++        }
++      }
++    }.queue();
++  }
++
+ }
+diff --git a/plugins/cvs/cvs-plugin/src/com/intellij/cvsSupport2/history/CvsHistoryProvider.java b/plugins/cvs/cvs-plugin/src/com/intellij/cvsSupport2/history/CvsHistoryProvider.java
+index 2cb4236c6e8..73d9338e037 100644
+--- a/plugins/cvs/cvs-plugin/src/com/intellij/cvsSupport2/history/CvsHistoryProvider.java
++++ b/plugins/cvs/cvs-plugin/src/com/intellij/cvsSupport2/history/CvsHistoryProvider.java
+@@ -252,6 +252,11 @@ public class CvsHistoryProvider implements VcsHistoryProvider {
+     return false;
+   }
+ 
++  @Override
++  public DiffFromHistoryHandler getHistoryDiffHandler() {
++    return null;
++  }
++
+   private static class MyHistoryAsTreeProvider implements HistoryAsTreeProvider {
+     private static final MyHistoryAsTreeProvider ourInstance = new MyHistoryAsTreeProvider();
+ 
+diff --git a/plugins/git4idea/src/git4idea/GitFileRevision.java b/plugins/git4idea/src/git4idea/GitFileRevision.java
+index 9b8d05d5997..b344ff5da54 100644
+--- a/plugins/git4idea/src/git4idea/GitFileRevision.java
++++ b/plugins/git4idea/src/git4idea/GitFileRevision.java
+@@ -34,6 +34,8 @@ import org.jetbrains.annotations.Nullable;
+ 
+ import java.io.IOException;
+ import java.nio.charset.Charset;
++import java.util.Collection;
++import java.util.Collections;
+ import java.util.Date;
+ 
+ /**
+@@ -52,9 +54,10 @@ public class GitFileRevision extends VcsFileRevisionEx implements Comparable<Vcs
+   private final String branch;
+   private final Date myAuthorTime;
+   private final boolean myNoCache;
++  @NotNull private final Collection<String> myParents;
+ 
+   public GitFileRevision(@NotNull Project project, @NotNull FilePath path, @NotNull GitRevisionNumber revision, boolean noCache) {
+-    this(project, path, revision, null, null, null, null, noCache);
++    this(project, path, revision, null, null, null, null, noCache, Collections.<String>emptyList());
+   }
+ 
+   public GitFileRevision(@NotNull Project project,
+@@ -62,7 +65,7 @@ public class GitFileRevision extends VcsFileRevisionEx implements Comparable<Vcs
+                          @NotNull GitRevisionNumber revision,
+                          @Nullable Pair<Pair<String, String>, Pair<String, String>> authorAndCommitter,
+                          @Nullable String message,
+-                         @Nullable String branch, final Date authorTime, boolean noCache) {
++                         @Nullable String branch, @Nullable final Date authorTime, boolean noCache, @NotNull Collection<String> parents) {
+     this.project = project;
+     this.path = path;
+     this.revision = revision;
+@@ -71,6 +74,7 @@ public class GitFileRevision extends VcsFileRevisionEx implements Comparable<Vcs
+     this.branch = branch;
+     myAuthorTime = authorTime;
+     myNoCache = noCache;
++    myParents = parents;
+   }
+ 
+   /**
+@@ -152,4 +156,15 @@ public class GitFileRevision extends VcsFileRevisionEx implements Comparable<Vcs
+   public String toString() {
+     return path.getName() + ":" + revision.getShortRev();
+   }
++
++  @NotNull
++  public Collection<String> getParents() {
++    return myParents;
++  }
++
++  @NotNull
++  public String getHash() {
++    return revision.getRev();
++  }
++
+ }
+diff --git a/plugins/git4idea/src/git4idea/GitRevisionNumber.java b/plugins/git4idea/src/git4idea/GitRevisionNumber.java
+index 334e7a069fe..7434b36af39 100644
+--- a/plugins/git4idea/src/git4idea/GitRevisionNumber.java
++++ b/plugins/git4idea/src/git4idea/GitRevisionNumber.java
+@@ -106,13 +106,7 @@ public class GitRevisionNumber implements ShortVcsRevisionNumber {
+    */
+   @NotNull
+   public String getShortRev() {
+-    if (myRevisionHash.length() == 0) return "";
+-    if (myRevisionHash.length() == 40) return myRevisionHash.substring(0, 8);
+-    if (myRevisionHash.length() > 40)  // revision string encoded with date too
+-    {
+-      return myRevisionHash.substring(myRevisionHash.indexOf("[") + 1, 8);
+-    }
+-    return myRevisionHash;
++    return GitUtil.getShortHash(myRevisionHash);
+   }
+ 
+   /**
+diff --git a/plugins/git4idea/src/git4idea/GitUtil.java b/plugins/git4idea/src/git4idea/GitUtil.java
+index b7d10a442e8..8bb45867534 100644
+--- a/plugins/git4idea/src/git4idea/GitUtil.java
++++ b/plugins/git4idea/src/git4idea/GitUtil.java
+@@ -86,6 +86,7 @@ public class GitUtil {
+   public static final String DOT_GIT = ".git";
+ 
+   private final static Logger LOG = Logger.getInstance(GitUtil.class);
++  private static final int SHORT_HASH_LENGTH = 8;
+ 
+   /**
+    * A private constructor to suppress instance creation
+@@ -844,4 +845,14 @@ public class GitUtil {
+     }, "\n");
+   }
+ 
++  @NotNull
++  public static String getShortHash(@NotNull String hash) {
++    if (hash.length() == 0) return "";
++    if (hash.length() == 40) return hash.substring(0, SHORT_HASH_LENGTH);
++    if (hash.length() > 40)  // revision string encoded with date too
++    {
++      return hash.substring(hash.indexOf("[") + 1, SHORT_HASH_LENGTH);
++    }
++    return hash;
++  }
+ }
+diff --git a/plugins/git4idea/src/git4idea/commands/Git.java b/plugins/git4idea/src/git4idea/commands/Git.java
+index 040a34e4541..846e48c0e98 100644
+--- a/plugins/git4idea/src/git4idea/commands/Git.java
++++ b/plugins/git4idea/src/git4idea/commands/Git.java
+@@ -91,6 +91,9 @@ public interface Git {
+   GitCommandResult push(@NotNull GitRepository repository, @NotNull GitPushSpec pushSpec,
+                         @NotNull GitLineHandlerListener... listeners);
+ 
++  @NotNull
++  GitCommandResult show(@NotNull GitRepository repository, @NotNull String revision);
++
+   @NotNull
+   GitCommandResult cherryPick(@NotNull GitRepository repository, @NotNull String hash, boolean autoCommit,
+                               @NotNull GitLineHandlerListener... listeners);
+diff --git a/plugins/git4idea/src/git4idea/commands/GitImpl.java b/plugins/git4idea/src/git4idea/commands/GitImpl.java
+index 2a34b0abf9a..3edb884c632 100644
+--- a/plugins/git4idea/src/git4idea/commands/GitImpl.java
++++ b/plugins/git4idea/src/git4idea/commands/GitImpl.java
+@@ -312,6 +312,13 @@ public class GitImpl implements Git {
+     return push(repository, remote.getName(), pushSpec.getSource().getName() + ":" + destination, listeners);
+   }
+ 
++  @NotNull
++  @Override
++  public GitCommandResult show(@NotNull GitRepository repository, @NotNull String revision) {
++    final GitLineHandler handler = new GitLineHandler(repository.getProject(), repository.getRoot(), GitCommand.SHOW);
++    return run(handler);
++  }
++
+   @Override
+   @NotNull
+   public GitCommandResult cherryPick(@NotNull GitRepository repository, @NotNull String hash, boolean autoCommit,
+diff --git a/plugins/git4idea/src/git4idea/history/GitDiffFromHistoryHandler.java b/plugins/git4idea/src/git4idea/history/GitDiffFromHistoryHandler.java
+new file mode 100644
+index 00000000000..410131c760d
+--- /dev/null
++++ b/plugins/git4idea/src/git4idea/history/GitDiffFromHistoryHandler.java
+@@ -0,0 +1,224 @@
++/*
++ * Copyright 2000-2012 JetBrains s.r.o.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package git4idea.history;
++
++import com.intellij.openapi.actionSystem.*;
++import com.intellij.openapi.actionSystem.impl.SimpleDataContext;
++import com.intellij.openapi.components.ServiceManager;
++import com.intellij.openapi.diagnostic.Logger;
++import com.intellij.openapi.progress.ProgressIndicator;
++import com.intellij.openapi.progress.Task;
++import com.intellij.openapi.project.Project;
++import com.intellij.openapi.ui.MessageType;
++import com.intellij.openapi.ui.popup.JBPopupFactory;
++import com.intellij.openapi.ui.popup.ListPopup;
++import com.intellij.openapi.util.io.FileUtil;
++import com.intellij.openapi.vcs.FilePath;
++import com.intellij.openapi.vcs.VcsException;
++import com.intellij.openapi.vcs.history.DiffFromHistoryHandler;
++import com.intellij.openapi.vcs.history.VcsFileRevision;
++import com.intellij.openapi.vcs.history.VcsHistoryUtil;
++import com.intellij.openapi.vcs.ui.VcsBalloonProblemNotifier;
++import com.intellij.openapi.vfs.VirtualFile;
++import com.intellij.ui.awt.RelativePoint;
++import com.intellij.util.ArrayUtil;
++import git4idea.GitFileRevision;
++import git4idea.GitRevisionNumber;
++import git4idea.GitUtil;
++import git4idea.commands.Git;
++import git4idea.commands.GitCommandResult;
++import git4idea.repo.GitRepository;
++import git4idea.repo.GitRepositoryManager;
++import org.jetbrains.annotations.NotNull;
++
++import java.awt.event.MouseEvent;
++import java.util.ArrayList;
++import java.util.Collection;
++import java.util.List;
++import java.util.concurrent.atomic.AtomicBoolean;
++
++/**
++ * {@link DiffFromHistoryHandler#showDiff(FilePath, VcsFileRevision, VcsFileRevision) "Show Diff" for 2 revision} calls the common code.
++ * {@link DiffFromHistoryHandler#showDiff(AnActionEvent, FilePath, VcsFileRevision) "Show diff" for 1 revision}
++ * behaves differently for merge commits: for them it shown a popup displaying the parents of the selected commit. Selecting a parent
++ * from the popup shows the difference with this parent.
++ * If an ordinary (not merge) revision with 1 parent, it is the same as usual: just compare with the parent;
++ *
++ * @author Kirill Likhodedov
++ */
++class GitDiffFromHistoryHandler implements DiffFromHistoryHandler {
++  
++  private static final Logger LOG = Logger.getInstance(GitDiffFromHistoryHandler.class);
++
++  @NotNull private final Project myProject;
++  @NotNull private final Git myGit;
++  @NotNull private final GitRepositoryManager myRepositoryManager;
++
++  GitDiffFromHistoryHandler(@NotNull Project project) {
++    myProject = project;
++    myGit = ServiceManager.getService(project, Git.class);
++    myRepositoryManager = GitUtil.getRepositoryManager(project);
++  }
++
++  @Override
++  public void showDiff(@NotNull AnActionEvent e, @NotNull FilePath filePath, @NotNull VcsFileRevision revision) {
++    GitFileRevision rev = (GitFileRevision)revision;
++    Collection<String> parents = rev.getParents();
++    if (parents.size() < 2) {
++      showDiffWithParent(revision, filePath, parents);
++    }
++    else { // merge 
++      showDiffForMergeCommit(e, filePath, rev, parents);
++    }
++  }
++
++  @Override
++  public void showDiff(@NotNull FilePath filePath, @NotNull VcsFileRevision revision1, @NotNull VcsFileRevision revision2) {
++    doShowDiff(filePath, revision1, revision2, true);
++  }
++
++  private void doShowDiff(@NotNull FilePath filePath, @NotNull VcsFileRevision revision1, @NotNull VcsFileRevision revision2,
++                          boolean autoSort) {
++    VcsHistoryUtil.showDifferencesInBackground(myProject, filePath, revision1, revision2, autoSort);
++  }
++
++  private void showDiffForMergeCommit(@NotNull final AnActionEvent event, @NotNull final FilePath filePath, @NotNull final GitFileRevision rev,
++                                      @NotNull final Collection<String> parents) {
++    final AtomicBoolean fileTouched = new AtomicBoolean();
++    new Task.Backgroundable(myProject, "Retrieving revision changes", false) {
++      @Override public void run(@NotNull ProgressIndicator indicator) {
++        try {
++          fileTouched.set(wasFileTouched(rev, filePath));
++        }
++        catch (VcsException e) {
++          LOG.info("Error happened while executing git show " + rev + ":" + filePath, e);
++          VcsBalloonProblemNotifier.showOverVersionControlView(GitDiffFromHistoryHandler.this.myProject, e.getMessage(), MessageType.ERROR);
++        }
++      }
++
++      @Override
++      public void onSuccess() {
++        if (fileTouched.get()) {
++          String message = filePath.getName() + " did not change in this merge commit";
++          VcsBalloonProblemNotifier.showOverVersionControlView(GitDiffFromHistoryHandler.this.myProject, message, MessageType.INFO);
++        }
++        showPopup(event, rev, filePath, parents);
++      }
++    }.queue();
++  }
++
++  private void showPopup(@NotNull AnActionEvent event, @NotNull GitFileRevision rev, @NotNull FilePath filePath,
++                         @NotNull Collection<String> parents) {
++    ActionGroup parentActions = createActionGroup(rev, filePath, parents);
++    DataContext dataContext = SimpleDataContext.getProjectContext(myProject);
++    ListPopup popup = JBPopupFactory.getInstance().createActionGroupPopup("Choose parent to compare", parentActions, dataContext,
++                                                                          JBPopupFactory.ActionSelectionAid.NUMBERING, true);
++    showPopupInBestPosition(popup, event, dataContext);
++  }
++
++  private static void showPopupInBestPosition(@NotNull ListPopup popup, @NotNull AnActionEvent event, @NotNull DataContext dataContext) {
++    if (event.getInputEvent() instanceof MouseEvent) {
++      if (!event.getPlace().equals(ActionPlaces.UPDATE_POPUP)) {
++        popup.show(new RelativePoint((MouseEvent)event.getInputEvent()));
++      }
++      else { // quick fix for invoking from the context menu: coordinates are calculated incorrectly there.
++        popup.showInBestPositionFor(dataContext);
++      }
++    }
++    else {
++      popup.showInBestPositionFor(dataContext);
++    }
++  }
++
++  @NotNull
++  private ActionGroup createActionGroup(@NotNull GitFileRevision rev, @NotNull FilePath filePath, @NotNull Collection<String> parents) {
++    Collection<AnAction> actions = new ArrayList<AnAction>(2);
++    for (String parent : parents) {
++      actions.add(createParentAction(rev, filePath, parent));
++    }
++    return new DefaultActionGroup(ArrayUtil.toObjectArray(actions, AnAction.class));
++  }
++
++  @NotNull
++  private AnAction createParentAction(@NotNull GitFileRevision rev, @NotNull FilePath filePath, @NotNull String parent) {
++    return new ShowDiffWithParentAction(filePath, rev, parent);
++  }
++
++  private void showDiffWithParent(@NotNull VcsFileRevision revision, @NotNull FilePath filePath, @NotNull Collection<String> parents) {
++    VcsFileRevision parentRevision;
++    if (parents.size() == 1) {
++      String parent = parents.iterator().next();
++      parentRevision = makeRevisionFromHash(filePath, parent);
++    }
++    else {
++      parentRevision = VcsFileRevision.NULL;
++    }
++    doShowDiff(filePath, parentRevision, revision, false);
++  }
++
++  @NotNull
++  private GitFileRevision makeRevisionFromHash(@NotNull FilePath filePath, @NotNull String hash) {
++    return new GitFileRevision(myProject, filePath, new GitRevisionNumber(hash), false);
++  }
++
++  private boolean wasFileTouched(@NotNull GitFileRevision rev, @NotNull FilePath path) throws VcsException {
++    VirtualFile file = path.getVirtualFile();
++    LOG.assertTrue(file != null, "VirtualFile can't be null for " + path); // we clicked on a file and asked its history => VF must exist.
++    GitRepository repository = myRepositoryManager.getRepositoryForFile(file);
++    LOG.assertTrue(repository != null, "Repository is null for " + file);
++    GitCommandResult result = myGit.show(repository, rev + ":" + path);
++    if (result.success()) {
++      return isFilePresentInOutput(repository, path, result.getOutput());
++    }
++    throw new VcsException(result.getErrorOutputAsJoinedString());
++  }
++
++  private static boolean isFilePresentInOutput(@NotNull GitRepository repository, @NotNull FilePath path, @NotNull List<String> output) {
++    String relativePath = FileUtil.getRelativePath(repository.getRoot().getPath(), path.getPath(), '/');
++    for (String line : output) {
++      if (line.startsWith("---") || line.startsWith("+++")) {
++        if (line.contains(relativePath)) {
++          return true;
++        }
++      }
++    }
++    return false;
++  }
++
++  private class ShowDiffWithParentAction extends AnAction {
++
++    @NotNull private final FilePath myFilePath;
++    @NotNull private final GitFileRevision myRevision;
++    @NotNull private final String myParentRevision;
++
++    public ShowDiffWithParentAction(@NotNull FilePath filePath, @NotNull GitFileRevision rev, @NotNull String parent) {
++      super(GitUtil.getShortHash(parent));
++      myFilePath = filePath;
++      myRevision = rev;
++      myParentRevision = parent;
++    }
++
++    @Override
++    public void actionPerformed(AnActionEvent e) {
++      doShowDiff(myFilePath, makeRevisionFromHash(myFilePath, myParentRevision), myRevision, false);
++    }
++
++    @Override
++    public void update(AnActionEvent e) {
++
++    }
++  }
++}
+diff --git a/plugins/git4idea/src/git4idea/history/GitHistoryProvider.java b/plugins/git4idea/src/git4idea/history/GitHistoryProvider.java
+index 3225167b10a..09bdeaa80a0 100644
+--- a/plugins/git4idea/src/git4idea/history/GitHistoryProvider.java
++++ b/plugins/git4idea/src/git4idea/history/GitHistoryProvider.java
+@@ -47,49 +47,26 @@ import java.util.List;
+  */
+ public class GitHistoryProvider implements VcsHistoryProvider, VcsCacheableHistorySessionFactory<Boolean, VcsAbstractHistorySession>,
+                                            VcsBaseRevisionAdviser {
+-  /**
+-   * logger instance
+-   */
+   private static final Logger log = Logger.getInstance(GitHistoryProvider.class.getName());
+-  /**
+-   * the current project instance
+-   */
+-  private final Project myProject;
+ 
+-  /**
+-   * A constructor
+-   *
+-   * @param project a context project
+-   */
++  @NotNull private final Project myProject;
++
+   public GitHistoryProvider(@NotNull Project project) {
+-    this.myProject = project;
++    myProject = project;
+   }
+ 
+-  /**
+-   * {@inheritDoc}
+-   */
+   public VcsDependentHistoryComponents getUICustomization(final VcsHistorySession session, JComponent forShortcutRegistration) {
+     return VcsDependentHistoryComponents.createOnlyColumns(new ColumnInfo[0]);
+   }
+ 
+-  /**
+-   * {@inheritDoc}
+-   * @param refresher
+-   */
+   public AnAction[] getAdditionalActions(Runnable refresher) {
+     return new AnAction[]{new GitShowAllSubmittedFilesAction(), new GitCopyHistoryRevisionNumberAction()};
+   }
+ 
+-  /**
+-   * {@inheritDoc}
+-   */
+   public boolean isDateOmittable() {
+     return false;
+   }
+ 
+-  /**
+-   * {@inheritDoc}
+-   */
+   @Nullable
+   public String getHelpId() {
+     return null;
+@@ -113,9 +90,6 @@ public class GitHistoryProvider implements VcsHistoryProvider, VcsCacheableHisto
+     return createSession(filePath, revisions, currentRevision);
+   }
+ 
+-  /**
+-   * {@inheritDoc}
+-   */
+   @Nullable
+   public VcsHistorySession createSessionFor(final FilePath filePath) throws VcsException {
+     List<VcsFileRevision> revisions = null;
+@@ -206,4 +180,9 @@ public class GitHistoryProvider implements VcsHistoryProvider, VcsCacheableHisto
+   public boolean supportsHistoryForDirectories() {
+     return true;
+   }
++
++  @Override
++  public DiffFromHistoryHandler getHistoryDiffHandler() {
++    return new GitDiffFromHistoryHandler(myProject);
++  }
+ }
+diff --git a/plugins/git4idea/src/git4idea/history/GitHistoryUtils.java b/plugins/git4idea/src/git4idea/history/GitHistoryUtils.java
+index 80301fb7754..3f806e8af5e 100644
+--- a/plugins/git4idea/src/git4idea/history/GitHistoryUtils.java
++++ b/plugins/git4idea/src/git4idea/history/GitHistoryUtils.java
+@@ -321,7 +321,8 @@ public class GitHistoryUtils {
+     // adjust path using change manager
+     path = getLastCommitName(project, path);
+     final VirtualFile finalRoot = (root == null ? GitUtil.getGitRoot(path) : root);
+-    final GitLogParser logParser = new GitLogParser(project, GitLogParser.NameStatus.NAME, HASH, COMMIT_TIME, AUTHOR_NAME, AUTHOR_EMAIL, COMMITTER_NAME, COMMITTER_EMAIL, PARENTS,
++    final GitLogParser logParser = new GitLogParser(project, GitLogParser.NameStatus.NAME,
++                                                    HASH, COMMIT_TIME, AUTHOR_NAME, AUTHOR_EMAIL, COMMITTER_NAME, COMMITTER_EMAIL, PARENTS,
+                                                     SUBJECT, BODY, RAW_BODY, AUTHOR_TIME);
+ 
+     final AtomicReference<String> firstCommit = new AtomicReference<String>("HEAD");
+@@ -358,8 +359,9 @@ public class GitHistoryUtils {
+ 
+           final Pair<String, String> authorPair = Pair.create(record.getAuthorName(), record.getAuthorEmail());
+           final Pair<String, String> committerPair = record.getCommitterName() == null ? null : Pair.create(record.getCommitterName(), record.getCommitterEmail());
+-          consumer.consume(new GitFileRevision(project, revisionPath, revision, Pair.create(authorPair, committerPair), message, null, new Date(record.getAuthorTimeStamp() * 1000),
+-                                               false));
++          Collection<String> parents = parentHashes == null ? Collections.<String>emptyList() : Arrays.asList(parentHashes);
++          consumer.consume(new GitFileRevision(project, revisionPath, revision, Pair.create(authorPair, committerPair), message, null,
++                                               new Date(record.getAuthorTimeStamp() * 1000), false, parents));
+         } catch (VcsException e) {
+           exceptionConsumer.consume(e);
+         }
+diff --git a/plugins/git4idea/tests/git4idea/test/MockGit.groovy b/plugins/git4idea/tests/git4idea/test/MockGit.groovy
+index 9b7b12e4016..c329ce52ce1 100644
+--- a/plugins/git4idea/tests/git4idea/test/MockGit.groovy
++++ b/plugins/git4idea/tests/git4idea/test/MockGit.groovy
+@@ -159,6 +159,12 @@ class MockGit implements Git {
+     throw new UnsupportedOperationException()
+   }
+ 
++  @NotNull
++  @Override
++  GitCommandResult show(@NotNull GitRepository repository, @NotNull String revision) {
++    throw new UnsupportedOperationException()
++  }
++
+   @NotNull
+   @Override
+   GitCommandResult cherryPick(@NotNull GitRepository repository, @NotNull String hash, boolean autoCommit, @NotNull GitLineHandlerListener... listeners) {
+diff --git a/plugins/hg4idea/src/org/zmlx/hg4idea/provider/HgHistoryProvider.java b/plugins/hg4idea/src/org/zmlx/hg4idea/provider/HgHistoryProvider.java
+index f19a2429102..2136f337026 100644
+--- a/plugins/hg4idea/src/org/zmlx/hg4idea/provider/HgHistoryProvider.java
++++ b/plugins/hg4idea/src/org/zmlx/hg4idea/provider/HgHistoryProvider.java
+@@ -112,4 +112,9 @@ public class HgHistoryProvider implements VcsHistoryProvider {
+   public boolean supportsHistoryForDirectories() {
+     return true;
+   }
++
++  @Override
++  public DiffFromHistoryHandler getHistoryDiffHandler() {
++    return null;
++  }
+ }
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistoryProvider.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistoryProvider.java
+index 8b175d7f7b8..4632fa5d747 100644
+--- a/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistoryProvider.java
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistoryProvider.java
+@@ -70,6 +70,11 @@ public class SvnHistoryProvider
+     return true;
+   }
+ 
++  @Override
++  public DiffFromHistoryHandler getHistoryDiffHandler() {
++    return null;
++  }
++
+   public VcsDependentHistoryComponents getUICustomization(final VcsHistorySession session, JComponent forShortcutRegistration) {
+     final ColumnInfo[] columns;
+     final Consumer<VcsFileRevision> listener;

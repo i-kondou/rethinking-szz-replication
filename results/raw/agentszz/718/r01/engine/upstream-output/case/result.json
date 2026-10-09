@@ -1,0 +1,22 @@
+{
+  "fix_commit": "e3a09244c0309b814ff0b6ce85908a0d3ba82840",
+  "bic": "af93ae74310639f406c35f885cc1204917c68dc5",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "git_blame on the buggy lines (calling `of(row)` and `new Row(...)` instead of `Row.of(...)`, absence of `getRawTableName()`, wrong argument ordering) in SweepPriorityTable.java (and analogous generated table files) at fix~1 traces back to commit af93ae74310639f406c35f885cc1204917c68dc5, \"initial open source code\". This commit added the generated table code (originally located at atlas/atlas-client/.../schema/generated/SweepPriorityTable.java before later reorganization) that contains the flawed row-factory calls and missing static accessor, which the fix commit e3a09244c030 corrects. No later refactor introduced the buggy `of()`/`new Row()` invocation pattern \u2014 it was present from the very first commit that added these generated classes to the repository, and subsequent commits (3b9411d5d0d0, 877422f5174b) only touched unrelated lines (toString formatting), not this logic.",
+  "metrics": {
+    "case_elapsed_seconds": 24.340934,
+    "api_elapsed_seconds": 23.717766,
+    "tool_elapsed_seconds": 0.511693,
+    "other_elapsed_seconds": 0.111479,
+    "api_call_count": 6,
+    "tool_call_count": 6,
+    "prompt_tokens": 71066,
+    "completion_tokens": 1438,
+    "total_tokens": 72504,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:04:50.582332"
+}

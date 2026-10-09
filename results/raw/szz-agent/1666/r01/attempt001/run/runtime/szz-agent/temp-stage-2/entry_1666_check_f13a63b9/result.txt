@@ -1,0 +1,10 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The bug fixed by this commit is in `CoverManager.getCoverBytes(String[] coverUrls, CoverInfo coverInfo)`. In the buggy version, the method loops over `coverUrls` and, once `coverBytes` is successfully downloaded/read for one URL, it does not stop the loop — it keeps iterating over the remaining URLs, which can overwrite the already-successful `coverBytes` with `null` (or a failed result) from a later URL attempt. The fix adds a `break` statement right after the successful download log line so the loop exits as soon as a cover is found, preserving the successfully fetched bytes.
+
+Looking at `files/old/.../CoverManager.java`, the equivalent method (lines 531-557) is structured differently: inside the `if (coverBytes != null) { ... }` block, it executes `return coverBytes;` directly, rather than just falling through to the next loop iteration. A `return` immediately exits the method (and therefore the loop) on the first successful download, which achieves the same effect as the `break` added by the fix — it prevents any subsequent iteration from overwriting the successful result.
+
+Therefore, the old version does not exhibit the bug: it already has correct early-exit behavior (via `return` instead of `break`), whereas the buggy version appears to have been refactored (e.g., to consolidate the two `if (state == CACHE_COVER_FETCH) / else if (state == WEB_COVER_FETCH)` branches, removing the early `return` and only reassigning `coverBytes` at the end) which introduced the missing-exit bug. The bug was introduced after the `old` snapshot and only exists in the `buggy` version.

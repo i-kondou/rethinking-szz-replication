@@ -1,0 +1,22 @@
+{
+  "fix_commit": "b1fbad54f2acadd010d3960fb1bb475c59ca2a38",
+  "bic": "0dff56fdb2525803c950b97fd6d2469357075703",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit refactored PatriciaTreeMutable's reclaim traversal code, introducing local variables `sourceNode`/`actualNode` cached from `source.currentNode`/`actual.currentNode` at loop start. However, inside the while loop, `source.moveDown()` and `actual.moveDown()` update `source.currentNode`/`actual.currentNode` to point to child nodes, but the code kept using the stale cached `sourceNode` variable in `sourceNode.getChildren(...)` and `sourceNode.keySequence.iterator()` calls, rather than the updated `source.currentNode`. This causes the \"weird reclaim bug\" fixed by reverting to use `source.currentNode`/`actual.currentNode` directly instead of the stale cached references.",
+  "metrics": {
+    "case_elapsed_seconds": 15.799263,
+    "api_elapsed_seconds": 15.616234,
+    "tool_elapsed_seconds": 0.064869,
+    "other_elapsed_seconds": 0.118165,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 17019,
+    "completion_tokens": 854,
+    "total_tokens": 17873,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:19:23.792112"
+}

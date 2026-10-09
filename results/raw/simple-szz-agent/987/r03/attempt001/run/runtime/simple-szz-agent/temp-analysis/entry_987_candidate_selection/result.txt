@@ -1,0 +1,31 @@
+SELECTED: candidate_05
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) addresses two related bugs in DokanyDriver.java:
+1. "Not able to unmount filesystem"
+2. "Wrongly set isMounted variable during shutdown"
+
+The fix changes the shutdown() method from:
+    isMounted.set(NativeMethods.DokanRemoveMountPoint(deviceOptions.MountPoint)); //TODO: check if the volume is already unmounted
+    if (isMounted.get()) {
+        LOG.error("Unable to unmount Dokan device at {}.", deviceOptions.MountPoint);
+    }
+to:
+    boolean unmounted = NativeMethods.DokanRemoveMountPoint(deviceOptions.MountPoint);
+    if (unmounted) {
+        isMounted.set(false);
+    } else {
+        LOG.error("Unable to unmount Dokan device at {}.", deviceOptions.MountPoint);
+    }
+
+The buggy pre-fix logic directly assigned the return value of DokanRemoveMountPoint() to isMounted. Since DokanRemoveMountPoint() returns true on a SUCCESSFUL unmount, this set isMounted=true precisely when the device was actually unmounted (and set it to false/left it unchanged on failure) — backwards from the intended semantics where isMounted should become false after a successful unmount. This is exactly the "wrongly set isMounted variable during shutdown" bug, and it also explains "not able to unmount": because isMounted incorrectly stays/becomes true on success, later shutdown attempts or state checks behave as if the device is still (or newly) mounted, preventing correct unmount handling.
+
+By walking the diff hash chain across candidates (each diff's "index a..b" hashes for DokanyDriver.java), the commits order as follows:
+- candidate_04: introduces isMounted AtomicBoolean field is NOT yet present; ends at hash d8ebc9f (adds LibraryNotFoundException handling only)
+- candidate_05: hash d8ebc9f..1bd917f — this commit introduces the AtomicBoolean isMounted field AND completely rewrites shutdown() with the exact buggy line: `isMounted.set(NativeMethods.DokanRemoveMountPoint(deviceOptions.MountPoint));` followed by `if (isMounted.get())`. This is the first appearance of the buggy pattern.
+- candidate_06: hash 1bd917f..7c8d008 — only adds a "//TODO: check if the volume is already unmounted" comment to that same buggy line; does not change the logic.
+- candidate_07: hash 7c8d008..7e30677 — this diff is byte-for-byte identical to fix_commit_diff.txt, meaning candidate_07 IS the fix commit itself, not a bug-introducing candidate.
+
+Since candidate_07 is the fix, and candidate_06 made no logic change to the buggy code, the bug was first introduced in candidate_05, which authored the flawed isMounted-assignment pattern in shutdown() that the fix commit later corrects.

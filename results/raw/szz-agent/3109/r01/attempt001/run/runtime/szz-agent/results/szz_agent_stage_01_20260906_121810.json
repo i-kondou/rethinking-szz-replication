@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "timestamp": "20260906_121810",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3109/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "3109",
+      "fix_commit_hash": "395d7ef9ff15d70632f75e4eb4816680e612f9e1",
+      "bug_commit_hash": [
+        "0dd84a04f05c4a852194e92db650588d1a8166c0"
+      ],
+      "szz_candidates": [
+        "0dd84a04f05c4a852194e92db650588d1a8166c0"
+      ],
+      "szz_num_candidates": 1,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "0dd84a04f05c4a852194e92db650588d1a8166c0"
+      ],
+      "llm_selected_commit": "0dd84a04f05c4a852194e92db650588d1a8166c0",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit wraps the single-choice (non-multi-select) parameter handling block in SavedHqlExportToCSV.export() with a `if (value != null) { ... }` check. Before the fix, the code unconditionally created a SavedHQLInterface.IdValue, called `option.lookupValue(context.getUser(), value)`, and attempted `Long.valueOf(value)` even when `value` (from `helper.getParameter(option.name())`) was null \u2014 this would throw a NullPointerException whenever a single-choice HQL report parameter (e.g. SUBJECT ",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/3109",
+      "bug_fixing_commit": "395d7ef9ff15d70632f75e4eb4816680e612f9e1",
+      "bug_inducing_commit": [
+        "0dd84a04f05c4a852194e92db650588d1a8166c0"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "UniTime/unitime"
+    }
+  ]
+}

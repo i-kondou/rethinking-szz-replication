@@ -1,0 +1,38 @@
+SELECTED: candidate_218
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix changes two return statements inside Input.parseRFC8601DateTime()'s
+isextendtime ('hh:mm:ss') and isextendfull ('hh:mm:ss.ssssss') branches from
+`return ret;` to `return ret * 1e-6;`, i.e. it converts the accumulated
+microsecond value (ret = hh*usPerHr + mm*usPerMin + ss*usPerSec [+ us]) into
+seconds before returning.
+
+Before candidate_218, parseRFC8601DateTime() returned a `long` representing
+microseconds for ALL branches (the RFC8601 date/time branches via getUS(),
+and the bare-time "extend" branches inline), and every call site
+(Input.parseDoubles(), TimeSeriesDataInput, FileToArray) divided the result
+by 1e6 to obtain seconds. This was internally consistent.
+
+Candidate_218 ("JS: refactor time parsing to work directly in simulation
+time") changed parseRFC8601DateTime()'s signature to return a `double`
+representing simulation time *in seconds directly*, and removed the `/1e6`
+division from every call site (FileToArray.java, Input.parseDoubles(),
+TimeSeriesDataInput.java), because the is8601-date branches were rewritten
+to call simModel.calendarMillisToSimTime(...) which already returns seconds.
+
+However, this refactor did NOT update the isextendtime and isextendfull
+branches (for plain 'hh:mm:ss' and 'hh:mm:ss.ssssss' duration strings, which
+don't go through getUS/calendarMillisToSimTime). Those branches were left
+unchanged, still computing and returning `ret` as raw microseconds. Because
+callers no longer divide by 1e6, any 'hh:mm:ss' or 'hh:mm:ss.ssssss' time
+value parsed through these two branches ends up 1,000,000x too large
+(returned as microseconds where seconds were expected).
+
+This exact defect (isextendtime/isextendfull returning un-converted `ret`)
+persists unchanged through subsequent refactors (candidate_219, 220, etc.,
+which only touch the date-based branches) all the way up to the bug fix,
+which finally adds the missing `* 1e-6` conversion to these two branches.
+Candidate_218 is therefore the first commit that introduced the
+inconsistency/bug described in the fix commit message.

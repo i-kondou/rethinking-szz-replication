@@ -1,0 +1,22 @@
+{
+  "fix_commit": "11f82fb8ee7111a072d4f44ee7b2adf21b16a9d1",
+  "bic": "e98ea09934cea64ca7b9f8b7be6416c5afc23a4b",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit introduced the maxSizeBeforeFirstWrap/maxSizeAfterFirstWrap alignment logic in setHalfwayBuffer that unconditionally rounded bufferSize down to a multiple of atracBytesPerFrame, even when readSize exceeded the aligned size (causing the buffer to be smaller than the actual read data). The fix commit adds a guard (only apply alignment if readSize < bufferSize and the aligned size is still >= readSize) to correct exactly this defect, directly modifying the same lines added by e98ea09934ce.",
+  "metrics": {
+    "case_elapsed_seconds": 8.57588,
+    "api_elapsed_seconds": 8.37694,
+    "tool_elapsed_seconds": 0.080384,
+    "other_elapsed_seconds": 0.118562,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 17961,
+    "completion_tokens": 563,
+    "total_tokens": 18524,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:53:24.700635"
+}

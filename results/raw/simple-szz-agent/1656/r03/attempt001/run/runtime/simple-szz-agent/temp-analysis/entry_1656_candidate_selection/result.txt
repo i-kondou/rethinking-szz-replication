@@ -1,0 +1,43 @@
+SELECTED: candidate_01
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit renames the package declaration in
+src/test/java/.../YuleApplicationTests.java from `com.github.piotr.rusin.yule`
+(dot-separated, mirroring the "piotr rusin" name literally) to
+`com.github.piotr_rusin.yule` (underscore, matching the rest of the
+application's package structure). The fix commit message states this
+resolves a test initialization error caused by no application configuration
+being found — i.e. Spring's component/context scanning could not locate the
+application context because the test class lived in a different package
+tree (`com.github.piotr.rusin.yule`) than the main application
+(`com.github.piotr_rusin.yule`).
+
+The exact buggy line, `package com.github.piotr.rusin.yule;`, was first
+introduced in candidate_01, which created the file
+`src/test/java/com/github/piotr/rusin/yule/YuleApplicationTests.java` from
+scratch with that package declaration (and also created the main
+application class under the same dot-separated `com.github.piotr.rusin.yule`
+package at that time, so the two were initially consistent with each other).
+
+Candidate_02 only added a license header block above the package line in
+the test file and otherwise touched unrelated files (LICENSE, entity/Post.java
+license header, and confirmed that by this point the main source tree,
+Post.java and YuleApplication.java, had already been moved to the
+`com.github.piotr_rusin.yule` package — the `package` line in the test file
+itself was left completely untouched by candidate_02). This means the
+underlying divergence (main app package renamed to use an underscore while
+the test package retained the original dot-separated form) trace back to the
+original creation of the test file's package declaration in candidate_01;
+that specific line was never modified again until the fix commit
+(candidate_03) corrected it.
+
+Candidate_03 is the fix commit itself (the rename that resolves the
+mismatch), not the bug-introducing commit.
+
+Because the exact problematic line in the test file was authored in
+candidate_01 and never subsequently modified until the fix, candidate_01 is
+the commit that introduced the bug (the mismatched, dot-separated test
+package that diverged from the underscore-based main application package,
+causing Spring Boot test context loading to fail).

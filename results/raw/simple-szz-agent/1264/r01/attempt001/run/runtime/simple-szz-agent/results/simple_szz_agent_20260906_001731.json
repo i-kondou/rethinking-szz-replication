@@ -1,0 +1,414 @@
+{
+  "metadata": {
+    "timestamp": "20260906_001731",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1264/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 159.454,
+      "max": 159.454,
+      "mean": 159.454,
+      "median": 159.454,
+      "total": 159.454,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 159.049,
+      "max": 159.049,
+      "mean": 159.049,
+      "median": 159.049,
+      "total": 159.049,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 19,
+      "max": 19,
+      "mean": 19,
+      "median": 19,
+      "total": 19,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 22,
+      "max": 22,
+      "mean": 22,
+      "median": 22,
+      "total": 22,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 14703,
+      "max": 14703,
+      "mean": 14703,
+      "median": 14703,
+      "total": 14703,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 59789,
+      "max": 59789,
+      "mean": 59789,
+      "median": 59789,
+      "total": 59789,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 279809,
+      "max": 279809,
+      "mean": 279809,
+      "median": 279809,
+      "total": 279809,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.6632877000000001,
+      "max": 0.6632877000000001,
+      "mean": 0.6632877000000001,
+      "median": 0.6632877000000001,
+      "total": 0.6632877000000001,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 9,
+      "Glob": 1,
+      "Grep": 7,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 48,
+      "max": 48,
+      "mean": 48,
+      "median": 48,
+      "total": 48,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "1264",
+      "fix_commit_hash": "f8ac9708ff8656cdc2518896271ea0b978c34d67",
+      "ground_truth_bics": [
+        "199ca4e59019df4572190f32b03ca709274ced7c"
+      ],
+      "predicted_bics": [
+        "199ca4e59019df4572190f32b03ca709274ced7c"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "1264",
+      "fix_commit": "f8ac9708ff8656cdc2518896271ea0b978c34d67",
+      "ground_truth_bics": [
+        "199ca4e59019df4572190f32b03ca709274ced7c"
+      ],
+      "total_candidates": 48,
+      "gt_in_candidates": true,
+      "selected_commit": "199ca4e59019df4572190f32b03ca709274ced7c",
+      "selected_index": 45,
+      "confidence": "MEDIUM",
+      "explanation": "The fix commit changes RuleSet.java's getParents() override from: return SConceptOperations.getAllSuperConcepts(nextConcept, false); back to: return SConceptOperations.getDirectSuperConcepts(nextConcept, false); This getParents() method is used by SingleTermRules.computeRules() to do a BFS/queue-based walk up the concept hierarchy, calling allForConcept() at each node and adding that node's own getParents() result back into the queue. This walker inherently expects getParents() to return only th",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "core/typesystemEngine/source/jetbrains/mps/lang/typesystem/runtime/RuleSet.java"
+      ],
+      "call_stats": {
+        "duration_s": 159.454,
+        "duration_api_s": 159.049,
+        "num_turns": 19,
+        "input_tokens": 22,
+        "output_tokens": 14703,
+        "cache_creation_input_tokens": 59789,
+        "cache_read_input_tokens": 279809,
+        "total_cost_usd": 0.6632877000000001,
+        "total_tool_calls": 18,
+        "tool_calls_by_name": {
+          "Read": 9,
+          "Glob": 1,
+          "Grep": 7,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1264/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1264_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1414,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1264/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1264_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1264/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1264_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 889,
+            "cache_read_input_tokens": 9696,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 958,
+            "cache_read_input_tokens": 10585,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "RuleSet.java",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getAllSuperConcepts|getDirectSuperConcepts",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 10,
+            "cache_creation_input_tokens": 1424,
+            "cache_read_input_tokens": 11543,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1264/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1264_candidate_selection/candidates/candidate_44.diff",
+                  "offset": 200,
+                  "limit": 100
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1264/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1264_candidate_selection/candidates/candidate_45.diff",
+                  "offset": 180,
+                  "limit": 100
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1264/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1264_candidate_selection/candidates/candidate_46.diff",
+                  "offset": 360,
+                  "limit": 100
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 8146,
+            "cache_read_input_tokens": 12967,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "RuleSet.java|^index",
+                  "path": "candidates/candidate_44.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "RuleSet.java|^index",
+                  "path": "candidates/candidate_45.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "RuleSet.java|^index",
+                  "path": "candidates/candidate_46.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "RuleSet.java|^index",
+                  "path": "candidates/candidate_48.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 3773,
+            "cache_read_input_tokens": 21113,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1264/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1264_candidate_selection/candidates/candidate_44.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1264/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1264_candidate_selection/candidates/candidate_46.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 9,
+            "cache_creation_input_tokens": 31075,
+            "cache_read_input_tokens": 24886,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "RuleSet.java",
+                  "path": "candidates/candidate_47.diff",
+                  "output_mode": "content"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 4152,
+            "cache_read_input_tokens": 55961,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1264/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1264_candidate_selection/candidates/candidate_47.diff",
+                  "limit": 40
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1152,
+            "cache_read_input_tokens": 60113,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1264/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1264_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_46\n\nCONFIDENCE: MEDIUM\n\nEXPLANATION:\nThe fix commit changes RuleSet.java's getParents() override from:\n  return SConceptOperations.getAllSuperConcepts(nextConcept, false);\nback to:\n  return SConceptOperations.getDirectSuperConcepts(nextConcept, false);\n\nThis getParents() method is used by SingleTermRules.computeRules() to do a\nBFS/queue-based walk up the concept hierarchy, calling allForConcept() at each\nnode and adding that node's own getParents() result back into the queue. This\nwalker inherently expects getParents() to return only the DIRECT\nsuperconcepts at each step, since it iterates the full transitive closure\nitself one level at a time. Returning getAllSuperConcepts (all transitive\nancestors) at every step causes each ancestor to be re-enqueued redundantly\nat every level, and more importantly it causes the walk to skip/short-circuit\nthe correct rule resolution order for overloaded-operator type rules (e.g.\n\"String += char\"), because rules that should only match a direct supertype\nend up being evaluated against the full transitive closure repeatedly,\nproducing the wrong result for the \"+=\" operator with a char operand and\ntriggering the reported type-system error.\n\nTracing this exact code line through the candidate history:\n- candidate_44 first introduced the buggy line (getAllSuperConcepts) as part\n  of a large refactor converting RuleSet/SingleTermRules and related classes\n  from String-based (FQName) concept lookups to SAbstractConcept-based ones.\n- candidate_45 is an exact revert of that specific RuleSet.java portion\n  (and the related OverloadedOpsProvider_OneTypeSpecified changes), restoring\n  the original ConceptRegistry-based getParentsNames() implementation\n  (git blob hashes confirm this reverts RuleSet.java back to its pre-44 state).\n- candidate_46 re-applies the SAbstractConcept-based refactor project-wide\n  (touching many more files: AbstractInferenceRule_Runtime,\n  ComparisonRule_Runtime, InequationReplacementRule_Runtime,\n  MetaAdapterFactoryByName, ConceptDescendantsCache, ModelsScope, etc.), and\n  in doing so reintroduces the identical buggy getAllSuperConcepts line in\n  RuleSet.java (verified via matching blob hash to candidate_44's version).\n- candidate_47 modifies RuleSet.java only to add logging/error-handling\n  around addRuleSetItem; it does not touch the getParents() line.\n- candidate_48 (the fix) is the first subsequent change to that line,\n  replacing getAllSuperConcepts with getDirectSuperConcepts.\n\nBecause the buggy line was removed (reverted) in candidate_45 and only\nreintroduced in candidate_46, the version of the code actually present\nimmediately before the fix \u2014 and thus the commit that \"blame\" attributes the\nfinal introduction of the defect to \u2014 is candidate_46, not the original\ncandidate_44 (whose change had already been undone). candidate_46 is\ntherefore the most likely bug-introducing commit for the specific defect\nbeing fixed.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1922,
+            "cache_read_input_tokens": 61265,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+SELECTED: candidate_99
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit ("fixed /help bug") removes an entire caching/reload mechanism for command help text: it deletes `CommandParser.reload()`, `AbstractCommand.reloadText()` (and its overrides in `InvalidCommand`, `OnlinePlayerArgCommand`, `PlayerArgCommand`), the mutable `helpText` field, and the call to `commandParser.reload()` in `Server.java`. In its place, the fix computes the help text lazily on every call to `getHelpText()` using a new immutable `help` field plus `t(commandCode)` (the translation lookup), instead of caching a pre-built, pre-translated string.
+
+Tracing this mechanism back through the candidates, `candidate_99` is exactly where it was introduced. That commit:
+- Adds `simpleserver.lang.Translations` (`t`) as the localization system and changes `AbstractCommand`'s constructor to build and cache `helpText` at construction time using `t.get(commandCode)` (`helpText = name + "§f : " + t.get(commandCode);`).
+- Adds `CommandParser.reload()`, which iterates over all server/player commands and calls `((AbstractCommand) command).reloadText()`.
+- Adds `AbstractCommand.reloadText()` (and overrides in `InvalidCommand`, `OnlinePlayerArgCommand`, `PlayerArgCommand`) to recompute the cached `helpText` after the fact.
+- Wires `commandParser.reload()` into `Server.java`'s `reload()` method, right after `t.setLanguage(...)`, so that command help text is (supposedly) refreshed once the correct language is loaded.
+
+This design is fundamentally the root cause of the `/help` bug: commands are constructed (and their help text cached) via `CommandParser`'s `loadCommands()` before the server's language/translation resource has necessarily been loaded/reloaded in every code path, and the `reload()`/`reloadText()` synchronization mechanism is fragile — any place where `reload()` isn't invoked, or is invoked in the wrong order relative to language loading, leaves `/help` displaying stale, untranslated, or incorrect text. The eventual fix eliminates the caching entirely (computing the text on demand in `getHelpText()`), which only makes sense as a fix if this caching/reload scheme (introduced in candidate_99) was the actual source of the bug. No earlier candidate contains any `helpText`/`reloadText`/translation caching logic that matches what the fix removes — `candidate_55` (and subsequent commits before 99) has help text cached in a single `final` field with no reload path at all, so there is no stale-cache bug possible there. Later candidates (108, 110, 117, 126, 131) only extend or reuse this same `reloadText`/`helpText` pattern established in candidate_99, without introducing the caching/reload architecture itself.

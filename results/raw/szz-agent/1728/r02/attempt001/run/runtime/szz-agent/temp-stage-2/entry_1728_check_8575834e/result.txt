@@ -1,0 +1,10 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a `DownloadManagerInterface.getInstance().destroy(this)` call to `MainActivity.onDestroy()`, plus a new `destroy(Context)` method on `DownloadManagerInterface` that unregisters `downloadCompletionReceiver` and clears the singleton instance. The bug being fixed is that `MainActivity` never disposed of the `DownloadManagerInterface` singleton/receiver when the activity was destroyed, leaking the registered `BroadcastReceiver`.
+
+In `files/old/`, the `DownloadManagerInterface` class does not exist at all — the codebase is from an earlier architectural stage where `MainActivity` directly declares and manages its own `downloadCompletionReceiver` field. Critically, this old `MainActivity` already has an `onDestroy()` override that calls `getApplicationContext().unregisterReceiver(downloadCompletionReceiver)`, correctly pairing the `registerReceiver()` call made in `onCreate()`.
+
+Since the `DownloadManagerInterface` abstraction (and its associated resource-leak bug) was introduced later in the project's history, and the equivalent functionality in the old version already correctly registers/unregisters its receiver in the activity lifecycle, the specific bug fixed by this commit cannot be present in `files/old/`.

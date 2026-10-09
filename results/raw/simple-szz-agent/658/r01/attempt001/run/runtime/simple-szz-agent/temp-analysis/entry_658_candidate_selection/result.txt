@@ -1,0 +1,32 @@
+SELECTED: candidate_34
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit modifies GHOrganization.java's getMembers() method, changing the
+anonymous PagedIterator's wrapUp(GHUser[] page) method (renamed to wrapUp(GHUser[] users))
+from an empty body to a body calling GHUser.wrap(users, root). This wrap() call is what
+populates ("wraps") the shallow GHUser objects returned by the API with a reference to
+'root', enabling lazy population of fields (avoiding NullPointerException on calls like
+user.getCreatedAt()).
+
+candidate_34 is the commit that introduced this exact code structure. It refactored
+getMembers() from an old implementation (an AbstractList that fully populated each user via
+root.getUser(shallow[index].getLogin())) into the new PagedIterable/PagedIterator-based
+implementation. Critically, in this refactor the new wrapUp(GHUser[] page) method was left
+with an EMPTY body:
+
+    protected void wrapUp(GHUser[] page) {
+    }
+
+This is precisely the bug: the previous implementation fully populated each returned user
+object, but the new PagedIterator-based implementation added a wrapUp() hook intended to
+populate/wrap users, yet never actually did so in this commit. As a result, users returned
+by getMembers() after this commit were shallow (only partially populated) and calling
+methods like getCreatedAt() on them would throw NullPointerException.
+
+Later candidates (35, 36, 37) modify surrounding code (parameterizing the URL, adding
+filters, renaming the suffix, etc.) but the wrapUp() body remains empty in all of them
+through candidate_37, until the actual fix commit adds the GHUser.wrap(users, root) call.
+This confirms candidate_34 as the original point where the problematic empty wrapUp()
+(and thus the un-populated user bug) was introduced.

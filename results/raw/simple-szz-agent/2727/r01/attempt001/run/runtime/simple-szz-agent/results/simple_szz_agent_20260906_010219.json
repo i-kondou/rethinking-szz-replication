@@ -1,0 +1,456 @@
+{
+  "metadata": {
+    "timestamp": "20260906_010219",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2727/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 114.94,
+      "max": 114.94,
+      "mean": 114.94,
+      "median": 114.94,
+      "total": 114.94,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 114.472,
+      "max": 114.472,
+      "mean": 114.472,
+      "median": 114.472,
+      "total": 114.472,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 19,
+      "max": 19,
+      "mean": 19,
+      "median": 19,
+      "total": 19,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 34,
+      "max": 34,
+      "mean": 34,
+      "median": 34,
+      "total": 34,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 11045,
+      "max": 11045,
+      "mean": 11045,
+      "median": 11045,
+      "total": 11045,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 70688,
+      "max": 70688,
+      "mean": 70688,
+      "median": 70688,
+      "total": 70688,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 501434,
+      "max": 501434,
+      "mean": 501434,
+      "median": 501434,
+      "total": 501434,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.7403352,
+      "max": 0.7403352,
+      "mean": 0.7403352,
+      "median": 0.7403352,
+      "total": 0.7403352,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 11,
+      "Glob": 1,
+      "Grep": 5,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 51,
+      "max": 51,
+      "mean": 51,
+      "median": 51,
+      "total": 51,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2727",
+      "fix_commit_hash": "4b5d099e1049909a16e93648d80df18a516afb73",
+      "ground_truth_bics": [
+        "2b7bff8f28b37d73d6063338b511cedd9caa5fae"
+      ],
+      "predicted_bics": [
+        "2b7bff8f28b37d73d6063338b511cedd9caa5fae"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2727",
+      "fix_commit": "4b5d099e1049909a16e93648d80df18a516afb73",
+      "ground_truth_bics": [
+        "2b7bff8f28b37d73d6063338b511cedd9caa5fae"
+      ],
+      "total_candidates": 51,
+      "gt_in_candidates": true,
+      "selected_commit": "2b7bff8f28b37d73d6063338b511cedd9caa5fae",
+      "selected_index": 48,
+      "confidence": "HIGH",
+      "explanation": "The fix commit adds a single line to the ConsoleProgressDialog constructor: `consoleProcess_ = consoleProcess;` placed immediately before the check `if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)`. The fix commit message explains that getInteractionMode() reads the saved consoleProcess_ field, so that field must be assigned before the interaction-mode check runs. Tracing the history of ConsoleProgressDialog.java through the candidates shows that this exact line existed in the ",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/gwt/src/org/rstudio/studio/client/workbench/views/vcs/common/ConsoleProgressDialog.java"
+      ],
+      "call_stats": {
+        "duration_s": 114.94,
+        "duration_api_s": 114.472,
+        "num_turns": 19,
+        "input_tokens": 34,
+        "output_tokens": 11045,
+        "cache_creation_input_tokens": 70688,
+        "cache_read_input_tokens": 501434,
+        "total_cost_usd": 0.7403352,
+        "total_tool_calls": 18,
+        "tool_calls_by_name": {
+          "Read": 11,
+          "Glob": 1,
+          "Grep": 5,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 16,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2727/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2727_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1384,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2727/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2727_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2727/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2727_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 958,
+            "cache_read_input_tokens": 9666,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 874,
+            "cache_read_input_tokens": 10624,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "ConsoleProgressDialog",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 830,
+            "cache_read_input_tokens": 11498,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "consoleProcess_",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 3577,
+            "cache_read_input_tokens": 12328,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "ConsoleProgressDialog.java",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1538,
+            "cache_read_input_tokens": 15905,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2727/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2727_candidate_selection/candidates/candidate_50.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 2743,
+            "cache_read_input_tokens": 17443,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2727/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2727_candidate_selection/candidates/candidate_27.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2727/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2727_candidate_selection/candidates/candidate_31.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4368,
+            "cache_read_input_tokens": 20186,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getInteractionMode",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2302,
+            "cache_read_input_tokens": 24554,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2727/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2727_candidate_selection/candidates/candidate_20.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 7012,
+            "cache_read_input_tokens": 26856,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2727/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2727_candidate_selection/candidates/candidate_18.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 12,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 12970,
+            "cache_read_input_tokens": 33868,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2727/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2727_candidate_selection/candidates/candidate_37.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 13,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 10440,
+            "cache_read_input_tokens": 46838,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "attachToProcess",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 14,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1959,
+            "cache_read_input_tokens": 57278,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2727/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2727_candidate_selection/candidates/candidate_49.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 15,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 11767,
+            "cache_read_input_tokens": 59237,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2727/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2727_candidate_selection/candidates/candidate_51.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 16,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1465,
+            "cache_read_input_tokens": 71004,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2727/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2727_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_49\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit adds a single line to the ConsoleProgressDialog constructor:\n`consoleProcess_ = consoleProcess;` placed immediately before the check\n`if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)`. The\nfix commit message explains that getInteractionMode() reads the saved\nconsoleProcess_ field, so that field must be assigned before the\ninteraction-mode check runs.\n\nTracing the history of ConsoleProgressDialog.java through the candidates\nshows that this exact line existed in the correct position (right before\nthe getInteractionMode()/isInteractive() check) all the way through\ncandidate_37 (where the constructor still contains:\n`consoleProcess_ = consoleProcess;` followed shortly after by\n`if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)`).\n\ncandidate_49 is the commit that refactors ConsoleProgressDialog to\nintroduce a new `attachToProcess(ConsoleProcess)` method (to support\nre-attaching the dialog to a second console process for the \"create\nbranch + push\" workflow). As part of this refactor it explicitly removes\nthe line:\n\n```\n-      consoleProcess_ = consoleProcess;\n```\n\nfrom the top of the constructor (right before the\n`if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)` check),\nand moves the actual assignment `consoleProcess_ = consoleProcess;` down\ninto the new `attachToProcess()` method, which is only invoked at the very\nend of the constructor. This means `getInteractionMode()` (and the\n`INTERACTION_NEVER` check that gates shell/history setup) is now evaluated\nwhile `consoleProcess_` is still unset (null), causing incorrect\ninteraction-mode detection (issue #1810).\n\ncandidate_50, a later commit, reorganizes a second/related\n`INTERACTION_ALWAYS` check to run inside `attachToProcess()` (after\n`consoleProcess_` is set), but it does not touch or fix the earlier\n`INTERACTION_NEVER` check near the top of the constructor, so that\noccurrence of the bug remains. The final fix commit (also present in the\ncandidate list as candidate_51, since it is chronologically the newest\ndiff) restores the missing assignment before that specific check,\nresolving the bug precisely where candidate_49 introduced it.\n\nTherefore candidate_49 is the commit that introduced the bug by\nseparating the `consoleProcess_` assignment from the interaction-mode\ncheck that depends on it.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 17,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1617,
+            "cache_read_input_tokens": 72469,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

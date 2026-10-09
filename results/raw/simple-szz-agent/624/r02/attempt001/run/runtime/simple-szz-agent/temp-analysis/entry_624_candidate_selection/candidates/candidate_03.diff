@@ -1,0 +1,247 @@
+diff --git a/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerClient.java b/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerClient.java
+index bf6b22f..461e153 100644
+--- a/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerClient.java
++++ b/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerClient.java
+@@ -7,7 +7,7 @@ import java.util.concurrent.Executor;
+ import java.util.concurrent.Executors;
+ 
+ import at.fhv.audioracer.communication.player.IPlayerClient;
+-import at.fhv.audioracer.communication.player.IPlayerClientManager;
++import at.fhv.audioracer.communication.player.IPlayerServer;
+ import at.fhv.audioracer.communication.player.PlayerNetwork;
+ import at.fhv.audioracer.core.model.Car;
+ import at.fhv.audioracer.core.model.Player;
+@@ -148,7 +148,7 @@ public class PlayerClient extends Connection implements IPlayerClient {
+ 	/*
+ 	 * PlayerClientManager of this Client
+ 	 */
+-	private IPlayerClientManager _playerClientManager;
++	private IPlayerServer _playerServer;
+ 	
+ 	public PlayerClient() {
+ 		super();
+@@ -260,12 +260,12 @@ public class PlayerClient extends Connection implements IPlayerClient {
+ 		return _nextCheckpoint;
+ 	}
+ 	
+-	public IPlayerClientManager getPlayerClientManager() {
+-		return _playerClientManager;
++	public IPlayerServer getPlayerServer() {
++		return _playerServer;
+ 	}
+ 	
+-	public void setPlayerClientManager(IPlayerClientManager playerClientManager) {
+-		_playerClientManager = playerClientManager;
++	public void setPlayerServer(IPlayerServer playerServer) {
++		_playerServer = playerServer;
+ 	}
+ 	
+ 	public ListenerList<IPlayerClientListener> getListenerList() {
+@@ -285,7 +285,7 @@ public class PlayerClient extends Connection implements IPlayerClient {
+ 		PlayerNetwork.register(_client);
+ 		
+ 		// get the PlayerClientManager from the server
+-		IPlayerClientManager _playerClientManager = ObjectSpace.getRemoteObject(_client, PlayerNetwork.PLAYER_MANAGER, IPlayerClientManager.class);
++		IPlayerServer _playerClientManager = ObjectSpace.getRemoteObject(_client, PlayerNetwork.PLAYER_MANAGER, IPlayerServer.class);
+ 		RemoteObject obj = (RemoteObject) _playerClientManager;
+ 		obj.setTransmitExceptions(false); // disable exception transmitting
+ 		
+@@ -297,7 +297,7 @@ public class PlayerClient extends Connection implements IPlayerClient {
+ 		_client.connect(1000, InetAddress.getLoopbackAddress(), PlayerNetwork.PLAYER_SERVICE_PORT);
+ 		_connected = true;
+ 		
+-		setPlayerClientManager(_playerClientManager);
++		setPlayerServer(_playerClientManager);
+ 		getPlayer().setPlayerId(_playerClientManager.connect(playerName));
+ 	}
+ 	
+diff --git a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerClientManager.java b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerServer.java
+similarity index 87%
+rename from AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerClientManager.java
+rename to AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerServer.java
+index d61ff83..e4e174e 100644
+--- a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerClientManager.java
++++ b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerServer.java
+@@ -1,26 +1,26 @@
+-package at.fhv.audioracer.communication.player;
+-
+-public interface IPlayerClientManager {
+-	/**
+-	 * @param playerClient
+-	 * @param playerName
+-	 * @return playerId
+-	 */
+-	public int connect(String playerName);
+-	
+-	public void disconnect();
+-	
+-	public void updateVelocity(float speed, float direction);
+-	
+-	public boolean selectCar(int carId);
+-	
+-	/**
+-	 * 
+-	 * @param carId
+-	 * @return Image of the car
+-	 */
+-	// TODO: image als byte[]?
+-	public byte[] getCarImage(int carId);
+-	
+-	public void setPlayerReady();
+-}
++package at.fhv.audioracer.communication.player;
++
++public interface IPlayerServer {
++	/**
++	 * @param playerClient
++	 * @param playerName
++	 * @return playerId
++	 */
++	public int connect(String playerName);
++	
++	public void disconnect();
++	
++	public void updateVelocity(float speed, float direction);
++	
++	public boolean selectCar(int carId);
++	
++	/**
++	 * 
++	 * @param carId
++	 * @return Image of the car
++	 */
++	// TODO: image als byte[]?
++	public byte[] getCarImage(int carId);
++	
++	public void setPlayerReady();
++}
+diff --git a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/PlayerNetwork.java b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/PlayerNetwork.java
+index 2ee6824..5606681 100644
+--- a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/PlayerNetwork.java
++++ b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/PlayerNetwork.java
+@@ -17,7 +17,7 @@ public class PlayerNetwork {
+ 		ObjectSpace.registerClasses(kryo);
+ 		
+ 		// The interfaces that will be used as remote objects must be registered.
+-		kryo.register(IPlayerClientManager.class);
++		kryo.register(IPlayerServer.class);
+ 		kryo.register(IPlayerClient.class);
+ 		// The classes of all method parameters and return values
+ 		// for remote objects must also be registered.
+diff --git a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/ControlView.java b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/ControlView.java
+index ca7f235..fc280ef 100644
+--- a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/ControlView.java
++++ b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/ControlView.java
+@@ -101,8 +101,8 @@ public class ControlView extends JFrame {
+ 				_playerClient.setDirection(calcSliderIntToFloat(_sliderDirection));
+ 				_playerClient.setSpeed(calcSliderIntToFloat(_sliderAccelaration));
+ 				
+-				if (_playerClient.getPlayerClientManager() != null) {
+-					_playerClient.getPlayerClientManager().updateVelocity(_playerClient.getSpeed(), _playerClient.getDirection());
++				if (_playerClient.getPlayerServer() != null) {
++					_playerClient.getPlayerServer().updateVelocity(_playerClient.getSpeed(), _playerClient.getDirection());
+ 				}
+ 			}
+ 		});
+diff --git a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java
+index f55a3b1..e3ae35c 100644
+--- a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java
++++ b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java
+@@ -73,7 +73,7 @@ public class StartUpView extends JFrame {
+ 			public void valueChanged(ListSelectionEvent e) {
+ 				
+ 				Integer selected = _listFreeCars.getSelectedValue();
+-				if (_playerClient.getPlayerClientManager().selectCar(selected)) {
++				if (_playerClient.getPlayerServer().selectCar(selected)) {
+ 					ControlView cv = new ControlView(_playerClient);
+ 					cv.setVisible(true);
+ 				}
+@@ -125,7 +125,7 @@ public class StartUpView extends JFrame {
+ 					@Override
+ 					public void run() {
+ 						
+-						_playerClient.getPlayerClientManager().updateVelocity(_playerClient.getSpeed(), _playerClient.getDirection());
++						_playerClient.getPlayerServer().updateVelocity(_playerClient.getSpeed(), _playerClient.getDirection());
+ 						try {
+ 							Thread.sleep(40);
+ 						} catch (InterruptedException e) {
+@@ -142,7 +142,7 @@ public class StartUpView extends JFrame {
+ 			
+ 			@Override
+ 			public void valueChanged(ListSelectionEvent arg0) {
+-				_playerClient.getPlayerClientManager().selectCar(_listFreeCars.getSelectedValue());
++				_playerClient.getPlayerServer().selectCar(_listFreeCars.getSelectedValue());
+ 				
+ 			}
+ 		});
+@@ -219,7 +219,7 @@ public class StartUpView extends JFrame {
+ 			@Override
+ 			public void actionPerformed(ActionEvent arg0) {
+ 				
+-				_playerClient.getPlayerClientManager().setPlayerReady();
++				_playerClient.getPlayerServer().setPlayerReady();
+ 				_lblReady.setText("Ready");
+ 				_btnReady.setText("Unready");
+ 				
+diff --git a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/Main.java b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/Main.java
+index 5f01914..b6afd4b 100644
+--- a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/Main.java
++++ b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/Main.java
+@@ -6,7 +6,7 @@ import java.util.concurrent.Executor;
+ import java.util.concurrent.Executors;
+ 
+ import at.fhv.audioracer.client.player.PlayerClient;
+-import at.fhv.audioracer.communication.player.IPlayerClientManager;
++import at.fhv.audioracer.communication.player.IPlayerServer;
+ import at.fhv.audioracer.communication.player.PlayerNetwork;
+ 
+ import com.esotericsoftware.kryonet.Client;
+@@ -39,7 +39,7 @@ public class Main {
+ 		PlayerNetwork.register(client);
+ 		
+ 		// get the PlayerClientManager from the server
+-		IPlayerClientManager playerClientManager = ObjectSpace.getRemoteObject(client, PlayerNetwork.PLAYER_MANAGER, IPlayerClientManager.class);
++		IPlayerServer playerClientManager = ObjectSpace.getRemoteObject(client, PlayerNetwork.PLAYER_MANAGER, IPlayerServer.class);
+ 		RemoteObject obj = (RemoteObject) playerClientManager;
+ 		obj.setTransmitExceptions(false); // disable exception transmitting
+ 		
+diff --git a/AudioRacer-Server/src/at/fhv/audioracer/server/proxy/PlayerCommunicationProxy.java b/AudioRacer-Server/src/at/fhv/audioracer/server/proxy/PlayerCommunicationProxy.java
+index 220a9d7..3071c8a 100644
+--- a/AudioRacer-Server/src/at/fhv/audioracer/server/proxy/PlayerCommunicationProxy.java
++++ b/AudioRacer-Server/src/at/fhv/audioracer/server/proxy/PlayerCommunicationProxy.java
+@@ -4,7 +4,7 @@ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
+ import at.fhv.audioracer.communication.player.IPlayerClient;
+-import at.fhv.audioracer.communication.player.IPlayerClientManager;
++import at.fhv.audioracer.communication.player.IPlayerServer;
+ import at.fhv.audioracer.server.PlayerManager;
+ 
+ import com.esotericsoftware.kryonet.Connection;
+@@ -14,7 +14,7 @@ import com.esotericsoftware.kryonet.Connection;
+  * 
+  * @author edi
+  */
+-public class PlayerCommunicationProxy extends Connection implements IPlayerClientManager, IPlayerClient {
++public class PlayerCommunicationProxy extends Connection implements IPlayerServer, IPlayerClient {
+ 	
+ 	private static final Logger _logger = LoggerFactory.getLogger(PlayerCommunicationProxy.class);
+ 	
+diff --git a/docs/api/Interfaces.ucls b/docs/api/Interfaces.ucls
+index f3f50af..9afba21 100644
+--- a/docs/api/Interfaces.ucls
++++ b/docs/api/Interfaces.ucls
+@@ -34,10 +34,10 @@
+       <operations public="true" package="true" protected="true" private="true" static="true"/>    
+     </display>  
+   </interface>  
+-  <interface id="4" language="java" name="at.fhv.audioracer.communication.player.IPlayerClientManager" 
++  <interface id="4" language="java" name="at.fhv.audioracer.communication.player.IPlayerServer" 
+     project="AudioRacer-PlayerCommunication" 
+-    file="/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerClientManager.java" 
+-    binary="false" corner="BOTTOM_RIGHT">    
++    file="/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerServer.java" binary="false" 
++    corner="BOTTOM_RIGHT">    
+     <position height="-1" width="-1" x="675" y="376"/>    
+     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+       visibility="true">      

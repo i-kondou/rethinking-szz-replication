@@ -1,0 +1,22 @@
+SELECTED: candidate_99
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a call to `spe.generateNASAThermoData()` immediately after the line `spe.setName(spe.getThermoData().getName());` inside the branch handled when a species name is derived from the primary thermo library, with the comment "regenerate the chemkin-formatted NASA polynomials ... because these contain the species name, which we just changed." This shows that the bug was: when the species name is changed via `spe.setName(...)`, the previously-generated Chemkin thermo NASA polynomial data (which embeds the species name as text) was never regenerated, leaving the old name baked into the Chemkin output.
+
+Searching the candidates for the exact code context (`spe.setName(spe.getThermoData().getName())` inside the "use the name from the primary thermo library" branch) shows it was introduced in candidate_99. That commit adds the entire block:
+```
+if ((p_name == null || p_name.length()==0) && p_chemGraph.fromprimarythermolibrary){
+    name = spe.getThermoData().getName();
+    if (name.matches("s\\d{8}")){
+        // it's an ugly PrIMe ID! Ignore it.
+    } else{
+        // use the name from the primary thermo library!
+        spe.setName(spe.getThermoData().getName());
+    }
+}
+```
+This is precisely the code path where the species name is renamed without regenerating the Chemkin NASA thermo data, causing the bug described in the fix commit message (Chemkin file retaining the old species name in its thermo section).
+
+Candidate_101 is the fix itself — it adds the missing `spe.generateNASAThermoData()` call to the exact same block introduced by candidate_99, confirming candidate_99 as the bug-introducing commit.

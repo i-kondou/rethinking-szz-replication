@@ -1,0 +1,14 @@
+SELECTED: candidate_09
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a `destroy(Context)` method to `DownloadManagerInterface` that unregisters `downloadCompletionReceiver`, and calls it from `MainActivity.onDestroy()`. This addresses a broadcast-receiver leak: the receiver is registered but never unregistered.
+
+Tracing the history of the receiver registration:
+- candidate_04 first introduced the receiver registration directly in `MainActivity`, via `getApplicationContext().registerReceiver(downloadCompletionReceiver, DOWNLOAD_COMPLETED_BROADCASTS)` in `onCreate()`.
+- By candidate_07/candidate_08, `MainActivity` correctly paired this with an `onDestroy()` override that called `getApplicationContext().unregisterReceiver(downloadCompletionReceiver)` — i.e., at this point the registration was balanced and there was no leak.
+- candidate_09 is a large refactor that extracts all download-manager logic (previously spread across `MainActivity`, `DownloadManagerAsyncTask`, `NewsletterDownloadHelper`) into a new singleton class `nl.sebastiaanschool.contact.app.data.DownloadManagerInterface`. As part of this refactor, `MainActivity`'s `registerReceiver`/`unregisterReceiver` pair was deleted entirely. The new `DownloadManagerInterface` class only carried over the `registerReceiver()` half (called once from `init()`), but no corresponding unregister/destroy method or lifecycle hook was added anywhere. This is precisely where the receiver leak was introduced — the unregister call that existed just before this refactor was silently dropped.
+- Later candidates (candidate_10) only adjust `init()` guard logic and call sites, without touching the missing-unregister issue.
+
+The fix commit's diff exactly matches the shape of this regression: it adds back a `destroy()` method to `DownloadManagerInterface` (mirroring the `registerReceiver()` it introduced) and wires it into `MainActivity.onDestroy()`, restoring the balance that candidate_09 broke.

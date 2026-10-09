@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "kind": "claude-szz-agentic-baseline-subject-run",
+  "created_at": "2026-09-07T12:02:03.013197+00:00",
+  "state": "completed",
+  "scientific_result": true,
+  "test_stub": false,
+  "baseline": "agentszz",
+  "sample_id": "2332",
+  "repository": "TheHolyWaffle/TeamSpeak-3-Java-API",
+  "synthetic_fix_hash": "052fc158198e97c6e44d9bdff1e5bf5595d61f83",
+  "model": "claude-sonnet-5",
+  "base_url": "https://api.anthropic.com/v1/",
+  "per_run_cap_usd": "5",
+  "model_started": true,
+  "reported_cost_usd": "0.386674",
+  "duration_seconds": 189.2186184169841,
+  "predicted_bics": [
+    "c8156def8cdc0f33f763b3edd9cec79f86c9b390"
+  ],
+  "reasoning": "This commit (\"Fix race condition on TS3Query#io\") added `synchronized` to `connect()`, `exit()`, and `doCommandAsync()`, all locking on the same TS3Query instance monitor. This created a new deadlock/race hazard: `exit()` could be invoked concurrently from multiple threads (e.g., directly and via `fireDisconnect()`'s async task calling `exit()` again), with one thread blocked inside `exit()` waiting for `api.quit()` to complete (which itself requires `doCommandAsync` to acquire the same lock from the I/O thread). The fix commit directly overhauls this exact synchronization design—replacing the plain `synchronized` guard on `exit()` with atomic flags and proper wait/notify signaling—confirming that the locking scheme from c8156def8cdc was the root cause of the synchronization bug being fixed.",
+  "confidence": "high",
+  "upstream_metrics": {
+    "case_elapsed_seconds": 188.988012,
+    "api_elapsed_seconds": 188.476171,
+    "tool_elapsed_seconds": 0.376801,
+    "other_elapsed_seconds": 0.135044,
+    "api_call_count": 11,
+    "tool_call_count": 14,
+    "prompt_tokens": 114147,
+    "completion_tokens": 15838,
+    "total_tokens": 129985,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "provider_calls": [
+    {
+      "input_tokens": 5016,
+      "output_tokens": 395,
+      "cost_usd_equivalent": "0.013982",
+      "elapsed_seconds": 5.39258670900017
+    },
+    {
+      "input_tokens": 7462,
+      "output_tokens": 299,
+      "cost_usd_equivalent": "0.017914",
+      "elapsed_seconds": 5.125565624970477
+    },
+    {
+      "input_tokens": 8539,
+      "output_tokens": 189,
+      "cost_usd_equivalent": "0.018968",
+      "elapsed_seconds": 2.8983305409783497
+    },
+    {
+      "input_tokens": 9209,
+      "output_tokens": 1729,
+      "cost_usd_equivalent": "0.035708",
+      "elapsed_seconds": 20.647733958961908
+    },
+    {
+      "input_tokens": 9427,
+      "output_tokens": 769,
+      "cost_usd_equivalent": "0.026544",
+      "elapsed_seconds": 9.134459208988119
+    },
+    {
+      "input_tokens": 10043,
+      "output_tokens": 1453,
+      "cost_usd_equivalent": "0.034616",
+      "elapsed_seconds": 16.91711470799055
+    },
+    {
+      "input_tokens": 11342,
+      "output_tokens": 2117,
+      "cost_usd_equivalent": "0.043854",
+      "elapsed_seconds": 24.07216687500477
+    },
+    {
+      "input_tokens": 11623,
+      "output_tokens": 2208,
+      "cost_usd_equivalent": "0.045326",
+      "elapsed_seconds": 26.958202500012703
+    },
+    {
+      "input_tokens": 12075,
+      "output_tokens": 2960,
+      "cost_usd_equivalent": "0.05375",
+      "elapsed_seconds": 34.1754349580151
+    },
+    {
+      "input_tokens": 14121,
+      "output_tokens": 2683,
+      "cost_usd_equivalent": "0.055072",
+      "elapsed_seconds": 29.986663249961566
+    },
+    {
+      "input_tokens": 15290,
+      "output_tokens": 1036,
+      "cost_usd_equivalent": "0.04094",
+      "elapsed_seconds": 13.156198582961224
+    }
+  ],
+  "source_provenance": {
+    "manifest_path": "/Users/user-01/research/workspaces/claude-szz/implementation/config/agentic-baseline-sources.json",
+    "manifest_sha256": "8fc7276c1bd2772698abeeaabfc6cc1a6bb24aac89db5601f27da49933147fb0",
+    "agentszz_source_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentszz-figshare-v2/replication_package/agentszz",
+    "agentszz_source_tree_sha256": "3436d1b781b11c9b2bf962105355f5f4ded84ede0ec599bda848e0cff9c72777",
+    "agentic_szz_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz",
+    "agentic_szz_commit": "0012a507b9087f15cdad340888a837f5618a3c29",
+    "agentic_szz_git_tree": "738bf1e17594df62dd198f7ffc220d728223b454",
+    "agentszz_python": {
+      "version": "3.11.11",
+      "modules": {
+        "openai": "2.16.0",
+        "git": "3.1.46"
+      },
+      "executable": "/Users/user-01/research/workspaces/claude-szz/baselines/venv/bin/python"
+    },
+    "agentic_szz_python": {
+      "version": "3.12.8",
+      "modules": {
+        "graphiti_core": "unknown",
+        "pydantic_ai": "2.31.1",
+        "neo4j": "6.2.0",
+        "git": "3.1.59",
+        "openai": "3.3.0"
+      },
+      "executable": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz-venv/bin/python"
+    },
+    "agentic_szz_requirements_path": "/Users/user-01/research/workspaces/claude-szz/implementation/config/llm-baselines/requirements-agentic-szz-python312.txt",
+    "agentic_szz_requirements_sha256": "e426ee65f956a8582aa195ac819d2c862d68abd66d20107d71558701ca313f22",
+    "neo4j": {
+      "reference": "neo4j:5.26.8-community",
+      "id": "sha256:c0f0ce3396c902c9ab6520d0c9d1c644a3aa83eed00036e609e5db10a84b2d92",
+      "repo_digests": [
+        "neo4j@sha256:5216b8f7bcca893448d5b4a809d91761609fc8aea900691d59531ada76c28c62"
+      ],
+      "architecture": "arm64",
+      "os": "linux"
+    }
+  },
+  "prompt_metadata_path": "/Users/user-01/research/workspaces/claude-szz/implementation/data/derived/subject-prompts-bfc-message-neutralized-final-v1/2332.json",
+  "prompt_metadata_sha256": "abce7e9a8c11bfff69d283ed640ed60f6178854048fe33df5b282f4f305ff953",
+  "repository_before": {
+    "head": "052fc158198e97c6e44d9bdff1e5bf5595d61f83",
+    "head_matches_synthetic_fix": true,
+    "source_fix_absent": true,
+    "clean": true,
+    "no_remotes": true,
+    "no_object_alternates": true
+  },
+  "repository_after": {
+    "head": "052fc158198e97c6e44d9bdff1e5bf5595d61f83",
+    "head_matches_synthetic_fix": true,
+    "source_fix_absent": true,
+    "clean": true,
+    "no_remotes": true,
+    "no_object_alternates": true
+  },
+  "postflight_clean": true,
+  "error": null,
+  "limitations": [
+    "Sonnet 5 through Anthropic is a matched-backbone adaptation, not the original-model replication.",
+    "Both upstream methods emit a single primary BIC; multi-BIC recall is structurally capped.",
+    "Reported cost is reconstructed from token usage and the frozen Anthropic price snapshot, not provider billing records.",
+    "AgenticSZZ checks its conservative total-token limit between requests, so one in-flight request can cross the nominal trigger."
+  ]
+}

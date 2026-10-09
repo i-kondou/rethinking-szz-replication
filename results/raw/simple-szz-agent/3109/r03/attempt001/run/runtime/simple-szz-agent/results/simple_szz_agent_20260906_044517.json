@@ -1,0 +1,360 @@
+{
+  "metadata": {
+    "timestamp": "20260906_044517",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3109/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 75.336,
+      "max": 75.336,
+      "mean": 75.336,
+      "median": 75.336,
+      "total": 75.336,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 74.791,
+      "max": 74.791,
+      "mean": 74.791,
+      "median": 74.791,
+      "total": 74.791,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 5481,
+      "max": 5481,
+      "mean": 5481,
+      "median": 5481,
+      "total": 5481,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 51098,
+      "max": 51098,
+      "mean": 51098,
+      "median": 51098,
+      "total": 51098,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 226871,
+      "max": 226871,
+      "mean": 226871,
+      "median": 226871,
+      "total": 226871,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.4569243,
+      "max": 0.4569243,
+      "mean": 0.4569243,
+      "median": 0.4569243,
+      "total": 0.4569243,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 13,
+      "max": 13,
+      "mean": 13,
+      "median": 13,
+      "total": 13,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 7,
+      "Glob": 1,
+      "Grep": 4,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "3109",
+      "fix_commit_hash": "395d7ef9ff15d70632f75e4eb4816680e612f9e1",
+      "ground_truth_bics": [
+        "0dd84a04f05c4a852194e92db650588d1a8166c0"
+      ],
+      "predicted_bics": [
+        "0dd84a04f05c4a852194e92db650588d1a8166c0"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "3109",
+      "fix_commit": "395d7ef9ff15d70632f75e4eb4816680e612f9e1",
+      "ground_truth_bics": [
+        "0dd84a04f05c4a852194e92db650588d1a8166c0"
+      ],
+      "total_candidates": 14,
+      "gt_in_candidates": true,
+      "selected_commit": "0dd84a04f05c4a852194e92db650588d1a8166c0",
+      "selected_index": 11,
+      "confidence": "HIGH",
+      "explanation": "The fix (SavedHqlExportToCSV.java) wraps the single-selection parameter handling block in `if (value != null) { ... }`, where `value = helper.getParameter(option.name())`. Before the fix, when a single-choice parameter (e.g. SUBJECT or DEPARTMENT) was not actually supplied in the request, `value` would be null, yet the code unconditionally created an `IdValue`, called `option.lookupValue(context.getUser(), value)` with a null value, and then attempted `Long.valueOf(value)` on a null string \u2014 cau",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "JavaSource/org/unitime/timetable/export/hql/SavedHqlExportToCSV.java"
+      ],
+      "call_stats": {
+        "duration_s": 75.336,
+        "duration_api_s": 74.791,
+        "num_turns": 14,
+        "input_tokens": 20,
+        "output_tokens": 5481,
+        "cache_creation_input_tokens": 51098,
+        "cache_read_input_tokens": 226871,
+        "total_cost_usd": 0.4569243,
+        "total_tool_calls": 13,
+        "tool_calls_by_name": {
+          "Read": 7,
+          "Glob": 1,
+          "Grep": 4,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3109/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3109_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1384,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3109/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3109_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3109/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3109_candidate_selection/fix_commit_diff.txt"
+                }
+              },
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1490,
+            "cache_read_input_tokens": 9666,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "SavedHqlExportToCSV|lookupValue|IdValue",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 549,
+            "cache_read_input_tokens": 11156,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "helper.getParameter\\(option.name\\(\\)\\)|v.setValue\\(option.name\\(\\)\\)|Long id = option.lookupValue",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 715,
+            "cache_read_input_tokens": 11705,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3109/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3109_candidate_selection/candidates/candidate_14.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3109/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3109_candidate_selection/candidates/candidate_12.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 9707,
+            "cache_read_input_tokens": 12420,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3109/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3109_candidate_selection/candidates/candidate_13.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 24643,
+            "cache_read_input_tokens": 22127,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "SavedHqlExportToCSV|option.name\\(\\)|getParameter\\(option\" ",
+                  "path": "candidates/candidate_01.diff",
+                  "output_mode": "content"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "SavedHqlExportToCSV",
+                  "path": "candidates",
+                  "output_mode": "count"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1664,
+            "cache_read_input_tokens": 46770,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3109/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3109_candidate_selection/candidates/candidate_01.diff",
+                  "offset": 1368,
+                  "limit": 200
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4479,
+            "cache_read_input_tokens": 48434,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3109/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3109_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_12\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix (SavedHqlExportToCSV.java) wraps the single-selection parameter handling block in `if (value != null) { ... }`, where `value = helper.getParameter(option.name())`. Before the fix, when a single-choice parameter (e.g. SUBJECT or DEPARTMENT) was not actually supplied in the request, `value` would be null, yet the code unconditionally created an `IdValue`, called `option.lookupValue(context.getUser(), value)` with a null value, and then attempted `Long.valueOf(value)` on a null string \u2014 causing a failure (NumberFormatException/NPE) that broke CSV export whenever a report contained a single-choice parameter placeholder that wasn't passed as a request parameter.\n\nTracing the history of this exact code block across the 14 candidates:\n- candidate_01 created SavedHqlExportToCSV.java originally, but at that point the file only handled parameters via a simple positional `params` string (`for (SavedHQL.Option o: ...) { ... v.setText(i < p.length ? p[i] : \"\"); ... }`). There was no `option.name()`-keyed `helper.getParameter(...)`, no `lookupValue`, and no unguarded `Long.valueOf(value)` call \u2014 i.e., the buggy pattern did not exist yet.\n- candidate_12 is the commit that introduces the entire new parameter-resolution mechanism, including the exact problematic else-branch:\n  ```\n  String value = helper.getParameter(option.name());\n  SavedHQLInterface.IdValue v = new SavedHQLInterface.IdValue();\n  v.setValue(option.name());\n  Long id = option.lookupValue(context.getUser(), value);\n  if (id == null) {\n      try { id = Long.valueOf(value); } catch (NumberFormatException e) {}\n  }\n  v.setText(id == null ? \"\" : id.toString());\n  params.add(v);\n  ```\n  This is precisely the code the fix wraps with a null check \u2014 no guard exists here for `value == null`, so this commit is where the defect was introduced.\n- candidate_13 modifies the same file extensively (adding a separate `SavedHQLParameter`/custom-parameter feature) but does not touch or alter this specific else-branch; the buggy code is carried forward unchanged.\n- The fix diff (and candidate_14, which is byte-identical to the fix diff and therefore actually represents the fix commit itself rather than a distinct candidate) finally adds the `if (value != null)` guard.\n\nSince the buggy code path was absent before candidate_12 and first appears there exactly as described by the fix, candidate_12 is the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1583,
+            "cache_read_input_tokens": 52913,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

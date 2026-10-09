@@ -1,0 +1,22 @@
+{
+  "fix_commit": "04a68cf8a934f27cd6c59fee3267ff17751bd9db",
+  "bic": "acef72c39cbf097729924faebb8b92c825642e33",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit wrapped the OptimizeGloballyPopupExpertBatch action listener logic (which reads `getSavedFilteringAndGrouping()`) in a `new Thread(new Runnable(){...})`, making the global optimization run asynchronously. Before this change, the action executed synchronously, so nulling out `savedFilteringAndGrouping` right after triggering global optimization (in StitchingExplorerPanel) was safe. After this commit made global optimization asynchronous, the panel's code path (added earlier in 4516bc398890) that immediately sets `savedFilteringAndGrouping = null` right after calling `globalOptPopup.doClick()` now races with the async thread that still needs to read the saved value \u2014 exactly the race the fix commit addresses by deferring the discard until the async thread itself is done using it.",
+  "metrics": {
+    "case_elapsed_seconds": 29.411369,
+    "api_elapsed_seconds": 29.124282,
+    "tool_elapsed_seconds": 0.173356,
+    "other_elapsed_seconds": 0.113735,
+    "api_call_count": 5,
+    "tool_call_count": 6,
+    "prompt_tokens": 45875,
+    "completion_tokens": 2508,
+    "total_tokens": 48383,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:22:43.290237"
+}

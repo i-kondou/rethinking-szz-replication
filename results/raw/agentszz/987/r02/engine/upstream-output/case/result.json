@@ -1,0 +1,22 @@
+{
+  "fix_commit": "b76c93fc8c6cb9e9e8165f19b4512a71461082ae",
+  "bic": "4473d460b995ba11a5984694f95da032ad20f94f",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit introduced the `isMounted` AtomicBoolean and the buggy `shutdown()` logic where `isMounted.set(NativeMethods.DokanRemoveMountPoint(...))` sets isMounted to true when unmount succeeds instead of false, causing \"already unmounted\" checks to misbehave (unable to unmount / wrong isMounted state). It also introduced the direct blocking call `NativeMethods.DokanMain(...)` in `start()` which the fix wraps with a CompletableFuture/timeout. Both bugs fixed in b76c93fc trace directly back to the logic added in this commit.",
+  "metrics": {
+    "case_elapsed_seconds": 9.314252,
+    "api_elapsed_seconds": 9.178968,
+    "tool_elapsed_seconds": 0.046267,
+    "other_elapsed_seconds": 0.089027,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 20389,
+    "completion_tokens": 609,
+    "total_tokens": 20998,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:14:51.571659"
+}

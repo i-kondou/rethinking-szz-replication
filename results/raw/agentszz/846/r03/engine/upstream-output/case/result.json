@@ -1,0 +1,22 @@
+{
+  "fix_commit": "9e0625d8d0827221dea0a9f6114ad8376ccc76b1",
+  "bic": "0a3fa76b3c2b4cba3708b1f06493e6ff9f398ec3",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"time matching for the formula\", 2011-11-02) introduced the new block of code that checks `myDataChoices.size() > 0 && myDataChoices.get(0) instanceof DerivedDataChoice` without first verifying that `myDataChoices` is non-null. Subsequent commits (0x84d2ba25, 5d2429b9, etc.) reformatted/refined this same block but never added the missing null check. The fix commit (9e0625d8) adds the `if (myDataChoices != null)` guard around exactly this logic, confirming that this original commit is where the NPE-prone code was introduced.",
+  "metrics": {
+    "case_elapsed_seconds": 50.528812,
+    "api_elapsed_seconds": 32.956328,
+    "tool_elapsed_seconds": 17.449228,
+    "other_elapsed_seconds": 0.123259,
+    "api_call_count": 12,
+    "tool_call_count": 11,
+    "prompt_tokens": 114481,
+    "completion_tokens": 2414,
+    "total_tokens": 116895,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:11:00.596338"
+}

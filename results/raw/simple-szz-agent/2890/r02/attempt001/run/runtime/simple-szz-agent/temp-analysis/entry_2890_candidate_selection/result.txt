@@ -1,0 +1,27 @@
+SELECTED: candidate_125
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes `onFoodLevelChange` in ArenaListener.java so that, when the arena is running, food level changes are only cancelled if `arena.inArena(p) && lockFoodLevel` — previously it only checked `lockFoodLevel`, meaning the food-lock affected every player on the server, not just those inside the arena.
+
+Tracing this method's history through the candidates: candidate_04 (its original introduction) had `if (!arena.isRunning()) return; if (!(event.getEntity() instanceof Player) || !arena.inArena((Player) event.getEntity())) return; if (lockFoodLevel) event.setCancelled(true);` — this correctly restricted the effect to players in the arena.
+
+candidate_125 rewrites this method entirely:
+```
+if (!(event.getEntity() instanceof Player)) return;
+Player p = (Player) event.getEntity();
+if (arena.isRunning()) {
+    if (lockFoodLevel) {
+        event.setCancelled(true);
+    }
+} else {
+    // Always locked in lobby/spec
+    if (arena.inLobby(p) || arena.inSpec(p)) {
+        event.setCancelled(true);
+    }
+}
+```
+This refactor drops the `arena.inArena(p)` guard from the "arena is running" branch, so `lockFoodLevel` now cancels the food level change event for ANY player on the server whenever the arena is running — exactly the bug described in the fix commit message ("otherwise it affects everyone on the server").
+
+The fix commit's diff (`if (lockFoodLevel)` -> `if (arena.inArena(p) && lockFoodLevel)`) applies precisely to the structure introduced in candidate_125, confirming this is the bug-introducing commit. (Note: candidate_128 has an identical diff to the fix commit itself and thus is the actual fix, not the bug-introducing commit — it was likely included at the boundary of the candidate range.)

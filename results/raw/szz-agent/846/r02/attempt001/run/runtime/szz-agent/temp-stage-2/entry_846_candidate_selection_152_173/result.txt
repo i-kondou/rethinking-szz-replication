@@ -1,0 +1,29 @@
+SELECTED: candidate_09
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit wraps a block of code in DisplayControlImpl.java (in initSharable/initDisplay area) with a new null check: `if (myDataChoices != null) { ... }`. Before the fix, the code directly called `myDataChoices.size()` and `myDataChoices.get(0)` without checking whether `myDataChoices` was null, which could throw a NullPointerException when `myDataChoices` was null.
+
+Tracing the candidate diffs in chronological order, this exact block of code:
+
+    if(myDataChoices.size() > 0 && myDataChoices.get(0) instanceof DerivedDataChoice){
+        List cdcs = ((DerivedDataChoice)myDataChoices.get(0)).getChoices();
+        if(cdcs.size() > 0)  {
+            DataChoice dc = (DataChoice)cdcs.get(0);
+            DataSelection ds = dc.getDataSelection();
+            if(ds != null){
+                List dtimes = ds.getTimeDriverTimes();
+                Object ud1 = ds.getProperty(DataSelection.PROP_USESTIMEDRIVER);
+                if(dtimes != null && dtimes.size() > 0 && ud1 != null){
+                    this.usesTimeDriver = ((Boolean)ud1).booleanValue();
+                }
+            }
+        }
+    }
+
+was first added in candidate_09. It has no null-guard for `myDataChoices` at the point of introduction. Subsequent candidates (10, 15, 17-21) only reformat this same block (e.g., wrapping the condition across multiple lines, adjusting comments/whitespace) but never add a null check for `myDataChoices` itself — the vulnerable pattern is inherited unchanged all the way through candidate_21.
+
+Candidate_22 is actually the fix commit itself (the diff's before/after blob hashes `7ffcabb77..6148ad531` are identical to fix_commit_diff.txt), so it cannot be the bug-introducing commit — it is the commit that resolves the issue by adding the `myDataChoices != null` guard.
+
+Therefore, candidate_09 is the commit that first introduced the code path lacking the null check that the fix commit later addresses.

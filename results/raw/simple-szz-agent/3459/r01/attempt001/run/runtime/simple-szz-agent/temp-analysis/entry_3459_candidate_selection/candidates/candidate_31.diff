@@ -1,0 +1,483 @@
+diff --git a/console/src/main/java/org/georchestra/console/ds/OrgsDao.java b/console/src/main/java/org/georchestra/console/ds/OrgsDao.java
+index 86b1fa206..6a02b62bf 100644
+--- a/console/src/main/java/org/georchestra/console/ds/OrgsDao.java
++++ b/console/src/main/java/org/georchestra/console/ds/OrgsDao.java
+@@ -25,7 +25,6 @@ import org.apache.commons.logging.LogFactory;
+ import org.georchestra.console.dto.Account;
+ import org.georchestra.console.dto.orgs.AbstractOrg;
+ import org.georchestra.console.dto.orgs.Org;
+-import org.georchestra.console.dto.orgs.OrgDetail;
+ import org.georchestra.console.dto.orgs.OrgExt;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.ldap.NameNotFoundException;
+@@ -70,7 +69,6 @@ public class OrgsDao {
+     private String pendingOrgSearchBaseDN;
+     private OrgExtension orgExtension = new OrgExtension();
+     private OrgExtExtension orgExtExtension = new OrgExtExtension();
+-    private OrgDetailExtension orgDetailExtension = new OrgDetailExtension();
+ 
+     public abstract class Extension<T extends AbstractOrg> {
+ 
+@@ -127,9 +125,8 @@ public class OrgsDao {
+         @Override
+         public void mapPayloadToContext(Org org, DirContextOperations context) {
+             String seeAlsoValueExt = LdapNameBuilder.newInstance((org.isPending() ? pendingOrgSearchBaseDN : orgSearchBaseDN) + "," + basePath).add("o", org.getId()).build().toString();
+-            String seeAlsoValueDetail = LdapNameBuilder.newInstance((org.isPending() ? pendingOrgSearchBaseDN : orgSearchBaseDN) + "," + basePath).add("uid", org.getId()).build().toString();
+ 
+-            context.setAttributeValues("seeAlso", new String[] {seeAlsoValueExt, seeAlsoValueDetail});
++            context.setAttributeValue("seeAlso", seeAlsoValueExt);
+ 
+             // Mandatory attribute
+             context.setAttributeValue("o", org.getName());
+@@ -213,6 +210,8 @@ public class OrgsDao {
+             if(org.getAddress() != null)
+                 context.setAttributeValue("postalAddress", org.getAddress());
+             setOrDeleteField(context, "description", org.getDescription());
++            setOrDeleteField(context, "labeledURI", org.getUrl());
++            setOrDeletePhoto(context, "jpegPhoto", org.getLogo());
+         }
+ 
+         @Override
+@@ -222,7 +221,7 @@ public class OrgsDao {
+ 
+         @Override
+         String[] getObjectClass() {
+-            return new String[] {"top", "organization"};
++            return new String[] {"top", "organization", "georchestraOrg"};
+         }
+ 
+         @Override
+@@ -234,6 +233,8 @@ public class OrgsDao {
+                     orgExt.setOrgType(asString(attrs.get("businessCategory")));
+                     orgExt.setAddress(asString(attrs.get("postalAddress")));
+                     orgExt.setDescription(asStringStream(attrs,"description").collect(joining(",")));
++                    orgExt.setUrl(asStringStream(attrs, "labeledURI").collect(joining(",")));
++                    orgExt.setLogo(asPhoto(attrs.get("jpegPhoto")));
+                     orgExt.setPending(pending);
+                     return orgExt;
+                 }
+@@ -241,41 +242,6 @@ public class OrgsDao {
+         }
+     }
+ 
+-    class OrgDetailExtension extends Extension<OrgDetail> {
+-
+-        @Override
+-        public void mapPayloadToContext(OrgDetail org, DirContextOperations context) {
+-            context.setAttributeValue("sn", org.getId());
+-            context.setAttributeValue("cn", org.getId());
+-            setOrDeleteField(context, "labeledURI", org.getUrl());
+-            setOrDeletePhoto(context, "jpegPhoto", org.getLogo());
+-        }
+-
+-        @Override
+-        String getLdapKeyField() {
+-            return "uid";
+-        }
+-
+-        @Override
+-        String[] getObjectClass() {
+-            return new String[] { "top", "person", "organizationalPerson", "inetOrgPerson"};
+-        }
+-
+-        @Override
+-        AttributesMapper<OrgDetail> getAttributeMapper(boolean pending) {
+-            return new AttributesMapper() {
+-                public OrgDetail mapFromAttributes(Attributes attrs) throws NamingException {
+-                    OrgDetail org = new OrgDetail();
+-                    org.setId(asString(attrs.get("uid")));
+-                    org.setUrl(asStringStream(attrs, "labeledURI").collect(joining(",")));
+-                    org.setLogo(asPhoto(attrs.get("jpegPhoto")));
+-                    org.setPending(pending);
+-                    return org;
+-                }
+-            };
+-        }
+-    }
+-
+     public Extension<Org> getExtension(Org org) {
+         return orgExtension;
+     }
+@@ -284,10 +250,6 @@ public class OrgsDao {
+         return orgExtExtension;
+     }
+ 
+-    public Extension<OrgDetail> getExtension(OrgDetail orgDetail) {
+-        return orgDetailExtension;
+-    }
+-
+     public void setLdapTemplate(LdapTemplate ldapTemplate) {
+         this.ldapTemplate = ldapTemplate;
+     }
+@@ -378,12 +340,6 @@ public class OrgsDao {
+         return getExtension(org).findById(org);
+     }
+ 
+-    public OrgDetail findDetailById(String cn) {
+-        OrgDetail org = new OrgDetail();
+-        org.setId(cn);
+-        return getExtension(org).findById(org);
+-    }
+-
+     /**
+      * @return Org instance corresponding to organization of specified user or null if no organization is linked to this user
+      * @throws DataServiceException if more than one organization is linked to specified user
+diff --git a/console/src/main/java/org/georchestra/console/dto/orgs/Org.java b/console/src/main/java/org/georchestra/console/dto/orgs/Org.java
+index 44917c42a..04242c57f 100644
+--- a/console/src/main/java/org/georchestra/console/dto/orgs/Org.java
++++ b/console/src/main/java/org/georchestra/console/dto/orgs/Org.java
+@@ -50,9 +50,6 @@ public class Org extends AbstractOrg implements Comparable<Org> {
+     @JsonIgnore
+     private OrgExt orgExt;
+ 
+-    @JsonIgnore
+-    private OrgDetail orgDetail;
+-
+     @JsonProperty(JSON_ID)
+     public String getId() {
+         return id;
+@@ -102,10 +99,6 @@ public class Org extends AbstractOrg implements Comparable<Org> {
+         this.orgExt = orgExt;
+     }
+ 
+-    public void setOrgDetail(OrgDetail orgDetail) {
+-        this.orgDetail = orgDetail;
+-    }
+-
+     @JsonGetter(OrgExt.JSON_ORG_TYPE)
+     public String getOrgType(){
+         if(this.orgExt == null)
+@@ -150,17 +143,17 @@ public class Org extends AbstractOrg implements Comparable<Org> {
+ 
+     @JsonProperty(JSON_URL)
+     public String getUrl() {
+-        if(this.orgDetail == null)
++        if(this.orgExt == null)
+             return null;
+         else
+-            return orgDetail.getUrl();
++            return orgExt.getUrl();
+     }
+ 
+     @JsonProperty(JSON_LOGO)
+     public String getLogo() {
+-        if(this.orgDetail == null)
++        if(this.orgExt == null)
+             return null;
+         else
+-            return orgDetail.getLogo();
++            return orgExt.getLogo();
+     }
+ }
+\ No newline at end of file
+diff --git a/console/src/main/java/org/georchestra/console/dto/orgs/OrgDetail.java b/console/src/main/java/org/georchestra/console/dto/orgs/OrgDetail.java
+deleted file mode 100644
+index fd0b80092..000000000
+--- a/console/src/main/java/org/georchestra/console/dto/orgs/OrgDetail.java
++++ /dev/null
+@@ -1,40 +0,0 @@
+-package org.georchestra.console.dto.orgs;
+-
+-import org.georchestra.console.ds.OrgsDao;
+-
+-public class OrgDetail extends AbstractOrg {
+-
+-    private String url;
+-    private String id;
+-    private String logo;
+-
+-    @Override
+-    public OrgsDao.Extension<OrgDetail> getExtension(OrgsDao orgDao) {
+-        return orgDao.getExtension(this);
+-    }
+-
+-    public String getId() {
+-        return id;
+-    }
+-
+-    public void setId(String id) {
+-        this.id = id;
+-    }
+-
+-    public void setUrl(String url) {
+-        this.url = url;
+-    }
+-
+-    public String getUrl() {
+-        return url;
+-    }
+-
+-
+-    public String getLogo() {
+-        return logo;
+-    }
+-
+-    public void setLogo(String logo) {
+-        this.logo = logo;
+-    }
+-}
+diff --git a/console/src/main/java/org/georchestra/console/dto/orgs/OrgExt.java b/console/src/main/java/org/georchestra/console/dto/orgs/OrgExt.java
+index e89bd1054..479972764 100644
+--- a/console/src/main/java/org/georchestra/console/dto/orgs/OrgExt.java
++++ b/console/src/main/java/org/georchestra/console/dto/orgs/OrgExt.java
+@@ -31,6 +31,8 @@ public class OrgExt extends AbstractOrg {
+     private String orgType;
+     private String address;
+     private String description;
++    private String url;
++    private String logo;
+ 
+     public String getId() {
+         return id;
+@@ -64,6 +66,22 @@ public class OrgExt extends AbstractOrg {
+         this.description = description;
+     }
+ 
++    public String getUrl() {
++        return url;
++    }
++
++    public void setUrl(String url) {
++        this.url = url;
++    }
++
++    public String getLogo() {
++        return logo;
++    }
++
++    public void setLogo(String logo) {
++        this.logo = logo;
++    }
++
+     @Override
+     public String toString() {
+         return "OrgExt{" +
+diff --git a/console/src/main/java/org/georchestra/console/ws/backoffice/orgs/OrgsController.java b/console/src/main/java/org/georchestra/console/ws/backoffice/orgs/OrgsController.java
+index ca5bdf1da..f18844fd3 100644
+--- a/console/src/main/java/org/georchestra/console/ws/backoffice/orgs/OrgsController.java
++++ b/console/src/main/java/org/georchestra/console/ws/backoffice/orgs/OrgsController.java
+@@ -24,7 +24,6 @@ import org.georchestra.console.dao.AdvancedDelegationDao;
+ import org.georchestra.console.dao.DelegationDao;
+ import org.georchestra.console.ds.OrgsDao;
+ import org.georchestra.console.dto.orgs.Org;
+-import org.georchestra.console.dto.orgs.OrgDetail;
+ import org.georchestra.console.dto.orgs.OrgExt;
+ import org.georchestra.console.model.DelegationEntry;
+ import org.georchestra.console.ws.backoffice.utils.ResponseUtil;
+@@ -163,9 +162,7 @@ public class OrgsController {
+ 
+         Org org = this.orgDao.findByCommonName(cn);
+         OrgExt orgExt = this.orgDao.findExtById(cn);
+-        OrgDetail orgDetail = this.orgDao.findDetailById(cn);
+         org.setOrgExt(orgExt);
+-        org.setOrgDetail(orgDetail);
+         return org;
+     }
+ 
+@@ -229,14 +226,11 @@ public class OrgsController {
+         // Retrieve current orgs state from ldap
+         Org org = this.orgDao.findByCommonName(commonName);
+         OrgExt orgExt = this.orgDao.findExtById(commonName);
+-        OrgDetail orgDetail = this.orgDao.findDetailById(commonName);
+ 
+         // Update org and orgExt fields
+         this.updateFromRequest(org, json);
+         orgExt.setId(org.getId());
+-        orgDetail.setId(org.getId());
+         this.updateFromRequest(orgExt, json);
+-        this.updateFromRequest(orgDetail, json);
+         // Persist changes to LDAP server
+         this.orgDao.update(org);
+ 
+@@ -248,12 +242,8 @@ public class OrgsController {
+             }
+         }
+ 
+-
+-
+         this.orgDao.update(orgExt);
+-        this.orgDao.update(orgDetail);
+         org.setOrgExt(orgExt);
+-        org.setOrgDetail(orgDetail);
+         return org;
+     }
+ 
+@@ -296,18 +286,11 @@ public class OrgsController {
+         orgExt.setId(org.getId());
+         this.updateFromRequest(orgExt, json);
+ 
+-        OrgDetail orgDetail = new OrgDetail();
+-        orgDetail.setId(org.getId());
+-        this.updateFromRequest(orgDetail, json);
+-
+         // Persist changes to LDAP server
+         this.orgDao.insert(org);
+         this.orgDao.insert(orgExt);
+-        this.orgDao.insert(orgDetail);
+ 
+         org.setOrgExt(orgExt);
+-        org.setOrgDetail(orgDetail);
+-
+         return org;
+     }
+ 
+@@ -328,7 +311,6 @@ public class OrgsController {
+         // delete entities in LDAP server
+         this.orgDao.delete(this.orgDao.findExtById(commonName));
+         this.orgDao.delete(this.orgDao.findByCommonName(commonName));
+-        this.orgDao.delete(this.orgDao.findDetailById(commonName));
+         ResponseUtil.writeSuccess(response);
+     }
+ 
+@@ -492,13 +474,6 @@ public class OrgsController {
+         org.setPending(json.optBoolean(Org.JSON_PENDING));
+     }
+ 
+-    protected void updateFromRequest(OrgDetail org, JSONObject json) {
+-        org.setUrl(json.optString(Org.JSON_URL));
+-        org.setPending(json.optBoolean(Org.JSON_PENDING));
+-        org.setUrl(json.optString(Org.JSON_URL));
+-        org.setLogo(json.optString(Org.JSON_LOGO));
+-    }
+-
+     /**
+      * Update orgExt instance based on field found in json object.
+      *
+@@ -513,6 +488,8 @@ public class OrgsController {
+         orgExt.setAddress(json.optString(OrgExt.JSON_ADDRESS));
+         orgExt.setPending(json.optBoolean(Org.JSON_PENDING));
+         orgExt.setDescription(json.optString(Org.JSON_DESCRIPTION));
++        orgExt.setUrl(json.optString(Org.JSON_URL));
++        orgExt.setLogo(json.optString(Org.JSON_LOGO));
+     }
+ 
+     /**
+diff --git a/console/src/main/java/org/georchestra/console/ws/newaccount/NewAccountFormController.java b/console/src/main/java/org/georchestra/console/ws/newaccount/NewAccountFormController.java
+index 74af46369..1e0642af6 100644
+--- a/console/src/main/java/org/georchestra/console/ws/newaccount/NewAccountFormController.java
++++ b/console/src/main/java/org/georchestra/console/ws/newaccount/NewAccountFormController.java
+@@ -34,7 +34,6 @@ import org.georchestra.console.ds.RoleDao;
+ import org.georchestra.console.dto.Account;
+ import org.georchestra.console.dto.AccountFactory;
+ import org.georchestra.console.dto.orgs.Org;
+-import org.georchestra.console.dto.orgs.OrgDetail;
+ import org.georchestra.console.dto.orgs.OrgExt;
+ import org.georchestra.console.dto.Role;
+ import org.georchestra.console.mailservice.EmailFactory;
+@@ -226,13 +225,11 @@ public final class NewAccountFormController {
+ 			try {
+ 				Org org = new Org();
+ 				OrgExt orgExt = new OrgExt();
+-				OrgDetail orgDetail = new OrgDetail();
+ 
+ 				// Generate textual identifier based on name
+ 				String orgId = orgDao.generateId(formBean.getOrgShortName());
+ 				org.setId(orgId);
+ 				orgExt.setId(orgId);
+-				orgDetail.setId(orgId);
+ 
+ 				// Store name, short name, orgType and address
+ 				org.setName(formBean.getOrgName());
+@@ -240,8 +237,8 @@ public final class NewAccountFormController {
+ 				orgExt.setAddress(formBean.getOrgAddress());
+ 				orgExt.setOrgType(formBean.getOrgType());
+ 				orgExt.setDescription(formBean.getOrgDescription());
+-				orgDetail.setUrl(formBean.getOrgUrl());
+-				orgDetail.setLogo(formBean.getOrgLogo());
++				orgExt.setUrl(formBean.getOrgUrl());
++				orgExt.setLogo(formBean.getOrgLogo());
+ 				// Parse and store cities
+ 				orgCities = orgCities.trim();
+ 				if (orgCities.length() > 0)
+@@ -249,11 +246,9 @@ public final class NewAccountFormController {
+ 
+ 				org.setPending(this.moderatedSignup);
+ 				orgExt.setPending(this.moderatedSignup);
+-				orgDetail.setPending(this.moderatedSignup);
+ 				// Persist changes to LDAP server
+ 				orgDao.insert(org);
+ 				orgDao.insert(orgExt);
+-				orgDao.insert(orgDetail);
+ 
+ 				// Set real org identifier in form
+ 				formBean.setOrg(orgId);
+diff --git a/console/src/test/java/org/georchestra/console/ws/backoffice/orgs/OrgsControllerTest.java b/console/src/test/java/org/georchestra/console/ws/backoffice/orgs/OrgsControllerTest.java
+index 92e7b893f..ea00f2313 100644
+--- a/console/src/test/java/org/georchestra/console/ws/backoffice/orgs/OrgsControllerTest.java
++++ b/console/src/test/java/org/georchestra/console/ws/backoffice/orgs/OrgsControllerTest.java
+@@ -4,7 +4,6 @@ import org.georchestra.console.dao.AdvancedDelegationDao;
+ import org.georchestra.console.dao.DelegationDao;
+ import org.georchestra.console.ds.OrgsDao;
+ import org.georchestra.console.dto.orgs.Org;
+-import org.georchestra.console.dto.orgs.OrgDetail;
+ import org.georchestra.console.dto.orgs.OrgExt;
+ import org.georchestra.console.model.DelegationEntry;
+ import org.georchestra.console.ws.utils.Validation;
+@@ -44,7 +43,6 @@ public class OrgsControllerTest {
+     private OrgExt mockOrgExt;
+     private OrgsDao mockOrgsDao;
+     private DelegationDao delegationDaoMock;
+-    private OrgDetail mockOrgDetail;
+ 
+     @Before
+     public void grantRight()
+@@ -120,7 +118,6 @@ public class OrgsControllerTest {
+         delegationDaoMock = mock(DelegationDao.class);
+         mockOrg = mock(Org.class);
+         mockOrgExt = mock(OrgExt.class);
+-        mockOrgDetail = mock(OrgDetail.class);
+         AdvancedDelegationDao advancedDelegationDaoMock = mock(AdvancedDelegationDao.class);
+         Validation mockValidation = mock(Validation.class);
+         when(mockValidation.validateOrgField(anyString(), any(JSONObject.class))).thenReturn(true);
+@@ -131,7 +128,6 @@ public class OrgsControllerTest {
+         toTest.validation = mockValidation;
+         when(mockOrgsDao.findByCommonName("csc")).thenReturn(mockOrg);
+         when(mockOrgsDao.findExtById("csc")).thenReturn(mockOrgExt);
+-        when(mockOrgsDao.findDetailById("csc")).thenReturn(mockOrgDetail);
+         mockEntry1 = mock(DelegationEntry.class);
+         mockEntry2 = mock(DelegationEntry.class);
+         Mockito.when(advancedDelegationDaoMock.findByOrg("csc")).thenReturn(Arrays.asList(new DelegationEntry[]{mockEntry1, mockEntry2}));
+diff --git a/console/src/test/java/org/georchestra/console/ws/newaccount/NewAccountFormControllerTest.java b/console/src/test/java/org/georchestra/console/ws/newaccount/NewAccountFormControllerTest.java
+index cdf943168..169e2796a 100644
+--- a/console/src/test/java/org/georchestra/console/ws/newaccount/NewAccountFormControllerTest.java
++++ b/console/src/test/java/org/georchestra/console/ws/newaccount/NewAccountFormControllerTest.java
+@@ -15,9 +15,7 @@ import org.georchestra.console.dto.Account;
+ import org.georchestra.console.dto.AccountFactory;
+ import org.georchestra.console.dto.orgs.AbstractOrg;
+ import org.georchestra.console.dto.orgs.Org;
+-import org.georchestra.console.dto.orgs.OrgDetail;
+ import org.georchestra.console.dto.orgs.OrgExt;
+-import org.georchestra.console.dto.ReferenceAware;
+ import org.georchestra.console.mailservice.EmailFactory;
+ import org.georchestra.console.ws.utils.PasswordUtils;
+ import org.georchestra.console.ws.utils.Validation;
+@@ -168,13 +166,11 @@ public class NewAccountFormControllerTest {
+ 
+         assertTrue(ret.equals("welcomeNewUser"));
+         ArgumentCaptor<AbstractOrg> orgCaptor = ArgumentCaptor.forClass(AbstractOrg.class);
+-        verify(mockOrgDao, times(3)).insert(orgCaptor.capture());
++        verify(mockOrgDao, times(2)).insert(orgCaptor.capture());
+         assertTrue(orgCaptor.getAllValues().get(0).isPending());
+         assertTrue(orgCaptor.getAllValues().get(0).getClass().equals(Org.class));
+         assertTrue(orgCaptor.getAllValues().get(1).isPending());
+         assertTrue(orgCaptor.getAllValues().get(1).getClass().equals(OrgExt.class));
+-        assertTrue(orgCaptor.getAllValues().get(2).isPending());
+-        assertTrue(orgCaptor.getAllValues().get(2).getClass().equals(OrgDetail.class));
+ 
+     }
+ 
+@@ -188,13 +184,11 @@ public class NewAccountFormControllerTest {
+ 
+         assertTrue(ret.equals("welcomeNewUser"));
+         ArgumentCaptor<AbstractOrg> orgCaptor = ArgumentCaptor.forClass(AbstractOrg.class);
+-        verify(mockOrgDao, times(3)).insert(orgCaptor.capture());
++        verify(mockOrgDao, times(2)).insert(orgCaptor.capture());
+         assertFalse(orgCaptor.getAllValues().get(0).isPending());
+         assertTrue(orgCaptor.getAllValues().get(0).getClass().equals(Org.class));
+         assertFalse(orgCaptor.getAllValues().get(1).isPending());
+         assertTrue(orgCaptor.getAllValues().get(1).getClass().equals(OrgExt.class));
+-        assertFalse(orgCaptor.getAllValues().get(2).isPending());
+-        assertTrue(orgCaptor.getAllValues().get(2).getClass().equals(OrgDetail.class));
+     }
+ 
+     /**

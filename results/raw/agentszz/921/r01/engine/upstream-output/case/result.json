@@ -1,0 +1,22 @@
+{
+  "fix_commit": "4ca7fd19017191f04546c2f90ab8b1d29e44459d",
+  "bic": "8359c9faaa074a4bbcdc677971a42ae17133356a",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit introduced the Biweekly library-based iCalendar export functionality in EventEmail.java, EventsExportEventsToICal.java, CalendarServlet.java, and CalendarExport.java using `Biweekly.write(ical).go()` calls that did not set a default timezone on the writer. The fix commit modifies exactly these same call sites, replacing the simple `Biweekly.write(ical).go()` calls with an `ICalWriter` that explicitly sets `TimeZone.getDefault()` as the default timezone to fix daylight savings/local timezone export issues. The BIC established this exact export logic across all four files, and the bug (missing timezone handling causing incorrect DST behavior) existed from that point forward.",
+  "metrics": {
+    "case_elapsed_seconds": 11.053271,
+    "api_elapsed_seconds": 10.413203,
+    "tool_elapsed_seconds": 0.540868,
+    "other_elapsed_seconds": 0.099204,
+    "api_call_count": 3,
+    "tool_call_count": 3,
+    "prompt_tokens": 21645,
+    "completion_tokens": 880,
+    "total_tokens": 22525,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:12:23.361860"
+}

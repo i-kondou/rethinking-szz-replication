@@ -1,0 +1,10 @@
+SELECTED: candidate_12
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes InverseBuildChooser.java from `EnvVars env = context.getBuild().getEnvironment();` to `EnvVars env = context.getEnvironment();`, fixing an NPE that occurs because context.getBuild() returns null when polling. The fix commit message explicitly states this same problem was previously fixed for DefaultBuildChooser, implying InverseBuildChooser was made to follow the same (buggy) pattern.
+
+Candidate_12's diff shows exactly this: it adds environment-variable support for BranchSpec matching across the codebase (BranchSpec.java, DefaultBuildChooser.java, GitUtils.java, and InverseBuildChooser.java). In InverseBuildChooser.java, it introduces the line `EnvVars env = context.getBuild().getEnvironment();` for the very first time (previously the getCandidateRevisions method did not use any BuildChooserContext-derived EnvVars at all). This same problematic call pattern was also added to DefaultBuildChooser.java in the same commit.
+
+This is the exact line targeted by the fix diff, and no other candidate introduces or touches this line — candidate_11 (chronologically preceding) does not contain this code, and none of the other candidates modify InverseBuildChooser.java's getCandidateRevisions method in this way. Therefore candidate_12 is the commit that introduced the bug, by copying the `context.getBuild().getEnvironment()` pattern into InverseBuildChooser without accounting for the null build reference during polling.

@@ -1,0 +1,22 @@
+{
+  "fix_commit": "45bddf5b5c2d9df754f984fb1cf9bf6b6e254441",
+  "bic": "d6e4936fa54dc3577296dbadaeb556178dcad2c3",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"Introduce allowed keys table per API client\") bumped DATABASE_VERSION from 7 to 8 and added the switch-case migration block for the new api_allowed_keys table. However, it introduced a superfluous \"case 7: // consolidate\" case that falls through into \"case 8:\" without ever being tied to an actual database version bump \u2014 effectively adding an extra, non-functional case label into the fall-through chain. This caused every subsequent case number in the switch statement to be off-by-one relative to the actual DATABASE_VERSION progression, which is precisely the \"ridiculous database migration bug\" that commit 45bddf5b5c2d fixes by removing the stray \"case 7: // consolidate\" line and renumbering all following cases down by one.",
+  "metrics": {
+    "case_elapsed_seconds": 77.64917,
+    "api_elapsed_seconds": 77.166409,
+    "tool_elapsed_seconds": 0.354923,
+    "other_elapsed_seconds": 0.127841,
+    "api_call_count": 9,
+    "tool_call_count": 8,
+    "prompt_tokens": 92360,
+    "completion_tokens": 4608,
+    "total_tokens": 96968,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T17:33:21.017850"
+}

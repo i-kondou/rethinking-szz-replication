@@ -1,0 +1,12 @@
+SELECTED: candidate_56
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix (fix_commit_diff.txt) changes EventEmail.java, EventsExportEventsToICal.java, CalendarServlet.java, and CalendarExport.java to replace `Biweekly.write(ical).go(...)` calls with an explicit `ICalWriter` that has `writer.getTimezoneInfo().setDefaultTimeZone(TimeZone.getDefault())` set before writing. This confirms the bug was that the Biweekly library's default write path did not use the local/system timezone when serializing iCalendar date-time values, causing exported dates to be wrong around daylight saving time transitions.
+
+candidate_56 is the commit that introduced the `Biweekly.write(ical).go(...)` calls in exactly these same four files (EventEmail.java, EventsExportEventsToICal.java, CalendarServlet.java, CalendarExport.java). Prior to this commit, these files used hand-written `PrintWriter`-based iCal serialization (manually printing "BEGIN:VCALENDAR", "DTSTART:", etc., with explicit UTC-based SimpleDateFormat formatters). candidate_56 replaced that manual approach with the Biweekly library's `ICalendar` model plus `Biweekly.write(ical).go()`, adding `import biweekly.Biweekly;` and calling `.go()`/`.go(writer)` without ever configuring a timezone on the writer. This is precisely the problematic pattern the fix commit removes (by switching to `ICalWriter` with an explicit `setDefaultTimeZone`).
+
+No other candidate introduces this `Biweekly.write(ical).go(...)` pattern from scratch in these files; later candidates (59, 63, 65) only modify context around the already-existing Biweekly.write calls (e.g., changing `ICalendarStatus` handling, dates, or class structure) without touching the fundamental lack-of-timezone issue. candidate_66 is actually the fix commit itself (its diff is identical to fix_commit_diff.txt), so it cannot be the bug-introducing commit.
+
+Therefore candidate_56 is the first commit that introduced the timezone-unaware Biweekly-based iCal export code, making it the bug-introducing commit.

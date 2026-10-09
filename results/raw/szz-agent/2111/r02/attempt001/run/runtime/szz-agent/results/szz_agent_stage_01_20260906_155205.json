@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "timestamp": "20260906_155205",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2111/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "2111",
+      "fix_commit_hash": "9cc0734c99c61cf651943edc49b2816edaf565c1",
+      "bug_commit_hash": [
+        "4b47461f03a607b9ef517beb2a1666ffae43a2a7"
+      ],
+      "szz_candidates": [
+        "4b47461f03a607b9ef517beb2a1666ffae43a2a7",
+        "bac96047f5752647fb0ebf01bacbcfb36f715e06",
+        "8ecd255f981e5d806173cf86f6fac9c4c7c25167",
+        "6afde8f45aaa4f6a477066f3bc85fa8f89718a1d",
+        "89e6ec36bbf7de552d6193420663413c1b28c15f"
+      ],
+      "szz_num_candidates": 5,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "4b47461f03a607b9ef517beb2a1666ffae43a2a7"
+      ],
+      "llm_selected_commit": "4b47461f03a607b9ef517beb2a1666ffae43a2a7",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit's message states: \"The Transactions were being looked up without the readLock and some of the controls for Read and Write lock were broken.\" Concretely, the fix moves `final JournalTransaction tx = getTransactionInfo(txID);` (and the equivalent lookups in appendUpdateRecordTransactional, appendDeleteRecordTransactional, appendPrepareRecord, appendCommitRecord, appendRollbackRecord) from being executed in the caller's thread, outside of `journalLock.readLock()`, to being executed i",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/2111",
+      "bug_fixing_commit": "9cc0734c99c61cf651943edc49b2816edaf565c1",
+      "bug_inducing_commit": [
+        "4b47461f03a607b9ef517beb2a1666ffae43a2a7"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "clebertsuconic/activemq-artemis"
+    }
+  ]
+}

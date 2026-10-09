@@ -1,0 +1,39 @@
+SELECTED: candidate_15
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single line to MainActivityFragment.onCreateView():
+
+    gridview = (GridView) mainFragmentView.findViewById(R.id.gridView);
++   gridview.setAdapter(imageAdapter);
+
+    gridview.setOnItemClickListener(...);
+
+This means immediately before the fix, the code found the GridView but never
+called setAdapter() on it synchronously in onCreateView(). Tracing the history
+of this exact code region:
+
+- Candidates 03/04 introduce `GridView gridview = ... findViewById(R.id.gridView); gridview.setAdapter(new ImageAdapter(...));` — setAdapter is present.
+- Candidates 06-14 keep `gridview.setAdapter(imageAdapter);` immediately after the findViewById call (imageAdapter later becomes a field populated by an async Volley network request).
+- Candidate_15 is the commit that removes this line:
+  `-        gridview.setAdapter(imageAdapter);`
+  and instead moves the only remaining `gridview.setAdapter(imageAdapter);` call
+  into an asynchronous `getActivity().runOnUiThread(...)` block inside the
+  `getMovies()` JSON response callback. This means the adapter is only ever
+  attached to the GridView once the network response for movies arrives.
+  However, `onCreateView()` calls `updateUI()`, which calls `resetImageAdapter()`
+  (not `getMovies()`) whenever `movies.size() != 0` (e.g., after a screen
+  rotation/config change, when the static `movies` list already has cached
+  data). In that code path, `getMovies()` is never invoked, so the
+  `runOnUiThread` callback that sets the adapter never executes, and the
+  GridView is left without an adapter — reproducing exactly the bug the fix
+  addresses (GridView has no adapter and shows nothing).
+- Candidates 16 and 17 are minor cleanups/comment changes on top of this same
+  file state; they do not restore the synchronous `setAdapter` call.
+
+The fix commit restores the missing synchronous `gridview.setAdapter(imageAdapter);`
+call right after the GridView is found via findViewById, guaranteeing the adapter
+is always attached regardless of whether the movies list was already populated.
+This directly reverts the regression introduced in candidate_15, making it the
+bug-introducing commit.

@@ -1,0 +1,18 @@
+SELECTED: candidate_51
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single `break;` statement inside CoverManager.java's cover-download loop, right after the log line "Cover downloaded for ... from ... size=...". This break stops the loop from continuing to iterate over remaining cover URLs once a cover has already been successfully downloaded.
+
+Looking at candidate_51.diff, it modifies the exact same block of code (same surrounding log statement "Cover downloaded for " + coverInfo.getAlbum() + " from " + url + ", size=" + coverBytes.length) and removes the line `return coverBytes;` that previously existed right after that log statement:
+
+    d(CoverManager.class.getSimpleName(),
+            "Cover downloaded for " + coverInfo.getAlbum() + " from " + url
+                    + ", size=" + coverBytes.length);
+-                    return coverBytes;
+    }
+
+Before candidate_51, the method returned immediately with the successfully downloaded bytes as soon as a cover was found for a given URL, which correctly terminated the loop. Candidate_51 removed that early `return`, apparently as part of a larger refactor that also changed related methods (e.g. reworking `download()`/`executeGetRequest()` to use a single exit-point pattern with a `buffer`/`result` variable and a final `return` after the try/finally block, visible in the same diff for `AbstractWebCover.executeGetRequest` and `CoverManager.download`). While that refactor pattern was applied correctly to those other methods (they still set the result variable and fall through to a single final return outside the loop), the loop in the "get cover bytes" method was left without a corresponding `break;`, so after removing the early `return`, execution simply continues to the next iteration of the loop and keeps re-attempting to fetch/overwrite the cover from subsequent URLs/retrievers even after a valid cover was already found — exactly the "local cover art" bug that the fix commit later corrects by re-inserting loop termination via `break;` in that same spot.
+
+No earlier candidate touches this exact loop/early-return logic in the cover-bytes-fetching method (grep for "Cover downloaded for" only matches candidates 4, 12, 36, 51, and 52; of these, only candidate_51 removes the loop-terminating return without replacing it with a break, and it is the version of the code that the final fix diff applies cleanly against, since the line numbers and surrounding context in fix_commit_diff.txt match the post-candidate_51 state of the file).

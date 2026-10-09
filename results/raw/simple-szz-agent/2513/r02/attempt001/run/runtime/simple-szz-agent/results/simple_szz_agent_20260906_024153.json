@@ -1,0 +1,332 @@
+{
+  "metadata": {
+    "timestamp": "20260906_024153",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2513/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 123.598,
+      "max": 123.598,
+      "mean": 123.598,
+      "median": 123.598,
+      "total": 123.598,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 123.188,
+      "max": 123.188,
+      "mean": 123.188,
+      "median": 123.188,
+      "total": 123.188,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 13,
+      "max": 13,
+      "mean": 13,
+      "median": 13,
+      "total": 13,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 16,
+      "max": 16,
+      "mean": 16,
+      "median": 16,
+      "total": 16,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 12120,
+      "max": 12120,
+      "mean": 12120,
+      "median": 12120,
+      "total": 12120,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 78831,
+      "max": 78831,
+      "mean": 78831,
+      "median": 78831,
+      "total": 78831,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 214582,
+      "max": 214582,
+      "mean": 214582,
+      "median": 214582,
+      "total": 214582,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.7192086,
+      "max": 0.7192086,
+      "mean": 0.7192086,
+      "median": 0.7192086,
+      "total": 0.7192086,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 8,
+      "Glob": 1,
+      "Grep": 2,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 4,
+      "max": 4,
+      "mean": 4,
+      "median": 4,
+      "total": 4,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 4,
+      "max": 4,
+      "mean": 4,
+      "median": 4,
+      "total": 4,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2513",
+      "fix_commit_hash": "c07165245a6c08faab57bbd08f770b4517bcb817",
+      "ground_truth_bics": [
+        "adb2fd7420b3bf01e696be87f4791759bfb6de53"
+      ],
+      "predicted_bics": [
+        "7b1204417230cbba54a9f31d79ac70662607c774"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2513",
+      "fix_commit": "c07165245a6c08faab57bbd08f770b4517bcb817",
+      "ground_truth_bics": [
+        "adb2fd7420b3bf01e696be87f4791759bfb6de53"
+      ],
+      "total_candidates": 9,
+      "gt_in_candidates": true,
+      "selected_commit": "7b1204417230cbba54a9f31d79ac70662607c774",
+      "selected_index": 7,
+      "confidence": "HIGH",
+      "explanation": "The fix commit modifies `MinimalImportScanner.shouldTypeBeImported()` so that the `qualifiedNameTokens` collection (used to detect a name-conflict that forces a static import) is changed from a `HashSet<String>` to a `LinkedList<String>`, and the membership check is restricted to only the last token (`qualifiedNameTokens.getLast()`, i.e. the outermost package name) instead of iterating over every token (simple field/method name, declaring-type name, and every enclosing package name). It also add",
+      "is_correct": false,
+      "num_files_touched_by_fix": 4,
+      "num_source_files_touched_by_fix": 4,
+      "files_analyzed": [
+        "src/main/java/spoon/reflect/visitor/MinimalImportScanner.java",
+        "src/test/java/spoon/test/variable/AccessFullyQualifiedFieldTest.java",
+        "src/test/java/spoon/test/variable/testclasses/digest/DigestUtil.java",
+        "src/test/java/spoon/test/variable/testclasses/digest/MessageDigest.java"
+      ],
+      "call_stats": {
+        "duration_s": 123.598,
+        "duration_api_s": 123.188,
+        "num_turns": 13,
+        "input_tokens": 16,
+        "output_tokens": 12120,
+        "cache_creation_input_tokens": 78831,
+        "cache_read_input_tokens": 214582,
+        "total_cost_usd": 0.7192086,
+        "total_tool_calls": 12,
+        "tool_calls_by_name": {
+          "Read": 8,
+          "Glob": 1,
+          "Grep": 2,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2513/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2513_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1415,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2513/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2513_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2513/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2513_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 3794,
+            "cache_read_input_tokens": 9697,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 16,
+            "cache_creation_input_tokens": 251,
+            "cache_read_input_tokens": 13491,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "MinimalImportScanner",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 16,
+            "cache_creation_input_tokens": 228,
+            "cache_read_input_tokens": 13742,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2513/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2513_candidate_selection/candidates/candidate_04.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2513/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2513_candidate_selection/candidates/candidate_06.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2513/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2513_candidate_selection/candidates/candidate_07.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2513/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2513_candidate_selection/candidates/candidate_08.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2513/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2513_candidate_selection/candidates/candidate_09.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 57725,
+            "cache_read_input_tokens": 13970,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "namedElements|parentClass|targetType",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2513/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2513_candidate_selection/candidates/candidate_04.diff",
+                  "output_mode": "content"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 8612,
+            "cache_read_input_tokens": 71695,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2513/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2513_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_08\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit modifies `MinimalImportScanner.shouldTypeBeImported()` so that the `qualifiedNameTokens` collection (used to detect a name-conflict that forces a static import) is changed from a `HashSet<String>` to a `LinkedList<String>`, and the membership check is restricted to only the last token (`qualifiedNameTokens.getLast()`, i.e. the outermost package name) instead of iterating over every token (simple field/method name, declaring-type name, and every enclosing package name). It also adds a guard to stop climbing package parents once the top-level package is reached. The accompanying new test (`testPrivateStaticImportShouldNotBeImportedInSameClass` / `DigestUtil`) shows the bug: a private static field used inside its own declaring class was being unnecessarily/incorrectly turned into a static import because the token-matching logic was too broad.\n\nTracing the history of this logic across the candidates:\n- candidate_04 introduced `MinimalImportScanner` with an unordered `Set<String> qualifiedNameTokens`/`namedElements` and no restriction tying named elements to the current target type.\n- candidate_06 refactored the scanner (added executable-reference support, addClassImport/addFieldImport/addMethodImport) and, importantly, added a scoping check so that a named element's simple name was only added to `namedElements` if `parentClass.getReference().equals(targetType)` \u2014 i.e., only fields/methods belonging to the class currently being printed could cause a name clash.\n- candidate_07 added an unrelated self-reference guard (`if (parentType != parent)`) and printer changes.\n- candidate_08 rewrote this section: it removed the `targetType`-scoping check entirely and unconditionally added any `CtField`/`CtMethod` simple name to the new `fieldAndMethodsNames` set (and added `localVariablesOfBlock` via the new `AccessibleVariablesFinder`), then checked `fieldAndMethodsNames.contains(token) || localVariablesOfBlock.contains(token)` against every token in the unordered `qualifiedNameTokens` set. This reintroduced the over-broad, unscoped matching that candidate_06 had specifically fixed, and is verbatim the exact buggy line (`for (String token : qualifiedNameTokens) { if (fieldAndMethodsNames.contains(token) || localVariablesOfBlock.contains(token)) {...} }`) that the fix commit later rewrites.\n- candidate_09 is essentially identical to the fix commit itself (same code changes, same new test files), so it is the fix, not the cause.\n\nBecause candidate_08 is the commit that (re)introduced the unscoped, all-tokens membership check against `fieldAndMethodsNames`/`localVariablesOfBlock` \u2014 the exact code the fix commit corrects \u2014 it is the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1922,
+            "cache_read_input_tokens": 80307,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The bug fixed by the commit is an ArrayIndexOutOfBoundsException caused by a mismatch between the number of column headers and the number of alignment strings passed to the WebTable constructor used for the instructor's class-assignment table when the instructor has no committed timetable (the `hasTimetable == false` branch).
+
+In files/buggy/InstructorDetailAction.java, this branch constructs:
+  new WebTable(6, null,
+      new String[] {columnClass, columnInstructorCheckConflicts, columnInstructorShare, columnTeachingResponsibility, columnLimit, columnManager},   // 6 headers
+      new String[] {"left","left","left","left","left"},   // only 5 alignments
+      null)
+The header array has 6 entries (including a newly added "Teaching Responsibility" column) but the alignment array still has only 5 entries, causing the out-of-bounds exception. The fix simply adds a sixth "left" to the alignment array.
+
+In files/old/InstructorDetailAction.java, the corresponding code is:
+  new WebTable(5, null,
+      new String[] {"Class", "Check Conflicts", "Share", "Limit", "Manager"},   // 5 headers
+      new String[] {"left","left","left","left","left"},   // 5 alignments
+      null)
+Here there is no "Teaching Responsibility" column at all — both the header array and the alignment array have exactly 5 elements, and they match. The same consistency holds for the `hasTimetable == true` branch (8 headers, 8 alignments in old/, vs. 10/10 in buggy/ after the same column was added there too).
+
+The "Teaching Responsibility" column (and the associated mismatch) was clearly introduced in a later change, after the old/ snapshot was taken. Since the code that causes the bug (the added header without a corresponding alignment entry) does not exist in files/old/, the old version does not contain this bug.

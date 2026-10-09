@@ -1,0 +1,38 @@
+SELECTED: candidate_16
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit removes try-with-resources wrapping around two ResultSet variables in
+SimpleJDBCRecordStore.java:
+1. In streamAllWithData(): `try (final ResultSet res = stm.executeQuery()) { return allWithDataStream(columns, res); }`
+   is changed back to `final ResultSet res = stm.executeQuery(); return allWithDataStream(columns, res);`
+   with the added comment "this result-set can't be try-with-resource because it is required to stay open".
+2. In getValues(tableName, column, condColumn, condValue): the same pattern is reverted for
+   `valuesStream(res)`, with the comment "can't use try-with-resource here, because result-set is required
+   to stay open".
+
+Both allWithDataStream() and valuesStream() return lazily-evaluated Stream objects backed by a
+Spliterator that reads from the ResultSet on each call to tryAdvance(). If the ResultSet is closed
+as soon as the try-with-resources block exits (which happens immediately, since the stream is only
+returned, not yet consumed), any later attempt to iterate the stream throws "ResultSet closed" /
+SQLException, because the JDBC ResultSet resource was released before its data was actually consumed.
+
+Searching the candidates, this exact defective pattern (wrapping `stm.executeQuery()` / `stmt.executeQuery()`
+in a try-with-resources immediately before returning a lazy stream built from allWithDataStream/valuesStream)
+does not exist prior to candidate_16. It is candidate_16 that:
+- Refactors the previously inline Spliterator-based stream construction in streamAllWithData() and
+  getValues(...) into the new private helper methods allWithDataStream(...) and valuesStream(...).
+- At the same time, wraps the ResultSet acquisition in `try (final ResultSet res = stm.executeQuery()) { ... }`
+  before calling these new helpers, closing the ResultSet prematurely.
+
+This is a clean, direct match: the fix commit's diff is the near-exact inverse of the change introduced
+in candidate_16 (same call sites, same helper method names, same try-with-resources pattern being removed).
+No earlier candidate contains references to allWithDataStream or valuesStream at all, confirming these
+call sites (and the associated bug) did not exist before candidate_16.
+
+The fix commit also addresses a resource leak of a PreparedStatement (`PreparedStatement stmt;` declared
+and never closed in insertNewRecord), but that leak pattern already existed in earlier candidates
+(e.g. candidate_09, candidate_13, candidate_15) prior to candidate_16, so it is a separate, older issue
+not introduced by the selected commit. The primary bug described by the fix - premature closing of a
+ResultSet needed to back a lazily-consumed Stream - was introduced in candidate_16.

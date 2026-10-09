@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "timestamp": "20260906_151556",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1029/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "1029",
+      "fix_commit_hash": "3ee6d03d40bf4ac6b8230d6c735f50527e1e93cc",
+      "bug_commit_hash": [
+        "8e5ee782690175e9cfb9a37f600f207b952ba8a6"
+      ],
+      "szz_candidates": [
+        "8e5ee782690175e9cfb9a37f600f207b952ba8a6",
+        "5fc743c1b57541afad447dc3baa31ae6bed61471",
+        "49c9ede3206cf2b9504cb9d06deeea8fd856900c",
+        "72f135589e5d705bcac4a3db3019e4d9d2d04d36"
+      ],
+      "szz_num_candidates": 4,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "8e5ee782690175e9cfb9a37f600f207b952ba8a6"
+      ],
+      "llm_selected_commit": "8e5ee782690175e9cfb9a37f600f207b952ba8a6",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit message explicitly describes two bugs being corrected in the \"words\" FTS3 table ID-offsetting scheme: 1. `(2 << 32)` is an int shift, and in Java the shift amount for ints is taken modulo 32, so `(2 << 32) == (2 << 0) == 2`. This made the mms/part row IDs collide with sms row IDs instead of being offset into a separate ID range. The fix changes this to `(1L << 33) + rowId` (a long shift). 2. `populateWordsTable` (run during database upgrade) never added the offset for mms/part row",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/1029",
+      "bug_fixing_commit": "3ee6d03d40bf4ac6b8230d6c735f50527e1e93cc",
+      "bug_inducing_commit": [
+        "8e5ee782690175e9cfb9a37f600f207b952ba8a6"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "BenzoRoms/packages_providers_TelephonyProvider"
+    }
+  ]
+}

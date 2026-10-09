@@ -1,0 +1,22 @@
+{
+  "fix_commit": "052fc158198e97c6e44d9bdff1e5bf5595d61f83",
+  "bic": "c8156def8cdc0f33f763b3edd9cec79f86c9b390",
+  "confidence": "high",
+  "type": "unknown",
+  "reasoning": "The fix commit removes the `synchronized` keyword from `exit()` and replaces the naive synchronization with `AtomicBoolean`s (`connected`, `shuttingDown`) plus explicit wait/notify logic in a separate `shutDown()` method. This directly undoes the change introduced in c8156def8cdc (\"Fix race condition on TS3Query#io\"), which made `connect()`, `exit()`, and `doCommandAsync()` all `synchronized` on the same monitor. That naive synchronization caused the race/deadlock issues being fixed here: e.g. `exit()` (holding the lock) calling `api.quit()` which internally calls `doCommandAsync()` (needing the same lock) from potentially different threads, and concurrent callers of `exit()`/`fireDisconnect()`'s `handleDisconnect()` path blocking incorrectly instead of properly coordinating shutdown. The fix's restructuring (separating `shutDown()`, using atomics with proper wait semantics, and only synchronizing a shrunk critical section) is a direct semantic correction of the synchronization scheme introduced by c8156def8cdc.",
+  "metrics": {
+    "case_elapsed_seconds": 151.477188,
+    "api_elapsed_seconds": 150.997936,
+    "tool_elapsed_seconds": 0.363538,
+    "other_elapsed_seconds": 0.115717,
+    "api_call_count": 14,
+    "tool_call_count": 13,
+    "prompt_tokens": 171615,
+    "completion_tokens": 10944,
+    "total_tokens": 182559,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:04:36.842868"
+}

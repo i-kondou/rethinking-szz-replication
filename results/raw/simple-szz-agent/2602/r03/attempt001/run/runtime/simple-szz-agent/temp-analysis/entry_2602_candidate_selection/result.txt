@@ -1,0 +1,37 @@
+SELECTED: candidate_81
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit's diff to core/src/de/gg/util/TickCounter.java removes the line
+`tickCount = maxTicks;` from the TickCounter constructor and updates the
+constructor's javadoc (dropping "Has to be reset() first to get used.").
+
+That exact line was introduced in candidate_81, which added TickCounter.java
+as a brand-new file (replacing GameSession's previous ad-hoc tick/time-delta
+fields with this new TickCounter abstraction). In that version the
+constructor set `tickCount = maxTicks` right away:
+
+    public TickCounter(TickHandler tickHandler, int maxTicks, int tickDuration) {
+        this.tickHandler = tickHandler;
+        this.maxTicks = maxTicks;
+        this.tickDuration = tickDuration;
+
+        tickCount = maxTicks;   // <-- the bug
+    }
+
+This is a genuine logic bug: because `update()` only ticks while
+`tickCount < maxTicks`, and immediately checks
+`if (tickCount == maxTicks) { if (!finished) { finished = true; return true; } }`,
+a freshly constructed TickCounter (as created in GameSession.init()) would
+report the round as immediately finished on the very first `update()` call,
+without ever processing any ticks — the round would end instantly instead of
+running for its full duration. The fix removes the erroneous initialization
+so `tickCount` correctly starts at 0.
+
+Note: candidate_82's diff is byte-for-byte identical to fix_commit_diff.txt,
+i.e. it IS the fix commit rather than a distinct candidate change, so it was
+excluded from consideration as the bug-introducing commit. All other
+candidates either predate the TickCounter class entirely or only contain
+unrelated changes, so candidate_81 is the sole commit where the buggy
+`tickCount = maxTicks;` initialization was introduced.

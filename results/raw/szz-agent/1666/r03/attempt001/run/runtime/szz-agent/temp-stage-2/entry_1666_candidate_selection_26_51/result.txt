@@ -1,0 +1,39 @@
+SELECTED: candidate_25
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single `break;` statement right after the log line
+"Cover downloaded for ... from " + url + ", size=" + coverBytes.length"
+inside the loop in CoverManager.java that iterates over candidate cover URLs
+and tries to download bytes for each one. Without that `break;`, once a cover
+is successfully downloaded, the loop continues to the next URL, potentially
+overwriting the already-successfully-fetched cover bytes with the result of a
+subsequent (possibly failed or wrong) download attempt — this is the "local
+cover art" bug described in the fix commit message.
+
+By tracing the blob hash chain of CoverManager.java across the candidates
+(each diff's pre-image hash matches the prior candidate's post-image hash),
+I found the exact origin of the regression:
+
+- candidate_24 (hash 3b7e75e9..306af5a3): a refactor adding try/finally
+  resource-closing logic to `download()`. No change to the loop in question.
+- candidate_25 (hash 306af5a3..d802a63f): refactors several methods
+  (`cleanGetRequest`, `download`, and the cover-fetch loop) to use a single
+  return point at the end of the method instead of early returns. As part of
+  this refactor, the line `return coverBytes;` that previously sat right
+  after the "Cover downloaded for ..." log statement inside the URL loop was
+  DELETED, but no `break;` was added in its place. This silently changed the
+  loop's control flow: it now falls through and keeps trying additional
+  candidate cover URLs even after a successful download, instead of stopping
+  immediately as before.
+- candidate_26 (hash d802a63f..ff2ebf2a): this diff is byte-for-byte
+  identical to fix_commit_diff.txt (same blob hashes), i.e. it IS the fix
+  commit that re-adds the missing `break;`. It cannot be the bug-introducing
+  commit since it's the fix itself.
+
+Therefore candidate_25 is the commit that introduced the bug: it removed the
+early `return` that implicitly terminated the URL-fetch loop on success,
+without replacing it with the equivalent `break;`, causing the app to
+potentially discard/overwrite a correctly fetched (including local) cover
+with results from subsequent URL attempts.

@@ -1,0 +1,31 @@
+SELECTED: candidate_76
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit modifies StudentSectioningDatabaseLoader.java to guard a call to
+section.setName(course.getUniqueId(), c.getClassSuffix(course)) with a null
+check on the suffix, because passing a null string into the section name map
+later causes a failure when the name is written into an XML document during
+passivation/export (XML text content must not be null).
+
+candidate_76 is the commit that originally introduced this exact code:
+
+    for (CourseOffering course: io.getCourseOfferings())
+        section.setName(course.getUniqueId(), c.getClassSuffix(course));
+
+added right after the Section is constructed in StudentSectioningDatabaseLoader.java,
+with no null check on c.getClassSuffix(course). This is precisely the code later
+patched by the fix commit (same file, same call site, same hunk location).
+
+Checking the immediately preceding candidate that touches this file
+(candidate_69), the corresponding code at that point in history does not yet
+contain any per-course setName loop at all - after building the Section object
+it goes straight to section.setCancelled(...). This confirms the loop (and thus
+the unguarded getClassSuffix(course) call) did not exist before candidate_76,
+and candidate_76 is the first commit to introduce it.
+
+Note: candidate_78's diff is byte-for-byte identical to the fix commit diff
+provided (adding the null check), confirming that candidate_78 is not the bug
+introducer but rather corresponds to the actual fix; the true bug-introducing
+commit is the earlier candidate_76 which added the unchecked call.

@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "timestamp": "20260906_123648",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/139/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "139",
+      "fix_commit_hash": "137ce13f74239ba3dc100269cafe842a1f4ea11d",
+      "bug_commit_hash": [
+        "43e45eb94e1aa0d1c4dbd10e99df8e366f637261"
+      ],
+      "szz_candidates": [
+        "43e45eb94e1aa0d1c4dbd10e99df8e366f637261"
+      ],
+      "szz_num_candidates": 1,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "43e45eb94e1aa0d1c4dbd10e99df8e366f637261"
+      ],
+      "llm_selected_commit": "43e45eb94e1aa0d1c4dbd10e99df8e366f637261",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit changes TextUtils.isRTLCharacter() so that the range check `(c >= 0xFE70 && c <= 0xFEFF)` becomes `(c >= 0xFE70 && c <= 0xFEFE)`, i.e. it excludes the special Unicode marker 0xFEFF (Zero Width No-Break Space / BOM) from being classified as an RTL character. This is exactly the bug described in the fix commit message (\"Fix handling of special unicode marker 0xFEFF ... wrongly handled as RTL\"). Candidate_01 is the commit that originally introduces the `isRTLCharacter` method into Te",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/139",
+      "bug_fixing_commit": "137ce13f74239ba3dc100269cafe842a1f4ea11d",
+      "bug_inducing_commit": [
+        "43e45eb94e1aa0d1c4dbd10e99df8e366f637261"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "CyanogenMod/android_frameworks_base"
+    }
+  ]
+}

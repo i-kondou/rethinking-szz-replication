@@ -1,0 +1,43 @@
+SELECTED: candidate_03
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix adds a default value to BddRunContext.runningBatchKey
+("Optional.of("batch-1")"), with the comment "must be initialized for
+jbehave-junit-runner", because the field could previously be read
+(via getRunningBatchKey()/getRunningBatch()) before any batch was
+actually started, causing an exception (reported as NPE) when
+jbehave-junit-runner builds the JUnit execution tree ahead of the
+real story execution.
+
+The `runningBatchKey` field itself was declared uninitialized all the
+way back in candidate_01 (the initial creation of BddRunContext), but
+it was harmless at that point: the only consumer, getRunningBatch(),
+was called from step implementations that only ever execute during an
+actual, already-running batch.
+
+candidate_03 is the commit that changes this. It refactors
+BddRunContext to expose a new getRunningBatchKey() method and, more
+importantly, modifies VariablesFactory so that createVariables() now
+unconditionally calls bddRunContext.getRunningBatchKey() to merge in
+batch-scoped variables:
+
+    globalScoped.putAll(batchVariables.getOrDefault(bddRunContext.getRunningBatchKey(), Map.of()));
+
+Before this commit, VariablesFactory had no dependency at all on
+IBddRunContext (its constructor only took an IPropertyParser). After
+this commit, every call to createVariables() requires a running batch
+to already be set, throwing IllegalStateException/NPE otherwise. Since
+jbehave-junit-runner builds its JUnit execution tree (which triggers
+variable/step resolution) before any batch is started via
+putRunningBatch(), this is exactly the failure path described in the
+fix commit message. This new, unconditional dependency introduced in
+candidate_03 is what actually turned the previously-harmless
+uninitialized field into a real bug, and it is fixed by initializing
+the field with a safe default in the fix commit.
+
+None of the later candidates (04, 05) touch this call path or the
+field's initialization — they only refactor batch storage classes
+around it — so candidate_03 is the first commit that introduced the
+problematic code exercised by the fix.

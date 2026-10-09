@@ -1,0 +1,39 @@
+SELECTED: candidate_68
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit renumbers the switch-case fallthrough chain in KeychainDatabase.onUpgrade(),
+removing an extraneous "case 7: // consolidate" that stood alone (doing nothing) immediately
+before "case 8:" (which creates the CREATE_API_APPS_ALLOWED_KEYS table), and shifting all
+subsequent case labels (8->7, 9->8, 10->9, ..., 15->14) down by one to match.
+
+This exact bug was introduced in candidate_68. That diff bumps DATABASE_VERSION from 7 to 8
+and adds the new migration step for the "api_allowed_keys" table, but writes it as:
+
+    case 7:
+        // consolidate
+    case 8:
+        // new table for allowed key ids in API
+        try {
+            db.execSQL(CREATE_API_APPS_ALLOWED_KEYS);
+        } catch (Exception e) {
+            // never mind, the column probably already existed
+        }
+
+Here "case 7:" was meant to represent the single migration step for the version bump to 8,
+but a redundant empty "case 7: // consolidate" was inserted before the real logic under
+"case 8:", introducing an extra, meaningless case label into the fallthrough chain. Since
+switch-case in onUpgrade() relies on fall-through (each case number corresponding to the
+target DB version an upgrade step brings the schema to), this spurious duplicate case
+number desynchronizes the case labels from the actual DATABASE_VERSION values used
+throughout the rest of the method, "consolidating" a version that shouldn't exist as
+a distinct step. All later commits that added further migration steps (candidates
+69-87 for case 9 through case 15) inherited and built on top of this off-by-one numbering
+without correcting the root issue. The fix commit finally removes the bogus standalone
+"case 7: // consolidate" and shifts every subsequent case number down by one, restoring
+correct alignment between case labels and intended migration/version semantics
+("fix ridiculous database migration bug").
+
+Candidate_68 is the first commit where this erroneous extra case label pattern appears,
+making it the bug-introducing commit.

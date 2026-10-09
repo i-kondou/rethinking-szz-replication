@@ -1,0 +1,451 @@
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/orgs/OrgsController.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/orgs/OrgsController.java
+index a91c4c014..3644f5fc8 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/orgs/OrgsController.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/orgs/OrgsController.java
+@@ -134,6 +134,7 @@ public class OrgsController {
+      * * 'status'
+      * * 'orgType'
+      * * 'address'
++     * * 'members' as json array ex: ["testadmin", "testuser"]
+      *
+      */
+     @RequestMapping(value = REQUEST_MAPPING + "/{cn}", method = RequestMethod.GET)
+@@ -202,6 +203,14 @@ public class OrgsController {
+             // Parse Json
+             JSONObject json = this.parseRequest(request, response);
+ 
++            // Validate request against required fields
++            for(String requiredField : this.validation.getRequiredOrgFieldsName()) {
++                if (!json.has(requiredField))
++                    throw new IOException("Missing required field : " + requiredField);
++                if(json.getString(requiredField) == null || json.getString(requiredField).length() == 0)
++                    throw new IOException("Empty required field : " + requiredField);
++            }
++
+             // Retrieve current orgs state from ldap
+             Org org = this.orgDao.findByCommonName(commonName);
+             OrgExt orgExt = this.orgDao.findExtById(commonName);
+@@ -401,7 +410,7 @@ public class OrgsController {
+     private void updateFromRequest(OrgExt orgExt, JSONObject json) throws JSONException {
+ 
+         try{
+-            orgExt.setOrgType(json.getString("orgType"));
++            orgExt.setOrgType(json.getString("type"));
+         } catch (JSONException ex){}
+ 
+         try{
+@@ -423,7 +432,7 @@ public class OrgsController {
+ 
+         JSONObject res = org.toJson();
+         if(orgExt.getOrgType() != null)
+-            res.put("orgType", orgExt.getOrgType());
++            res.put("type", orgExt.getOrgType());
+         if(orgExt.getAddress() != null)
+             res.put("address", orgExt.getAddress());
+         return res;
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/edituserdetails/EditUserDetailsFormController.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/edituserdetails/EditUserDetailsFormController.java
+index 19741be65..748a8a432 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/edituserdetails/EditUserDetailsFormController.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/edituserdetails/EditUserDetailsFormController.java
+@@ -57,10 +57,13 @@ public class EditUserDetailsFormController {
+ 	private OrgsDao orgsDao;
+ 	private AccountDao accountDao;
+ 
++	private Validation validation;
++
+ 	@Autowired
+-	public EditUserDetailsFormController(AccountDao dao, OrgsDao orgsDao){
++	public EditUserDetailsFormController(AccountDao dao, OrgsDao orgsDao, Validation validation){
+ 		this.accountDao = dao;
+ 		this.orgsDao = orgsDao;
++		this.validation = validation;
+ 	}
+ 
+ 	private static final String[] fields = {"uid", "firstName", "surname", "email", "title", "phone", "facsimile", "org", "description", "postalAddress"};
+@@ -96,7 +99,7 @@ public class EditUserDetailsFormController {
+ 
+ 			model.addAttribute(formBean);
+ 			for (String f : fields) {
+-				if (Validation.isFieldRequired(f)) {
++				if (this.validation.isFieldRequired(f)) {
+ 					session.setAttribute(f + "Required", "true");
+ 				}
+ 			}
+@@ -168,11 +171,11 @@ public class EditUserDetailsFormController {
+ 		}
+ 
+ 		UserUtils.validate( formBean.getFirstName(), formBean.getSurname(), resultErrors );
+-		Validation.validateField("phone", formBean.getPhone(), resultErrors);
+-		Validation.validateField("facsimile", formBean.getFacsimile(), resultErrors);
+-		Validation.validateField("title", formBean.getTitle(), resultErrors);
+-		Validation.validateField("description", formBean.getDescription(), resultErrors);
+-		Validation.validateField("postalAddress", formBean.getPostalAddress(), resultErrors);
++		this.validation.validateField("phone", formBean.getPhone(), resultErrors);
++		this.validation.validateField("facsimile", formBean.getFacsimile(), resultErrors);
++		this.validation.validateField("title", formBean.getTitle(), resultErrors);
++		this.validation.validateField("description", formBean.getDescription(), resultErrors);
++		this.validation.validateField("postalAddress", formBean.getPostalAddress(), resultErrors);
+ 
+ 		if(resultErrors.hasErrors()){
+ 			return "editUserDetailsForm";
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormController.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormController.java
+index f499c21ca..597ddb2da 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormController.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormController.java
+@@ -23,6 +23,7 @@ import net.tanesha.recaptcha.ReCaptcha;
+ import org.apache.commons.lang3.ArrayUtils;
+ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
++import org.apache.commons.validator.routines.EmailValidator;
+ import org.georchestra.ldapadmin.bs.Moderator;
+ import org.georchestra.ldapadmin.bs.ReCaptchaParameters;
+ import org.georchestra.ldapadmin.ds.AccountDao;
+@@ -36,7 +37,6 @@ import org.georchestra.ldapadmin.dto.Group;
+ import org.georchestra.ldapadmin.dto.Org;
+ import org.georchestra.ldapadmin.dto.OrgExt;
+ import org.georchestra.ldapadmin.mailservice.MailService;
+-import org.georchestra.ldapadmin.ws.utils.EmailUtils;
+ import org.georchestra.ldapadmin.ws.utils.PasswordUtils;
+ import org.georchestra.ldapadmin.ws.utils.RecaptchaUtils;
+ import org.georchestra.ldapadmin.ws.utils.UserUtils;
+@@ -44,6 +44,7 @@ import org.georchestra.ldapadmin.ws.utils.Validation;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.stereotype.Controller;
+ import org.springframework.ui.Model;
++import org.springframework.util.StringUtils;
+ import org.springframework.validation.BindingResult;
+ import org.springframework.web.bind.WebDataBinder;
+ import org.springframework.web.bind.annotation.InitBinder;
+@@ -86,18 +87,21 @@ public final class NewAccountFormController {
+ 
+ 	private ReCaptchaParameters reCaptchaParameters;
+ 
++	private Validation validation;
++
+ 	private static final String[] fields = {"firstName","surname", "email", "phone", "org", "title", "description",
+ 			"uid", "password", "confirmPassword", "createOrg", "orgName", "orgShortName", "orgAddress", "orgType"};
+ 
+ 	@Autowired
+ 	public NewAccountFormController(AccountDao dao, OrgsDao orgDao, MailService mailSrv, Moderator moderatorRule,
+-									ReCaptcha reCaptcha, ReCaptchaParameters reCaptchaParameters) {
++									ReCaptcha reCaptcha, ReCaptchaParameters reCaptchaParameters, Validation validation) {
+ 		this.accountDao = dao;
+ 		this.orgDao = orgDao;
+ 		this.mailService = mailSrv;
+ 		this.moderator = moderatorRule;
+ 		this.reCaptcha = reCaptcha;
+ 		this.reCaptchaParameters = reCaptchaParameters;
++		this.validation = validation;
+ 	}
+ 
+ 	@InitBinder
+@@ -119,7 +123,7 @@ public final class NewAccountFormController {
+ 
+ 		session.setAttribute("reCaptchaPublicKey", this.reCaptchaParameters.getPublicKey());
+ 		for (String f : fields) {
+-			if (Validation.isFieldRequired(f)) {
++			if (this.validation.isFieldRequired(f)) {
+ 				session.setAttribute(f + "Required", "true");
+ 			}
+ 		}
+@@ -154,13 +158,21 @@ public final class NewAccountFormController {
+ 		model.addAttribute("orgTypes", this.getOrgTypes());
+ 
+ 		UserUtils.validate(formBean.getUid(), formBean.getFirstName(), formBean.getSurname(), result );
+-		EmailUtils.validate(formBean.getEmail(), result);
++
++		if ( !StringUtils.hasLength(formBean.getEmail()) && this.validation.isFieldRequired("email") ) {
++			result.rejectValue("email", "email.error.required", "required");
++		} else {
++			if (!EmailValidator.getInstance().isValid(formBean.getEmail())) {
++				result.rejectValue("email", "email.error.invalidFormat", "Invalid Format");
++			}
++		}
++
+ 		PasswordUtils.validate(formBean.getPassword(), formBean.getConfirmPassword(), result);
+ 		new RecaptchaUtils(request.getRemoteAddr(), this.reCaptcha)
+ 				.validate(formBean.getRecaptcha_challenge_field(), formBean.getRecaptcha_response_field(), result);
+-		Validation.validateField("phone", formBean.getPhone(), result);
+-		Validation.validateField("title", formBean.getTitle(), result);
+-		Validation.validateField("description", formBean.getDescription(), result);
++		this.validation.validateField("phone", formBean.getPhone(), result);
++		this.validation.validateField("title", formBean.getTitle(), result);
++		this.validation.validateField("description", formBean.getDescription(), result);
+ 
+ 
+ 		// Create org if needed
+@@ -199,7 +211,7 @@ public final class NewAccountFormController {
+ 				throw new IOException(e);
+ 			}
+ 		} else {
+-			Validation.validateField("org", formBean.getOrg(), result);
++			this.validation.validateField("org", formBean.getOrg(), result);
+ 		}
+ 
+ 		if(result.hasErrors())
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormController.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormController.java
+index 8259fb2c5..8660be3a3 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormController.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormController.java
+@@ -38,7 +38,6 @@ import org.georchestra.ldapadmin.ds.UserTokenDao;
+ import org.georchestra.ldapadmin.dto.Account;
+ import org.georchestra.ldapadmin.dto.Group;
+ import org.georchestra.ldapadmin.mailservice.MailService;
+-import org.georchestra.ldapadmin.ws.utils.EmailUtils;
+ import org.georchestra.ldapadmin.ws.utils.RecaptchaUtils;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.ldap.NameNotFoundException;
+@@ -138,14 +137,7 @@ public class PasswordRecoveryFormController  {
+ 						BindingResult resultErrors, 
+ 						SessionStatus sessionStatus) 
+ 						throws IOException {
+-		
+-		EmailUtils.validate(formBean.getEmail(), resultErrors);
+-		if(resultErrors.hasErrors()){
+-			return "passwordRecoveryForm";
+-		}
+ 
+-		
+-		
+ 		String remoteAddr = request.getRemoteAddr();
+ 		new RecaptchaUtils(remoteAddr, this.reCaptcha).validate(formBean.getRecaptcha_challenge_field(), formBean.getRecaptcha_response_field(), resultErrors);
+ 		if(resultErrors.hasErrors()){
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/utils/EmailUtils.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/utils/EmailUtils.java
+deleted file mode 100644
+index e5e70baac..000000000
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/utils/EmailUtils.java
++++ /dev/null
+@@ -1,45 +0,0 @@
+-/*
+- * Copyright (C) 2009-2016 by the geOrchestra PSC
+- *
+- * This file is part of geOrchestra.
+- *
+- * geOrchestra is free software: you can redistribute it and/or modify it under
+- * the terms of the GNU General Public License as published by the Free
+- * Software Foundation, either version 3 of the License, or (at your option)
+- * any later version.
+- *
+- * geOrchestra is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * You should have received a copy of the GNU General Public License along with
+- * geOrchestra.  If not, see <http://www.gnu.org/licenses/>.
+- */
+-
+-package org.georchestra.ldapadmin.ws.utils;
+-
+-import org.apache.commons.validator.routines.EmailValidator;
+-import org.springframework.util.StringUtils;
+-import org.springframework.validation.Errors;
+-
+-/**
+- * Utility class to manage the email.
+- *
+- * @author Mauricio Pazos
+- *
+- */
+-public class EmailUtils {
+-
+-	public static void validate(String email, Errors errors) {
+-
+-		if ( !StringUtils.hasLength(email) && Validation.isFieldRequired("email") ) {
+-			errors.rejectValue("email", "email.error.required", "required");
+-		} else {
+-			if (!EmailValidator.getInstance().isValid(email)) {
+-				errors.rejectValue("email", "email.error.invalidFormat", "Invalid Format");
+-			}
+-		}
+-	}
+-
+-}
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/utils/PasswordUtils.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/utils/PasswordUtils.java
+index b47f7ed79..36710aebb 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/utils/PasswordUtils.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/utils/PasswordUtils.java
+@@ -19,6 +19,7 @@
+ 
+ package org.georchestra.ldapadmin.ws.utils;
+ 
++import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.util.StringUtils;
+ import org.springframework.validation.Errors;
+ 
+@@ -31,6 +32,8 @@ public final class PasswordUtils  {
+ 
+ 	public static final int SIZE = 8;
+ 
++	@Autowired
++	private static Validation validation;
+ 
+ 	private PasswordUtils(){
+ 		// utility class
+@@ -41,12 +44,12 @@ public final class PasswordUtils  {
+ 		final String pwd1 = password.trim();
+ 		final String pwd2 = confirmPassword.trim();
+ 
+-		if( !StringUtils.hasLength(pwd1) && Validation.isFieldRequired("password") ){
++		if( !StringUtils.hasLength(pwd1) && PasswordUtils.validation.isFieldRequired("password") ){
+ 
+ 			errors.rejectValue("password", "password.error.required", "required");
+ 
+ 		}
+-		if( !StringUtils.hasLength(pwd2) && Validation.isFieldRequired("confirmPassword") ){
++		if( !StringUtils.hasLength(pwd2) && PasswordUtils.validation.isFieldRequired("confirmPassword") ){
+ 
+ 			errors.rejectValue("confirmPassword", "confirmPassword.error.required", "required");
+ 		}
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/utils/UserUtils.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/utils/UserUtils.java
+index 39a41b108..50fab96d6 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/utils/UserUtils.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/utils/UserUtils.java
+@@ -19,6 +19,7 @@
+ 
+ package org.georchestra.ldapadmin.ws.utils;
+ 
++import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.util.StringUtils;
+ import org.springframework.validation.Errors;
+ 
+@@ -30,6 +31,10 @@ import org.springframework.validation.Errors;
+  */
+ public class UserUtils {
+ 
++	@Autowired
++	private static Validation validation;
++
++
+ 	private UserUtils(){
+ 			// utility class
+ 	}
+@@ -37,7 +42,7 @@ public class UserUtils {
+ 	public static void validate(String uid, String firstName, String surname, Errors errors) {
+ 
+ 		// uid validation
+-		if( !StringUtils.hasLength(uid) && Validation.isFieldRequired("uid") ){
++		if( !StringUtils.hasLength(uid) && UserUtils.validation.isFieldRequired("uid") ){
+ 			errors.rejectValue("uid", "uid.error.required", "required");
+ 		} else{
+ 
+@@ -74,11 +79,11 @@ public class UserUtils {
+ 
+ 	public static void validate(String firstName, String surname, Errors errors) {
+ 
+-		if( !StringUtils.hasLength(firstName) && Validation.isFieldRequired("firstName") ){
++		if( !StringUtils.hasLength(firstName) && UserUtils.validation.isFieldRequired("firstName") ){
+ 			errors.rejectValue("firstName", "firstName.error.required", "required");
+ 		}
+ 
+-		if( !StringUtils.hasLength( surname ) && Validation.isFieldRequired("surname") ){
++		if( !StringUtils.hasLength( surname ) && UserUtils.validation.isFieldRequired("surname") ){
+ 			errors.rejectValue("surname", "surname.error.required", "required");
+ 		}
+ 	}
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/utils/Validation.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/utils/Validation.java
+index c5b97ff47..e8150ec9b 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/utils/Validation.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/utils/Validation.java
+@@ -37,10 +37,29 @@ import org.springframework.validation.Errors;
+  */
+ public class Validation {
+ 
+-	private static List<String> requiredFields;
+-	public String getRequiredFields() {
+-		return requiredFields.toString();
++	private List<String> requiredFields;
++
++	public List<String> getRequiredFields() {
++		return requiredFields;
++	}
++
++	public List<String> getRequiredOrgFieldsName(){
++		List<String> res = new LinkedList<String>();
++		// Extract all fields starting by Org and change next letter to lower case
++		// orgShortName --> shortName
++		Pattern regexp = Pattern.compile("^org(.+)$");
++		for(String field: this.getRequiredFields()){
++			Matcher m = regexp.matcher(field);
++			if(m.matches()) {
++				String match = m.group(1);
++				match = match.substring(0, 1).toLowerCase() + match.substring(1);
++				res.add(match);
++			}
++		}
++
++		return res;
+ 	}
++
+ 	public void setRequiredFields(String csvRequiredFields) {
+ 		List<String> r = new ArrayList<String>(Arrays.asList(csvRequiredFields.split("\\s*,\\s*")));
+ 		// add mandatory fields (they may be present two times, it's not a problem)
+@@ -50,8 +69,8 @@ public class Validation {
+ 		r.add("confirmPassword");
+ 		this.requiredFields = r;
+ 	}
+-	public static boolean isFieldRequired (String field) {
+-	    if (requiredFields == null)
++	public boolean isFieldRequired (String field) {
++	    if (this.requiredFields == null)
+ 	        return false;
+ 
+ 		for (String f : requiredFields) {
+@@ -61,8 +80,8 @@ public class Validation {
+ 		}
+ 		return false;
+ 	}
+-	public static void validateField (String field, String value, Errors errors) {
+-		if( Validation.isFieldRequired(field) && !StringUtils.hasLength(value) ){
++	public void validateField (String field, String value, Errors errors) {
++		if( this.isFieldRequired(field) && !StringUtils.hasLength(value) ){
+ 			errors.rejectValue(field, "error.required", "required");
+ 		}
+ 	}
+diff --git a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/edituserdetails/EditUserDetailsFormControllerTest.java b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/edituserdetails/EditUserDetailsFormControllerTest.java
+index 5b08d4a47..1489cd0fb 100644
+--- a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/edituserdetails/EditUserDetailsFormControllerTest.java
++++ b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/edituserdetails/EditUserDetailsFormControllerTest.java
+@@ -10,6 +10,7 @@ import org.georchestra.ldapadmin.ds.OrgsDao;
+ import org.georchestra.ldapadmin.dto.Account;
+ import org.georchestra.ldapadmin.dto.AccountFactory;
+ import org.georchestra.ldapadmin.dto.Org;
++import org.georchestra.ldapadmin.ws.utils.Validation;
+ import org.junit.After;
+ import org.junit.Before;
+ import org.junit.Test;
+@@ -42,7 +43,7 @@ public class EditUserDetailsFormControllerTest {
+ 
+     @Before
+     public void setUp() throws Exception {
+-        ctrl = new EditUserDetailsFormController(dao, orgsDao);
++        ctrl = new EditUserDetailsFormController(dao, orgsDao, new Validation());
+         formBean.setDescription("description");
+         formBean.setEmail("email");
+         formBean.setFacsimile("+331234567890");
+diff --git a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormControllerTest.java b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormControllerTest.java
+index 3eb85c90c..20614e4ff 100644
+--- a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormControllerTest.java
++++ b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormControllerTest.java
+@@ -81,7 +81,7 @@ public class NewAccountFormControllerTest {
+ 
+     @Before
+     public void setUp() throws Exception {
+-        ctrl = new NewAccountFormController(dao, org, srv, mod, rec, rep);
++        ctrl = new NewAccountFormController(dao, org, srv, mod, rec, rep, new Validation());
+ 
+         // Mock admin account
+         DistinguishedName dn = new DistinguishedName();
+diff --git a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormControllerTest.java b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormControllerTest.java
+index 8dafec37c..be1122aec 100644
+--- a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormControllerTest.java
++++ b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/passwordrecovery/PasswordRecoveryFormControllerTest.java
+@@ -143,7 +143,7 @@ public class PasswordRecoveryFormControllerTest {
+     @Test
+     public void testBadCaptchaGenerateToken() throws Exception {
+         prepareLegitRequest();
+-        Mockito.when(result.hasErrors()).thenReturn(false, true);
++        Mockito.when(result.hasErrors()).thenReturn(true);
+         Mockito.when(rec.checkAnswer(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
+             .thenReturn(rer);
+ 

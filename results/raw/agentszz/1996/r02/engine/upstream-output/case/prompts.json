@@ -1,0 +1,163 @@
+[
+  {
+    "round": 1,
+    "agent": "executor",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are an expert at identifying Bug-Introducing Commits (BICs) in the Linux kernel.\n\nGiven a fix commit, find the commit that originally introduced the bug.\n\n## Tools\n\n1. **git_show(commit, context_lines, stat_only, file_filter)** \u2014 View commit message and diff. Use file_filter for one file's changes in large commits.\n2. **git_blame(file_path, commit, line_start, line_end)** \u2014 Show which commit last modified each line.\n3. **git_log_s(search_string, path, after, before)** \u2014 Search commits that added or removed a string (-S).\n4. **git_log_func(function_name, file_path, after, before)** \u2014 Track function body change history.\n5. **git_grep(search_string, commit, path)** \u2014 Search codebase at a commit snapshot.\n\n## Workflow\n\n### Step 1: git_blame at fix~1\n\nYour first tool call should be git_blame on the changed lines at fix~1 \u2014 this is the most efficient starting point for nearly all cases:\n- MODIFIED or REMOVED lines \u2192 blame those exact lines\n- ONLY ADDED lines (omission fix) \u2192 no deleted or modified lines to trace. Blame surrounding context (adjacent lines, function signature, callers) to find which commit established the code structure that should have included this logic. If context blame is inconclusive, use git_log_s or git_log_func to trace the related identifier's history.\n\nOnly start with git_log_s or git_grep instead if the fix message clearly describes a cross-file behavior change (file A's fix caused by a change in file B) or an omission bug where the surrounding context provides no useful blame signal.\n\n### Step 2: Evaluate Blame Results\n\nBlame returns multiple commits. When two or more distinct commits appear, git_show at least the most frequent one and the one directly on the buggy line. If they are the same commit, one git_show is sufficient.\n\nFor each, run git_show (use file_filter for multi-file commits) and classify:\n\n**Non-semantic change?** Signals:\n- Refactoring: message says refactor/rename/move/extract/split/accessor/cleanup/\"no functional change\"; diff is mechanical; semantics unchanged.\n- Merge or cherry-pick: commit merges branches or backports code without introducing new logic.\n- Meta-change: whitespace adjustment, comment-only edit, formatting, copyright update, import reordering.\n\n\u2192 If the commit message indicates refactoring, merge/cherry-pick, or meta-change, treat it as non-semantic and trace further back via git_blame at this_commit~1. Only reconsider if the diff contains changes clearly beyond what the message describes.\n\u2192 Exception: if the commit moves/adds an entire driver or subsystem (e.g. \"Move driver from staging\", \"Add new driver\"), it IS the BIC \u2014 it introduced the buggy code into the tree the fix targets. Do not trace back into staging or the original source.\n\u2192 If re-blame cannot continue (e.g., file was renamed or blame chain breaks), fall back to git_log_s on the relevant symbol to trace its origin across renames.\n\n**Semantic introduction?** The commit added new logic, changed an expression's meaning, or created the code the fix corrects.\n\n**Initial commit (1da177e4c3f4)?** Valid BIC \u2014 bug existed from start of git history. Report with high confidence. Also check the fix commit message: if it describes a long-standing issue, says the code \"never had\" something, or does not reference any specific introducing commit, and blame traces back to 1da177e4c3f4, that strongly confirms this is the BIC. Do not keep searching for a newer commit when blame already points here. Note: if the fix message says another commit \"exposed\", \"triggered\", or \"made visible\" the problem, that commit is NOT the BIC \u2014 it merely revealed a pre-existing bug.\n\n**Multiple semantic candidates?** The BIC is the one that introduced the CORE buggy logic. Ask: \"if this commit had never been written, would the bug exist?\" A later commit that adjusted existing logic is not the BIC.\n\n### Step 3: Report\n\nConfirm before outputting:\n- Candidate introduced buggy logic, not just reformatted code\n- Direct causal link to what the fix corrects\n- Evidence found \u2192 report it. Uncertainty is not a reason to return empty.\n\n<r>\nBIC: <full_commit_hash>\nconfidence: <high|medium|low>\ntype: <introduction|omission|cross_file|refactor_penetration>\nreasoning: <brief explanation>\n</r>\n\n## Tool Rules\n\n- git_log_s: include a path when possible; broaden only if empty. Use the fix commit date as the `before` upper bound \u2014 the BIC must predate the fix.\n- git_show on large commits: use file_filter.\n- Do not git_show the same commit more than twice.\n- Timeout \u2192 retry with narrower parameters.\n- file_filter returns \"no changes\" \u2192 file was at a different path in that commit. Try git_show WITHOUT file_filter to see the actual paths, or blame at commit~1."
+      },
+      {
+        "role": "user",
+        "content": "## Fix Commit\n\ncommit 333cd0d114de5bee2bdbfc3be91c7a373174dfe1\nDate: Thu Dec 01 18:11:25 2016 -0800\n\nFixed unused imports, and fixed a bug.\n\ndiff --git a/src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java b/src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java\nindex 9cf914d..b1502b8 100644\n--- a/src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java\n+++ b/src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java\n@@ -16,9 +16,7 @@\n package com.diffplug.gradle.oomph;\n \n import java.util.HashSet;\n-import java.util.LinkedHashMap;\n import java.util.List;\n-import java.util.Map;\n import java.util.Set;\n \n import org.gradle.api.Action;\n@@ -77,7 +75,7 @@ public class ConventionJdt extends OomphConvention {\n \t\t\t\t\"org.eclipse.jdt.core.compiler.compliance\",\n \t\t\t\t\"org.eclipse.jdt.core.compiler.source\");\n \t\textension.workspaceProp(JDT_CORE_PREFS, props -> {\n-\t\t\tJDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, compilerComplianceLevel.toString()));\n+\t\t\tJDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, JavaVersion.toVersion(compilerComplianceLevel).toString()));\n \t\t\t//Use default compliance settings.\n \t\t\tprops.put(\"org.eclipse.jdt.core.compiler.codegen.inlineJsrBytecode\", \"enabled\");\n \t\t\tprops.put(\"org.eclipse.jdt.core.compiler.problem.assertIdentifier\", \"error\");\n\n**Fix commit date: 2016-12-01**. The BIC must be before this date. Use this as the upper bound for any date-based searches.\n\nFind the Bug-Introducing Commit (BIC) for this fix.\n"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01TqCffXLYFMZ7Ea9iSjLrfW",
+            "function": {
+              "arguments": "{\"search_string\": \"compilerComplianceLevel.toString()\", \"path\": \"src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java\", \"before\": \"2016-12-01\"}",
+              "name": "git_log_s"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01TqCffXLYFMZ7Ea9iSjLrfW",
+        "content": "No commits found that add or remove 'compilerComplianceLevel.toString()'"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01G6WEe9rYzRWpHYnNJTZabz",
+            "function": {
+              "arguments": "{\"search_string\": \"compilerComplianceLevel\", \"path\": \"src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java\", \"before\": \"2016-12-01\"}",
+              "name": "git_log_s"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01G6WEe9rYzRWpHYnNJTZabz",
+        "content": "No commits found that add or remove 'compilerComplianceLevel'"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01P4QL47o2QJvpK1faouCZQe",
+            "function": {
+              "arguments": "{\"file_path\": \"src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java\", \"commit\": \"333cd0d114de5bee2bdbfc3be91c7a373174dfe1~1\"}",
+              "name": "git_blame"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01P4QL47o2QJvpK1faouCZQe",
+        "content": "[66 lines, 8 unique commits: 78630dde9484, 0b59b6c50375, e4cd89812c97, 52125340343d, 5c53ab4e4d94, e86e016a08c8, e9c80a44f982, 10aa587d48ce]\nL1: 78630dde9484 | /*\nL2: 78630dde9484 |  * Copyright 2016 DiffPlug\nL3: 78630dde9484 |  *\nL4: 78630dde9484 |  * Licensed under the Apache License, Version 2.0 (the \"License\");\nL5: 78630dde9484 |  * you may not use this file except in compliance with the License.\nL6: 78630dde9484 |  * You may obtain a copy of the License at\nL7: 78630dde9484 |  *\nL8: 78630dde9484 |  *     http://www.apache.org/licenses/LICENSE-2.0\nL9: 78630dde9484 |  *\nL10: 78630dde9484 |  * Unless required by applicable law or agreed to in writing, software\nL11: 78630dde9484 |  * distributed under the License is distributed on an \"AS IS\" BASIS,\nL12: 78630dde9484 |  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nL13: 78630dde9484 |  * See the License for the specific language governing permissions and\nL14: 78630dde9484 |  * limitations under the License.\nL15: 78630dde9484 |  */\nL16: 78630dde9484 | package com.diffplug.gradle.oomph;\nL17: 78630dde9484 | \nL18: 0b59b6c50375 | import java.util.HashSet;\nL19: e4cd89812c97 | import java.util.LinkedHashMap;\nL20: e4cd89812c97 | import java.util.List;\nL21: e4cd89812c97 | import java.util.Map;\nL22: 0b59b6c50375 | import java.util.Set;\nL23: 0b59b6c50375 | \nL24: 52125340343d | import org.gradle.api.Action;\nL25: e4cd89812c97 | import org.gradle.api.JavaVersion;\nL26: 52125340343d | \nL27: 5c53ab4e4d94 | import com.diffplug.common.collect.ImmutableList;\nL28: 5c53ab4e4d94 | \nL29: e86e016a08c8 | /**\nL30: e86e016a08c8 |  * Adding the JDT convention to your project\nL31: e86e016a08c8 |  * adds the following features:\nL32: e86e016a08c8 |  * \nL33: e86e016a08c8 |  * - `org.eclipse.platform.ide`\nL34: e86e016a08c8 |  * - `org.eclipse.jdt`\nL35: e86e016a08c8 |  * - `org.eclipse.ui.views.log`\nL36: e86e016a08c8 |  * \nL37: e86e016a08c8 |  * You can set the installed JRE as follows:\nL38: e86e016a08c8 |  * \nL39: e86e016a08c8 |  * ```gradle\nL40: e86e016a08c8 |  * oomphIde {\nL41: e86e016a08c8 |  *     jdt {\nL42: e4cd89812c97 |  *         \nL43: e86e016a08c8 |  *         installedJre {\nL44: e86e016a08c8 |  *             version = '1.6.0_45'\nL45: e86e016a08c8 |  *             installedLocation = new File('C:/jdk1.6.0_45')\nL46: e86e016a08c8 |  *             markDefault = true // or false\nL47: e86e016a08c8 |  *             executionEnvironments = ['JavaSE-1.6'] // any execution environments can be specified here.\nL48: e86e016a08c8 |  *         }\nL49: e4cd89812c97 |  *         compilerComplianceLevel('1.6')\nL50: e4cd89812c97 |  *         classpathVariable('myClasspath', '/var/lib/repo')\nL51: e86e016a08c8 |  *     }\nL52: e86e016a08c8 |  * }\nL53: e86e016a08c8 |  * ```\nL54: e86e016a08c8 |  */\nL55: e9c80a44f982 | public class ConventionJdt extends OomphConvention {\nL56: 10aa587d48ce | \tfinal static String JDT_CORE_PREFS = \".metadata/.plugins/org.eclipse.core.runtime/.settings/org.eclipse.jdt.core.prefs\";\n\nCommits referenced:\n  78630dde9484  Large improvements to using eclipse's internal services to setup the IDE.\n  0b59b6c50375  Took ConventionJdt's installedJre logic out of OomphIdeExtension and contained it within ConventionJdt.\n  e4cd89812c97  Added compilerComplianceLevel method, and classpathVariables method.\n  52125340343d  Added setup task to add installed jre/jdk's to the Eclipse workspace\n  5c53ab4e4d94  Use ImmutableList.\n  e86e016a08c8  Reorganized docs to be a tad more hierarchical.  Show the basics first, and give links to the more detailed stuff later.\n  e9c80a44f982  OomphIdeExtension is now barebones, and the complexity is moved out to OomphConvention objects.\n  10aa587d48ce  Restrict access to constants.\n"
+      },
+      {
+        "content": "The line with the buggy logic wasn't in this blame result (need to look at line ~77-80 range for the actual buggy line).",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01KCnagFhyCzy1fD21XtwcsT",
+            "function": {
+              "arguments": "{\"file_path\": \"src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java\", \"commit\": \"333cd0d114de5bee2bdbfc3be91c7a373174dfe1~1\", \"line_start\": 70, \"line_end\": 85}",
+              "name": "git_blame"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01KCnagFhyCzy1fD21XtwcsT",
+        "content": "L70: 0b59b6c50375 | \t\tinstalledJres.add(instance);\nL71: 0b59b6c50375 | \t}\nL72: 0b59b6c50375 | \nL73: e4cd89812c97 | \t/** Sets default compliance level */\nL74: e4cd89812c97 | \tpublic void compilerComplianceLevel(String compilerComplianceLevel) {\nL75: 7434506f7fd3 | \t\tList<String> JDT_COMPLIANCE_PROPS = ImmutableList.of(\nL76: 7434506f7fd3 | \t\t\t\t\"org.eclipse.jdt.core.compiler.codegen.targetPlatform\",\nL77: 7434506f7fd3 | \t\t\t\t\"org.eclipse.jdt.core.compiler.compliance\",\nL78: 7434506f7fd3 | \t\t\t\t\"org.eclipse.jdt.core.compiler.source\");\nL79: 7434506f7fd3 | \t\textension.workspaceProp(JDT_CORE_PREFS, props -> {\nL80: 7434506f7fd3 | \t\t\tJDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, compilerComplianceLevel.toString()));\nL81: 7434506f7fd3 | \t\t\t//Use default compliance settings.\nL82: 7434506f7fd3 | \t\t\tprops.put(\"org.eclipse.jdt.core.compiler.codegen.inlineJsrBytecode\", \"enabled\");\nL83: 7434506f7fd3 | \t\t\tprops.put(\"org.eclipse.jdt.core.compiler.problem.assertIdentifier\", \"error\");\nL84: 7434506f7fd3 | \t\t\tprops.put(\"org.eclipse.jdt.core.compiler.problem.enumIdentifier\", \"error\");\nL85: 7434506f7fd3 | \t\t});\n\nCommits referenced:\n  0b59b6c50375  Took ConventionJdt's installedJre logic out of OomphIdeExtension and contained it within ConventionJdt.\n  e4cd89812c97  Added compilerComplianceLevel method, and classpathVariables method.\n  7434506f7fd3  Moved new JdtConvention actions to be local, where possible.\n"
+      },
+      {
+        "content": "Found the exact line at commit 7434506f7fd3. Let's verify it.",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01LtYfNW5gUM48V8hJegcWRF",
+            "function": {
+              "arguments": "{\"commit\": \"7434506f7fd3\", \"file_filter\": \"src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java\"}",
+              "name": "git_show"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01LtYfNW5gUM48V8hJegcWRF",
+        "content": "commit 7434506f7fd3a069f899c1d535eaf0a876306c6f\nDate: Thu Dec 01 16:20:21 2016 -0800\n\nMoved new JdtConvention actions to be local, where possible.\n\nWhen a DSL method gets called (e.g. compilerComplicanceLevel), ideally we would call extension.workspaceProp() or extension.addSetupAction() right there, immediately.  That keeps everything local, so there are fewer places to debug.\n\nThere are cases, such as installedJres, where you have aggregate several calls to a method into a single action.  In that case, we can use the `close()` method to know that the user has finished calling methods, and we can now take our aggregated actions.\n\n\n[diff: context lines stripped, 27 lines dropped]\ndiff --git a/src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java b/src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java\nindex c9b434f..9cf914d 100644\n--- a/src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java\n+++ b/src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java\n@@ -54,8 +54,6 @@ import com.diffplug.common.collect.ImmutableList;\n-\tfinal static List<String> JDT_COMPLIANCE_PROPS = ImmutableList.of(\"org.eclipse.jdt.core.compiler.codegen.targetPlatform\", \"org.eclipse.jdt.core.compiler.compliance\", \"org.eclipse.jdt.core.compiler.source\");\n-\tfinal static String JDT_CLASSPATH_VAR_FMT = \"org.eclipse.jdt.core.classpathVariable.%s\";\n@@ -64,8 +62,6 @@ public class ConventionJdt extends OomphConvention {\n-\tfinal Map<String, String> classpathVariables = new LinkedHashMap<>();\n-\tprivate JavaVersion compilerComplianceLevel;\n@@ -76,12 +72,25 @@ public class ConventionJdt extends OomphConvention {\n-\t\tthis.compilerComplianceLevel = JavaVersion.toVersion(compilerComplianceLevel);\n+\t\tList<String> JDT_COMPLIANCE_PROPS = ImmutableList.of(\n+\t\t\t\t\"org.eclipse.jdt.core.compiler.codegen.targetPlatform\",\n+\t\t\t\t\"org.eclipse.jdt.core.compiler.compliance\",\n+\t\t\t\t\"org.eclipse.jdt.core.compiler.source\");\n+\t\textension.workspaceProp(JDT_CORE_PREFS, props -> {\n+\t\t\tJDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, compilerComplianceLevel.toString()));\n+\t\t\t//Use default compliance settings.\n+\t\t\tprops.put(\"org.eclipse.jdt.core.compiler.codegen.inlineJsrBytecode\", \"enabled\");\n+\t\t\tprops.put(\"org.eclipse.jdt.core.compiler.problem.assertIdentifier\", \"error\");\n+\t\t\tprops.put(\"org.eclipse.jdt.core.compiler.problem.enumIdentifier\", \"error\");\n+\t\t});\n-\t\tclasspathVariables.put(name, value);\n+\t\tString JDT_CLASSPATH_VAR_FMT = \"org.eclipse.jdt.core.classpathVariable.%s\";\n+\t\textension.workspaceProp(JDT_CORE_PREFS, props -> {\n+\t\t\tprops.put(String.format(JDT_CLASSPATH_VAR_FMT, name), value);\n+\t\t});\n@@ -90,43 +99,5 @@ public class ConventionJdt extends OomphConvention {\n-\t\tif (!classpathVariables.isEmpty()) {\n-\t\t\textension.workspaceProp(JDT_CORE_PREFS, new JavaClasspathVariableAction(classpathVariables));\n-\t\t}\n-\t\tif (compilerComplianceLevel != null) {\n-\t\t\textension.workspaceProp(JDT_CORE_PREFS, new JavaComplianceAction(compilerComplianceLevel));\n-\t\t}\n-\t}\n-\n-\tstatic class JavaComplianceAction implements Action<Map<String, String>> {\n-\t\tprivate final JavaVersion complianceLevel;\n-\n-\t\tpublic JavaComplianceAction(JavaVersion complianceLevel) {\n-\t\t\tsuper();\n-\t\t\tthis.complianceLevel = complianceLevel;\n-\t\t}\n-\n-\t\t@Override\n-\t\tpublic void execute(Map<String, String> props) {\n-\t\t\tJDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, complianceLevel.toString()));\n-\t\t\t//Use default compliance settings.\n-\t\t\tprops.put(\"org.eclipse.jdt.core.compiler.codegen.inlineJsrBytecode\", \"enabled\");\n-\t\t\tprops.put(\"org.eclipse.jdt.core.compiler.problem.assertIdentifier\", \"error\");\n-\t\t\tprops.put(\"org.eclipse.jdt.core.compiler.problem.enumIdentifier\", \"error\");\n-\t\t}\n-\t}\n-\n-\tstatic class JavaClasspathVariableAction implements Action<Map<String, String>> {\n-\t\tprivate final Map<String, String> classpathVariables;\n-\n-\t\tpublic JavaClasspathVariableAction(Map<String, String> classpathVariables) {\n-\t\t\tsuper();\n-\t\t\tthis.classpathVariables = classpathVariables;\n-\t\t}\n-\n-\t\t@Override\n-\t\tpublic void execute(Map<String, String> props) {\n-\t\t\tclasspathVariables.forEach((key, value) -> props.put(String.format(JDT_CLASSPATH_VAR_FMT, key), value));\n-\t\t}"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01CRRJGSarUhLMGWctsjksmY",
+            "function": {
+              "arguments": "{\"commit\": \"7434506f7fd3\", \"file_filter\": \"src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java\", \"context_lines\": 15}",
+              "name": "git_show"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01CRRJGSarUhLMGWctsjksmY",
+        "content": "commit 7434506f7fd3a069f899c1d535eaf0a876306c6f\nDate: Thu Dec 01 16:20:21 2016 -0800\n\nMoved new JdtConvention actions to be local, where possible.\n\nWhen a DSL method gets called (e.g. compilerComplicanceLevel), ideally we would call extension.workspaceProp() or extension.addSetupAction() right there, immediately.  That keeps everything local, so there are fewer places to debug.\n\nThere are cases, such as installedJres, where you have aggregate several calls to a method into a single action.  In that case, we can use the `close()` method to know that the user has finished calling methods, and we can now take our aggregated actions.\n\n\n[diff: context lines stripped, 47 lines dropped]\ndiff --git a/src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java b/src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java\nindex c9b434f..9cf914d 100644\n--- a/src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java\n+++ b/src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java\n@@ -42,91 +42,62 @@ import com.diffplug.common.collect.ImmutableList;\n-\tfinal static List<String> JDT_COMPLIANCE_PROPS = ImmutableList.of(\"org.eclipse.jdt.core.compiler.codegen.targetPlatform\", \"org.eclipse.jdt.core.compiler.compliance\", \"org.eclipse.jdt.core.compiler.source\");\n-\tfinal static String JDT_CLASSPATH_VAR_FMT = \"org.eclipse.jdt.core.classpathVariable.%s\";\n-\tfinal Map<String, String> classpathVariables = new LinkedHashMap<>();\n-\tprivate JavaVersion compilerComplianceLevel;\n-\t\tthis.compilerComplianceLevel = JavaVersion.toVersion(compilerComplianceLevel);\n+\t\tList<String> JDT_COMPLIANCE_PROPS = ImmutableList.of(\n+\t\t\t\t\"org.eclipse.jdt.core.compiler.codegen.targetPlatform\",\n+\t\t\t\t\"org.eclipse.jdt.core.compiler.compliance\",\n+\t\t\t\t\"org.eclipse.jdt.core.compiler.source\");\n+\t\textension.workspaceProp(JDT_CORE_PREFS, props -> {\n+\t\t\tJDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, compilerComplianceLevel.toString()));\n+\t\t\t//Use default compliance settings.\n+\t\t\tprops.put(\"org.eclipse.jdt.core.compiler.codegen.inlineJsrBytecode\", \"enabled\");\n+\t\t\tprops.put(\"org.eclipse.jdt.core.compiler.problem.assertIdentifier\", \"error\");\n+\t\t\tprops.put(\"org.eclipse.jdt.core.compiler.problem.enumIdentifier\", \"error\");\n+\t\t});\n-\t\tclasspathVariables.put(name, value);\n+\t\tString JDT_CLASSPATH_VAR_FMT = \"org.eclipse.jdt.core.classpathVariable.%s\";\n+\t\textension.workspaceProp(JDT_CORE_PREFS, props -> {\n+\t\t\tprops.put(String.format(JDT_CLASSPATH_VAR_FMT, name), value);\n+\t\t});\n-\t\tif (!classpathVariables.isEmpty()) {\n-\t\t\textension.workspaceProp(JDT_CORE_PREFS, new JavaClasspathVariableAction(classpathVariables));\n-\t\t}\n-\t\tif (compilerComplianceLevel != null) {\n-\t\t\textension.workspaceProp(JDT_CORE_PREFS, new JavaComplianceAction(compilerComplianceLevel));\n-\t\t}\n-\t}\n-\n-\tstatic class JavaComplianceAction implements Action<Map<String, String>> {\n-\t\tprivate final JavaVersion complianceLevel;\n-\n-\t\tpublic JavaComplianceAction(JavaVersion complianceLevel) {\n-\t\t\tsuper();\n-\t\t\tthis.complianceLevel = complianceLevel;\n-\t\t}\n-\n-\t\t@Override\n-\t\tpublic void execute(Map<String, String> props) {\n-\t\t\tJDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, complianceLevel.toString()));\n-\t\t\t//Use default compliance settings.\n-\t\t\tprops.put(\"org.eclipse.jdt.core.compiler.codegen.inlineJsrBytecode\", \"enabled\");\n-\t\t\tprops.put(\"org.eclipse.jdt.core.compiler.problem.assertIdentifier\", \"error\");\n-\t\t\tprops.put(\"org.eclipse.jdt.core.compiler.problem.enumIdentifier\", \"error\");\n-\t\t}\n-\t}\n-\n-\tstatic class JavaClasspathVariableAction implements Action<Map<String, String>> {\n-\t\tprivate final Map<String, String> classpathVariables;\n-\n-\t\tpublic JavaClasspathVariableAction(Map<String, String> classpathVariables) {\n-\t\t\tsuper();\n-\t\t\tthis.classpathVariables = classpathVariables;\n-\t\t}\n-\n-\t\t@Override\n-\t\tpublic void execute(Map<String, String> props) {\n-\t\t\tclasspathVariables.forEach((key, value) -> props.put(String.format(JDT_CLASSPATH_VAR_FMT, key), value));\n-\t\t}"
+      },
+      {
+        "content": "This confirms it. Before this commit, the code correctly converted `compilerComplianceLevel` to `JavaVersion` via `JavaVersion.toVersion(...)` before calling `.toString()`. This commit refactored the code and introduced the bug by calling `.toString()` directly on the raw String parameter instead of converting it first via `JavaVersion.toVersion()`.\n\n<r>\nBIC: 7434506f7fd3a069f899c1d535eaf0a876306c6f\nconfidence: high\ntype: refactor_penetration\nreasoning: This commit (\"Moved new JdtConvention actions to be local, where possible\") refactored ConventionJdt.java, moving logic from separate Action classes into inline lambdas within the DSL methods. In doing so, it dropped the `JavaVersion.toVersion(compilerComplianceLevel)` conversion that previously existed (`this.compilerComplianceLevel = JavaVersion.toVersion(compilerComplianceLevel);`), and instead directly called `compilerComplianceLevel.toString()` on the raw String parameter. This changed the semantics \u2014 the raw string was used instead of its normalized JavaVersion representation \u2014 which is exactly the bug fixed by commit 333cd0d114de5bee2bdbfc3be91c7a373174dfe1, which restores the `JavaVersion.toVersion(compilerComplianceLevel).toString()` call.\n</r>",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": null
+      }
+    ]
+  }
+]

@@ -1,0 +1,35 @@
+SELECTED: candidate_16
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single line to MainActivityFragment.onCreateView():
+
+    gridview = (GridView) mainFragmentView.findViewById(R.id.gridView);
++   gridview.setAdapter(imageAdapter);
+
+    gridview.setOnItemClickListener(...)
+
+Tracing the history of this exact code region:
+- Through candidate_10/11 (and earlier), the code in onCreateView had:
+    GridView gridview = (GridView) mainFragmentView.findViewById(R.id.gridView);
+    gridview.setAdapter(imageAdapter);
+  i.e. setAdapter was always called synchronously right after the GridView was looked up, so the grid always had an adapter attached before the fragment view was returned.
+
+- candidate_16 refactors `gridview` from a local variable into a field (`GridView gridview;` declared at class level) and, critically, REMOVES the `gridview.setAdapter(imageAdapter);` call from onCreateView entirely:
+    -        GridView gridview = (GridView) mainFragmentView.findViewById(R.id.gridView);
+    -        gridview.setAdapter(imageAdapter);
+    +         gridview = (GridView) mainFragmentView.findViewById(R.id.gridView);
+  The setAdapter call is instead moved inside the asynchronous Volley network response callback:
+    getActivity().runOnUiThread(new Runnable() {
+        public void run() {
+            gridview.setAdapter(imageAdapter);
+        }
+    });
+  This means the GridView adapter is now only set once the network request for movies completes (or not at all if `updateUI()` takes the `resetImageAdapter()` branch because movies were already cached, since that path never calls setAdapter). This is exactly the bug the fix addresses: the GridView could be displayed without an adapter attached (blank/broken grid) whenever the synchronous setAdapter call was skipped.
+
+- candidate_17 only makes a whitespace/formatting fix and reverts an API key change; it does not restore the setAdapter call.
+
+- The fix commit re-adds the missing synchronous `gridview.setAdapter(imageAdapter);` call immediately after `gridview` is assigned in onCreateView, restoring the guarantee that the adapter is always set.
+
+Since candidate_16 is the commit that removed the setAdapter call from the synchronous flow (the precise code pattern reinstated by the fix), it is the bug-introducing commit.

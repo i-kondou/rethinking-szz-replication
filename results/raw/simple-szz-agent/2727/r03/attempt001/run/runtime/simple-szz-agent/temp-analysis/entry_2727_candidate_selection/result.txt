@@ -1,0 +1,45 @@
+SELECTED: candidate_49
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single line to ConsoleProgressDialog.java's constructor:
+right after the `IllegalArgumentException` check it inserts
+`consoleProcess_ = consoleProcess;` before the subsequent
+`if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)` check,
+with the comment "save console process so that we can compute interaction
+mode below". This tells us the bug is that `getInteractionMode()` (which
+reads `consoleProcess_.getProcessInfo().getInteractionMode()`, guarded by a
+null check that falls back to `INTERACTION_NEVER`) was being evaluated
+before `consoleProcess_` had been assigned, so it always saw `consoleProcess_
+== null` and incorrectly returned `INTERACTION_NEVER`.
+
+Tracing the history of this constructor across the candidates:
+- In candidate_14, candidate_20, and candidate_37 (which introduces the
+  `extends ProgressDialog` refactor), the line `consoleProcess_ =
+  consoleProcess;` appears immediately after the argument-validation throw,
+  BEFORE the `getInteractionMode() != INTERACTION_NEVER` check further
+  down — i.e., the code was correct at that point.
+- candidate_38 preserves the same correct ordering.
+- candidate_49 refactors the constructor to extract process-attachment
+  logic into a new `attachToProcess(ConsoleProcess consoleProcess)` method.
+  Critically, it DELETES the early
+  `consoleProcess_ = consoleProcess;`
+  assignment (visible as a removed `-      consoleProcess_ = consoleProcess;`
+  right after the throw check) and instead sets `consoleProcess_` only
+  inside `attachToProcess()`, which is invoked at the very end of the
+  constructor — after the `getInteractionMode() != INTERACTION_NEVER` check
+  (and an `getInteractionMode() == INTERACTION_ALWAYS` check) have already
+  executed using a still-null `consoleProcess_`. This is precisely the bug
+  described in the fix (issue #1810): getInteractionMode() computed with a
+  stale/unset console process, so interactive/shell dialogs were treated as
+  non-interactive.
+- candidate_50 reorganizes code further (moving the INTERACTION_ALWAYS
+  block into attachToProcess as well) but does not restore the early
+  assignment, so the bug persists.
+- candidate_51 is essentially the fix commit itself (identical diff to
+  fix_commit_diff.txt), restoring `consoleProcess_ = consoleProcess;`
+  immediately after the throw check and before the interaction-mode check.
+
+This confirms candidate_49 is the commit that first introduced the ordering
+bug that the fix later corrected.

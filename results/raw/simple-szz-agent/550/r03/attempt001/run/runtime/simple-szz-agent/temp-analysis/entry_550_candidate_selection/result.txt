@@ -1,0 +1,30 @@
+SELECTED: candidate_32
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix adds a missing "left" entry to a String[] style array (5 -> 6 elements) in the
+!hasTimetable branch of InstructorDetailAction.java's class-assignment WebTable, which is
+built when "the instructor is assigned to one or more classes, but there is no committed
+timetable yet" (exactly the ArrayIndexOutOfBoundsException scenario described in the fix
+commit message).
+
+Tracing this branch across the candidates: candidate_01 originally created this WebTable
+with 5 headers ({"Class","Lead","Share","Limit","Manager"}) and 5 matching style entries -
+consistent, no bug. Subsequent candidates (06, 09, 21, 26) only touched header label text or
+the hasTimetable (7/8/9-column) branch, leaving the !hasTimetable branch's column count and
+style array both at 5, still consistent.
+
+candidate_32 is the first commit to modify the !hasTimetable branch's column count: it
+changes `new WebTable( 5, ...)` to `new WebTable( 6, ...)` and adds
+`MSG.columnTeachingResponsibility()` to the header array (making it 6 headers:
+columnClass, columnInstructorCheckConflicts, columnInstructorShare,
+columnTeachingResponsibility, columnLimit, columnManager). However, it left the style array
+unchanged at `{"left", "left","left", "left", "left"}` (only 5 elements). This mismatch
+between the 6-element header array and the 5-element style array is exactly what causes the
+ArrayIndexOutOfBoundsException when the table renderer iterates styles by column index (index
+5 is out of bounds).
+
+candidate_33 does not touch this code section, so the bug persists unchanged until it is
+fixed by adding the 6th "left" entry to the style array - which is precisely the change shown
+in fix_commit_diff.txt. Therefore candidate_32 is the commit that introduced the bug.

@@ -1,0 +1,23 @@
+SELECTED: candidate_09
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes a single line in KVMPhysicalDisk.java's RBDStringBuilder method:
+  rbdOpts += "\\\\:" + monPort;   (buggy - double-escaped)
+to
+  rbdOpts += "\\:" + monPort;     (fixed - single-escaped)
+
+This causes the rados monitor host/port string to be double-escaped when building the "rbd:" disk option string, which is the exact bug described in the fix commit message ("Fix double-escape issue while creating rbd disk options").
+
+Candidate_09 is the commit that adds RBD/Ceph storage pool support to the KVM plugin, and it introduces the RBDStringBuilder method in agent/src/com/cloud/agent/storage/KVMPhysicalDisk.java with the exact buggy line:
+
+    public static String RBDStringBuilder(String monHost, int monPort,
+                            String authUserName, String authSecret, String image) {
+        String rbdOpts;
+
+        rbdOpts = "rbd:" + image;
+        rbdOpts += ":mon_host=" + monHost + "\\\\:" + monPort;
+        ...
+
+This is a brand new method (and file section) added in this commit, containing the "\\\\:" double-escape from the moment RBD support was introduced. No earlier candidate contains this code (RBD support did not exist before), and the corresponding unit test in KVMPhysicalDiskTest.java (also modified by the fix) originally asserted the double-escaped string, confirming the bug originated here. This is unambiguously the first commit to introduce the problematic code pattern.

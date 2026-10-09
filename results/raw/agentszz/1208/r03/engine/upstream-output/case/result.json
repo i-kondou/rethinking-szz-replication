@@ -1,0 +1,22 @@
+{
+  "fix_commit": "04a68cf8a934f27cd6c59fee3267ff17751bd9db",
+  "bic": "acef72c39cbf097729924faebb8b92c825642e33",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "The fix comment explicitly states the bug is that `savedFilteringAndGrouping` gets discarded before it can be used by the \"asynchronous\" global optimization. Commit acef72c39cbf (\"global optimization should now run in separate thread\") is the commit that wrapped OptimizeGloballyPopupExpertBatch's action logic in `new Thread(...).start()`, making the consumption of `savedFilteringAndGrouping` asynchronous relative to the caller (StitchingExplorerPanel), which nulls the field synchronously right after invoking `doClick()`. Before this commit, the popup's logic executed synchronously, so nulling the field immediately afterward was safe. After this commit introduced asynchronous execution, the race condition (nulling before use) was created, which the fix commit addresses by deferring the null-out to inside the background thread itself.",
+  "metrics": {
+    "case_elapsed_seconds": 56.141893,
+    "api_elapsed_seconds": 55.762009,
+    "tool_elapsed_seconds": 0.281274,
+    "other_elapsed_seconds": 0.098614,
+    "api_call_count": 8,
+    "tool_call_count": 9,
+    "prompt_tokens": 92092,
+    "completion_tokens": 4771,
+    "total_tokens": 96863,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:23:41.397215"
+}

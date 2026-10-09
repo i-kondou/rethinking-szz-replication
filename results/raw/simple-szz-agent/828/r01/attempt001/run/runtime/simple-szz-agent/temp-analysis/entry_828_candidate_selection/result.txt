@@ -1,0 +1,53 @@
+SELECTED: candidate_12
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a second boolean argument (`true`) to several calls of
+`ConfigElement.getPath(TitanHadoopConfiguration.GRAPH_CONFIG_KEYS)` /
+`ConfigElement.getPath(TitanHadoopConfiguration.SCAN_JOB_CONFIG_KEYS)` in
+MapReduceIndexJobs.java, MapReduceIndexManagement.java,
+CassandraHadoopScanRunner.java, HBaseHadoopScanRunner.java, and
+CassandraScanJobIT.java, so that the generated Hadoop config key paths
+include the "titanmr" root namespace segment (e.g.
+"titanmr.ioformat.conf.storage.backend" instead of
+"ioformat.conf.storage.backend").
+
+Candidate_12 is the commit that created this inconsistency:
+
+1. It adds the new `ConfigElement.getPath(ConfigElement element, boolean
+   includeRoot, String... umbrellaElements)` overload to
+   `titan-core/.../ConfigElement.java`, which (when `includeRoot=true`)
+   prepends the top-level namespace's own name ("titanmr") to the
+   generated path — something the previous single-argument `getPath()`
+   never did.
+
+2. It updates `ModifiableHadoopConfiguration.prefixView()` to call the new
+   overload with `true`:
+   `ConfigElement.getPath(prefixRoot, true) + "."`
+   This means `getTitanGraphConf()` (used to *read* Titan graph settings
+   back out of the raw Hadoop `Configuration`) now expects keys to be
+   prefixed with "titanmr.ioformat.conf." (i.e. including the root).
+
+3. However, in the very same commit, the code that *writes* those
+   settings into the raw Hadoop `Configuration` — in
+   `MapReduceIndexJobs.java`, `MapReduceIndexManagement.java`,
+   `CassandraHadoopScanRunner.java`, `HBaseHadoopScanRunner.java`, and the
+   `CassandraScanJobIT.java` test — was only mechanically renamed from
+   `TITAN_INPUT_CONFIG_KEYS` to `GRAPH_CONFIG_KEYS` but still calls the
+   old single-argument `ConfigElement.getPath(GRAPH_CONFIG_KEYS)`
+   (root excluded), producing keys prefixed with "ioformat.conf." only.
+
+This creates a mismatch between the keys written (without the "titanmr"
+root) and the keys expected on read (with the "titanmr" root via
+`prefixView`), so Titan graph configuration properties set by these
+scanjob helper classes (MapReduceIndexJobs, MapReduceIndexManagement,
+CassandraHadoopScanRunner, HBaseHadoopScanRunner) are silently dropped —
+exactly the "broke some scanjob helper classes" bug described in the fix
+commit message. The fix simply adds the missing `, true` argument to
+those write-side `getPath()` calls so they match the read side
+introduced by candidate_12.
+
+The exact same five files and call sites touched by the fix are all
+present (and buggy in the described way) in candidate_12, confirming it
+as the bug-introducing commit.

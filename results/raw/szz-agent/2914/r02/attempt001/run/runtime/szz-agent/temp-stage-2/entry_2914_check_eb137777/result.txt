@@ -1,0 +1,10 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes `parseRFC8601DateTime` in `Input.java` so that the values returned for the "extended" time formats ('hh:mm:ss' and 'hh:mm:ss.ssssss') are multiplied by `1e-6` before being returned. In the buggy/fixed versions, `parseRFC8601DateTime(JaamSimModel simModel, String input)` returns a `double` representing simulation time **in seconds**. The date-based branches correctly return seconds (via `simModel.calendarMillisToSimTime(millis)`), but the two extended-time branches accumulated `ret` in **microseconds** (using `usPerHr`, `usPerMin`, `usPerSec`) and returned that raw microsecond value without converting to seconds — a unit-mismatch bug. The fix adds `* 1e-6` to convert microseconds to seconds in both of those return statements.
+
+In `files/old/`, `parseRFC8601DateTime(String input)` has a completely different signature and design: it returns a `long` representing an offset in **microseconds from 0AD** (per its Javadoc: "Parse an RFC8601 date time and return it as an offset in microseconds from 0AD"). All branches of this old function — including the date branches (via the `getUS()` helper, which accumulates in microseconds) and the extended-time branches (`isextendtime`/`isextendfull`, which accumulate `ret` using the same `usPerHr`/`usPerMin`/`usPerSec` constants) — consistently return microseconds. There is no unit mismatch in the old version: every branch returns the same unit (microseconds), so no seconds-conversion is missing or needed.
+
+Because the old version predates the refactor that changed the function to return seconds (introducing the `JaamSimModel` parameter and calling `calendarMillisToSimTime`), the specific bug being fixed — forgetting to convert microseconds to seconds for two of the branches while the rest of the function returns seconds — cannot exist in `old/`, since the entire function operates in microseconds there. Therefore the bug is not present in the old version.

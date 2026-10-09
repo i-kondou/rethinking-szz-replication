@@ -1,0 +1,16 @@
+SELECTED: candidate_65
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes `bootclasspathDirectories().addAll(value);` to `bootclasspathDirectories().addAll(0, value);` inside the `addBootCP` method of `src/polyglot/main/Options.java`. This means the bug was that entries passed via the `-addbootcp` flag were being appended to the end of the bootclasspath directories list instead of being prepended (inserted at index 0).
+
+candidate_65 is the commit that introduces this exact bug. It adds the new `-addbootcp` command-line flag, whose help text explicitly states it should "prepend <path> to the bootclasspath". However, the accompanying `addBootCP(List<File> value)` method implementation is:
+
+    protected void addBootCP(List<File> value) {
+        bootclasspath_directories.addAll(value);
+    }
+
+This uses a plain `addAll(value)` call, which appends the new paths to the end of the list rather than prepending them as documented and intended. This is precisely the logic error that the fix commit later corrects by changing the call to `addAll(0, value)`.
+
+No earlier candidate contains the `addBootCP` method or the `-addbootcp` flag at all (grep across all 85 candidates only found matches in candidate_65 and later commits, which simply carry the bug forward through refactors, e.g. renaming `bootclasspath_directories` to `bootclasspathDirectories()`). Since candidate_65 is the first commit to introduce the method with the incorrect `addAll(value)` call, it is the bug-introducing commit.

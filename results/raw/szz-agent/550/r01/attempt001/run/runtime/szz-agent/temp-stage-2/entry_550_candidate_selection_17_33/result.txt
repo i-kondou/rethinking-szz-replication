@@ -1,0 +1,15 @@
+SELECTED: candidate_15
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) corrects a single line in JavaSource/org/unitime/timetable/action/InstructorDetailAction.java: in the "no committed timetable" branch of the WebTable construction for the instructor's class-assignment table, the header array had 6 entries (Class, Check Conflicts, Share, Teaching Responsibility, Limit, Manager) but the alignment array had only 5 "left" entries. WebTable requires the header and alignment arrays to be the same length, so this mismatch caused an ArrayIndexOutOfBoundsException whenever an instructor was assigned to classes but no timetable had been committed yet. The fix simply appends a 6th "left" to the alignment array.
+
+Tracing the history of this exact code block in InstructorDetailAction.java across the 17 candidates:
+
+- Through candidate_08, the "no timetable" branch used raw String header/alignment arrays: {"Class", "Check Conflicts", "Share", "Limit", "Manager"} (5 headers) and {"left","left","left","left","left"} (5 aligns) — correctly matched.
+- candidate_09 converted the raw strings to localized MSG.* calls (MSG.columnClass(), MSG.columnInstructorCheckConflicts(), MSG.columnInstructorShare(), MSG.columnLimit(), MSG.columnManager()) but kept exactly 5 headers and 5 aligns — still correctly matched, no bug.
+- candidates 10–14 did not touch this WebTable header/alignment array at all.
+- candidate_15 is the "Teaching Responsibilities" feature commit. It modifies InstructorDetailAction.java to add a new MSG.columnTeachingResponsibility() column to BOTH WebTable branches. In the hasTimetable branch it correctly bumped the WebTable size from 9 to 10 and grew both the header array (10 entries) and alignment array (10 entries) in sync. However, in the "no timetable" (else) branch, it bumped the WebTable size from 5 to 6 and added MSG.columnTeachingResponsibility() to the header array (making it 6 entries: Class, Check Conflicts, Share, Teaching Responsibility, Limit, Manager), but left the alignment array unchanged at {"left", "left","left", "left", "left"} (still only 5 entries). This is exactly the 6-headers/5-aligns mismatch that the fix commit later corrects by adding a 6th "left".
+
+This is a clear, first-occurrence introduction of the bug: the diff hunk in candidate_15 shows the header array line changing (adding MSG.columnTeachingResponsibility()) while the very next line (the alignment array) is left untouched, which is the root cause of the reported ArrayIndexOutOfBoundsException. No earlier candidate contains this discrepancy.

@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "timestamp": "20260906_164404",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3459/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 0,
+    "gt_in_szz_candidates_rate": 0.0,
+    "llm_accuracy": 0.0
+  },
+  "results": [
+    {
+      "id": "3459",
+      "fix_commit_hash": "9282132c5abd230b0ff94a332e01d5c2ba876986",
+      "bug_commit_hash": [
+        "11b15cf907ecab5c950fa02df0c5cec2f233d4d8"
+      ],
+      "szz_candidates": [
+        "bccbe8b1b9b00ef3e5c6b0802ed2a1ef4d6edeee",
+        "39e7175bc4717e41769de2c3675d952cc32d108d"
+      ],
+      "szz_num_candidates": 2,
+      "gt_in_szz_candidates": false,
+      "matching_gt_in_candidates": [],
+      "llm_selected_commit": "bccbe8b1b9b00ef3e5c6b0802ed2a1ef4d6edeee",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit's message states: \"Fixes NewAccountFormControllerTest, the call to orgDao.findByCommonName(...) in NewAccountFormController is not mocked up and resulted in NPE.\" The fix itself only touches the test file, adding a mock stub `when(mockOrgDao.findByCommonName(eq(orgName))).thenReturn(mockOrg);`. This tells us the bug was introduced in production code: a new call to `orgDao.findByCommonName(...)` was added inside `NewAccountFormController`, which the existing test did not anticipate",
+      "llm_correct": false,
+      "llm_error": null,
+      "repo_name": "subjects/3459",
+      "bug_fixing_commit": "9282132c5abd230b0ff94a332e01d5c2ba876986",
+      "bug_inducing_commit": [
+        "11b15cf907ecab5c950fa02df0c5cec2f233d4d8"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "georchestra/georchestra"
+    }
+  ]
+}

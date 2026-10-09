@@ -1,0 +1,46 @@
+SELECTED: candidate_01
+
+CONFIDENCE: LOW
+
+EXPLANATION:
+The fix commit adds a single null-guard around an existing block of code in
+DisplayControlImpl.java's instantiate/init logic:
+
+    if (myDataChoices != null) {
+        if ((myDataChoices.size() > 0)
+                && (myDataChoices.get(0) instanceof DerivedDataChoice)) {
+            ... looks at the first DataChoice's DerivedDataChoice sub-choices,
+            pulls a DataSelection from the first sub-choice, and reads the
+            DataSelection.PROP_USESTIMEDRIVER property to set
+            this.usesTimeDriver ...
+        }
+    }
+
+The bug being fixed is a NullPointerException that occurs when
+`myDataChoices` is null at this point (previously the code unconditionally
+called `myDataChoices.size()`).
+
+I inspected the diffs of all 22 candidates line-by-line looking for:
+  - any introduction/modification of this exact block (the
+    `usesTimeDriver` / `DataSelection.PROP_USESTIMEDRIVER` /
+    `DerivedDataChoice` / `getTimeDriverTimes` logic), and
+  - any change to how/when `myDataChoices` is assigned (which would live in
+    DisplayControlBase, a superclass never touched by any of the 22 diffs).
+
+None of the 22 candidates touch this code at all. The closest anything gets
+is candidate_15 and candidate_09, which make incidental/whitespace or
+unrelated refactoring edits to the same enclosing method (near the
+"//Check if we have been removed" guard that appears immediately after this
+block in the fix), but neither one adds, removes, or modifies the
+myDataChoices/usesTimeDriver logic itself. This strongly suggests that the
+code introducing the null-dereference bug predates candidate_01 (i.e., it
+was already present, unmodified, throughout the entire candidate window) and
+that its true origin lies outside the 22 commits provided.
+
+Since a selection is required and no candidate directly introduces or
+touches the vulnerable code, I selected candidate_01 as the earliest commit
+in the observable window, on the reasoning that if the bug already existed
+before this window began, the earliest available snapshot is the closest
+attribution point we can make from the given candidates. This is a
+low-confidence, best-effort guess rather than a finding backed by direct
+evidence of the bug being introduced in candidate_01 itself.

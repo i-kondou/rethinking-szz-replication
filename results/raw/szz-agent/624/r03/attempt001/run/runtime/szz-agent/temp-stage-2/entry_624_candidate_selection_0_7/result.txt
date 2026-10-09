@@ -1,0 +1,25 @@
+SELECTED: candidate_02
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes StartUpView.java's anonymous IPlayerClientListener implementation:
+
+    @Override
+    public void onUpdateCheckpointDirection(Position pos) {
+
+from the previous no-argument signature:
+
+    @Override
+    public void onUpdateCheckpointDirection() {
+
+This was a "fix build error" commit, meaning the override in StartUpView.java no longer matched the IPlayerClientListener interface's method signature (which had come to expect a Position parameter), causing a compile-time mismatch.
+
+Tracing the exact line/method across the candidates:
+
+- candidate_01: StartUpView.java is created as a bare skeleton with no IPlayerClientListener implementation at all.
+- candidate_02: This is where IPlayerClientListener is first created (with `void onUpdateCheckpointDirection();`, no parameters) and where StartUpView.java is first given the anonymous listener implementation containing `public void onUpdateCheckpointDirection() { // TODO ... }`. This is the exact line later modified by the fix.
+- candidate_03 through candidate_07: None of these candidates touch this specific method in StartUpView.java at all — they modify unrelated interfaces (IPlayerClientManager -> IPlayerServer rename), unrelated fields (Player loginName -> name), unrelated server logic (GameModerator, WorldZigbeeMediator), unrelated GUI classes (Pivot-based UI, ServerDiscover), and unrelated type refactors (int -> byte for car IDs). The no-arg onUpdateCheckpointDirection() method is carried forward unchanged through all of these commits.
+- candidate_08: Is byte-identical to the actual fix diff itself (same before/after blob hashes on StartUpView.java: 7026249 -> c2479a8), meaning this "candidate" is effectively the fix commit, not a bug-introducing one.
+
+Since the no-arg `onUpdateCheckpointDirection()` method was created in candidate_02 and never touched again by any subsequent candidate until it was finally corrected by the fix, candidate_02 is the commit that introduced (and left in place) the exact code that later became incompatible with the interface, ultimately causing the build error. It is the earliest and only candidate that established this specific piece of problematic code.

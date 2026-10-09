@@ -1,0 +1,58 @@
+SELECTED: candidate_208
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (in FileHistoryPanelImpl.java) moves the statement
+`myPopupActions = createPopupActions();` to BEFORE the call to
+`createDualView();` inside the constructor. Before the fix, the constructor
+called `createDualView()` first and only assigned `myPopupActions` afterward.
+
+This ordering (createDualView() before myPopupActions assignment) actually
+dates back to the very first version of this class (candidate_01), but it was
+harmless for a long time because, in `createDualView()`, the popup menu for
+the tree/flat views was wired up using an anonymous `PopupHandler` subclass:
+
+    myDualView.getTreeView().addMouseListener(new PopupHandler() {
+      public void invokePopup(Component comp, int x, int y) {
+        ActionPopupMenu popupMenu = ActionManager.getInstance()
+          .createActionPopupMenu(ActionPlaces.UPDATE_POPUP, myPopupActions);
+        ...
+      }
+    });
+
+Here `myPopupActions` is only read lazily, inside `invokePopup`, which fires
+on a later user mouse event -- by that time the constructor has long finished
+and `myPopupActions` is guaranteed to be non-null. So the field being assigned
+"too late" inside the constructor never mattered in practice.
+
+candidate_208 changes `createDualView()` to replace these anonymous
+`PopupHandler` subclasses with direct, eager calls to the static utility:
+
+    PopupHandler.installPopupHandler(myDualView.getTreeView(), myPopupActions, ActionPlaces.UPDATE_POPUP, ActionManager.getInstance());
+    PopupHandler.installPopupHandler(myDualView.getFlatView(), myPopupActions, ActionPlaces.UPDATE_POPUP, ActionManager.getInstance());
+
+`PopupHandler.installPopupHandler(component, group, place, actionManager)` is
+implemented as:
+
+    final ActionPopupMenu popupMenu = actionManager.createActionPopupMenu(place, group);
+
+which builds the `ActionPopupMenu` immediately (eagerly) at the time
+`installPopupHandler` is called, rather than lazily when the popup is
+actually shown. Since `createDualView()` (and therefore this eager call) still
+runs BEFORE `myPopupActions = createPopupActions();` in the constructor,
+`myPopupActions` is `null` at the moment `createActionPopupMenu(place, null)`
+is invoked. Action-group validation in the action system rejects a null
+action group here, producing an `IllegalArgumentException` -- exactly the
+"IAE: PopupHandler.installPopupHandler" crash described in the fix commit's
+title.
+
+Thus candidate_208 is the commit that actually introduced the bug: by
+switching from a lazy, deferred popup-menu construction to an eager one, it
+turned a previously benign field-initialization-order quirk into a
+guaranteed-to-crash initialization-order bug. The eventual fix simply
+reorders the two statements so `myPopupActions` is assigned before
+`createDualView()` runs.
+
+(Note: candidate_209 is byte-identical to the fix commit itself and was
+excluded as a candidate -- it is the fix, not the bug-introducing commit.)

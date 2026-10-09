@@ -1,0 +1,321 @@
+{
+  "metadata": {
+    "timestamp": "20260905_230447",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/166/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 41.933,
+      "max": 41.933,
+      "mean": 41.933,
+      "median": 41.933,
+      "total": 41.933,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 41.851,
+      "max": 41.851,
+      "mean": 41.851,
+      "median": 41.851,
+      "total": 41.851,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 2886,
+      "max": 2886,
+      "mean": 2886,
+      "median": 2886,
+      "total": 2886,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 17036,
+      "max": 17036,
+      "mean": 17036,
+      "median": 17036,
+      "total": 17036,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 98923,
+      "max": 98923,
+      "mean": 98923,
+      "median": 98923,
+      "total": 98923,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.17523689999999997,
+      "max": 0.17523689999999997,
+      "mean": 0.17523689999999997,
+      "median": 0.17523689999999997,
+      "total": 0.17523689999999997,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Glob": 1,
+      "Grep": 2,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "166",
+      "fix_commit_hash": "7179f4d17786a5f4e8ec16b560b335609ea16dd2",
+      "ground_truth_bics": [
+        "4fc7f4447c990082e8322c42ebafd1f33a2e60aa"
+      ],
+      "predicted_bics": [
+        "4fc7f4447c990082e8322c42ebafd1f33a2e60aa"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "166",
+      "fix_commit": "7179f4d17786a5f4e8ec16b560b335609ea16dd2",
+      "ground_truth_bics": [
+        "4fc7f4447c990082e8322c42ebafd1f33a2e60aa"
+      ],
+      "total_candidates": 12,
+      "gt_in_candidates": true,
+      "selected_commit": "4fc7f4447c990082e8322c42ebafd1f33a2e60aa",
+      "selected_index": 10,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes InverseBuildChooser.java line `EnvVars env = context.getBuild().getEnvironment();` to `EnvVars env = context.getEnvironment();`, because `context.getBuild()` can return null when polling (as opposed to actually building), causing an NPE. Searching the candidates for the exact buggy line `context.getBuild().getEnvironment()` in InverseBuildChooser.java shows it was introduced in candidate_11. That commit adds EnvVars-based expansion support to BranchSpec (so branch spec str",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/main/java/hudson/plugins/git/util/InverseBuildChooser.java"
+      ],
+      "call_stats": {
+        "duration_s": 41.933,
+        "duration_api_s": 41.851,
+        "num_turns": 10,
+        "input_tokens": 18,
+        "output_tokens": 2886,
+        "cache_creation_input_tokens": 17036,
+        "cache_read_input_tokens": 98923,
+        "total_cost_usd": 0.17523689999999997,
+        "total_tool_calls": 9,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Glob": 1,
+          "Grep": 2,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/166/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_166_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1416,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/166/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_166_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/166/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_166_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1167,
+            "cache_read_input_tokens": 9696,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 374,
+            "cache_read_input_tokens": 10863,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "InverseBuildChooser",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 319,
+            "cache_read_input_tokens": 11237,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getBuild\\(\\)\\.getEnvironment\\(\\)",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 354,
+            "cache_read_input_tokens": 11556,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/166/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_166_candidate_selection/candidates/candidate_12.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 845,
+            "cache_read_input_tokens": 11910,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/166/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_166_candidate_selection/candidates/candidate_11.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 6473,
+            "cache_read_input_tokens": 12755,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/166/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_166_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_11\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes InverseBuildChooser.java line `EnvVars env = context.getBuild().getEnvironment();` to `EnvVars env = context.getEnvironment();`, because `context.getBuild()` can return null when polling (as opposed to actually building), causing an NPE.\n\nSearching the candidates for the exact buggy line `context.getBuild().getEnvironment()` in InverseBuildChooser.java shows it was introduced in candidate_11. That commit adds EnvVars-based expansion support to BranchSpec (so branch spec strings like `${master}` can be expanded using environment variables) and propagates an `EnvVars env` parameter through DefaultBuildChooser, GitUtils, and InverseBuildChooser. In InverseBuildChooser.getCandidateRevisions(), it adds the line:\n\n    EnvVars env = context.getBuild().getEnvironment();\n\nThis is the exact line that caused the NPE described in the fix commit message: \"When polling git for changes, context.getBuild() returns null, manifesting in an NPE from InverseBuildChooser.getCandidateRevisions()\". The commit message of the fix also references that the analogous bug for DefaultBuildChooser (which candidate_11 introduces the same faulty pattern for, `context.getBuild().getEnvironment()` in getAdvancedCandidateRevisions) was already fixed in a separate commit \u2014 confirming candidate_11 is the origin of this exact bug pattern for both classes, with InverseBuildChooser's instance remaining unfixed until the fix commit under analysis.\n\nNo other candidate touches InverseBuildChooser.java with this line (candidate_12 is the fix itself, changing the line from `context.getBuild().getEnvironment()` to `context.getEnvironment()`), so candidate_11 is clearly the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1206,
+            "cache_read_input_tokens": 19228,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

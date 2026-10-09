@@ -1,0 +1,22 @@
+{
+  "fix_commit": "0d211148fb659fd22181ac82d103eae4b0e1897f",
+  "bic": "ac494c6c2710a207f51a219e3b09360a9c94203c",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "Blame on the modified line in the fix commit traces to ac494c6c2710a207f51a219e3b09360a9c94203c (\"more diagnostics for EA-68014\"). Prior to this commit, the code had two separate branches each correctly wrapping `(stripHtml/escapeString(message) + link)` inside `wrapInHtml()`. This commit consolidated the if/else into a single ternary expression but placed the closing parenthesis of `wrapInHtml(...)` before `+ link`, so `link` ended up outside the HTML wrapping \u2014 exactly the bug the fix commit corrects by moving the parenthesis back after `+ link`.",
+  "metrics": {
+    "case_elapsed_seconds": 70.437433,
+    "api_elapsed_seconds": 65.440099,
+    "tool_elapsed_seconds": 4.874253,
+    "other_elapsed_seconds": 0.123087,
+    "api_call_count": 13,
+    "tool_call_count": 12,
+    "prompt_tokens": 139824,
+    "completion_tokens": 3601,
+    "total_tokens": 143425,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:29:11.838780"
+}

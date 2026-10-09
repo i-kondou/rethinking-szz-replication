@@ -1,0 +1,27 @@
+SELECTED: candidate_70
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes `int pageNum = 0;` to `int pageNum = -1;` inside the `getPageNumberFor(int index, int position)` method (by the time of the fix, this method lived in BookView.java). This initial value is the return value used to signal "no valid page number" / the title page, and initializing it to 0 instead of -1 caused the title page to incorrectly be reported as page number 0 (matching the fix commit message: "Title-page has page-num 0 again").
+
+Tracing the history of this method across the candidates, `getPageNumberFor` first appears in candidate_70, where it is added as a brand-new method on `PageTurnerSpine.java`:
+
+```java
+public int getPageNumberFor( int index, int position ) {
+    int pageNum = 0;
+    if ( index >= pageOffsets.size() ) {
+        return -1;
+    }
+    for ( int i=0; i < index; i++ ) {
+        pageNum += pageOffsets.get(i).size();
+    }
+    List<Integer> offsets = pageOffsets.get(index);
+    for ( int i=0; i < offsets.size() && offsets.get(i) < position; i++ ) {
+        pageNum++;
+    }
+    return pageNum;
+}
+```
+
+This is the very first introduction of the `int pageNum = 0;` initialization that the fix later corrects to `-1`. All subsequent candidates that touch this method (candidate_80, 84, 104, 126, 147, 148, 157, 162, 163, 166) only refactor it (moving it into BookView.java, adding logging, adjusting the offset-comparison loop, adding a null-spine guard, etc.) but retain the same `pageNum = 0` initialization inherited from candidate_70. No candidate earlier than 70 contains this method at all (confirmed via search for "getPageNumberFor" and "pageNum" across all 173 candidate diffs), so candidate_70 is the commit that introduced the underlying off-by-one/initial-value bug that was eventually fixed.

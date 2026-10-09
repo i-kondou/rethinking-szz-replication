@@ -1,0 +1,387 @@
+diff --git a/src/net/nightwhistler/pageturner/activity/ReadingFragment.java b/src/net/nightwhistler/pageturner/activity/ReadingFragment.java
+index 5173054..3fd914a 100644
+--- a/src/net/nightwhistler/pageturner/activity/ReadingFragment.java
++++ b/src/net/nightwhistler/pageturner/activity/ReadingFragment.java
+@@ -27,7 +27,6 @@ import java.util.*;
+ import android.content.res.AssetFileDescriptor;
+ import android.widget.*;
+ import com.actionbarsherlock.app.SherlockFragmentActivity;
+-import com.hlidskialf.android.hardware.ShakeListener;
+ import net.nightwhistler.htmlspanner.HtmlSpanner;
+ import net.nightwhistler.htmlspanner.spans.CenterSpan;
+ import net.nightwhistler.pageturner.Configuration;
+@@ -96,7 +95,6 @@ import android.os.PowerManager;
+ import android.speech.tts.TextToSpeech;
+ import android.speech.tts.TextToSpeech.OnUtteranceCompletedListener;
+ import android.telephony.TelephonyManager;
+-import android.text.InputType;
+ import android.text.Spannable;
+ import android.text.SpannableStringBuilder;
+ import android.util.DisplayMetrics;
+@@ -113,7 +111,6 @@ import android.view.View;
+ import android.view.ViewGroup;
+ import android.view.WindowManager;
+ import android.view.animation.Animation;
+-import android.view.inputmethod.EditorInfo;
+ import android.view.inputmethod.InputMethodManager;
+ 
+ import com.actionbarsherlock.view.Menu;
+@@ -594,7 +591,14 @@ public class ReadingFragment extends RoboSherlockFragment implements
+ 
+ 		File fos = new File( config.getTTSFolder() );
+ 
+-        if ( ! fos.mkdir() ) {
++        if ( fos.exists() && ! fos.isDirectory() ) {
++            fos.delete();
++        }
++
++        fos.mkdir();
++
++        if ( ! (fos.exists() && fos.isDirectory() )  ) {
++            LOG.error("Failed to create folder " + fos.getAbsolutePath() );
+             showTTSFailed();
+             return;
+         }
+@@ -617,7 +621,8 @@ public class ReadingFragment extends RoboSherlockFragment implements
+ 		this.waitDialog.setTitle(R.string.init_tts);
+ 		this.waitDialog.show();
+ 
+-        backgroundHandler.post(new StreamToDiskRunnable());
++        //backgroundHandler.post(new StreamToDiskRunnable());
++        new Thread( new StreamToDiskRunnable() ).start();
+ 	}
+ 
+     private class StreamToDiskRunnable implements Runnable {
+@@ -631,10 +636,16 @@ public class ReadingFragment extends RoboSherlockFragment implements
+             }
+ 
+             File ttsFolder = new File( config.getTTSFolder() );
+-            String textToSpeak = text.toString().substring( bookView.getPosition() );
++            String textToSpeak = text.toString().substring( bookView.getStartOfCurrentPage() );
+ 
+-            String[] parts = textToSpeak.split("\\.|\n");
+-            int offset = bookView.getPosition();
++            textToSpeak = textToSpeak.replace( "\n", "~" );
++            textToSpeak = textToSpeak.replace( ".", ".~" );
++            textToSpeak = textToSpeak.replace( "?", "?~" );
++            textToSpeak = textToSpeak.replace( "!", "!~" );
++
++            String[] parts = textToSpeak.split("\\~");
++
++            int offset = bookView.getStartOfCurrentPage();
+ 
+             try {
+                 for ( int i=0; i < parts.length && ttsIsRunning(); i++ ) {
+@@ -646,11 +657,12 @@ public class ReadingFragment extends RoboSherlockFragment implements
+                     boolean lastPart = i == parts.length -1;
+ 
+                     //Utterance ID doubles as the filename
+-                    String pageName = new File( ttsFolder, "tts_" + Integer.toHexString( part.hashCode()) + ".wav").getAbsolutePath();
++                    String pageName = new File( ttsFolder, "tts_" + UUID.randomUUID() + ".wav").getAbsolutePath();
+                     streamPartToDisk(pageName, part, offset, textToSpeak.length(), lastPart);
+ 
+                     offset += part.length() +1;
+ 
++                    Thread.yield();
+                 }
+             } catch (TTSFailedException e) {
+                 //Just stop streaming
+@@ -681,7 +693,9 @@ public class ReadingFragment extends RoboSherlockFragment implements
+     private void streamPartToDisk(String fileName, String part, int offset, int totalLength, boolean endOfPage )
+         throws TTSFailedException {
+ 
+-        if ( part.trim().length() > 0 ) {
++        LOG.debug("Request to stream text to file " + fileName + " with text " + part );
++
++        if ( part.trim().length() > 0 || endOfPage ) {
+ 
+             HashMap<String, String> params = new HashMap<String, String>();
+ 
+@@ -690,10 +704,14 @@ public class ReadingFragment extends RoboSherlockFragment implements
+             TTSPlaybackItem item = new TTSPlaybackItem( part, new MediaPlayer(), totalLength, offset, endOfPage, fileName);
+             ttsItemPrep.put(fileName, item);
+ 
+-            if ( textToSpeech.synthesizeToFile(part, params, fileName) != TextToSpeech.SUCCESS ) {
++            int result = textToSpeech.synthesizeToFile(part, params, fileName);
++            if ( result != TextToSpeech.SUCCESS ) {
++                LOG.error("synthesizeToFile failed with result " + result);
+                 showTTSFailed();
+                 throw new TTSFailedException();
+             }
++        } else {
++            LOG.debug("Skipping part, since it's empty.");
+         }
+     }
+ 	
+@@ -744,7 +762,8 @@ public class ReadingFragment extends RoboSherlockFragment implements
+ 	
+ 	private Runnable progressBarUpdater = new Runnable() {
+ 		public void run() {
+-			
++
++
+ 			int phoneState = telephonyManager.getCallState();
+ 	    
+ 			if ( phoneState == TelephonyManager.CALL_STATE_RINGING || 
+@@ -842,13 +861,17 @@ public class ReadingFragment extends RoboSherlockFragment implements
+ 	
+ 	private void startPlayback() {
+ 
++        LOG.debug("startPlayback() - doing peek()");
++
+         final TTSPlaybackItem item = this.ttsPlaybackItemQueue.peek();
+ 
+         if ( item == null ) {
++            LOG.debug("Got null item, bailing out.");
+ 			return;
+ 		}
+ 
+         LOG.debug("Start playback for item " + item.getFileName() );
++        LOG.debug("Text: '" + item.getText() + "'");
+ 		
+ 		if ( item.getMediaPlayer().isPlaying() ) {
+ 			return;
+@@ -1931,7 +1954,7 @@ public class ReadingFragment extends RoboSherlockFragment implements
+ 		if (this.bookView != null) {
+ 
+ 			int index = this.bookView.getIndex();
+-			int position = this.bookView.getPosition();
++			int position = this.bookView.getProgressPosition();
+ 			
+ 			if ( index != -1 && position != -1 ) {			
+ 				config.setLastPosition(this.fileName, position);
+@@ -2298,7 +2321,7 @@ public class ReadingFragment extends RoboSherlockFragment implements
+ 	@Override
+ 	public void onSaveInstanceState(final Bundle outState) {
+ 		if (this.bookView != null) {
+-			outState.putInt(POS_KEY, this.bookView.getPosition());
++			outState.putInt(POS_KEY, this.bookView.getProgressPosition());
+ 			outState.putInt(IDX_KEY, this.bookView.getIndex());
+ 		}
+ 
+@@ -2533,7 +2556,7 @@ public class ReadingFragment extends RoboSherlockFragment implements
+ 			waitDialog.hide();
+ 
+ 			int index = bookView.getIndex();
+-			int pos = bookView.getPosition();
++			int pos = bookView.getProgressPosition();
+ 
+ 			if (progress != null) {
+ 
+diff --git a/src/net/nightwhistler/pageturner/view/bookview/BookView.java b/src/net/nightwhistler/pageturner/view/bookview/BookView.java
+index 5883bd9..0e8d965 100644
+--- a/src/net/nightwhistler/pageturner/view/bookview/BookView.java
++++ b/src/net/nightwhistler/pageturner/view/bookview/BookView.java
+@@ -25,7 +25,6 @@ import java.io.ByteArrayInputStream;
+ import java.io.ByteArrayOutputStream;
+ import java.net.URLDecoder;
+ import java.util.ArrayList;
+-import java.util.Arrays;
+ import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.List;
+@@ -49,11 +48,8 @@ import net.nightwhistler.pageturner.tasks.SearchTextTask;
+ import net.nightwhistler.pageturner.view.FastBitmapDrawable;
+ import nl.siegmann.epublib.Constants;
+ import nl.siegmann.epublib.domain.Book;
+-import nl.siegmann.epublib.domain.MediaType;
+ import nl.siegmann.epublib.domain.Resource;
+ import nl.siegmann.epublib.domain.TOCReference;
+-import nl.siegmann.epublib.epub.EpubReader;
+-import nl.siegmann.epublib.service.MediatypeService;
+ import nl.siegmann.epublib.util.StringUtil;
+ 
+ import org.htmlcleaner.TagNode;
+@@ -409,7 +405,7 @@ public class BookView extends ScrollView {
+ 	}
+ 
+ 	void loadText() {
+-		executeTask( new LoadTextTask() );
++		executeTask(new LoadTextTask());
+ 	}
+ 
+ 	private void loadText(List<SearchTextTask.SearchResult> hightListResults) {
+@@ -562,11 +558,11 @@ public class BookView extends ScrollView {
+ 	public void navigateTo(String rawHref) {
+ 
+ 		this.prevIndex = this.getIndex();
+-		this.prevPos = this.getPosition();
++		this.prevPos = this.getProgressPosition();
+ 
+ 		// URLDecode the href, so it does not contain %20 etc.
+ 		String href = URLDecoder.decode(StringUtil.substringBefore(rawHref,
+-				Constants.FRAGMENT_SEPARATOR_CHAR));
++                Constants.FRAGMENT_SEPARATOR_CHAR));
+ 
+ 		// Don't decode the anchor.
+ 		String anchor = StringUtil.substringAfterLast(rawHref,
+@@ -633,7 +629,7 @@ public class BookView extends ScrollView {
+ 			this.strategy.setPosition(0);
+ 		}
+ 
+-		this.prevPos = this.getPosition();
++		this.prevPos = this.getProgressPosition();
+ 		doNavigation(index);
+ 	}
+ 
+@@ -642,7 +638,7 @@ public class BookView extends ScrollView {
+ 		SearchTextTask.SearchResult searchResult = result
+ 				.get(selectedResultIndex);
+ 		
+-		this.prevPos = this.getPosition();
++		this.prevPos = this.getProgressPosition();
+ 		this.strategy.setPosition(searchResult.getStart());
+ 
+ 		this.prevIndex = this.getIndex();
+@@ -674,7 +670,7 @@ public class BookView extends ScrollView {
+ 
+ 	public void navigateTo(int index, int position) {
+ 
+-		this.prevPos = this.getPosition();
++		this.prevPos = this.getProgressPosition();
+ 		this.strategy.setPosition(position);
+ 
+ 		doNavigation(index);
+@@ -732,8 +728,12 @@ public class BookView extends ScrollView {
+ 		return this.spine.getPosition();
+ 	}
+ 
+-	public int getPosition() {
+-		return strategy.getPosition();
++    public int getStartOfCurrentPage() {
++        return strategy.getTopLeftPosition();
++    }
++
++	public int getProgressPosition() {
++		return strategy.getProgressPosition();
+ 	}
+ 
+ 	public void setPosition(int pos) {
+@@ -849,7 +849,7 @@ public class BookView extends ScrollView {
+ 	private void setImageSpan(SpannableStringBuilder builder,
+ 			Drawable drawable, int start, int end) {
+ 		builder.setSpan(new ImageSpan(drawable), start, end,
+-				Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
++                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+ 
+ 		if (spine.isCover()) {
+ 			builder.setSpan(new CenterSpan(), start, end,
+@@ -1167,7 +1167,7 @@ public class BookView extends ScrollView {
+ 		if (this.spine != null && this.strategy.getText() != null
+ 				&& this.strategy.getText().length() > 0) {
+ 
+-			double progressInPart = (double) this.getPosition()
++			double progressInPart = (double) this.getProgressPosition()
+ 					/ (double) this.strategy.getText().length();
+ 
+ 			if (strategy.getText().length() > 0 && strategy.isAtEnd()) {
+@@ -1179,7 +1179,7 @@ public class BookView extends ScrollView {
+ 			if (progress != -1) {
+ 
+ 				int pageNumber = getPageNumberFor(getIndex(),
+-						getPosition());
++						getProgressPosition());
+ 
+ 				for (BookViewListener listener : this.listeners) {
+ 					listener.progressUpdate(progress, pageNumber,
+@@ -1230,7 +1230,7 @@ public class BookView extends ScrollView {
+ 			Spanned text = null;
+ 
+ 			if (this.strategy != null) {
+-				pos = this.strategy.getPosition();
++				pos = this.strategy.getTopLeftPosition();
+ 				text = this.strategy.getText();
+ 				this.strategy.clearText();
+ 				wasNull = false;
+@@ -1373,7 +1373,7 @@ public class BookView extends ScrollView {
+ 			if (BookView.this.book == null) {
+ 				try {
+                     publishProgress(BookReadPhase.OPEN_FILE);
+-					setBook( textLoader.initBook(fileName) );
++					setBook(textLoader.initBook(fileName));
+ 				} catch (IOException io) {
+ 					this.error = io.getMessage();
+ 					return null;
+diff --git a/src/net/nightwhistler/pageturner/view/bookview/FixedPagesStrategy.java b/src/net/nightwhistler/pageturner/view/bookview/FixedPagesStrategy.java
+index 2971da1..6d7eabf 100644
+--- a/src/net/nightwhistler/pageturner/view/bookview/FixedPagesStrategy.java
++++ b/src/net/nightwhistler/pageturner/view/bookview/FixedPagesStrategy.java
+@@ -205,7 +205,7 @@ public class FixedPagesStrategy implements PageChangeStrategy {
+ 		
+ 	}
+ 
+-    public int getStartOfCurrentPage() {
++    public int getTopLeftPosition() {
+         if ( this.pageNum >= this.pageOffsets.size() ) {
+             return this.pageOffsets.get( this.pageOffsets.size() -1 );
+         }
+@@ -213,13 +213,13 @@ public class FixedPagesStrategy implements PageChangeStrategy {
+         return this.pageOffsets.get(this.pageNum);
+     }
+ 	
+-	public int getPosition() {
++	public int getProgressPosition() {
+ 
+         if ( storedPosition > 0 || this.pageOffsets.isEmpty() ||  this.pageNum == -1 ) {
+             return this.storedPosition;
+         }
+ 
+-		return getStartOfCurrentPage();
++		return getTopLeftPosition();
+ 	}
+ 	
+ 	public android.text.Spanned getText() {
+diff --git a/src/net/nightwhistler/pageturner/view/bookview/PageChangeStrategy.java b/src/net/nightwhistler/pageturner/view/bookview/PageChangeStrategy.java
+index 68d2561..afdc176 100644
+--- a/src/net/nightwhistler/pageturner/view/bookview/PageChangeStrategy.java
++++ b/src/net/nightwhistler/pageturner/view/bookview/PageChangeStrategy.java
+@@ -41,7 +41,15 @@ public interface PageChangeStrategy {
+ 	 * 
+ 	 * @return
+ 	 */
+-	public int getPosition();
++	public int getTopLeftPosition();
++
++
++    /**
++     * Gets the current reading progress in the chapter.
++     * @return
++     */
++    public int getProgressPosition();
++
+ 	
+ 	/**
+ 	 * Returns if we're at the start of the current section
+diff --git a/src/net/nightwhistler/pageturner/view/bookview/ScrollingStrategy.java b/src/net/nightwhistler/pageturner/view/bookview/ScrollingStrategy.java
+index 7fae50a..12c51eb 100644
+--- a/src/net/nightwhistler/pageturner/view/bookview/ScrollingStrategy.java
++++ b/src/net/nightwhistler/pageturner/view/bookview/ScrollingStrategy.java
+@@ -63,7 +63,7 @@ public class ScrollingStrategy implements PageChangeStrategy {
+ 	}
+ 	
+ 	@Override
+-	public int getPosition() {
++	public int getTopLeftPosition() {
+ 		if ( childView.getText().length() == 0 ) {
+ 			return storedPosition;
+ 		} else {
+@@ -72,6 +72,10 @@ public class ScrollingStrategy implements PageChangeStrategy {
+ 			return findTextOffset(findClosestLineBottom(yPos));
+ 		}
+ 	}
++
++    public int getProgressPosition() {
++        return getTopLeftPosition();
++    }
+ 	
+ 	@Override
+ 	public boolean isAtEnd() {
+@@ -88,7 +92,7 @@ public class ScrollingStrategy implements PageChangeStrategy {
+ 	
+ 	@Override
+ 	public boolean isAtStart() {
+-		return getPosition() == 0;
++		return getTopLeftPosition() == 0;
+ 	}
+ 	
+ 	@Override

@@ -1,0 +1,15 @@
+SELECTED: candidate_12
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes several call sites from `ConfigElement.getPath(TitanHadoopConfiguration.GRAPH_CONFIG_KEYS)` / `ConfigElement.getPath(TitanHadoopConfiguration.SCAN_JOB_CONFIG_KEYS)` to the two-argument form `ConfigElement.getPath(..., true)` in MapReduceIndexJobs.java, MapReduceIndexManagement.java, CassandraHadoopScanRunner.java, HBaseHadoopScanRunner.java, and CassandraScanJobIT.java (a scanjob test).
+
+candidate_12 is exactly where this bug was introduced:
+1. It adds the new overload `ConfigElement.getPath(ConfigElement element, boolean includeRoot, String... umbrellaElements)`, with the old single-arg `getPath(element, umbrellaElements)` now delegating to it with `includeRoot=false`.
+2. It restructures the Hadoop config namespace hierarchy: `TITAN_INPUT_CONFIG_KEYS` (previously under `INPUT_NS` under `MAPRED_NS`) is renamed to `GRAPH_CONFIG_KEYS` (now under a new `IOFORMAT_NS`), and `SCAN_JOB_CONFIG_KEYS` is moved from directly under `MAPRED_NS` to a new `SCAN_NS` namespace.
+3. It renames all the call sites from `TITAN_INPUT_CONFIG_KEYS` to `GRAPH_CONFIG_KEYS`, but does NOT add the `true` (includeRoot) argument to most of them — only the internal `ModifiableHadoopConfiguration.prefixView` call was updated to pass `true`. The call sites in MapReduceIndexJobs, MapReduceIndexManagement, CassandraHadoopScanRunner, HBaseHadoopScanRunner, and the CassandraScanJobIT test were left using the old single-argument `getPath(...)` call, which no longer produces the correct fully-qualified namespace path given the new deeper namespace nesting.
+
+This mismatch (new nested namespace structure + missing `includeRoot=true` at several call sites) is precisely what broke the scanjob helper classes referenced in the fix commit message ("Fix Hadoop config namespace refs ... fixes a bug that broke some scanjob helper classes"), and the fix commit corrects it by adding `true` to exactly those call sites that candidate_12 left unmodified/miswired.
+
+No other candidate touches the `getPath` signature, the namespace restructuring, or the `GRAPH_CONFIG_KEYS`/`SCAN_JOB_CONFIG_KEYS` definitions in this way, making candidate_12 the clear origin of the bug.

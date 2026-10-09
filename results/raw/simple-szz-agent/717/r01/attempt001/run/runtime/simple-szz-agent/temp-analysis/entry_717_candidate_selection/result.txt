@@ -1,0 +1,23 @@
+SELECTED: candidate_65
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes `Options.addBootCP()` from:
+    bootclasspathDirectories().addAll(value);
+to:
+    bootclasspathDirectories().addAll(0, value);
+
+This means the bug was that entries passed via the `-addbootcp` flag were being appended to the end of the boot classpath list instead of being inserted at the beginning (index 0), which is presumably the intended/expected ordering for boot classpath prepending.
+
+Searching all 85 candidates for references to `addBootCP`/`bootclasspathDirectories`, only 7 candidates touch this code: 65, 66, 67, 72, 78, 80, and 85.
+
+candidate_65 is the first commit that introduces the `addBootCP` method and the `-addbootcp` flag handling entirely:
+
+    protected void addBootCP(List<File> value) {
+        bootclasspath_directories.addAll(value);
+    }
+
+This is exactly the buggy pattern (plain `.addAll(value)`, appending to the end) that the fix commit later corrects to `.addAll(0, value)`. Since this method and its buggy body did not exist before this commit, this is the first point the bug could have been introduced.
+
+The subsequent candidates that touch this area (66, 67, 72, 78, 80, 85) were inspected and involve only refactoring (e.g., reformatting the if/else chain, renaming `bootclasspath_directories` to `bootclasspathDirectories()`) without changing the underlying `.addAll(value)` append behavior — the bug persists unchanged from candidate_65 through to the fix commit. Therefore candidate_65 is the bug-introducing commit.

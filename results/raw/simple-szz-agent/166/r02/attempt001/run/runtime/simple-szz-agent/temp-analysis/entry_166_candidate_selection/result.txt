@@ -1,0 +1,10 @@
+SELECTED: candidate_11
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix replaces `EnvVars env = context.getBuild().getEnvironment();` with `EnvVars env = context.getEnvironment();` in InverseBuildChooser.java, because context.getBuild() returns null when polling (not building), causing an NPE in InverseBuildChooser.getCandidateRevisions().
+
+Comparing blob hashes confirms the lineage precisely: candidate_12's diff for InverseBuildChooser.java goes from blob 7b3f693 to a929dd9 and is byte-for-byte identical to fix_commit_diff.txt — candidate_12 is in fact the fix commit itself, included among the candidates rather than a distinct bug-introducing candidate.
+
+candidate_11's diff for the same file goes from blob 7c1d7eb to 7b3f693 — i.e., it produces exactly the "before" state that the fix commit (candidate_12) then patches. In candidate_11, the line `EnvVars env = context.getBuild().getEnvironment();` is newly added (marked with `+`) to InverseBuildChooser.getCandidateRevisions(), alongside an identical addition to DefaultBuildChooser.java's getAdvancedCandidateRevisions(). This is precisely the problematic call that later causes the NPE during polling. Since DefaultBuildChooser was fixed separately in a prior commit (per the fix message), and InverseBuildChooser's copy of this bug was fixed by candidate_12, candidate_11 is the commit that introduced the bug.

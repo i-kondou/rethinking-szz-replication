@@ -1,0 +1,379 @@
+{
+  "metadata": {
+    "timestamp": "20260905_235736",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 54.919,
+      "max": 54.919,
+      "mean": 54.919,
+      "median": 54.919,
+      "total": 54.919,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 54.767,
+      "max": 54.767,
+      "mean": 54.767,
+      "median": 54.767,
+      "total": 54.767,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 22,
+      "max": 22,
+      "mean": 22,
+      "median": 22,
+      "total": 22,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 5342,
+      "max": 5342,
+      "mean": 5342,
+      "median": 5342,
+      "total": 5342,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 19348,
+      "max": 19348,
+      "mean": 19348,
+      "median": 19348,
+      "total": 19348,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 151499,
+      "max": 151499,
+      "mean": 151499,
+      "median": 151499,
+      "total": 151499,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.24173370000000002,
+      "max": 0.24173370000000002,
+      "mean": 0.24173370000000002,
+      "median": 0.24173370000000002,
+      "total": 0.24173370000000002,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 13,
+      "max": 13,
+      "mean": 13,
+      "median": 13,
+      "total": 13,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 4,
+      "Grep": 8,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 174,
+      "max": 174,
+      "mean": 174,
+      "median": 174,
+      "total": 174,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "846",
+      "fix_commit_hash": "9e0625d8d0827221dea0a9f6114ad8376ccc76b1",
+      "ground_truth_bics": [
+        "0a3fa76b3c2b4cba3708b1f06493e6ff9f398ec3"
+      ],
+      "predicted_bics": [
+        "0a3fa76b3c2b4cba3708b1f06493e6ff9f398ec3"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "846",
+      "fix_commit": "9e0625d8d0827221dea0a9f6114ad8376ccc76b1",
+      "ground_truth_bics": [
+        "0a3fa76b3c2b4cba3708b1f06493e6ff9f398ec3"
+      ],
+      "total_candidates": 174,
+      "gt_in_candidates": true,
+      "selected_commit": "0a3fa76b3c2b4cba3708b1f06493e6ff9f398ec3",
+      "selected_index": 160,
+      "confidence": "HIGH",
+      "explanation": "The fix commit wraps a block of code in DisplayControlImpl.java with a new `if (myDataChoices != null) { ... }` null check to prevent a NullPointerException when `myDataChoices` is null. The wrapped block is: if ((myDataChoices.size() > 0) && (myDataChoices.get(0) instanceof DerivedDataChoice)) { List cdcs = ((DerivedDataChoice) myDataChoices.get(0)).getChoices(); if (cdcs.size() > 0) { DataChoice dc = (DataChoice) cdcs.get(0);",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/ucar/unidata/idv/control/DisplayControlImpl.java"
+      ],
+      "call_stats": {
+        "duration_s": 54.919,
+        "duration_api_s": 54.767,
+        "num_turns": 14,
+        "input_tokens": 22,
+        "output_tokens": 5342,
+        "cache_creation_input_tokens": 19348,
+        "cache_read_input_tokens": 151499,
+        "total_cost_usd": 0.24173370000000002,
+        "total_tool_calls": 13,
+        "tool_calls_by_name": {
+          "Read": 4,
+          "Grep": 8,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1416,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1526,
+            "cache_read_input_tokens": 9696,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "myDataChoices.size\\(\\) > 0",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "usesTimeDriver",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1025,
+            "cache_read_input_tokens": 11222,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "myDataChoices.size\\(\\) > 0",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates/candidate_01.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2285,
+            "cache_read_input_tokens": 12247,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "usesTimeDriver|PROP_USESTIMEDRIVER|getTimeDriverTimes",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates/candidate_140.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1706,
+            "cache_read_input_tokens": 14532,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "DerivedDataChoice\\)\\s*myDataChoices|usesTimeDriver = \\(\\(Boolean\\)|myDataChoices.get\\(0\\) instanceof DerivedDataChoice",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 547,
+            "cache_read_input_tokens": 16238,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "DerivedDataChoice|usesTimeDriver|myDataChoices",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates/candidate_157.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 792,
+            "cache_read_input_tokens": 16785,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "DerivedDataChoice|usesTimeDriver|myDataChoices",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates/candidate_161.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "DerivedDataChoice|usesTimeDriver|myDataChoices",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates/candidate_162.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2611,
+            "cache_read_input_tokens": 17577,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/candidates/candidate_161.diff",
+                  "offset": 1,
+                  "limit": 30
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1148,
+            "cache_read_input_tokens": 20188,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/846/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_846_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_161\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit wraps a block of code in DisplayControlImpl.java with a new\n`if (myDataChoices != null) { ... }` null check to prevent a\nNullPointerException when `myDataChoices` is null. The wrapped block is:\n\n    if ((myDataChoices.size() > 0)\n            && (myDataChoices.get(0) instanceof DerivedDataChoice)) {\n        List cdcs = ((DerivedDataChoice) myDataChoices.get(0)).getChoices();\n        if (cdcs.size() > 0) {\n            DataChoice dc = (DataChoice) cdcs.get(0);\n            DataSelection ds = dc.getDataSelection();\n            if (ds != null) {\n                ...\n                this.usesTimeDriver = ((Boolean) ud1).booleanValue();\n            }\n        }\n    }\n\ncandidate_161 is the commit that first introduces exactly this block\n(unconditionally calling `myDataChoices.size()` without any preceding\nnull check):\n\n    if(myDataChoices.size() > 0 && myDataChoices.get(0) instanceof DerivedDataChoice){\n        List cdcs = ((DerivedDataChoice)myDataChoices.get(0)).getChoices();\n        if(cdcs.size() > 0)  {\n            DataChoice dc = (DataChoice)cdcs.get(0);\n            DataSelection ds = dc.getDataSelection();\n            if(ds != null){\n                ...\n                this.usesTimeDriver = ((Boolean)ud1).booleanValue();\n            }\n        }\n    }\n\nThis diff context (`@@ -1100,6 +1089,20 @@`, with the block appearing as\npure additions after the `return;` at the top of the method) shows the\ncode did not exist before this commit \u2014 it was newly added here, with no\nguard against `myDataChoices` being null.\n\ncandidate_162, the very next commit, only reformats this same block\n(whitespace/brace style changes and splitting long lines) without\naltering its logic or adding any null check, so it does not introduce the\nbug \u2014 it merely inherits it. All later candidates that reference this\ncode (167, 170-174, etc.) likewise inherit the same unguarded\n`myDataChoices` access introduced in candidate_161, until the fix commit\nfinally adds the `myDataChoices != null` check.\n\nTherefore candidate_161 is the bug-introducing commit: it added code that\ndereferences `myDataChoices` (calling `.size()`) without first checking\nit for null, which could throw a NullPointerException if `myDataChoices`\nwas null at that point in `doRemoveField` (or equivalent method).\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1410,
+            "cache_read_input_tokens": 21336,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

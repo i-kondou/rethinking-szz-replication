@@ -1,0 +1,31 @@
+SELECTED: candidate_190
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit reverts this exact code in TripleAPlayer.java's move() method:
+
+    if ((nonCombat && !m_soundPlayedAlreadyNonCombatMove) || (!nonCombat && !m_soundPlayedAlreadyCombatMove)) {
+      ClipPlayer.play(SoundPath.CLIP_PHASE_MOVE_NONCOMBAT, id);
+      m_soundPlayedAlreadyNonCombatMove = true;
+    }
+
+back into two separate blocks, one for the non-combat case (playing CLIP_PHASE_MOVE_NONCOMBAT and setting m_soundPlayedAlreadyNonCombatMove) and one for the combat case (playing CLIP_PHASE_MOVE_COMBAT and setting m_soundPlayedAlreadyCombatMove).
+
+Tracing the history of this section across the candidates shows that from candidate_140 through candidate_189, the code correctly used two distinct branches:
+
+    if (nonCombat && !m_soundPlayedAlreadyNonCombatMove) {
+      ...play CLIP_PHASE_MOVE_NONCOMBAT...
+      m_soundPlayedAlreadyNonCombatMove = true;
+    } else if (!nonCombat && !m_soundPlayedAlreadyCombatMove) {
+      ...play CLIP_PHASE_MOVE_COMBAT...
+      m_soundPlayedAlreadyCombatMove = true;
+    }
+
+candidate_190 is the commit that collapses these two branches into the single buggy OR-condition shown above, while simultaneously reverting sound-playing calls from DefaultSoundChannel.playSoundOnLocalMachine(...) back to ClipPlayer.play(...) (an apparent side effect of a larger revert of the sound-channel-broadcaster refactor). In doing so, it drops the "else if" branch entirely and the CLIP_PHASE_MOVE_COMBAT / m_soundPlayedAlreadyCombatMove logic, replacing it with a merged condition that:
+1. Always plays CLIP_PHASE_MOVE_NONCOMBAT regardless of whether the move is combat or non-combat.
+2. Always sets m_soundPlayedAlreadyNonCombatMove to true, never m_soundPlayedAlreadyCombatMove.
+
+This means combat moves incorrectly play the non-combat movement sound, the combat sound never plays, and the non-combat flag gets incorrectly marked as "played" after a combat move, potentially suppressing the correct non-combat sound later in the turn. This is precisely the bug that the fix commit corrects by splitting the condition back into two independent if-statements with their own sound clips and flags.
+
+No other candidate in the 191-commit set shows this specific merged/buggy pattern being introduced (candidates 189 and 191 only touch adjacent lines such as id.getName() vs id, inheriting the buggy state that candidate_190 introduced).

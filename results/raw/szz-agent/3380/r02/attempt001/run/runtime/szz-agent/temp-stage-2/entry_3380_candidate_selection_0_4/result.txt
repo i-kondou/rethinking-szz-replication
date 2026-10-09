@@ -1,0 +1,10 @@
+SELECTED: candidate_02
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit removes the "addition parameters by terry" (`OUTPUT_ENCODING` = "html.outputEncoding" and `SOURCE_ENCODING` = "html.sourceEncoding") from IReportProperties.java and ReportProperties.java, replacing all usages of `getOutputEncoding()`/`setOutputEncoding()` and `getSourceEncoding()`/`setSourceEncoding()` back with a proper `getOutEncoding()`/`setOutEncoding()` pair, and additionally introduces a new, distinct `IN_ENCODING`/`getInEncoding()`/`setInEncoding()` for reading source files (as opposed to writing output files).
+
+Candidate_02 is the commit that originally introduced this problematic code: it added the `OUTPUT_ENCODING`/`SOURCE_ENCODING` properties (with the comment "addition parameters by terry"), added the corresponding getter/setter methods and assertion checks (`m_sourceEncoding != null`, `m_outputEncoding != null`) in ReportProperties.java, removed the previously-existing `getOutEncoding()`/`setOutEncoding()` methods, and rewired all the report generators (html, txt, xml ReportGenerator.java) to call `getOutputEncoding()` instead of `getOutEncoding()`. It also changed the HTML report generator's source-file reading to use `getSourceEncoding()` where it previously used the platform default (`FileReader`).
+
+This is exactly the code pattern that the fix commit reverses line-for-line: the fix restores `getOutEncoding()`/`setOutEncoding()` for output encoding and introduces a cleanly separated `getInEncoding()`/`setInEncoding()` (backed by a new `IN_ENCODING` property key) for the input/source encoding, rather than the confusingly named and incorrectly conflated `OUTPUT_ENCODING`/`SOURCE_ENCODING` properties added by candidate_02. The other candidates are unrelated: candidate_01 is an unrelated bulk repository restructuring (deleting build files, adding an IDE module file), and candidate_03 only renames an unrelated constant (`NESTED_ITEMS_PARENT_DIRNAME`). Candidate_04 appears to duplicate the fix commit's own diff (identical blob hashes), rather than being a genuine earlier candidate that introduced the bug.

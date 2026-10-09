@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "kind": "claude-szz-agentic-baseline-source-acquisition",
+  "recorded_at": "2026-08-19",
+  "execution_authorized": false,
+  "model_condition": {
+    "model_id": "anthropic/claude-sonnet-5",
+    "model_provider": "OpenRouter OpenAI-compatible Chat Completions",
+    "base_url": "https://openrouter.ai/api/v1",
+    "input_usd_per_million_tokens_snapshot": "2",
+    "output_usd_per_million_tokens_snapshot": "10",
+    "max_output_tokens_per_request": 4096,
+    "repetitions_per_sample": 3,
+    "normal_completion_only": true,
+    "classification": "matched-backbone adaptation, not original-model replication"
+  },
+  "sources": {
+    "agentszz": {
+      "paper": "AgentSZZ: Teaching the LLM Agent to Play Detective with Bug-Inducing Commits",
+      "doi": "10.6084/m9.figshare.31899760.v2",
+      "figshare_article_id": 31899760,
+      "figshare_file_id": 63446622,
+      "download_url": "https://ndownloader.figshare.com/files/63446622",
+      "archive_name": "replication_package.zip",
+      "archive_size_bytes": 7901472,
+      "archive_md5": "e1f0a2b71fabc52e5aa44ddcfee241e4",
+      "archive_sha256": "9db30ccb3e38c6a99242c26afd7347fb44ef26ef434378c452be13a5a2f3e866",
+      "license": "CC BY 4.0",
+      "local_archive_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentszz-replication-package-v2.zip",
+      "local_source_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentszz-figshare-v2/replication_package/agentszz",
+      "source_tree_sha256": "3436d1b781b11c9b2bf962105355f5f4ded84ede0ec599bda848e0cff9c72777",
+      "original_model": "openai/gpt-5-mini via OpenRouter",
+      "original_max_executor_turns": 15,
+      "original_validator_enabled": false,
+      "output_cardinality": "one primary BIC"
+    },
+    "agentic_szz": {
+      "paper": "AgenticSZZ: Temporal Knowledge Graph-Guided Agentic Bug-Inducing Commit Identification",
+      "repository": "https://github.com/SAILResearch/AgenticSZZ.git",
+      "commit": "0012a507b9087f15cdad340888a837f5618a3c29",
+      "git_tree": "738bf1e17594df62dd198f7ffc220d728223b454",
+      "license_declared_in_pyproject": "MIT",
+      "local_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz",
+      "original_model": "DeepSeek-V3.2 through the official API",
+      "original_agent_request_limit": 30,
+      "original_candidate_limit": 20,
+      "full_condition_context_expand_lines": 2,
+      "output_cardinality": "one primary BIC"
+    }
+  },
+  "runtimes": {
+    "agentszz_python": "/Users/user-01/research/workspaces/claude-szz/baselines/venv/bin/python",
+    "agentszz_python_version": "3.11.11",
+    "agentszz_openai_version": "2.16.0",
+    "agentic_szz_python": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz-venv/bin/python",
+    "agentic_szz_python_version": "3.12.8",
+    "agentic_szz_requirements_path": "config/llm-baselines/requirements-agentic-szz-python312.txt",
+    "agentic_szz_requirements_sha256": "e426ee65f956a8582aa195ac819d2c862d68abd66d20107d71558701ca313f22",
+    "agentic_szz_dependencies": {
+      "graphiti-core": "0.29.3",
+      "pydantic-ai": "2.31.1",
+      "neo4j": "6.2.0",
+      "GitPython": "3.1.59",
+      "openai": "3.3.0",
+      "python-dotenv": "1.2.3",
+      "tiktoken": "0.14.0",
+      "unidiff": "1.0.0"
+    },
+    "neo4j_image": "neo4j:5.26.8-community",
+    "neo4j_repo_digest": "neo4j@sha256:5216b8f7bcca893448d5b4a809d91761609fc8aea900691d59531ada76c28c62",
+    "neo4j_local_image_id": "sha256:c0f0ce3396c902c9ab6520d0c9d1c644a3aa83eed00036e609e5db10a84b2d92",
+    "neo4j_architecture": "arm64"
+  },
+  "adapter_boundaries": {
+    "same79_input": "the existing sanitized subject repository and synthetic BFC HEAD; Oracle remains analyst-side",
+    "agentszz": "official source imported without modification; model/base URL injected; request-level conservative byte-as-token cap gate and 4096 maximum output added",
+    "agentic_szz": "official Git tree unchanged; OpenRouter model/key and isolated Neo4j connection injected; 4096 maximum output and conservative total-token cap added",
+    "agentic_szz_graphiti": "Graphiti creates default clients but this package writes episodes and code entities programmatically and queries them directly; the adapter supplies a dummy OPENAI_API_KEY and does not authorize an OpenAI request",
+    "billing": "OPENROUTER_API_KEY and explicit billing acknowledgement required only for live execution",
+    "test_stub": "never counted as a scientific completion and never sends a model request"
+  },
+  "known_construct_limitations": [
+    "Both methods select one primary BIC, which caps recall for multi-BIC Oracle cases.",
+    "Sonnet 5 is not the model used in either original effectiveness experiment.",
+    "AgenticSZZ requires Neo4j and is intended to run sequentially on the local 32 GB machine."
+  ]
+}

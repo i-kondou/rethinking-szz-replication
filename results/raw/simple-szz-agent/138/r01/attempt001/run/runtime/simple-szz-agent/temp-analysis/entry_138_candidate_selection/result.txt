@@ -1,0 +1,33 @@
+SELECTED: candidate_06
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes AbstractElement.equals() so that it calls getID() (the internal
+long-id accessor) instead of getId() (the Blueprints-style ID accessor that returns an
+Object/String and requires .equals()):
+
+-            return getId().equals(((TitanVertex)other).getId());
++            return getID() == ((TitanVertex)other).getID();
+-            return getId().equals(((TitanEdge)other).getId());
++            return getID() == ((TitanEdge)other).getID();
+
+Tracing AbstractElement.java through the candidates shows this exact code path was
+introduced by candidate_06. Before candidate_06 (index 8f69d4a..339f4a0), the equals()
+method used the correct/intended comparison:
+
+    return getID()==((AbstractElement)other).getID();
+
+candidate_06 rewrote this into the buggy form that calls the differently-capitalized
+getId() method and compares via .equals() instead of ==:
+
+    return getId().equals(((TitanVertex)other).getId());
+    return getId().equals(((TitanEdge)other).getId());
+
+This is precisely the "capitalization bug" described in the fix commit message
+("Call AbstractElement getID() insteado of getId()"), where relying on the
+capitalization difference between getID() and getId() to select different methods
+caused equals() to invoke the wrong accessor. candidate_06 is the first candidate
+where this problematic getId()-based code appears, making it the bug-introducing
+commit. (candidate_07's diff on the same file is byte-identical to the fix commit's
+diff, i.e. it corresponds to the fix itself rather than a separate introduction.)

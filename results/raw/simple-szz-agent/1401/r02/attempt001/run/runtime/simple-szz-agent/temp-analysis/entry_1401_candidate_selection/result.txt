@@ -1,0 +1,30 @@
+SELECTED: candidate_327
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) changes this exact line in LocalInspectionsPass.java:
+
+  BEFORE (buggy):
+    tooltip = XmlStringUtil.wrapInHtml(message.startsWith("<html>") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link ;
+
+  AFTER (fixed):
+    tooltip = XmlStringUtil.wrapInHtml((message.startsWith("<html>") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link);
+
+The bug is a misplaced closing parenthesis: `link` (the "Show more/inspection details" HTML anchor appended to every warning tooltip) was being concatenated OUTSIDE the wrapInHtml(...) call instead of inside it. Since wrapInHtml() wraps its argument in `<html>...</html>`, appending `link` after the closing `</html>` tag produces malformed/truncated HTML for the tooltip. Swing's HTML renderer (and the tooltip display logic) then fails to render or fully display these tooltips, which is consistent with the reported symptom "Not all warnings are displayed in the editor" - warnings whose tooltip HTML got corrupted this way were not shown properly.
+
+Searching the 328 candidates for this exact line, I found:
+
+- candidate_290/291/292: contain an EARLIER, correct version of this code as an if/else block:
+    if (message.startsWith("<html>")) {
+      tooltip = XmlStringUtil.wrapInHtml(XmlStringUtil.stripHtml(message) + link);
+    } else {
+      tooltip = XmlStringUtil.wrapInHtml(XmlStringUtil.escapeString(message) + link);
+    }
+  Here `link` is correctly placed inside wrapInHtml() in both branches - no bug.
+
+- candidate_327: refactors this if/else block into the single ternary-based line, and in doing so moves the closing parenthesis of wrapInHtml(...) to BEFORE `+ link` instead of after it. This is precisely the buggy line reproduced verbatim in fix_commit_diff.txt's "before" state.
+
+- candidate_328: is the fix commit itself, restoring correct paren placement.
+
+Since candidate_327 is the commit that transforms the previously-correct code into the exact buggy line shown in the fix diff, it is the bug-introducing commit.

@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "timestamp": "20260906_163038",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 0,
+    "gt_in_szz_candidates_rate": 0.0,
+    "llm_accuracy": 0.0
+  },
+  "results": [
+    {
+      "id": "2911",
+      "fix_commit_hash": "1084c112ee85c7269baadafa0defc319f6c7ffc0",
+      "bug_commit_hash": [
+        "e33ec10aa400f32c2e0278c15ea80a0f624e5919"
+      ],
+      "szz_candidates": [
+        "8399707f054e5d387e1af18384efab4cd1b26e57",
+        "ba7db47ab912269eca160bc1112f46cc417688d1",
+        "ed7696b130a0b7b6fb63b4d37c4a873fa1f8f96f",
+        "ee0dddee6849d1968500af666571df668d34393a",
+        "c8255f8c5f73a2353293ec1d9612dbb98f291ccc",
+        "a4bded985ca1346a17ee0dcf08fe9dcd570dcfb7",
+        "b6c1a8bbd7c2d44c2edb59d9938fa073f6f478de"
+      ],
+      "szz_num_candidates": 7,
+      "gt_in_szz_candidates": false,
+      "matching_gt_in_candidates": [],
+      "llm_selected_commit": "8399707f054e5d387e1af18384efab4cd1b26e57",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit modifies bookkeeper-common/src/main/java/org/apache/bookkeeper/common/util/OrderedScheduler.java to correct two bugs: 1. In TimedRunnable.safeRun(), the pending-time stat was being recorded incorrectly: `taskPendingStats.registerSuccessfulEvent(initNanos, TimeUnit.NANOSECONDS);` was changed to: `taskPendingStats.registerSuccessfulEvent(MathUtils.elapsedNanos(initNanos), TimeUnit.NANOSECONDS);` The original code passed the raw start timestamp (initNanos) as if it were an elapsed du",
+      "llm_correct": false,
+      "llm_error": null,
+      "repo_name": "subjects/2911",
+      "bug_fixing_commit": "1084c112ee85c7269baadafa0defc319f6c7ffc0",
+      "bug_inducing_commit": [
+        "e33ec10aa400f32c2e0278c15ea80a0f624e5919"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "apache/bookkeeper"
+    }
+  ]
+}

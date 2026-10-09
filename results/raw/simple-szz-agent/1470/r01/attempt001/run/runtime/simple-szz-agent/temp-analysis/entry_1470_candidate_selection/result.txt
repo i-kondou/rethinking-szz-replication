@@ -1,0 +1,16 @@
+SELECTED: candidate_13
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit removes a single dead-store line in AbstractStickyAssignor.generalAssign:
+`boolean isFreshAssignment = currentAssignment.isEmpty();`
+This was flagged by spotBugs because the variable was declared but never used.
+
+Tracing the history of `isFreshAssignment` across the candidates shows it was originally introduced (in candidate_02) as a parameter passed into `sortPartitions(currentAssignment, prevAssignment.keySet(), isFreshAssignment, partition2AllPotentialConsumers, consumer2AllPotentialPartitions)`, where it was genuinely used inside `sortPartitions` to decide whether to take the "fresh assignment" code path.
+
+candidate_13 performs a large refactor of AbstractStickyAssignor (adding the constrained/general assignment split for cooperative sticky assignment). As part of this refactor, `sortPartitions` was rewritten and simplified to `sortPartitions(Map<TopicPartition, List<String>> partition2AllPotentialConsumers)` — it no longer takes `currentAssignment`, `partitionsWithADifferentPreviousAssignment`, or `isFreshAssignment` as parameters, and the old fresh-vs-reassignment branching logic (and the `areSubscriptionsIdentical`/`hasIdenticalListElements` helpers it depended on) was deleted entirely.
+
+However, the call site in `generalAssign` still computes `boolean isFreshAssignment = currentAssignment.isEmpty();` (visible in the diff context at line 349) but the very next call now reads `sortPartitions(partition2AllPotentialConsumers)` — the variable is no longer passed anywhere or used. This is precisely the dead store spotBugs flagged, and it was introduced by this refactor in candidate_13. The fix commit simply deletes this now-vestigial line, confirming candidate_13 as the bug-introducing commit.
+
+Later candidates (candidate_14) show the exact same line being removed in a diff that matches the fix commit content, further confirming this variable remained dead/unused from candidate_13 onward until it was cleaned up.

@@ -1,0 +1,30 @@
+SELECTED: candidate_51
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single `break;` statement right after the "Cover downloaded for ..." debug log line inside the loop over candidate cover URLs in `CoverManager.getCoverBytes()`. Without this `break`, once a cover is successfully downloaded/read, the loop keeps iterating over the remaining URLs for that same retriever, which can overwrite the already-successfully-fetched `coverBytes` with a later (possibly null or wrong) result — this is the "local cover art" bug described in the fix message.
+
+Tracing the history of this exact method:
+- candidate_04 is the commit that originally introduced `CoverManager.java` (and the `getCoverBytes(String[] coverUrls, CoverInfo coverInfo)` method). At that point the loop body read:
+  ```
+  if (coverBytes != null) {
+      ...
+      return coverBytes;
+  }
+  ```
+  The `return coverBytes;` here functioned exactly like a `break` — it immediately exited the loop (and the method) as soon as a valid cover was found, so the bug did not exist yet.
+
+- candidate_51 refactored this same method (and sibling methods like `executeGetRequest`/`cleanGetRequest`/`isWifi`) to a "single exit point" style, pre-declaring the return variable and removing early `return`s in favor of falling through to one `return` at the end of the method. In doing so, it deleted the `return coverBytes;` line from inside the `if (coverBytes != null) { ... }` block but did NOT add a `break;` in its place. This is the exact diff:
+  ```
+  d(CoverManager.class.getSimpleName(),
+          "Cover downloaded for " + coverInfo.getAlbum() + " from " + url
+                  + ", size=" + coverBytes.length);
+  -                    return coverBytes;
+  }
+  ```
+  This change silently converted the early-exit into a no-op fall-through, so the loop continued to the next URL even after a cover was already found — introducing the local-cover-art overwrite bug.
+
+- candidate_52 (a later, unrelated-looking commit) coincidentally touches the very same lines and its diff is textually identical to the fix commit's diff (adding `break;` back at this location, same line numbers and same before/after hashes as the fix). This indicates candidate_52 is effectively the fix commit itself (or an equivalent re-application of it), not a bug-introducing candidate — selecting it would be circular.
+
+Given that candidate_04 had correct (return-based) early-exit behavior and candidate_51 is the commit that removed that early exit without substituting a `break`, candidate_51 is the commit that introduced the bug fixed by the target commit.

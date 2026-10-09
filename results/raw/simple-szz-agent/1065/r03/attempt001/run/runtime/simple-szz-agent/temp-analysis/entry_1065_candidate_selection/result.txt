@@ -1,0 +1,23 @@
+SELECTED: candidate_210
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes a single line in FlexReader.java's file-grouping loop:
+
+    file.field = field % runCount;
+  ->
+    file.field = field % (nFiles / (wellCount * runCount));
+
+This shows the bug was an incorrect field-index computation ("field % runCount") used when assigning FlexFile.field for each file, which produced wrong field indices whenever multiple acquisition "runs" were present (causing incorrect file indexing/lookup for wells with more than one run).
+
+Tracing the history of this exact line across the candidates:
+- candidate_202 is where multi-run support (runCount, runDirs, acquisition tracking) was first introduced. At that point the line read:
+      file.field = field / runCount;
+  (division, not modulo) — this was the original multi-run-aware computation.
+- candidate_210 changed this same line from division to modulo:
+      file.field = field / runCount;   ->   file.field = field % runCount;
+  This is exactly the buggy expression ("field % runCount") that the fix commit later replaces. No candidate between 210 and the fix touches this line again.
+- The fix commit (and the near-identical diff seen in candidate_211, which appears to correspond to the fix itself rather than a bug-introducing change) corrects the formula to "field % (nFiles / (wellCount * runCount))".
+
+Since candidate_210 is the commit that introduced the precise faulty expression ("field % runCount") that persisted unchanged until the fix, it is the bug-introducing commit. candidate_202, while it added the multi-run feature and a related but different (division-based) computation, did not contain the specific buggy pattern that the fix directly addresses.

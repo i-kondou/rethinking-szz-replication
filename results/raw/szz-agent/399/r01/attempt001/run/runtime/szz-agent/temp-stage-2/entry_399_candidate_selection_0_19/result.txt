@@ -1,0 +1,28 @@
+SELECTED: candidate_09
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes KVMPhysicalDisk.java's RBDStringBuilder method, replacing
+"\\\\:" with "\\:" when building the mon_host portion of the rbd connection
+string (rbdOpts += ":mon_host=" + monHost + ...). This corrected a
+double-escaping issue where the monitor host/port separator was escaped twice.
+
+candidate_09 is the commit that originally introduces the RBDStringBuilder
+method (adding RBD/Ceph storage support to the KVM plugin). In this candidate,
+the method is added as:
+
+    public static String RBDStringBuilder(String monHost, int monPort,
+                            String authUserName, String authSecret, String image) {
+        String rbdOpts;
+        rbdOpts = "rbd:" + image;
+        rbdOpts += ":mon_host=" + monHost + "\\\\:" + monPort;
+        ...
+
+This is exactly the buggy double-escaped pattern ("\\\\:") that the fix commit
+later corrects to "\\:". No earlier candidate contains this method or any RBD
+disk-string-building logic at all (RBD support did not exist yet), so
+candidate_09 is the first commit to introduce the bug. Later candidates
+(e.g., candidate_10, which reorganizes and extends the KVM plugin further)
+simply carry the same buggy line forward unchanged, confirming that the bug
+originated in candidate_09.

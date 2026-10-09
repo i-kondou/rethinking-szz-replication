@@ -1,0 +1,21 @@
+SELECTED: candidate_13
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix (gh-18211) changes ApplicationContextRequestMatcher.matches() away from the pattern:
+
+    if (this.initialized.compareAndSet(false, true)) {
+        initialized(context);
+    }
+    return matches(request, context);
+
+to a proper double-checked-locking pattern that only marks `initialized = true` *after* `initialized(context)` has returned, inside a synchronized block. The bug being fixed is a race condition: `compareAndSet(false, true)` flips the `initialized` flag to true immediately/atomically, before `initialized(context)` (which can be a slow, non-trivial setup method) has actually finished running. If a second thread calls `matches()` concurrently while the first thread is still inside `initialized(context)`, `compareAndSet` returns false for the second thread, so it skips the initialization block entirely and proceeds straight to `matches(request, context)` even though initialization has not completed yet. This is exactly what the fix's new test (`matchesWhenConcurrentlyCalledWaitsForInitialize`) exercises.
+
+Examining the candidate diffs for this file:
+- Prior to candidate_13, the class used a `synchronized (this.contextLock)` block with a double-checked `if (this.context == null)` on a plain field, and only assigned `this.context = createdContext` (i.e. "marked as initialized") *after* `initialized(createdContext)` returned. This was already safe: a concurrent second thread would block on the same monitor until initialization completed.
+- candidate_13 rewrote this logic, replacing `contextLock`/`context` field with `private final AtomicBoolean initialized = new AtomicBoolean(false);` and introducing exactly the buggy line `if (this.initialized.compareAndSet(false, true)) { initialized(context); }`. This is the precise code removed by the fix commit.
+- candidate_14 only fixes an unrelated Javadoc typo (`{@code true}` -> `{@code false}`) and does not touch the synchronization logic.
+- candidate_15 is the fix commit itself (identical to fix_commit_diff.txt), which restores correct synchronization via `synchronized (this.initializeLock)` and a `volatile boolean initialized` set only after `initialized(context)` completes.
+
+Therefore candidate_13 is the commit that introduced the race condition later fixed in gh-18211.

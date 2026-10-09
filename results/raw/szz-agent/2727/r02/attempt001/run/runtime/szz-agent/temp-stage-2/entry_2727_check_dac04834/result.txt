@@ -1,0 +1,10 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The bug fixed in this commit is that `consoleProcess_` was not assigned until inside `attachToProcess()`, which is called after the constructor's `getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER` check. Since `getInteractionMode()` reads `consoleProcess_`, it would always see it as `null` at that point and therefore always return `INTERACTION_NEVER`, regardless of the actual console process's interaction mode. The fix adds `consoleProcess_ = consoleProcess;` directly in the constructor, immediately before the `getInteractionMode()` check, so the correct interaction mode can be computed.
+
+Examining `files/old/ConsoleProgressDialog.java`, the constructor assigns `consoleProcess_ = consoleProcess;` at line 113 directly in the constructor body, *before* the `getInteractionMode()` check at line 126 (which is used to decide whether to create a `ShellInteractionManager` and later to determine interaction-always mode UI customization). At this point in history there is no separate `attachToProcess()` method — the process is attached and interaction mode is computed within the constructor itself, with the field assignment correctly preceding the interaction-mode check.
+
+This means the old version does not exhibit the bug: `getInteractionMode()` in old already has access to a properly-set `consoleProcess_` when it's called in the constructor. The bug was introduced later, when the code was refactored to extract process-attachment logic into a separate `attachToProcess()` method that is called *after* the `getInteractionMode()` check, without also moving/duplicating the `consoleProcess_` assignment earlier in the constructor. The fix commit re-adds that early assignment. Since old predates this problematic refactor and already has the correct assignment order, it does not contain the bug.

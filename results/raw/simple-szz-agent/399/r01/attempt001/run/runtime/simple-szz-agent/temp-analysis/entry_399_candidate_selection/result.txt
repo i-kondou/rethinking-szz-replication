@@ -1,0 +1,18 @@
+SELECTED: candidate_08
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes KVMPhysicalDisk.java's rbd option string construction from:
+    rbdOpts += "\\\\:" + monPort;
+to:
+    rbdOpts += "\\:" + monPort;
+i.e. it removes an extra level of backslash escaping applied when building the "mon_host=<host>\:<port>" segment of the rbd connection string, because the host/port separator was being double-escaped.
+
+candidate_08 is the commit that originally introduces the RBDStringBuilder() static method (in agent/src/com/cloud/agent/storage/KVMPhysicalDisk.java, as part of adding RBD/Ceph storage support to the KVM plugin). The very first version of this method contains the line:
+
+    rbdOpts += ":mon_host=" + monHost + "\\\\:" + monPort;
+
+This is exactly the double-escaped pattern later corrected by the fix commit. Searching all 20 candidates for occurrences of "mon_host"/"RBDStringBuilder"/"rbdOpts" shows candidate_08 is the earliest (and only originating) commit containing this code — candidates 09 and earlier (01-07, 09, 10) do not touch this code at all, confirming it did not exist before candidate_08. Later candidates (11, 12, 13, 14, 16, 19, 20) merely carry the code forward through package refactors (moving it into plugins/hypervisors/kvm/...) and unrelated logic changes (e.g., candidate_12 adds a `monPort != 6789` condition around the same buggy `"\\\\:"` string, but does not fix the escaping itself), while still retaining the double-escaped separator until the actual fix commit.
+
+Therefore candidate_08 is the commit that introduced the bug.

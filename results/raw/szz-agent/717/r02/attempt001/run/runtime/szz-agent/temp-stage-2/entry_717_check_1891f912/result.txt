@@ -1,0 +1,15 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the `addBootCP` method in `src/polyglot/main/Options.java` from `bootclasspathDirectories().addAll(value)` to `bootclasspathDirectories().addAll(0, value)`, so that boot classpath entries supplied via `addBootCP` are prepended rather than appended.
+
+Comparing `files/buggy/` and `files/fixed/`, both versions share the same overall design: a `bootclasspathDirectories()` accessor method, a `setBootclasspath` method that adds a full list, and a separate `addBootCP` method used to incrementally add entries (e.g., for the -B/-bootclasspath-prepend style option). The bug is specifically that `addBootCP` appends instead of prepending.
+
+In `files/old/src/polyglot/main/Options.java`, this method does not exist at all. The old version instead has:
+- `bootclasspath_directories` as a plain field (not accessed via a `bootclasspathDirectories()` method)
+- `setBootclasspath(List<File> value)` implemented as `bootclasspath_directories.clear(); bootclasspath_directories.addAll(value);`
+- No `addBootCP` method anywhere in the class
+
+This indicates the old version predates a refactor that introduced the `addBootCP` method (and the `bootclasspathDirectories()`/`classpathDirectories()` accessor pattern used in both the buggy and fixed versions). Since the specific method containing the bug does not exist in the old version, the bug cannot be present there, per the instructions' guidance that "If the relevant code section doesn't exist in old/, the bug cannot be present."

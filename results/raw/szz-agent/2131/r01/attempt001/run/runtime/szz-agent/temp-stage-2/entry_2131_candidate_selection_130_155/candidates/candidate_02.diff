@@ -1,0 +1,269 @@
+diff --git a/platform/platform-api/src/com/intellij/ui/table/TableView.java b/platform/platform-api/src/com/intellij/ui/table/TableView.java
+index 4e3767db256..36b3c7d96cf 100644
+--- a/platform/platform-api/src/com/intellij/ui/table/TableView.java
++++ b/platform/platform-api/src/com/intellij/ui/table/TableView.java
+@@ -119,7 +119,7 @@ public class TableView<Item> extends BaseTableView implements ItemsProvider, Sel
+         int width = columnInfo.getWidth(this);
+         widths[i] = width;
+       }
+-      else if ((maxStringValue = columnInfo.getMaxStringValue(this)) != null) {
++      else if ((maxStringValue = columnInfo.getMaxStringValue()) != null) {
+         sizeMode[i] = 1;
+         int width = getFontMetrics(getFont()).stringWidth(maxStringValue) + columnInfo.getAdditionalWidth();
+         width = Math.max(width, headerSize.width);
+diff --git a/platform/util/src/com/intellij/util/ui/ColumnInfo.java b/platform/util/src/com/intellij/util/ui/ColumnInfo.java
+index 579fdd64460..98add315824 100644
+--- a/platform/util/src/com/intellij/util/ui/ColumnInfo.java
++++ b/platform/util/src/com/intellij/util/ui/ColumnInfo.java
+@@ -93,7 +93,7 @@ public abstract class ColumnInfo <Item, Aspect> {
+   }
+ 
+   @Nullable
+-  public String getMaxStringValue(JTable table) {
++  public String getMaxStringValue() {
+     return null;
+   }
+ 
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+index c01f87d1bb8..3bbaed4fbef 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+@@ -55,10 +55,7 @@ import com.intellij.openapi.vfs.ReadonlyStatusHandler;
+ import com.intellij.openapi.vfs.VirtualFile;
+ import com.intellij.ui.*;
+ import com.intellij.ui.content.ContentManager;
+-import com.intellij.ui.dualView.CellWrapper;
+-import com.intellij.ui.dualView.DualTreeElement;
+-import com.intellij.ui.dualView.DualView;
+-import com.intellij.ui.dualView.DualViewColumnInfo;
++import com.intellij.ui.dualView.*;
+ import com.intellij.ui.table.TableView;
+ import com.intellij.util.*;
+ import com.intellij.util.text.DateFormatUtil;
+@@ -152,12 +149,12 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+       }
+ 
+       @Override
+-      public String getMaxStringValue(JTable table) {
+-        return getMaxValue(getName(), table);
++      public String getMaxStringValue() {
++        return getMaxValue(getName());
+       }
+     };
+ 
+-  private static final DualViewColumnInfo DATE = new VcsColumnInfo<String>(VcsBundle.message("column.name.revision.date")) {
++  private final DualViewColumnInfo DATE = new VcsColumnInfo<String>(VcsBundle.message("column.name.revision.date")) {
+     protected String getDataOf(VcsFileRevision object) {
+       Date date = object.getRevisionDate();
+       if (date == null) return "";
+@@ -174,8 +171,8 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+     }
+ 
+     @Override
+-    public String getMaxStringValue(JTable table) {
+-      return getMaxValue(getName(), table);
++    public String getMaxStringValue() {
++      return getMaxValue(getName());
+     }
+   };
+   private final Splitter myDetailsSplitter = new Splitter(false, 0.5f);
+@@ -216,7 +213,7 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+ 
+   private static final TableCellRenderer AUTHOR_RENDERER = new AuthorCellRenderer();
+ 
+-  private static final DualViewColumnInfo AUTHOR = new VcsColumnInfo<String>(VcsBundle.message("column.name.revision.list.author")) {
++  private final DualViewColumnInfo AUTHOR = new VcsColumnInfo<String>(VcsBundle.message("column.name.revision.list.author")) {
+     protected String getDataOf(VcsFileRevision object) {
+       VcsFileRevision rev = object;
+       if (object instanceof TreeNodeOnVcsRevision) {
+@@ -265,8 +262,8 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+     }
+ 
+     @Override
+-    public String getMaxStringValue(JTable table) {
+-      return getMaxValue(getName(), table);
++    public String getMaxStringValue() {
++      return getMaxValue(getName());
+     }
+   };
+ 
+@@ -292,7 +289,7 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+ 
+   }
+ 
+-  private static class MessageColumnInfo extends VcsColumnInfo<String> {
++  private class MessageColumnInfo extends VcsColumnInfo<String> {
+     private final MessageRenderer myRenderer;
+ 
+     public MessageColumnInfo(Project project) {
+@@ -319,18 +316,6 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+       }
+     }
+ 
+-    private static int getSuitableIndex(int index10, int index13) {
+-      if (index10 < 0) {
+-        return index13;
+-      }
+-      else if (index13 < 0) {
+-        return index10;
+-      }
+-      else {
+-        return Math.min(index10, index13);
+-      }
+-    }
+-
+     @Override
+     public String getPreferredStringValue() {
+       return StringUtil.repeatSymbol('a', 125);
+@@ -341,11 +326,24 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+     }
+ 
+     @Override
+-    public String getMaxStringValue(JTable table) {
+-      return getMaxValue(getName(), table);
++    public String getMaxStringValue() {
++      return getMaxValue(getName());
+     }
+   }
+ 
++  private static int getSuitableIndex(int index10, int index13) {
++    if (index10 < 0) {
++      return index13;
++    }
++    else if (index13 < 0) {
++      return index10;
++    }
++    else {
++      return Math.min(index10, index13);
++    }
++  }
++
++
+   private final Map<VcsFileRevision, VirtualFile> myRevisionToVirtualFile = new HashMap<VcsFileRevision, VirtualFile>();
+ 
+   public FileHistoryPanelImpl(AbstractVcs vcs,
+@@ -519,7 +517,7 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+     return columns.toArray(new DualViewColumnInfo[columns.size()]);
+   }
+ 
+-  private static Collection<DualViewColumnInfo> wrapAdditionalColumns(ColumnInfo[] additionalColumns) {
++  private Collection<DualViewColumnInfo> wrapAdditionalColumns(ColumnInfo[] additionalColumns) {
+     ArrayList<DualViewColumnInfo> result = new ArrayList<DualViewColumnInfo>();
+     if (additionalColumns != null) {
+       for (ColumnInfo additionalColumn : additionalColumns) {
+@@ -1504,7 +1502,7 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+ 
+   }
+ 
+-  private static class MyColumnWrapper<T> extends DualViewColumnInfo<TreeNodeOnVcsRevision, Object> {
++  private class MyColumnWrapper<T> extends DualViewColumnInfo<TreeNodeOnVcsRevision, Object> {
+     private final ColumnInfo<VcsFileRevision, T> myBaseColumn;
+ 
+     public Comparator<TreeNodeOnVcsRevision> getComparator() {
+@@ -1548,10 +1546,10 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+       return myBaseColumn.getEditor(item.myRevision);
+     }
+ 
+-    public String getMaxStringValue(JTable table) {
+-      final String superValue = myBaseColumn.getMaxStringValue(table);
++    public String getMaxStringValue() {
++      final String superValue = myBaseColumn.getMaxStringValue();
+       if (superValue != null) return superValue;
+-      return getMaxValue(myBaseColumn.getName(), table);
++      return getMaxValue(myBaseColumn.getName());
+     }
+ 
+     public int getAdditionalWidth() {
+@@ -1592,7 +1590,9 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+     return myFilePath.getVirtualFileParent();
+   }
+ 
+-  private static String getMaxValue(String name, JTable table) {
++  private String getMaxValue(String name) {
++    if (myDualView == null) return null;
++    TableView table = myDualView.getFlatView();
+     if (table.getRowCount() == 0) return null;
+     final Enumeration<TableColumn> columns = table.getColumnModel().getColumns();
+     int idx = 0;
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/merge/MultipleFileMergeDialog.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/merge/MultipleFileMergeDialog.java
+index 4959cf997cf..1fe8cf89fe1 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/merge/MultipleFileMergeDialog.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/merge/MultipleFileMergeDialog.java
+@@ -100,7 +100,7 @@ public class MultipleFileMergeDialog extends DialogWrapper {
+       }
+ 
+       @Override
+-      public String getMaxStringValue(JTable table) {
++      public String getMaxStringValue() {
+         return VcsBundle.message("multiple.file.merge.type.binary");
+       }
+ 
+diff --git a/plugins/cvs/cvs-plugin/src/com/intellij/cvsSupport2/ui/experts/importToCvs/CustomizeKeywordSubstitutionDialog.java b/plugins/cvs/cvs-plugin/src/com/intellij/cvsSupport2/ui/experts/importToCvs/CustomizeKeywordSubstitutionDialog.java
+index 503bb42774b..2da5db5bb0d 100644
+--- a/plugins/cvs/cvs-plugin/src/com/intellij/cvsSupport2/ui/experts/importToCvs/CustomizeKeywordSubstitutionDialog.java
++++ b/plugins/cvs/cvs-plugin/src/com/intellij/cvsSupport2/ui/experts/importToCvs/CustomizeKeywordSubstitutionDialog.java
+@@ -90,7 +90,7 @@ public class CustomizeKeywordSubstitutionDialog extends DialogWrapper {
+     }
+ 
+     @Override
+-    public String getMaxStringValue(JTable table) {
++    public String getMaxStringValue() {
+       return KeywordSubstitutionWrapper.KEYWORD_EXPANSION_LOCKER.toString();
+     }
+   };
+@@ -118,7 +118,7 @@ public class CustomizeKeywordSubstitutionDialog extends DialogWrapper {
+     }
+ 
+     @Override
+-    public String getMaxStringValue(JTable table) {
++    public String getMaxStringValue() {
+       return getName();
+     }
+   };
+diff --git a/plugins/git4idea/src/git4idea/merge/GitMergeProvider.java b/plugins/git4idea/src/git4idea/merge/GitMergeProvider.java
+index 27602c194bb..44a43048251 100644
+--- a/plugins/git4idea/src/git4idea/merge/GitMergeProvider.java
++++ b/plugins/git4idea/src/git4idea/merge/GitMergeProvider.java
+@@ -40,7 +40,6 @@ import git4idea.i18n.GitBundle;
+ import org.jetbrains.annotations.NotNull;
+ import org.jetbrains.annotations.Nullable;
+ 
+-import javax.swing.*;
+ import java.io.IOException;
+ import java.util.HashMap;
+ import java.util.List;
+@@ -421,7 +420,7 @@ public class GitMergeProvider implements MergeProvider2 {
+       }
+ 
+       @Override
+-      public String getMaxStringValue(JTable table) {
++      public String getMaxStringValue() {
+         return GitBundle.message("merge.tool.column.status.modified");
+       }
+ 
+diff --git a/plugins/git4idea/src/git4idea/ui/GitCommitListPanel.java b/plugins/git4idea/src/git4idea/ui/GitCommitListPanel.java
+index 42700e67dd7..d0941f3f2b8 100644
+--- a/plugins/git4idea/src/git4idea/ui/GitCommitListPanel.java
++++ b/plugins/git4idea/src/git4idea/ui/GitCommitListPanel.java
+@@ -197,7 +197,7 @@ public class GitCommitListPanel extends JPanel implements TypeSafeDataProvider {
+     }
+ 
+     @Override
+-    public String getMaxStringValue(JTable table) {
++    public String getMaxStringValue() {
+       return myMaxString;
+     }
+ 
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistoryProvider.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistoryProvider.java
+index 229578f50a8..2d32622e38b 100644
+--- a/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistoryProvider.java
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistoryProvider.java
+@@ -803,7 +803,7 @@ public class SvnHistoryProvider
+     }
+ 
+     @Override
+-    public String getMaxStringValue(JTable table) {
++    public String getMaxStringValue() {
+       return SvnBundle.message("copy.column.title");
+     }
+ 

@@ -1,0 +1,16 @@
+SELECTED: candidate_16
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds `gridview.setAdapter(imageAdapter);` immediately after `gridview = (GridView) mainFragmentView.findViewById(R.id.gridView);` inside `MainActivityFragment.onCreateView()`. This means the bug was that the GridView had no adapter set at that point in the code path.
+
+Tracing the history of that line:
+- candidate_04 first introduced `gridview.setAdapter(new ImageAdapter(getContext()))` right after finding the GridView.
+- candidate_08 changed this to use the fragment's `imageAdapter` field: `gridview.setAdapter(imageAdapter);` — still called directly in `onCreateView`, right after finding the view.
+- This call remained intact through candidate_10 and candidate_11 (which introduced `updateUI()` to either fetch movies or call `resetImageAdapter()` if movies were already loaded, e.g. after a config change).
+- candidate_16 is where the bug was introduced: it removed the line `gridview.setAdapter(imageAdapter);` from `onCreateView` entirely, keeping only `gridview = (GridView) mainFragmentView.findViewById(R.id.gridView);`. The adapter is now only assigned inside the asynchronous network response callback (`getActivity().runOnUiThread(() -> gridview.setAdapter(imageAdapter))`), which only executes when `getMovies()` runs (i.e., only on first load).
+- As a result, when `updateUI()` takes the `resetImageAdapter()` path (movies already cached, e.g. after an orientation change since candidate_15 added `configChanges="orientation|screenSize"`), the network request/callback is never triggered, so `gridview.setAdapter()` is never called and the GridView is left without an adapter — the bug.
+- candidate_17 only fixes indentation/whitespace and restores the API key placeholder; it does not restore the missing `setAdapter` call.
+
+The fix commit re-adds the direct `gridview.setAdapter(imageAdapter);` call right after the GridView is found, ensuring the adapter is always set regardless of which branch of `updateUI()` executes — exactly reverting the regression introduced in candidate_16.

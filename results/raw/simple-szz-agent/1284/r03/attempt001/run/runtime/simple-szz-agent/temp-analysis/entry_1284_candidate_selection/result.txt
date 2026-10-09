@@ -1,0 +1,15 @@
+SELECTED: candidate_08
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes a single line in TetrisPanel.java:
+  - private static final int HIGH_SCORES_FILENAME = "TetrisHighScores.txt";
+  + private static final String HIGH_SCORES_FILENAME = "TetrisHighScores.txt";
+
+This was a build error: a String literal was being assigned to a field declared with type `int`, which will not compile in Java.
+
+Searching the candidates for the origin of this field shows it does not exist before candidate_08. In candidate_08, TetrisPanel.java is refactored to extract several hardcoded literals (window size, grid size, colors, filenames, etc.) into named static final constants, replacing the previous hardcoded string literal "TetrisHighScores.txt" used directly in `new File(...)` and `new FileWriter(...)` calls. During this refactor, the new constant was introduced as:
+  private static final int HIGH_SCORES_FILENAME = "TetrisHighScores.txt";
+
+This is the exact same line (down to whitespace) that the fix commit corrects, confirming candidate_08 is where the bug was introduced. Candidate_09 is the fix commit itself, correcting the type from `int` to `String`. No other candidate touches this declaration, so candidate_08 is unambiguously the bug-introducing commit.

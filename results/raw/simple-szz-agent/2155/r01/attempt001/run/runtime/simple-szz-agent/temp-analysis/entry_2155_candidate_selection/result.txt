@@ -1,0 +1,10 @@
+SELECTED: candidate_06
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit corrects XReservation.java's constructor, where the switch statement on reservation type used ApplicationProperty.ReservationPriorityIndividual / ReservationCanOverLimitIndividual / ReservationMustBeUsedIndividual / ReservationAllowOverlapIndividual for the Group, Curriculum, and Course cases instead of the type-specific properties (ReservationPriorityGroup, ReservationPriorityCurriculum, ReservationPriorityCourse, etc.). This means every reservation type except Individual, Override, and Dummy incorrectly inherited the Individual reservation's priority, over-limit, must-be-used, and allow-overlap settings.
+
+candidate_06 is the commit that introduced this exact code. It added the new ApplicationProperty enum values (ReservationPriorityIndividual, ReservationPriorityGroup, ReservationPriorityCurriculum, ReservationPriorityCourse, etc.) and rewrote XReservation's constructor to set priority/flags via a switch statement. In that switch statement, the Group, Curriculum, and Course cases were copy-pasted from the Individual case without updating the property names to the type-specific ones — a classic copy-paste bug. This is the first commit where the buggy pattern (all types using "Individual" properties) exists in the codebase; no earlier candidate (01-05, 07) contains any reference to these ReservationPriority*/ReservationCanOverLimit*/ReservationMustBeUsed*/ReservationAllowOverlap* properties at all.
+
+Note: candidate_08's diff is textually identical to the fix_commit_diff.txt itself (same before/after hashes, same hunk) — it is a duplicate of the fix, not a bug-introducing candidate, so it was excluded from consideration despite matching the search pattern.

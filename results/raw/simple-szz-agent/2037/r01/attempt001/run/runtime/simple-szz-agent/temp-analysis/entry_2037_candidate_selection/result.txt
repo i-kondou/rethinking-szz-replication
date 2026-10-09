@@ -1,0 +1,12 @@
+SELECTED: candidate_26
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit moves `mContainerView.removeView(removedPage.getView())` and `mCurPage = prevPage` out of `doFinalWorkForPopPageInternal` (which only runs after the pop animation finishes, via a `postDelayed` Runnable, when the pop is animated) and into `popPageInternal` itself, so they execute immediately when a page is popped, regardless of whether a transition animation is playing. The fix commit message states: "mCurPage should be set to null immediately when last page is popped, even if there is a transition animation to play."
+
+Before candidate_26, `popPageInternal` set `mCurPage = prevPage` synchronously/immediately, right after computing `prevPage`, before scheduling any animation-related `postDelayed` callback. This was correct behavior.
+
+candidate_26 refactors `popPageInternal` by extracting the removal/cleanup logic (`mContainerView.removeView(removedPage.getView())`, `removedPage.onDetach()`, `removedPage.onHidden()`, `mCurPage = prevPage`, and `prevPage.onUncovered(...)`) into a new private method `doFinalWorkForPopPageInternal(Page removedPage, Page prevPage)`. Crucially, this new method is invoked either immediately (no animation) or, when animated, only inside the `postDelayed` Runnable that runs after `animationDuration` has elapsed. This means `mCurPage` is no longer updated immediately when popping the last page — it stays stale until the animation completes, which is precisely the bug the fix corrects: "mCurPage should be set to null immediately when last page is popped, even if there is a transition animation to play."
+
+This is a direct structural match: the fix essentially reverses candidate_26's refactor by hoisting `mContainerView.removeView(...)` and `mCurPage = prevPage` back out of the animation-gated `doFinalWorkForPopPageInternal` call and placing them before the animation-duration check in `popPageInternal`. No other candidate introduces or modifies the `doFinalWorkForPopPageInternal` method or this delayed-assignment pattern for `mCurPage`.

@@ -1,0 +1,32 @@
+SELECTED: candidate_27
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds `when(mockOrgDao.findByCommonName(eq(orgName))).thenReturn(mockOrg);` to the
+`setUp()` method of NewAccountFormControllerTest.java, and states in its commit message that
+"the call to orgDao.findByCommonName(...) in NewAccountFormController is not mocked up and
+resulted in NPE." This means the bug was introduced by whichever commit added a call to
+`orgDao.findByCommonName(...)` inside NewAccountFormController's account-creation flow without
+updating the test's mock setup accordingly.
+
+Searching the candidates for `orgDao.findByCommonName` calls inside NewAccountFormController.java
+(as opposed to unrelated controllers like OrgsController or EditUserDetailsFormController, which
+also reference findByCommonName but are not implicated by the fix), candidate_27 is the first and
+only candidate that introduces this exact call as new code in NewAccountFormController.java:
+
+    +			if(account.getOrg().length() > 0) {
+    +				Org org = orgDao.findByCommonName(account.getOrg());
+    +				orgDao.addUser(org, account);
+    +			}
+
+replacing the prior simpler `accountDao.insert(account, roleID, ...)` call that didn't touch
+orgDao at account-creation time.
+
+Critically, candidate_27 also rewrites NewAccountFormControllerTest.java's `setUp()` method to
+the exact "before" state shown in the fix diff (using `mockAccountDao`, `mockOrgDao`, mocking
+`findByUID` and `getOrgTypeValues`, but NOT mocking `findByCommonName`). This is precisely the
+gap that the fix commit later closes by adding the missing `findByCommonName` mock. Since
+candidate_27 both introduces the production-code call to `orgDao.findByCommonName(...)` and
+leaves the corresponding test double unmocked, it is the commit that introduced the NPE/build
+failure fixed by the target commit.

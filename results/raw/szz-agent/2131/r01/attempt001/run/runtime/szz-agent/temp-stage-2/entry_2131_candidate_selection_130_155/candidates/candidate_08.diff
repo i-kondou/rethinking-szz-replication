@@ -1,0 +1,1060 @@
+diff --git a/platform/vcs-api/src/com/intellij/openapi/vcs/annotate/ShowAllAffectedGenericAction.java b/platform/vcs-api/src/com/intellij/openapi/vcs/annotate/ShowAllAffectedGenericAction.java
+index 45560106aa5..eeab609885e 100644
+--- a/platform/vcs-api/src/com/intellij/openapi/vcs/annotate/ShowAllAffectedGenericAction.java
++++ b/platform/vcs-api/src/com/intellij/openapi/vcs/annotate/ShowAllAffectedGenericAction.java
+@@ -66,7 +66,7 @@ public class ShowAllAffectedGenericAction extends AnAction {
+     showSubmittedFiles(project, revision, virtualFile, vcsKey, null, false);
+   }
+ 
+-  private static void showSubmittedFiles(final Project project, final VcsRevisionNumber revision, final VirtualFile virtualFile,
++  public static void showSubmittedFiles(final Project project, final VcsRevisionNumber revision, final VirtualFile virtualFile,
+                                          final VcsKey vcsKey, final RepositoryLocation location, final boolean isNonLocal) {
+     final AbstractVcs vcs = ProjectLevelVcsManager.getInstance(project).findVcsByName(vcsKey.getName());
+     if (vcs == null) return;
+diff --git a/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsAnnotationCachedProxy.java b/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsAnnotationCachedProxy.java
+index c6f27b34308..dd6d34e69bc 100644
+--- a/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsAnnotationCachedProxy.java
++++ b/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsAnnotationCachedProxy.java
+@@ -104,6 +104,7 @@ public class VcsAnnotationCachedProxy implements AnnotationProvider {
+ 
+     final FileAnnotation fileAnnotation = delegate.compute();
+     vcsAnnotation = cacheableAnnotationProvider.createCacheable(fileAnnotation);
++    if (vcsAnnotation == null) return fileAnnotation;
+ 
+     if (revisionNumber != null) {
+       myCache.put(filePath, myVcs.getKeyInstanceMethod(), revisionNumber, vcsAnnotation);
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+index 618bf2a2506..4a6d0b9ba51 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+@@ -1156,8 +1156,10 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+     public void update(AnActionEvent e) {
+       VirtualFile revVFile = e.getData( VcsDataKeys.VCS_VIRTUAL_FILE );
+       VcsFileRevision revision = e.getData( VcsDataKeys.VCS_FILE_REVISION );
++      final Boolean nonLocal = e.getData(VcsDataKeys.VCS_NON_LOCAL_HISTORY_SESSION);
++
+       FileType fileType = revVFile == null ? null : revVFile.getFileType();
+-      boolean enabled = revision != null && revVFile != null && !fileType.isBinary();
++      boolean enabled = revision != null && revVFile != null && !fileType.isBinary() && ! Boolean.TRUE.equals(nonLocal);
+ 
+       if (enabled) {
+         final ProjectLevelVcsManager plVcsManager = ProjectLevelVcsManager.getInstance(myVcs.getProject());
+@@ -1175,7 +1177,9 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+     public void actionPerformed(AnActionEvent e) {
+       final VcsFileRevision revision = e.getData(VcsDataKeys.VCS_FILE_REVISION);
+       final VirtualFile revisionVirtualFile = e.getData(VcsDataKeys.VCS_VIRTUAL_FILE);
+-      if ((revision == null) || (revisionVirtualFile == null)) return;
++      final Boolean nonLocal = e.getData(VcsDataKeys.VCS_NON_LOCAL_HISTORY_SESSION);
++
++      if ((revision == null) || (revisionVirtualFile == null) || Boolean.TRUE.equals(nonLocal)) return;
+ 
+       final BackgroundableActionEnabledHandler handler = ((ProjectLevelVcsManagerImpl) ProjectLevelVcsManager.getInstance(myVcs.getProject())).
+         getBackgroundableActionHandler(VcsBackgroundableActions.ANNOTATE);
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/annotate/BaseSvnFileAnnotation.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/annotate/BaseSvnFileAnnotation.java
+new file mode 100644
+index 00000000000..02788fb07db
+--- /dev/null
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/annotate/BaseSvnFileAnnotation.java
+@@ -0,0 +1,387 @@
++/*
++ * Copyright 2000-2012 JetBrains s.r.o.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package org.jetbrains.idea.svn.annotate;
++
++import com.intellij.openapi.vcs.annotate.*;
++import com.intellij.openapi.vcs.history.VcsFileRevision;
++import com.intellij.openapi.vcs.history.VcsRevisionNumber;
++import com.intellij.util.text.DateFormatUtil;
++import com.intellij.xml.util.XmlStringUtil;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++import org.jetbrains.idea.svn.SvnBundle;
++import org.jetbrains.idea.svn.SvnConfiguration;
++import org.jetbrains.idea.svn.SvnRevisionNumber;
++import org.jetbrains.idea.svn.SvnVcs;
++import org.jetbrains.idea.svn.history.SvnFileRevision;
++import org.tmatesoft.svn.core.wc.SVNRevision;
++
++import java.util.*;
++
++/**
++ * Created with IntelliJ IDEA.
++ * User: Irina.Chernushina
++ * Date: 6/20/12
++ * Time: 11:33 AM
++ */
++public abstract class BaseSvnFileAnnotation implements FileAnnotation {
++  protected final String myContents;
++  protected final VcsRevisionNumber myBaseRevision;
++  private final MyPartiallyCreatedInfos myInfos;
++
++  protected final SvnVcs myVcs;
++  protected final List<AnnotationListener> myListeners = new ArrayList<AnnotationListener>();
++  private final Map<Long, SvnFileRevision> myRevisionMap = new HashMap<Long, SvnFileRevision>();
++
++  private final LineAnnotationAspect DATE_ASPECT = new SvnAnnotationAspect(SvnAnnotationAspect.DATE, true) {
++    public String getValue(int lineNumber) {
++      if (myInfos.size() <= lineNumber || lineNumber < 0) {
++        return "";
++      }
++      else {
++        final LineInfo lineInfo = myInfos.get(lineNumber);
++        return (lineInfo == null) ? "" : DateFormatUtil.formatPrettyDate(lineInfo.getDate());
++      }
++    }
++  };
++
++  private final LineAnnotationAspect REVISION_ASPECT = new SvnAnnotationAspect(SvnAnnotationAspect.REVISION, false) {
++    public String getValue(int lineNumber) {
++      if (myInfos.size() <= lineNumber || lineNumber < 0) {
++        return "";
++      }
++      else {
++        final long revision = getRevision(lineNumber);
++        return (revision == -1) ? "" : String.valueOf(revision);
++      }
++    }
++  };
++
++  private final LineAnnotationAspect ORIGINAL_REVISION_ASPECT = new SvnAnnotationAspect(SvnBundle.message("annotation.original.revision"), false) {
++    @Override
++    public String getValue(int lineNumber) {
++      final long value = myInfos.originalRevision(lineNumber);
++      return (value == -1) ? "" : String.valueOf(value);
++    }
++
++    @Override
++    protected long getRevision(int lineNum) {
++      return myInfos.originalRevision(lineNum);
++    }
++
++    @Override
++    public String getTooltipText(int lineNumber) {
++      if (myInfos.size() <= lineNumber || lineNumber < 0) {
++        return "";
++      }
++      final LineInfo info = myInfos.get(lineNumber);
++      if (info == null) return null;
++      SvnFileRevision svnRevision = myRevisionMap.get(info.getRevision());
++      if (svnRevision != null) {
++        final String tooltip = "Revision " + info.getRevision() + ": " + svnRevision.getCommitMessage();
++        return XmlStringUtil.escapeString(tooltip);
++      }
++      return "";
++    }
++  };
++
++  private final LineAnnotationAspect AUTHOR_ASPECT = new SvnAnnotationAspect(SvnAnnotationAspect.AUTHOR, true) {
++    public String getValue(int lineNumber) {
++      if (myInfos.size() <= lineNumber || lineNumber < 0) {
++        return "";
++      }
++      else {
++        final LineInfo lineInfo = myInfos.get(lineNumber);
++        return (lineInfo == null) ? "" : lineInfo.getAuthor();
++      }
++    }
++  };
++  private final SvnConfiguration myConfiguration;
++  private boolean myShowMergeSources;
++  // null if full annotation
++  private SvnRevisionNumber myFirstRevisionNumber;
++
++  public void setRevision(final long revision, final SvnFileRevision svnRevision) {
++    myRevisionMap.put(revision, svnRevision);
++  }
++
++  public void clearRevisions() {
++    myRevisionMap.clear();
++  }
++
++  public SvnFileRevision getRevision(final long revision) {
++    return myRevisionMap.get(revision);
++  }
++
++  public void setFirstRevision(SVNRevision svnRevision) {
++    myFirstRevisionNumber = new SvnRevisionNumber(svnRevision);
++  }
++
++  public SvnRevisionNumber getFirstRevisionNumber() {
++    return myFirstRevisionNumber;
++  }
++
++  static class LineInfo {
++    private final Date myDate;
++    private final long myRevision;
++    private final String myAuthor;
++
++    public LineInfo(final Date date, final long revision, final String author) {
++      myDate = date;
++      myRevision = revision;
++      myAuthor = author;
++    }
++
++    public Date getDate() {
++      return myDate;
++    }
++
++    public long getRevision() {
++      return myRevision;
++    }
++
++    public String getAuthor() {
++      return myAuthor;
++    }
++  }
++
++  public BaseSvnFileAnnotation(final SvnVcs vcs, final String contents, final VcsRevisionNumber baseRevision) {
++    myVcs = vcs;
++    myContents = contents;
++    myBaseRevision = baseRevision;
++    myConfiguration = SvnConfiguration.getInstance(vcs.getProject());
++    myShowMergeSources = myConfiguration.SHOW_MERGE_SOURCES_IN_ANNOTATE;
++
++    myInfos = new MyPartiallyCreatedInfos();
++  }
++
++  public void addListener(AnnotationListener listener) {
++    myListeners.add(listener);
++    myConfiguration.addAnnotationListener(listener);
++  }
++
++  public void removeListener(AnnotationListener listener) {
++    myListeners.remove(listener);
++    myConfiguration.removeAnnotationListener(listener);
++  }
++
++  public LineAnnotationAspect[] getAspects() {
++    return new LineAnnotationAspect[]{REVISION_ASPECT, DATE_ASPECT, AUTHOR_ASPECT};
++  }
++
++  public String getToolTip(final int lineNumber) {
++    if (myInfos.size() <= lineNumber || lineNumber < 0) {
++      return "";
++    }
++    final LineInfo info = myInfos.get(lineNumber);
++    if (info == null) return "";
++    SvnFileRevision svnRevision = myRevisionMap.get(info.getRevision());
++    if (svnRevision != null) {
++      if (myInfos.getAnnotationSource(lineNumber).showMerged()) {
++        return "Merge source revision " + info.getRevision() + ": " + svnRevision.getCommitMessage();
++      } else {
++        return "Revision " + info.getRevision() + ": " + svnRevision.getCommitMessage();
++      }
++    }
++    return "";
++  }
++
++  public String getAnnotatedContent() {
++    return myContents;
++  }
++
++  public void setLineInfo(final int lineNumber, final Date date, final long revision, final String author,
++                             @Nullable final Date mergeDate, final long mergeRevision, @Nullable final String mergeAuthor) {
++    myInfos.appendNumberedLineInfo(lineNumber, date, revision, author, mergeDate, mergeRevision, mergeAuthor);
++  }
++
++  public void appendLineInfo(final Date date, final long revision, final String author,
++                             @Nullable final Date mergeDate, final long mergeRevision, @Nullable final String mergeAuthor) {
++    myInfos.appendNumberedLineInfo(date, revision, author, mergeDate, mergeRevision, mergeAuthor);
++  }
++
++  @Nullable
++  public VcsRevisionNumber originalRevision(final int lineNumber) {
++    if (myInfos.size() <= lineNumber || lineNumber < 0) {
++      return null;
++    }
++    final SvnFileRevision revision = myRevisionMap.get(myInfos.originalRevision(lineNumber));
++    return revision == null ? null : revision.getRevisionNumber();
++  }
++
++  public VcsRevisionNumber getLineRevisionNumber(final int lineNumber) {
++    if (myInfos.size() <= lineNumber || lineNumber < 0) {
++      return null;
++    }
++    final LineInfo info = myInfos.get(lineNumber);
++    if (info == null) return null;
++    final long revision = info.getRevision();
++    if (revision >= 0) {
++      return new SvnRevisionNumber(SVNRevision.create(revision));
++    }
++    return null;
++  }
++
++  @Override
++  public Date getLineDate(int lineNumber) {
++    if (myInfos.size() <= lineNumber || lineNumber < 0) {
++      return null;
++    }
++    final LineInfo info = myInfos.get(lineNumber);
++    if (info == null) return null;
++    return info.getDate();
++  }
++
++  public List<VcsFileRevision> getRevisions() {
++    final List<VcsFileRevision> result = new ArrayList<VcsFileRevision>(myRevisionMap.values());
++    Collections.sort(result, new Comparator<VcsFileRevision>() {
++      public int compare(final VcsFileRevision o1, final VcsFileRevision o2) {
++        return -1 * o1.getRevisionNumber().compareTo(o2.getRevisionNumber());
++      }
++    });
++    return result;
++  }
++
++  public boolean revisionsNotEmpty() {
++    return ! myRevisionMap.isEmpty();
++  }
++
++  public int getNumLines() {
++    return myInfos.size();
++  }
++
++  @Nullable
++  public AnnotationSourceSwitcher getAnnotationSourceSwitcher() {
++    if (! myShowMergeSources) return null;
++    return new AnnotationSourceSwitcher() {
++      @NotNull
++      public AnnotationSource getAnnotationSource(int lineNumber) {
++        return myInfos.getAnnotationSource(lineNumber);
++      }
++
++      public boolean mergeSourceAvailable(int lineNumber) {
++        return myInfos.mergeSourceAvailable(lineNumber);
++      }
++
++      @NotNull
++      public LineAnnotationAspect getRevisionAspect() {
++        return ORIGINAL_REVISION_ASPECT;
++      }
++
++      @NotNull
++      public AnnotationSource getDefaultSource() {
++        return AnnotationSource.getInstance(myShowMergeSources);
++      }
++
++      public void switchTo(AnnotationSource source) {
++        myInfos.setShowMergeSource(source.showMerged());
++      }
++    };
++  }
++
++  @Override
++  public int getLineCount() {
++    return getNumLines();
++  }
++
++  private abstract class SvnAnnotationAspect extends LineAnnotationAspectAdapter {
++    public SvnAnnotationAspect(String id, boolean showByDefault) {
++      super(id, showByDefault);
++    }
++
++    protected long getRevision(final int lineNum) {
++      final LineInfo lineInfo = myInfos.get(lineNum);
++      return (lineInfo == null) ? -1 : lineInfo.getRevision();
++    }
++
++    @Override
++    protected void showAffectedPaths(int lineNum) {
++      if (lineNum >= 0 && lineNum < myInfos.size()) {
++        final long revision = getRevision(lineNum);
++        if (revision >= 0) {
++          showAllAffectedPaths(new SvnRevisionNumber(SVNRevision.create(revision)));
++        }
++      }
++    }
++  }
++
++  protected abstract void showAllAffectedPaths(SvnRevisionNumber number);
++
++  private static class MyPartiallyCreatedInfos {
++    private boolean myShowMergeSource;
++    private final Map<Integer, LineInfo> myMappedLineInfo;
++    private final Map<Integer, LineInfo> myMergeSourceInfos;
++    private int myMaxIdx;
++
++    private MyPartiallyCreatedInfos() {
++      myMergeSourceInfos = new HashMap<Integer, LineInfo>();
++      myMappedLineInfo = new HashMap<Integer, LineInfo>();
++      myMaxIdx = 0;
++    }
++
++    boolean isShowMergeSource() {
++      return myShowMergeSource;
++    }
++
++    void setShowMergeSource(boolean showMergeSource) {
++      myShowMergeSource = showMergeSource;
++    }
++
++    int size() {
++      return myMaxIdx + 1;
++    }
++
++    void appendNumberedLineInfo(final Date date, final long revision, final String author,
++                               @Nullable final Date mergeDate, final long mergeRevision, @Nullable final String mergeAuthor) {
++      appendNumberedLineInfo(myMaxIdx + 1, date, revision, author, mergeDate, mergeRevision, mergeAuthor);
++    }
++
++    void appendNumberedLineInfo(final int lineNumber, final Date date, final long revision, final String author,
++                               @Nullable final Date mergeDate, final long mergeRevision, @Nullable final String mergeAuthor) {
++      if (date == null) return;
++      if (myMappedLineInfo.get(lineNumber) != null) return;
++      myMaxIdx = (myMaxIdx < lineNumber) ? lineNumber : myMaxIdx;
++      myMappedLineInfo.put(lineNumber, new LineInfo(date, revision, author));
++      if (mergeDate != null) {
++        myMergeSourceInfos.put(lineNumber, new LineInfo(mergeDate, mergeRevision, mergeAuthor));
++      }
++    }
++
++    LineInfo get(final int idx) {
++      if (myShowMergeSource) {
++        final LineInfo lineInfo = myMergeSourceInfos.get(idx);
++        if (lineInfo != null) {
++          return lineInfo;
++        }
++      }
++      return myMappedLineInfo.get(idx);
++    }
++
++    AnnotationSource getAnnotationSource(final int line) {
++      return myShowMergeSource ? AnnotationSource.getInstance(myMergeSourceInfos.containsKey(line)) : AnnotationSource.LOCAL;
++    }
++
++    public long originalRevision(final int line) {
++      if (line >= size()) return -1;
++      final LineInfo lineInfo = myMappedLineInfo.get(line);
++      return lineInfo == null ? -1 : lineInfo.getRevision();
++    }
++
++    public boolean mergeSourceAvailable(int lineNumber) {
++      return myMergeSourceInfos.containsKey(lineNumber);
++    }
++  }
++}
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/annotate/SvnAnnotationProvider.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/annotate/SvnAnnotationProvider.java
+index 31e6238286d..c5fdc50b315 100644
+--- a/plugins/svn4idea/src/org/jetbrains/idea/svn/annotate/SvnAnnotationProvider.java
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/annotate/SvnAnnotationProvider.java
+@@ -19,6 +19,12 @@ import com.intellij.openapi.application.ApplicationManager;
+ import com.intellij.openapi.fileEditor.impl.LoadTextUtil;
+ import com.intellij.openapi.progress.ProgressIndicator;
+ import com.intellij.openapi.progress.ProgressManager;
++import com.intellij.openapi.util.Comparing;
++import com.intellij.openapi.util.Pair;
++import com.intellij.openapi.util.io.FileUtil;
++import com.intellij.openapi.util.text.StringUtil;
++import com.intellij.openapi.vcs.CommittedChangesProvider;
++import com.intellij.openapi.vcs.FilePath;
+ import com.intellij.openapi.vcs.FilePathImpl;
+ import com.intellij.openapi.vcs.VcsException;
+ import com.intellij.openapi.vcs.annotate.*;
+@@ -26,9 +32,12 @@ import com.intellij.openapi.vcs.history.VcsAbstractHistorySession;
+ import com.intellij.openapi.vcs.history.VcsFileRevision;
+ import com.intellij.openapi.vcs.history.VcsHistoryUtil;
+ import com.intellij.openapi.vcs.history.VcsRevisionNumber;
++import com.intellij.openapi.vcs.versionBrowser.ChangeBrowserSettings;
++import com.intellij.openapi.vfs.CharsetToolkit;
+ import com.intellij.openapi.vfs.VirtualFile;
+ import org.jetbrains.annotations.Nullable;
+ import org.jetbrains.idea.svn.*;
++import org.jetbrains.idea.svn.history.SvnChangeList;
+ import org.jetbrains.idea.svn.history.SvnFileRevision;
+ import org.tmatesoft.svn.core.*;
+ import org.tmatesoft.svn.core.wc.*;
+@@ -70,8 +79,9 @@ public class SvnAnnotationProvider implements AnnotationProvider, VcsCacheableAn
+     Runnable command = new Runnable() {
+       public void run() {
+         final ProgressIndicator progress = ProgressManager.getInstance().getProgressIndicator();
++        final File ioFile = new File(file.getPath()).getAbsoluteFile();
++        SVNInfo info = null;
+         try {
+-          final File ioFile = new File(file.getPath()).getAbsoluteFile();
+ 
+           final String contents;
+           if (loadExternally) {
+@@ -86,7 +96,7 @@ public class SvnAnnotationProvider implements AnnotationProvider, VcsCacheableAn
+           final SvnFileAnnotation result = new SvnFileAnnotation(myVcs, file, contents, revision.getRevisionNumber());
+ 
+           SVNWCClient wcClient = myVcs.createWCClient();
+-          SVNInfo info = wcClient.doInfo(ioFile, SVNRevision.UNDEFINED);
++          info = wcClient.doInfo(ioFile, SVNRevision.UNDEFINED);
+           if (info == null) {
+               exception[0] = new VcsException(new SVNException(SVNErrorMessage.create(SVNErrorCode.UNKNOWN, "File ''{0}'' is not under version control", ioFile)));
+               return;
+@@ -124,6 +134,25 @@ public class SvnAnnotationProvider implements AnnotationProvider, VcsCacheableAn
+           annotation[0] = result;
+         }
+         catch (SVNException e) {
++          if (SVNErrorCode.FS_NOT_FOUND.equals(e.getErrorMessage().getErrorCode())) {
++            final CommittedChangesProvider<SvnChangeList,ChangeBrowserSettings> provider = myVcs.getCommittedChangesProvider();
++            try {
++              final Pair<SvnChangeList, FilePath> pair = provider.getOneList(file, revision.getRevisionNumber());
++              if (pair != null && info != null && pair.getSecond() != null && ! Comparing.equal(pair.getSecond().getIOFile(), ioFile)) {
++                annotation[0] = annotateNonExisting(pair, revision, info, file.getCharset());
++                return;
++              }
++            }
++            catch (VcsException e1) {
++              //
++            }
++            catch (SVNException e1) {
++              exception[0] = new VcsException(e);
++            }
++            catch (IOException e1) {
++              exception[0] = new VcsException(e);
++            }
++          }
+           exception[0] = new VcsException(e);
+         } catch (IOException e) {
+           exception[0] = new VcsException(e);
+@@ -144,7 +173,68 @@ public class SvnAnnotationProvider implements AnnotationProvider, VcsCacheableAn
+     return annotation[0];
+   }
+ 
+-  private ISVNAnnotateHandler createAnnotationHandler(final ProgressIndicator progress, final SvnFileAnnotation result) {
++  private File getCommonAncestor(final File file1, final File file2) throws IOException {
++    if (FileUtil.filesEqual(file1, file2)) return file1;
++    final File can1 = file1.getCanonicalFile();
++    final File can2 = file2.getCanonicalFile();
++    final List<String> parts1 = StringUtil.split(can1.getPath(), File.separator, true);
++    final List<String> parts2 = StringUtil.split(can2.getPath(), File.separator, true);
++    int cnt = 0;
++    while (parts1.size() > cnt && parts2.size() > cnt) {
++      if (! parts1.get(cnt).equals(parts2.get(cnt))) {
++        if (cnt > 0) {
++          return new File(StringUtil.join(parts1.subList(0, cnt), File.separator));
++        } else {
++          return null;
++        }
++      }
++      ++ cnt;
++    }
++    //shorter one
++    if (parts1.size() > parts2.size()) {
++      return file2;
++    } else {
++      return file1;
++    }
++  }
++
++  private SvnRemoteFileAnnotation annotateNonExisting(Pair<SvnChangeList, FilePath> pair,
++                                                      VcsFileRevision revision,
++                                                      SVNInfo info,
++                                                      Charset charset) throws VcsException, SVNException, IOException {
++    final File wasFile = pair.getSecond().getIOFile();
++    final File root = getCommonAncestor(wasFile, info.getFile());
++
++    if (root == null) throw new VcsException("Can not find relative path for " + wasFile.getPath() + "@" + revision.getRevisionNumber().asString());
++
++    final String relativePath = FileUtil.getRelativePath(root.getPath(), wasFile.getPath(), File.separatorChar);
++    if (relativePath == null) throw new VcsException("Can not find relative path for " + wasFile.getPath() + "@" + revision.getRevisionNumber().asString());
++
++    SVNWCClient wcClient = myVcs.createWCClient();
++    SVNInfo wcRootInfo = wcClient.doInfo(root, SVNRevision.UNDEFINED);
++    if (wcRootInfo == null || wcRootInfo.getURL() == null) {
++        throw new VcsException("Can not find relative path for " + wasFile.getPath() + "@" + revision.getRevisionNumber().asString());
++    }
++    final SVNURL wasUrl = wcRootInfo.getURL().appendPath(relativePath, true);
++
++    final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
++    final SVNRevision svnRevision = ((SvnRevisionNumber)revision.getRevisionNumber()).getRevision();
++    myVcs.createWCClient().doGetFileContents(wasUrl, svnRevision, svnRevision, true, buffer);
++    final String contents = LoadTextUtil.getTextByBinaryPresentation(buffer.toByteArray(),
++                                                                     charset == null ? CharsetToolkit.UTF8_CHARSET : charset).toString();
++    SVNLogClient client = myVcs.createLogClient();
++    setLogClientOptions(client);
++    final SvnRemoteFileAnnotation result = new SvnRemoteFileAnnotation(myVcs, contents, revision.getRevisionNumber(), pair.getFirst(), pair.getSecond().getPath());
++    final ISVNAnnotateHandler annotateHandler = createAnnotationHandler(ProgressManager.getInstance().getProgressIndicator(), result);
++
++    final boolean calculateMergeinfo = SvnConfiguration.getInstance(myVcs.getProject()).SHOW_MERGE_SOURCES_IN_ANNOTATE &&
++                                       SvnUtil.checkRepositoryVersion15(myVcs, wasUrl.toString());
++    client.doAnnotate(wasUrl, svnRevision, SVNRevision.create(1), svnRevision, true, calculateMergeinfo, annotateHandler, null);
++
++    return result;
++  }
++
++  private ISVNAnnotateHandler createAnnotationHandler(final ProgressIndicator progress, final BaseSvnFileAnnotation result) {
+     return new ISVNAnnotateHandler() {
+       public void handleLine(Date date, long revision, String author, String line) {
+         if (progress != null) {
+@@ -189,7 +279,8 @@ public class SvnAnnotationProvider implements AnnotationProvider, VcsCacheableAn
+ 
+   @Override
+   public VcsAnnotation createCacheable(FileAnnotation fileAnnotation) {
+-    final SvnFileAnnotation svnFileAnnotation = (SvnFileAnnotation)fileAnnotation;
++    if (! (fileAnnotation instanceof SvnFileAnnotation)) return null;
++    final SvnFileAnnotation svnFileAnnotation = (SvnFileAnnotation) fileAnnotation;
+     final AnnotationSourceSwitcher annotationSourceSwitcher = svnFileAnnotation.getAnnotationSourceSwitcher();
+     if (annotationSourceSwitcher != null) {
+       annotationSourceSwitcher.switchTo(AnnotationSource.LOCAL);
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/annotate/SvnFileAnnotation.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/annotate/SvnFileAnnotation.java
+index f6448c5c05a..fcff85f5a40 100644
+--- a/plugins/svn4idea/src/org/jetbrains/idea/svn/annotate/SvnFileAnnotation.java
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/annotate/SvnFileAnnotation.java
+@@ -15,93 +15,16 @@
+  */
+ package org.jetbrains.idea.svn.annotate;
+ 
+-import com.intellij.openapi.vcs.annotate.*;
+-import com.intellij.openapi.vcs.history.VcsFileRevision;
++import com.intellij.openapi.vcs.annotate.AnnotationListener;
++import com.intellij.openapi.vcs.annotate.ShowAllAffectedGenericAction;
+ import com.intellij.openapi.vcs.history.VcsRevisionNumber;
+ import com.intellij.openapi.vfs.VirtualFile;
+-import com.intellij.util.text.DateFormatUtil;
+-import com.intellij.xml.util.XmlStringUtil;
+-import org.jetbrains.annotations.NotNull;
+-import org.jetbrains.annotations.Nullable;
+-import org.jetbrains.idea.svn.*;
+-import org.jetbrains.idea.svn.history.SvnFileRevision;
+-import org.tmatesoft.svn.core.wc.SVNRevision;
++import org.jetbrains.idea.svn.SvnEntriesListener;
++import org.jetbrains.idea.svn.SvnRevisionNumber;
++import org.jetbrains.idea.svn.SvnVcs;
+ 
+-import java.util.*;
+-
+-public class SvnFileAnnotation implements FileAnnotation {
+-  private final String myContents;
+-  private final VcsRevisionNumber myBaseRevision;
+-  private final MyPartiallyCreatedInfos myInfos;
+-
+-  private final SvnVcs myVcs;
++public class SvnFileAnnotation extends BaseSvnFileAnnotation {
+   private final VirtualFile myFile;
+-  private final List<AnnotationListener> myListeners = new ArrayList<AnnotationListener>();
+-  private final Map<Long, SvnFileRevision> myRevisionMap = new HashMap<Long, SvnFileRevision>();
+-
+-  private final LineAnnotationAspect DATE_ASPECT = new SvnAnnotationAspect(SvnAnnotationAspect.DATE, true) {
+-    public String getValue(int lineNumber) {
+-      if (myInfos.size() <= lineNumber || lineNumber < 0) {
+-        return "";
+-      }
+-      else {
+-        final LineInfo lineInfo = myInfos.get(lineNumber);
+-        return (lineInfo == null) ? "" : DateFormatUtil.formatPrettyDate(lineInfo.getDate());
+-      }
+-    }
+-  };
+-
+-  private final LineAnnotationAspect REVISION_ASPECT = new SvnAnnotationAspect(SvnAnnotationAspect.REVISION, false) {
+-    public String getValue(int lineNumber) {
+-      if (myInfos.size() <= lineNumber || lineNumber < 0) {
+-        return "";
+-      }
+-      else {
+-        final long revision = getRevision(lineNumber);
+-        return (revision == -1) ? "" : String.valueOf(revision);
+-      }
+-    }
+-  };
+-
+-  private final LineAnnotationAspect ORIGINAL_REVISION_ASPECT = new SvnAnnotationAspect(SvnBundle.message("annotation.original.revision"), false) {
+-    @Override
+-    public String getValue(int lineNumber) {
+-      final long value = myInfos.originalRevision(lineNumber);
+-      return (value == -1) ? "" : String.valueOf(value);
+-    }
+-
+-    @Override
+-    protected long getRevision(int lineNum) {
+-      return myInfos.originalRevision(lineNum);
+-    }
+-
+-    @Override
+-    public String getTooltipText(int lineNumber) {
+-      if (myInfos.size() <= lineNumber || lineNumber < 0) {
+-        return "";
+-      }
+-      final LineInfo info = myInfos.get(lineNumber);
+-      if (info == null) return null;
+-      SvnFileRevision svnRevision = myRevisionMap.get(info.getRevision());
+-      if (svnRevision != null) {
+-        final String tooltip = "Revision " + info.getRevision() + ": " + svnRevision.getCommitMessage();
+-        return XmlStringUtil.escapeString(tooltip);
+-      }
+-      return "";
+-    }
+-  };
+-
+-  private final LineAnnotationAspect AUTHOR_ASPECT = new SvnAnnotationAspect(SvnAnnotationAspect.AUTHOR, true) {
+-    public String getValue(int lineNumber) {
+-      if (myInfos.size() <= lineNumber || lineNumber < 0) {
+-        return "";
+-      }
+-      else {
+-        final LineInfo lineInfo = myInfos.get(lineNumber);
+-        return (lineInfo == null) ? "" : lineInfo.getAuthor();
+-      }
+-    }
+-  };
+   private final SvnEntriesListener myListener = new SvnEntriesListener() {
+     public void onEntriesChanged(VirtualFile directory) {
+       if (directory != myFile.getParent()) return;
+@@ -127,288 +50,22 @@ public class SvnFileAnnotation implements FileAnnotation {
+       }
+     }
+   };
+-  private final SvnConfiguration myConfiguration;
+-  private boolean myShowMergeSources;
+-  // null if full annotation
+-  private SvnRevisionNumber myFirstRevisionNumber;
+-
+-  public void setRevision(final long revision, final SvnFileRevision svnRevision) {
+-    myRevisionMap.put(revision, svnRevision);
+-  }
+-
+-  public void clearRevisions() {
+-    myRevisionMap.clear();
+-  }
+ 
+-  public SvnFileRevision getRevision(final long revision) {
+-    return myRevisionMap.get(revision);
+-  }
+-
+-  public void setFirstRevision(SVNRevision svnRevision) {
+-    myFirstRevisionNumber = new SvnRevisionNumber(svnRevision);
+-  }
+-
+-  public SvnRevisionNumber getFirstRevisionNumber() {
+-    return myFirstRevisionNumber;
+-  }
+-
+-  static class LineInfo {
+-    private final Date myDate;
+-    private final long myRevision;
+-    private final String myAuthor;
+-
+-    public LineInfo(final Date date, final long revision, final String author) {
+-      myDate = date;
+-      myRevision = revision;
+-      myAuthor = author;
+-    }
+-
+-    public Date getDate() {
+-      return myDate;
+-    }
+-
+-    public long getRevision() {
+-      return myRevision;
+-    }
+-
+-    public String getAuthor() {
+-      return myAuthor;
+-    }
+-  }
+-
+-  public SvnFileAnnotation(final SvnVcs vcs, final VirtualFile file, final String contents, final VcsRevisionNumber baseRevision) {
+-    myVcs = vcs;
++  public SvnFileAnnotation(SvnVcs vcs, VirtualFile file, String contents, VcsRevisionNumber baseRevision) {
++    super(vcs, contents, baseRevision);
+     myFile = file;
+-    myContents = contents;
+-    myBaseRevision = baseRevision;
+-    myVcs.addEntriesListener(myListener);
+-    myConfiguration = SvnConfiguration.getInstance(vcs.getProject());
+-    myShowMergeSources = myConfiguration.SHOW_MERGE_SOURCES_IN_ANNOTATE;
+-
+-    myInfos = new MyPartiallyCreatedInfos();
+-  }
+-
+-  public void addListener(AnnotationListener listener) {
+-    myListeners.add(listener);
+-    myConfiguration.addAnnotationListener(listener);
+-  }
+-
+-  public void removeListener(AnnotationListener listener) {
+-    myListeners.remove(listener);
+-    myConfiguration.removeAnnotationListener(listener);
+   }
+ 
+   public void dispose() {
+     myVcs.removeEntriesListener(myListener);
+   }
+ 
+-  public LineAnnotationAspect[] getAspects() {
+-    return new LineAnnotationAspect[]{REVISION_ASPECT, DATE_ASPECT, AUTHOR_ASPECT};
+-  }
+-
+-  public String getToolTip(final int lineNumber) {
+-    if (myInfos.size() <= lineNumber || lineNumber < 0) {
+-      return "";
+-    }
+-    final LineInfo info = myInfos.get(lineNumber);
+-    if (info == null) return "";
+-    SvnFileRevision svnRevision = myRevisionMap.get(info.getRevision());
+-    if (svnRevision != null) {
+-      if (myInfos.getAnnotationSource(lineNumber).showMerged()) {
+-        return "Merge source revision " + info.getRevision() + ": " + svnRevision.getCommitMessage();
+-      } else {
+-        return "Revision " + info.getRevision() + ": " + svnRevision.getCommitMessage();
+-      }
+-    }
+-    return "";
+-  }
+-
+-  public String getAnnotatedContent() {
+-    return myContents;
+-  }
+-
+-  public void setLineInfo(final int lineNumber, final Date date, final long revision, final String author,
+-                             @Nullable final Date mergeDate, final long mergeRevision, @Nullable final String mergeAuthor) {
+-    myInfos.appendNumberedLineInfo(lineNumber, date, revision, author, mergeDate, mergeRevision, mergeAuthor);
+-  }
+-
+-  public void appendLineInfo(final Date date, final long revision, final String author,
+-                             @Nullable final Date mergeDate, final long mergeRevision, @Nullable final String mergeAuthor) {
+-    myInfos.appendNumberedLineInfo(date, revision, author, mergeDate, mergeRevision, mergeAuthor);
+-  }
+-
+-  @Nullable
+-  public VcsRevisionNumber originalRevision(final int lineNumber) {
+-    if (myInfos.size() <= lineNumber || lineNumber < 0) {
+-      return null;
+-    }
+-    final SvnFileRevision revision = myRevisionMap.get(myInfos.originalRevision(lineNumber));
+-    return revision == null ? null : revision.getRevisionNumber();
+-  }
+-
+-  public VcsRevisionNumber getLineRevisionNumber(final int lineNumber) {
+-    if (myInfos.size() <= lineNumber || lineNumber < 0) {
+-      return null;
+-    }
+-    final LineInfo info = myInfos.get(lineNumber);
+-    if (info == null) return null;
+-    final long revision = info.getRevision();
+-    if (revision >= 0) {
+-      return new SvnRevisionNumber(SVNRevision.create(revision));
+-    }
+-    return null;
+-  }
+-
+-  @Override
+-  public Date getLineDate(int lineNumber) {
+-    if (myInfos.size() <= lineNumber || lineNumber < 0) {
+-      return null;
+-    }
+-    final LineInfo info = myInfos.get(lineNumber);
+-    if (info == null) return null;
+-    return info.getDate();
+-  }
+-
+-  public List<VcsFileRevision> getRevisions() {
+-    final List<VcsFileRevision> result = new ArrayList<VcsFileRevision>(myRevisionMap.values());
+-    Collections.sort(result, new Comparator<VcsFileRevision>() {
+-      public int compare(final VcsFileRevision o1, final VcsFileRevision o2) {
+-        return -1 * o1.getRevisionNumber().compareTo(o2.getRevisionNumber());
+-      }
+-    });
+-    return result;
+-  }
+-
+-  public boolean revisionsNotEmpty() {
+-    return ! myRevisionMap.isEmpty();
+-  }
+-
+   public VirtualFile getFile() {
+     return myFile;
+   }
+ 
+-  public int getNumLines() {
+-    return myInfos.size();
+-  }
+-
+-  @Nullable
+-  public AnnotationSourceSwitcher getAnnotationSourceSwitcher() {
+-    if (! myShowMergeSources) return null;
+-    return new AnnotationSourceSwitcher() {
+-      @NotNull
+-      public AnnotationSource getAnnotationSource(int lineNumber) {
+-        return myInfos.getAnnotationSource(lineNumber);
+-      }
+-
+-      public boolean mergeSourceAvailable(int lineNumber) {
+-        return myInfos.mergeSourceAvailable(lineNumber);
+-      }
+-
+-      @NotNull
+-      public LineAnnotationAspect getRevisionAspect() {
+-        return ORIGINAL_REVISION_ASPECT;
+-      }
+-
+-      @NotNull
+-      public AnnotationSource getDefaultSource() {
+-        return AnnotationSource.getInstance(myShowMergeSources);
+-      }
+-
+-      public void switchTo(AnnotationSource source) {
+-        myInfos.setShowMergeSource(source.showMerged());
+-      }
+-    };
+-  }
+-
+   @Override
+-  public int getLineCount() {
+-    return getNumLines();
+-  }
+-
+-  private abstract class SvnAnnotationAspect extends LineAnnotationAspectAdapter {
+-    public SvnAnnotationAspect(String id, boolean showByDefault) {
+-      super(id, showByDefault);
+-    }
+-
+-    protected long getRevision(final int lineNum) {
+-      final LineInfo lineInfo = myInfos.get(lineNum);
+-      return (lineInfo == null) ? -1 : lineInfo.getRevision();
+-    }
+-
+-    @Override
+-    protected void showAffectedPaths(int lineNum) {
+-      if (lineNum >= 0 && lineNum < myInfos.size()) {
+-        final long revision = getRevision(lineNum);
+-        if (revision >= 0) {
+-          ShowAllAffectedGenericAction.showSubmittedFiles(myVcs.getProject(), new SvnRevisionNumber(SVNRevision.create(revision)),
+-                                                          myFile, myVcs.getKeyInstanceMethod());
+-        }
+-      }
+-    }
+-  }
+-
+-  private static class MyPartiallyCreatedInfos {
+-    private boolean myShowMergeSource;
+-    private final Map<Integer, LineInfo> myMappedLineInfo;
+-    private final Map<Integer, LineInfo> myMergeSourceInfos;
+-    private int myMaxIdx;
+-
+-    private MyPartiallyCreatedInfos() {
+-      myMergeSourceInfos = new HashMap<Integer, LineInfo>();
+-      myMappedLineInfo = new HashMap<Integer, LineInfo>();
+-      myMaxIdx = 0;
+-    }
+-
+-    boolean isShowMergeSource() {
+-      return myShowMergeSource;
+-    }
+-
+-    void setShowMergeSource(boolean showMergeSource) {
+-      myShowMergeSource = showMergeSource;
+-    }
+-
+-    int size() {
+-      return myMaxIdx + 1;
+-    }
+-
+-    void appendNumberedLineInfo(final Date date, final long revision, final String author,
+-                               @Nullable final Date mergeDate, final long mergeRevision, @Nullable final String mergeAuthor) {
+-      appendNumberedLineInfo(myMaxIdx + 1, date, revision, author, mergeDate, mergeRevision, mergeAuthor);
+-    }
+-
+-    void appendNumberedLineInfo(final int lineNumber, final Date date, final long revision, final String author,
+-                               @Nullable final Date mergeDate, final long mergeRevision, @Nullable final String mergeAuthor) {
+-      if (date == null) return;
+-      if (myMappedLineInfo.get(lineNumber) != null) return;
+-      myMaxIdx = (myMaxIdx < lineNumber) ? lineNumber : myMaxIdx;
+-      myMappedLineInfo.put(lineNumber, new LineInfo(date, revision, author));
+-      if (mergeDate != null) {
+-        myMergeSourceInfos.put(lineNumber, new LineInfo(mergeDate, mergeRevision, mergeAuthor));
+-      }
+-    }
+-
+-    LineInfo get(final int idx) {
+-      if (myShowMergeSource) {
+-        final LineInfo lineInfo = myMergeSourceInfos.get(idx);
+-        if (lineInfo != null) {
+-          return lineInfo;
+-        }
+-      }
+-      return myMappedLineInfo.get(idx);
+-    }
+-
+-    AnnotationSource getAnnotationSource(final int line) {
+-      return myShowMergeSource ? AnnotationSource.getInstance(myMergeSourceInfos.containsKey(line)) : AnnotationSource.LOCAL;
+-    }
+-
+-    public long originalRevision(final int line) {
+-      if (line >= size()) return -1;
+-      final LineInfo lineInfo = myMappedLineInfo.get(line);
+-      return lineInfo == null ? -1 : lineInfo.getRevision();
+-    }
+-
+-    public boolean mergeSourceAvailable(int lineNumber) {
+-      return myMergeSourceInfos.containsKey(lineNumber);
+-    }
++  protected void showAllAffectedPaths(SvnRevisionNumber number) {
++    ShowAllAffectedGenericAction.showSubmittedFiles(myVcs.getProject(), number, myFile, myVcs.getKeyInstanceMethod());
+   }
+ }
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/annotate/SvnRemoteFileAnnotation.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/annotate/SvnRemoteFileAnnotation.java
+new file mode 100644
+index 00000000000..b303386a58f
+--- /dev/null
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/annotate/SvnRemoteFileAnnotation.java
+@@ -0,0 +1,56 @@
++/*
++ * Copyright 2000-2012 JetBrains s.r.o.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package org.jetbrains.idea.svn.annotate;
++
++import com.intellij.openapi.vcs.AbstractVcsHelper;
++import com.intellij.openapi.vcs.VcsBundle;
++import com.intellij.openapi.vcs.history.VcsRevisionNumber;
++import com.intellij.openapi.vcs.vfs.VcsFileSystem;
++import com.intellij.openapi.vcs.vfs.VcsVirtualFile;
++import com.intellij.openapi.vfs.CharsetToolkit;
++import org.jetbrains.idea.svn.SvnRevisionNumber;
++import org.jetbrains.idea.svn.SvnVcs;
++import org.jetbrains.idea.svn.history.SvnChangeList;
++
++/**
++ * Created with IntelliJ IDEA.
++ * User: Irina.Chernushina
++ * Date: 6/20/12
++ * Time: 12:10 PM
++ */
++public class SvnRemoteFileAnnotation extends BaseSvnFileAnnotation {
++  private final SvnChangeList mySvnChangeList;
++  private final String myPathToSelect;
++
++  public SvnRemoteFileAnnotation(SvnVcs vcs, String contents, VcsRevisionNumber baseRevision, SvnChangeList svnChangeList,
++                                 final String pathToSelect) {
++    super(vcs, contents, baseRevision);
++    mySvnChangeList = svnChangeList;
++    myPathToSelect = pathToSelect;
++  }
++
++  @Override
++  protected void showAllAffectedPaths(SvnRevisionNumber number) {
++    final AbstractVcsHelper instance = AbstractVcsHelper.getInstance(myVcs.getProject());
++    final String title = VcsBundle.message("paths.affected.in.revision", myBaseRevision.asString());
++    instance.showChangesListBrowser(mySvnChangeList,
++      new VcsVirtualFile(myPathToSelect, myContents.getBytes(CharsetToolkit.UTF8_CHARSET), number.asString(), VcsFileSystem.getInstance()), title);
++  }
++
++  @Override
++  public void dispose() {
++  }
++}

@@ -1,0 +1,24 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a `if (myDataChoices != null) { ... }` null check around a block in
+`DisplayControlImpl.init(...)` that inspects `myDataChoices.get(0)` to determine whether a
+DerivedDataChoice's DataSelection has `PROP_USESTIMEDRIVER` set. The bug being fixed is a
+potential NullPointerException that occurs when `myDataChoices` is null and this block
+(`if ((myDataChoices.size() > 0) && (myDataChoices.get(0) instanceof DerivedDataChoice)) { ... }`)
+is reached without a null guard.
+
+In `files/old/src/ucar/unidata/idv/control/DisplayControlImpl.java`, the corresponding `init(...)`
+method was inspected around the call to `init(myDataChoices)` (lines ~1000-1017). In this older
+version, immediately after the `init(myDataChoices)` call and its failure check, the code goes
+straight to the "Check if we have been removed" block — there is no code at all that checks
+`myDataChoices.size() > 0`, inspects `DerivedDataChoice`, or reads `PROP_USESTIMEDRIVER` /
+`usesTimeDriver`. This entire time-driver-related code block (the one both `buggy/` and `fixed/`
+contain, differing only by the null check) does not exist yet in `old/`.
+
+Since the specific code section that harbors the bug (the unguarded `myDataChoices` access for
+the time driver logic) is entirely absent from the old version, the bug cannot be present there.
+This feature was evidently added later in the project's history, after which the null-check bug
+was introduced and subsequently fixed by this commit.

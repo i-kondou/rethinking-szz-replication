@@ -1,0 +1,22 @@
+{
+  "fix_commit": "3ee6d03d40bf4ac6b8230d6c735f50527e1e93cc",
+  "bic": "8e5ee782690175e9cfb9a37f600f207b952ba8a6",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "The commit \"search work\" (8e5ee7826901) introduced the FTS3 \"words\" table feature entirely, including the buggy `(2 << 32) + rowId` id-offset calculation (which due to Java's int shift modulo-32 rule evaluates incorrectly), the `populateWordsTable` method that failed to add the offset for mms parts, and the unindexable `source_id`/`table_to_use` columns/triggers that the fix commit removes and replaces with rowid-based logic. All buggy lines blame to this single commit, and it is the origin of the core logic being corrected.",
+  "metrics": {
+    "case_elapsed_seconds": 10.072008,
+    "api_elapsed_seconds": 9.917048,
+    "tool_elapsed_seconds": 0.042987,
+    "other_elapsed_seconds": 0.111976,
+    "api_call_count": 3,
+    "tool_call_count": 3,
+    "prompt_tokens": 33927,
+    "completion_tokens": 854,
+    "total_tokens": 34781,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:15:55.150403"
+}

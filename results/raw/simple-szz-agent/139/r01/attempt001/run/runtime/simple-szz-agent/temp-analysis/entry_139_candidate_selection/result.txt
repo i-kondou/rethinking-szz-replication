@@ -1,0 +1,26 @@
+SELECTED: candidate_12
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the upper bound of an RTL character range check in
+core/java/android/text/TextUtils.java from `c <= 0xFEFF` to `c <= 0xFEFE`,
+so that the special Unicode marker U+FEFF (zero-width no-break space / BOM)
+is no longer misclassified as an RTL character.
+
+Candidate_12 is the commit that originally introduces this exact code. It
+adds the new `isRTLCharacter(char c)` method to TextUtils.java, containing
+the line:
+
+    (c >= 0xFE70 && c <= 0xFEFF)    ;
+
+This is precisely the buggy range (inclusive of 0xFEFF) that the fix commit
+later corrects. Since this method did not exist before candidate_12 (it is
+added as new code, along with the helper methods hasRTLCharacters), this
+commit is the first point at which the bug could have been introduced.
+No earlier candidate contains this code or the isRTLCharacter method at all,
+confirming candidate_12 as the bug-introducing commit.
+
+candidate_13 contains a diff textually identical to the fix commit diff
+itself (changing 0xFEFF to 0xFEFE), and therefore represents the fix, not
+the bug's introduction.

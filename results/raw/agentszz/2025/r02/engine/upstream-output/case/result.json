@@ -1,0 +1,22 @@
+{
+  "fix_commit": "a8726173a9351b718b477ee1579a20c1b9a7a446",
+  "bic": "3dc5041e20f5949a6773fa00fab20aa6af60ab14",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit refactored JettyStart.java to use SystemProperties (backed by org/exist/system.properties resource) for several log messages, including changing the correct `System.getProperty(\"exist.home\")` call to `SystemProperties.getInstance().getSystemProperty(\"exist.home\", \"unknown\")`. However, exist.home is a JVM system property set via -Dexist.home on the command line (as seen throughout build/launch scripts), and is never written into src/org/exist/system.properties. This mismatch causes the eXist Home log line to always print \"unknown\", which is exactly the bug that commit a8726173a9351b718b477ee1579a20c1b9a7a446 fixes by reverting to System.getProperty(\"exist.home\", \"unknown\").",
+  "metrics": {
+    "case_elapsed_seconds": 48.61599,
+    "api_elapsed_seconds": 37.098824,
+    "tool_elapsed_seconds": 11.396173,
+    "other_elapsed_seconds": 0.120996,
+    "api_call_count": 10,
+    "tool_call_count": 9,
+    "prompt_tokens": 76516,
+    "completion_tokens": 2186,
+    "total_tokens": 78702,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:45:34.873786"
+}

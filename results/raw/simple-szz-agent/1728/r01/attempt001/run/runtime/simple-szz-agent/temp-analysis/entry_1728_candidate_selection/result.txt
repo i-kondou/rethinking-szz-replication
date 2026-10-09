@@ -1,0 +1,33 @@
+SELECTED: candidate_59
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds an onDestroy() override to MainActivity that calls a new
+DownloadManagerInterface.destroy(this) method, which in turn calls
+context.unregisterReceiver(downloadCompletionReceiver) and clears the
+singleton instance. This fixes a broadcast receiver leak: the receiver
+registered by DownloadManagerInterface was never unregistered.
+
+Before candidate_59, MainActivity itself registered/unregistered the download
+completion BroadcastReceiver directly, correctly pairing
+registerReceiver() in onCreate with unregisterReceiver() in onDestroy() (see
+candidate_33, which introduced this working pattern).
+
+candidate_59 is a large refactor that extracts all download-related logic
+into a new class, DownloadManagerInterface (created in this diff). It moves
+the receiver registration into DownloadManagerInterface.init()/
+registerReceiver(), invoked once from SebApp.onCreate() as an application-
+wide singleton. Critically, this refactor deletes MainActivity's onDestroy()
+override and the unregisterReceiver() call entirely, without adding any
+replacement teardown/destroy path for the newly created
+DownloadManagerInterface. From this commit onward, the download completion
+receiver is registered once at application startup and is never
+unregistered, which is precisely the leak that the fix commit's addition of
+onDestroy() -> DownloadManagerInterface.destroy(this) -> unregisterReceiver()
+resolves.
+
+No candidates between candidate_33 (introduces correct register/unregister
+pairing) and candidate_59 alter this pairing, and no DownloadManagerInterface
+class exists before candidate_59. This makes candidate_59 the first commit
+to introduce the missing-unregister bug.

@@ -1,0 +1,35 @@
+SELECTED: candidate_09
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes TransitionHandler.java so that mouse-transparency is set on the whole
+container `view` (view.setMouseTransparent(true)/(false)) instead of on `previousNode`, and it
+removes the `MOUSE_TRANSPARENT` properties-map hack used to save/restore the previous node's
+original mouse-transparent state:
+
+- previousNode.getProperties().put(MOUSE_TRANSPARENT, previousNode.isMouseTransparent());
+  previousNode.setMouseTransparent(true);
+  -> replaced with: view.setMouseTransparent(true);
+
+- previousNode.setMouseTransparent((Boolean) previousNode.getProperties().get(MOUSE_TRANSPARENT));
+  -> replaced with: view.setMouseTransparent(false);
+
+This exact buggy pattern (marking only `previousNode` transparent via the MOUSE_TRANSPARENT
+property, instead of the whole view) was first introduced in candidate_09. That diff adds:
+  previousNode.getProperties().put(MOUSE_TRANSPARENT, previousNode.isMouseTransparent());
+  previousNode.setMouseTransparent(true);
+and
+  previousNode.setMouseTransparent((Boolean) previousNode.getProperties().get(MOUSE_TRANSPARENT));
+along with the `MOUSE_TRANSPARENT` constant declaration — i.e., it's the origin of the code the
+fix later removes.
+
+candidate_10 is a subsequent refactor (wrapping the animation setup in Platform.runLater and
+introducing an `init` step for AnimationProducer) but it carries the same buggy
+previousNode-based mouse-transparency logic forward unchanged, so it does not introduce the bug,
+it only inherits it. candidate_11 is identical to the fix diff itself (the bug-fixing change),
+not a bug-introducing candidate. No candidate before candidate_09 contains any reference to
+MOUSE_TRANSPARENT or previousNode.setMouseTransparent, confirming candidate_09 is the first
+commit responsible for the incorrect behavior (only the previous view node being restored/marked
+mouse-transparent instead of the whole transition container), which caused the reported bug
+where the underlying view's mouse events weren't properly blocked during/after transitions.

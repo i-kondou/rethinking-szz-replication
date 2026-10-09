@@ -1,0 +1,26 @@
+SELECTED: candidate_12
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix (SavedHqlExportToCSV.java) wraps the single-selection parameter handling block in `if (value != null) { ... }`, where `value = helper.getParameter(option.name())`. Before the fix, when a single-choice parameter (e.g. SUBJECT or DEPARTMENT) was not actually supplied in the request, `value` would be null, yet the code unconditionally created an `IdValue`, called `option.lookupValue(context.getUser(), value)` with a null value, and then attempted `Long.valueOf(value)` on a null string — causing a failure (NumberFormatException/NPE) that broke CSV export whenever a report contained a single-choice parameter placeholder that wasn't passed as a request parameter.
+
+Tracing the history of this exact code block across the 14 candidates:
+- candidate_01 created SavedHqlExportToCSV.java originally, but at that point the file only handled parameters via a simple positional `params` string (`for (SavedHQL.Option o: ...) { ... v.setText(i < p.length ? p[i] : ""); ... }`). There was no `option.name()`-keyed `helper.getParameter(...)`, no `lookupValue`, and no unguarded `Long.valueOf(value)` call — i.e., the buggy pattern did not exist yet.
+- candidate_12 is the commit that introduces the entire new parameter-resolution mechanism, including the exact problematic else-branch:
+  ```
+  String value = helper.getParameter(option.name());
+  SavedHQLInterface.IdValue v = new SavedHQLInterface.IdValue();
+  v.setValue(option.name());
+  Long id = option.lookupValue(context.getUser(), value);
+  if (id == null) {
+      try { id = Long.valueOf(value); } catch (NumberFormatException e) {}
+  }
+  v.setText(id == null ? "" : id.toString());
+  params.add(v);
+  ```
+  This is precisely the code the fix wraps with a null check — no guard exists here for `value == null`, so this commit is where the defect was introduced.
+- candidate_13 modifies the same file extensively (adding a separate `SavedHQLParameter`/custom-parameter feature) but does not touch or alter this specific else-branch; the buggy code is carried forward unchanged.
+- The fix diff (and candidate_14, which is byte-identical to the fix diff and therefore actually represents the fix commit itself rather than a distinct candidate) finally adds the `if (value != null)` guard.
+
+Since the buggy code path was absent before candidate_12 and first appears there exactly as described by the fix, candidate_12 is the bug-introducing commit.

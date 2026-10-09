@@ -1,0 +1,24 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a null check `if (myDataChoices != null)` around a block in
+DisplayControlImpl.init() that inspects `myDataChoices.size()` and, if the first
+data choice is a DerivedDataChoice, digs into its child choices' DataSelection to
+set `this.usesTimeDriver`. Without the null check, a NullPointerException would
+occur if `myDataChoices` were null when this code ran.
+
+Examining files/old/.../DisplayControlImpl.java shows that this entire code block
+does not exist in the old version at all. In the old file, immediately after the
+`if (!init(myDataChoices)) {...}` call, the code proceeds directly to the second
+`//Check if we have been removed` guard and then to `doMakeWindow()` /
+`addToControlContext()` — there is no `myDataChoices.size() > 0`,
+`DerivedDataChoice`, or `usesTimeDriver` logic anywhere in that region (confirmed
+by reading the surrounding ~150 lines of the old file, which lines up structurally
+with the buggy/fixed files but is missing this whole block).
+
+Since the code section containing the bug (the unguarded `myDataChoices.size()`
+call) was not yet present in the old version, the bug could not have existed at
+that point in history — it was introduced later, after the old snapshot, and only
+then later fixed by the reviewed commit.

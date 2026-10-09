@@ -1,0 +1,18 @@
+SELECTED: candidate_15
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit resolves an ArrayIndexOutOfBoundsException thrown by InstructorDetailAction.java when an instructor is assigned to classes but there is no committed timetable yet. The fix diff shows that the "no committed timetable" (else) branch builds a WebTable with a 6-element header array (Class, Check Conflicts, Share, Teaching Responsibility, Limit, Manager) but only a 5-element alignment array ({"left","left","left","left","left"}); the fix simply appends a sixth "left" to make the alignment array match the header array.
+
+Tracing InstructorDetailAction.java through the candidates:
+- candidate_09 established the else-branch WebTable with 5 headers (columnClass, columnInstructorCheckConflicts, columnInstructorShare, columnLimit, columnManager) and 5 matching "left" alignment entries — correctly synced, not buggy.
+- candidates 10-14 touched unrelated features (distribution types, instructor attributes, class instructor assignment editing, controlling department permissions) and did not modify this WebTable call.
+- candidate_15 is a large "Teaching Responsibilities" feature commit (adds teaching_responsibility DB table, TeachingResponsibility model, OfferingCoordinator refactor, etc.). As part of this feature it modifies InstructorDetailAction.java's WebTable construction in both branches to add a new "Responsibility" column (MSG.columnTeachingResponsibility()):
+  - In the hasTimetable branch: WebTable(9,...) -> WebTable(10,...), header array grows to 10 items, AND the alignment array is correctly grown to 10 "left" entries as well.
+  - In the else branch (no committed timetable): WebTable(5,...) -> WebTable(6,...), header array grows to 6 items by inserting MSG.columnTeachingResponsibility(), but the alignment array is left unchanged at 5 "left" entries.
+- This exactly reproduces the "before" state shown in the fix diff: a 6-element header array paired with a 5-element alignment array in the else branch, which causes WebTable to throw ArrayIndexOutOfBoundsException when rendering the 6th column for instructors without a committed timetable.
+- candidate_16 makes unrelated changes (icon/conflict styling) to the same file but does not touch the header/alignment arrays.
+- candidate_17 is effectively the fix itself (adds the missing 6th "left"), matching fix_commit_diff.txt verbatim.
+
+Therefore candidate_15 is the first (and only) commit that introduces the array-length mismatch bug, by adding the new Teaching Responsibility column to the header array of the no-timetable branch without correspondingly updating its alignment array.

@@ -1,0 +1,335 @@
+diff --git a/src/com/better/alarm/model/AlarmApplication.java b/src/com/better/alarm/model/AlarmApplication.java
+index dbefb6f..863a426 100644
+--- a/src/com/better/alarm/model/AlarmApplication.java
++++ b/src/com/better/alarm/model/AlarmApplication.java
+@@ -6,7 +6,7 @@ public class AlarmApplication extends Application {
+ 
+     @Override
+     public void onCreate() {
+-        Alarms.init(getApplicationContext());
++        AlarmsManager.init(getApplicationContext());
+         super.onCreate();
+     }
+ 
+diff --git a/src/com/better/alarm/model/AlarmInitReceiver.java b/src/com/better/alarm/model/AlarmInitReceiver.java
+index 1988fa2..dbe5764 100644
+--- a/src/com/better/alarm/model/AlarmInitReceiver.java
++++ b/src/com/better/alarm/model/AlarmInitReceiver.java
+@@ -32,6 +32,6 @@ public class AlarmInitReceiver extends BroadcastReceiver {
+     public void onReceive(final Context context, Intent intent) {
+         final String action = intent.getAction();
+         if (DBG) Log.d(TAG, "AlarmInitReceiver" + action);
+-        Alarms.init(context);
++        AlarmsManager.init(context);
+     }
+ }
+diff --git a/src/com/better/alarm/model/AlarmProvider.java b/src/com/better/alarm/model/AlarmProvider.java
+index 4e52d1f..789435d 100644
+--- a/src/com/better/alarm/model/AlarmProvider.java
++++ b/src/com/better/alarm/model/AlarmProvider.java
+@@ -72,7 +72,7 @@ public class AlarmProvider extends ContentProvider {
+         Cursor ret = qb.query(db, projectionIn, selection, selectionArgs, null, null, sort);
+ 
+         if (ret == null) {
+-            if (DBG) Log.d(TAG, "Alarms.query: failed");
++            if (DBG) Log.d(TAG, "AlarmsManager.query: failed");
+         } else {
+             ret.setNotificationUri(getContext().getContentResolver(), url);
+         }
+diff --git a/src/com/better/alarm/model/AlarmReceiver.java b/src/com/better/alarm/model/AlarmReceiver.java
+index 7d91f61..f3fbeef 100644
+--- a/src/com/better/alarm/model/AlarmReceiver.java
++++ b/src/com/better/alarm/model/AlarmReceiver.java
+@@ -51,13 +51,13 @@ public class AlarmReceiver extends BroadcastReceiver {
+ 
+         String action = intent.getAction();
+         if (action.equals(ACTION_FIRED)) {
+-            Alarms.getAlarms().onAlarmFired(alarm);
++            AlarmsManager.getInstance().onAlarmFired(alarm);
+ 
+         } else if (action.equals(ACTION_SNOOZED_FIRED)) {
+-            Alarms.getAlarms().onAlarmSnoozedFired(alarm);
++            AlarmsManager.getInstance().onAlarmSnoozedFired(alarm);
+ 
+         } else if (action.equals(ACTION_SOUND_EXPIRED)) {
+-            Alarms.getAlarms().onAlarmSoundExpired(alarm);
++            AlarmsManager.getInstance().onAlarmSoundExpired(alarm);
+ 
+         }
+     }
+diff --git a/src/com/better/alarm/model/Alarms.java b/src/com/better/alarm/model/AlarmsManager.java
+similarity index 92%
+rename from src/com/better/alarm/model/Alarms.java
+rename to src/com/better/alarm/model/AlarmsManager.java
+index d42b05d..a9f8aec 100644
+--- a/src/com/better/alarm/model/Alarms.java
++++ b/src/com/better/alarm/model/AlarmsManager.java
+@@ -28,10 +28,10 @@ import android.database.Cursor;
+ import android.net.Uri;
+ 
+ /**
+- * The Alarms provider supplies info about Alarm Clock settings
++ * The AlarmsManager provider supplies info about Alarm Clock settings
+  */
+-public class Alarms implements IAlarmsManager, IAlarmsSetup {
+-    private static final String TAG = "Alarms";
++public class AlarmsManager implements IAlarmsManager {
++    private static final String TAG = "AlarmsManager";
+     private static final boolean DBG = true;
+     private static final String DEFAULT_SNOOZE = "10";
+ 
+@@ -41,38 +41,31 @@ public class Alarms implements IAlarmsManager, IAlarmsSetup {
+     private static final int INVALID_ALARM_ID = -1;
+     private Context mContext;
+ 
+-    private static Alarms sModelInstance;
++    private static AlarmsManager sModelInstance;
+ 
+     public static IAlarmsManager getAlarmsManager() {
+         if (sModelInstance == null) {
+-            throw new NullPointerException("Alarms not initialized yet");
++            throw new NullPointerException("AlarmsManager not initialized yet");
+         }
+         return sModelInstance;
+     }
+ 
+-    public static IAlarmsSetup getAlarmsSetup() {
++    static AlarmsManager getInstance() {
+         if (sModelInstance == null) {
+-            throw new NullPointerException("Alarms not initialized yet");
+-        }
+-        return sModelInstance;
+-    }
+-
+-    static Alarms getAlarms() {
+-        if (sModelInstance == null) {
+-            throw new NullPointerException("Alarms not initialized yet");
++            throw new NullPointerException("AlarmsManager not initialized yet");
+         }
+         return sModelInstance;
+     }
+ 
+     static void init(Context context) {
+         if (sModelInstance == null) {
+-            sModelInstance = new Alarms(context);
++            sModelInstance = new AlarmsManager(context);
+         }
+         sModelInstance.disableExpiredAlarms();
+         sModelInstance.setNextAlert();
+     }
+ 
+-    private Alarms(Context context) {
++    private AlarmsManager(Context context) {
+         mContext = context;
+     }
+ 
+@@ -165,7 +158,7 @@ public class Alarms implements IAlarmsManager, IAlarmsSetup {
+     }
+ 
+     /**
+-     * A convenience method to set an alarm in the Alarms content provider.
++     * A convenience method to set an alarm in the AlarmsManager content provider.
+      * 
+      * @return Time when the alarm will fire.
+      */
+diff --git a/src/com/better/alarm/model/IAlarmsManager.java b/src/com/better/alarm/model/IAlarmsManager.java
+index 2354d5d..9d6d036 100644
+--- a/src/com/better/alarm/model/IAlarmsManager.java
++++ b/src/com/better/alarm/model/IAlarmsManager.java
+@@ -1,5 +1,7 @@
+ package com.better.alarm.model;
+ 
++import android.database.Cursor;
++
+ /**
+  * An interface for Presenter-Model interaction. Presenters can invoke
+  * {@link #dismiss(Alarm)}, {@link #snooze(Alarm)} as a result of user
+@@ -26,4 +28,18 @@ public interface IAlarmsManager {
+      * @param alarm
+      */
+     public void dismiss(Alarm alarm);
++
++    /**
++     *  Delete an Alarm with the given id from the database
++     * @param id
++     */
++    public void delete(int id);
++
++    public long add(Alarm alarm);
++
++    public void enable(Alarm alarm);
++
++    public long set(Alarm alarm);
++
++    public Cursor getCursor();
+ }
+diff --git a/src/com/better/alarm/model/IAlarmsSetup.java b/src/com/better/alarm/model/IAlarmsSetup.java
+deleted file mode 100644
+index 280dd30..0000000
+--- a/src/com/better/alarm/model/IAlarmsSetup.java
++++ /dev/null
+@@ -1,15 +0,0 @@
+-package com.better.alarm.model;
+-
+-import android.database.Cursor;
+-
+-public interface IAlarmsSetup {
+-    public void delete(int id);
+-
+-    public long add(Alarm alarm);
+-
+-    public void enable(Alarm alarm);
+-
+-    public long set(Alarm alarm);
+-
+-    public Cursor getCursor();
+-}
+diff --git a/src/com/better/alarm/model/Temp.java b/src/com/better/alarm/model/Temp.java
+index 30ee86f..8a26c29 100644
+--- a/src/com/better/alarm/model/Temp.java
++++ b/src/com/better/alarm/model/Temp.java
+@@ -11,7 +11,7 @@ import android.widget.Toast;
+ 
+ import com.better.alarm.Log;
+ import com.better.alarm.R;
+-import com.better.alarm.model.Alarms;
++import com.better.alarm.model.AlarmsManager;
+ import com.better.alarm.presenter.AlarmAlertFullScreen;
+ import com.better.alarm.presenter.AlarmReceiver;
+ import com.better.alarm.presenter.SettingsActivity;
+diff --git a/src/com/better/alarm/presenter/AlarmAlertFullScreen.java b/src/com/better/alarm/presenter/AlarmAlertFullScreen.java
+index 972f33e..52bc58b 100644
+--- a/src/com/better/alarm/presenter/AlarmAlertFullScreen.java
++++ b/src/com/better/alarm/presenter/AlarmAlertFullScreen.java
+@@ -33,7 +33,7 @@ import android.widget.Button;
+ 
+ import com.better.alarm.R;
+ import com.better.alarm.model.Alarm;
+-import com.better.alarm.model.Alarms;
++import com.better.alarm.model.AlarmsManager;
+ import com.better.alarm.model.IAlarmsManager;
+ import com.better.alarm.model.Intents;
+ 
+@@ -80,7 +80,7 @@ public class AlarmAlertFullScreen extends Activity {
+ 
+         mAlarm = getIntent().getParcelableExtra(Intents.ALARM_INTENT_EXTRA);
+ 
+-        alarmsManager = Alarms.getAlarmsManager();
++        alarmsManager = AlarmsManager.getAlarmsManager();
+ 
+         // Get the volume/camera button behavior setting
+         final String vol = PreferenceManager.getDefaultSharedPreferences(this).getString(
+@@ -179,7 +179,7 @@ public class AlarmAlertFullScreen extends Activity {
+         super.onResume();
+         // XXX this is some wierd logic and should not be here
+         // If the alarm was deleted at some point, disable snooze.
+-        // if (Alarms.getAlarm(getContentResolver(), mAlarm.id) == null) {
++        // if (AlarmsManager.getAlarm(getContentResolver(), mAlarm.id) == null) {
+         // Button snooze = (Button) findViewById(R.id.snooze);
+         // snooze.setEnabled(false);
+         // }
+diff --git a/src/com/better/alarm/presenter/AlarmsListActivity.java b/src/com/better/alarm/presenter/AlarmsListActivity.java
+index 2702622..b6cb868 100644
+--- a/src/com/better/alarm/presenter/AlarmsListActivity.java
++++ b/src/com/better/alarm/presenter/AlarmsListActivity.java
+@@ -44,8 +44,8 @@ import android.widget.TextView;
+ 
+ import com.better.alarm.R;
+ import com.better.alarm.model.Alarm;
+-import com.better.alarm.model.Alarms;
+-import com.better.alarm.model.IAlarmsSetup;
++import com.better.alarm.model.AlarmsManager;
++import com.better.alarm.model.IAlarmsManager;
+ import com.better.alarm.model.Intents;
+ import com.better.alarm.view.DigitalClock;
+ 
+@@ -69,7 +69,7 @@ public class AlarmsListActivity extends Activity implements OnItemClickListener
+     private ListView mAlarmsList;
+     private Cursor mCursor;
+ 
+-    IAlarmsSetup alarms;
++    IAlarmsManager alarms;
+ 
+     private void updateAlarm(boolean enabled, Alarm alarm) {
+         alarms.enable(alarm);
+@@ -183,7 +183,7 @@ public class AlarmsListActivity extends Activity implements OnItemClickListener
+     protected void onCreate(Bundle icicle) {
+         super.onCreate(icicle);
+ 
+-        alarms = Alarms.getAlarmsSetup();
++        alarms = AlarmsManager.getAlarmsManager();
+         mFactory = LayoutInflater.from(this);
+         mCursor = alarms.getCursor();
+ 
+diff --git a/src/com/better/alarm/presenter/NotificationPresenter.java b/src/com/better/alarm/presenter/NotificationPresenter.java
+index 6077d2b..672b1ab 100644
+--- a/src/com/better/alarm/presenter/NotificationPresenter.java
++++ b/src/com/better/alarm/presenter/NotificationPresenter.java
+@@ -5,7 +5,7 @@ import java.util.Calendar;
+ import com.better.alarm.Log;
+ import com.better.alarm.R;
+ import com.better.alarm.model.Alarm;
+-import com.better.alarm.model.Alarms;
++import com.better.alarm.model.AlarmsManager;
+ import com.better.alarm.model.Intents;
+ import com.better.alarm.presenter.AlarmAlert;
+ import com.better.alarm.presenter.AlarmReceiver;
+diff --git a/src/com/better/alarm/presenter/SetAlarmActivity.java b/src/com/better/alarm/presenter/SetAlarmActivity.java
+index abf5d39..d371aaa 100644
+--- a/src/com/better/alarm/presenter/SetAlarmActivity.java
++++ b/src/com/better/alarm/presenter/SetAlarmActivity.java
+@@ -37,8 +37,8 @@ import android.widget.TimePicker;
+ 
+ import com.better.alarm.R;
+ import com.better.alarm.model.Alarm;
+-import com.better.alarm.model.Alarms;
+-import com.better.alarm.model.IAlarmsSetup;
++import com.better.alarm.model.AlarmsManager;
++import com.better.alarm.model.IAlarmsManager;
+ import com.better.alarm.model.Intents;
+ 
+ /**
+@@ -54,7 +54,7 @@ public class SetAlarmActivity extends PreferenceActivity implements Preference.O
+     public final static String M12 = "h:mm aa";
+     public final static String M24 = "kk:mm";
+ 
+-    private IAlarmsSetup alarms;
++    private IAlarmsManager alarms;
+ 
+     private CheckBoxPreference mEnabledPref;
+     private Preference mTimePref;
+@@ -78,7 +78,7 @@ public class SetAlarmActivity extends PreferenceActivity implements Preference.O
+         // each change.
+         addPreferencesFromResource(R.xml.alarm_prefs);
+ 
+-        alarms = Alarms.getAlarmsSetup();
++        alarms = AlarmsManager.getAlarmsManager();
+ 
+         // Get each preference so we can retrieve the value later.
+         mEnabledPref = (CheckBoxPreference) findPreference("enabled");
+diff --git a/src/com/better/alarm/presenter/ToastMaster.java b/src/com/better/alarm/presenter/ToastMaster.java
+index d601cbb..a706aed 100644
+--- a/src/com/better/alarm/presenter/ToastMaster.java
++++ b/src/com/better/alarm/presenter/ToastMaster.java
+@@ -19,7 +19,7 @@ package com.better.alarm.presenter;
+ import com.better.alarm.Log;
+ import com.better.alarm.R;
+ import com.better.alarm.model.Alarm;
+-import com.better.alarm.model.Alarms;
++import com.better.alarm.model.AlarmsManager;
+ import com.better.alarm.presenter.AlarmAlertFullScreen;
+ 
+ import android.content.Context;
+diff --git a/src/com/better/alarm/view/DigitalClock.java b/src/com/better/alarm/view/DigitalClock.java
+index 0d69608..a76effc 100644
+--- a/src/com/better/alarm/view/DigitalClock.java
++++ b/src/com/better/alarm/view/DigitalClock.java
+@@ -170,7 +170,7 @@ public class DigitalClock extends RelativeLayout {
+     }
+ 
+     private void setDateFormat() {
+-        // XXX this should not query Alarms for this
++        // XXX this should not query AlarmsManager for this
+         mFormat = android.text.format.DateFormat.is24HourFormat(getContext()) ? M24 : M12;
+         mAmPm.setShowAmPm(mFormat == M12);
+     }

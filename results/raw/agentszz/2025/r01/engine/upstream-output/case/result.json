@@ -1,0 +1,22 @@
+{
+  "fix_commit": "a8726173a9351b718b477ee1579a20c1b9a7a446",
+  "bic": "3dc5041e20f5949a6773fa00fab20aa6af60ab14",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit changed the eXist Home logging line from `System.getProperty(\"exist.home\")` (a JVM system property) to `SystemProperties.getInstance().getSystemProperty(\"exist.home\", \"unknown\")`, which reads from org/exist/system.properties \u2014 a file that does not contain the \"exist.home\" key. This is exactly the bug described in the fix commit (\"exist.home is not in src/org/exist/system.properties\"), and the fix reverts to using `System.getProperty(\"exist.home\", ...)`. The introducing commit directly created this incorrect lookup logic.",
+  "metrics": {
+    "case_elapsed_seconds": 33.525407,
+    "api_elapsed_seconds": 32.833648,
+    "tool_elapsed_seconds": 0.582527,
+    "other_elapsed_seconds": 0.109236,
+    "api_call_count": 9,
+    "tool_call_count": 8,
+    "prompt_tokens": 67377,
+    "completion_tokens": 2057,
+    "total_tokens": 69434,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:44:43.765980"
+}

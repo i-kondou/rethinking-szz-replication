@@ -1,0 +1,26 @@
+SELECTED: candidate_13
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit's message explicitly cites "fixed generated table factory method argument ordering". The corresponding hunk in fix_commit_diff.txt (TableFactoryRenderer.java) changes:
+
+    line("return ", Table, ".of(t, name, namespace, Triggers.getAllTriggers(t, sharedTriggers, triggers));");
+to
+    line("return ", Table, ".of(t, namespace, name, Triggers.getAllTriggers(t, sharedTriggers, triggers));");
+
+i.e. swapping the (name, namespace) argument order to the correct (namespace, name) order in the generated `get<Table>(Transaction t, String name, ...)` factory method for generic tables.
+
+Searching the candidates for this exact code, candidate_13.diff is the commit that first introduces the `namespace` parameter into this generated factory call. Before this commit, the generated code was:
+
+    _("return ", Table, ".of(t, name, Triggers.getAllTriggers(t, sharedTriggers, triggers));");
+
+Candidate_13 changes it to:
+
+    _("return ", Table, ".of(t, name, namespace, Triggers.getAllTriggers(t, sharedTriggers, triggers));");
+
+This is the exact buggy ordering (name, namespace) that the fix commit later corrects to (namespace, name). This makes sense: candidate_13 introduced namespace-awareness to the generated TableFactory (adding a `namespace` field/constructor param to TableFactoryRenderer), and in doing so placed `name` before `namespace` in the `Table.of(...)` factory call — inconsistent with the actual static factory signature `of(Transaction t, Namespace namespace, String name, ...)` used elsewhere, causing a namespace/name mismatch bug in generated code.
+
+Candidate_16 later only changes the rendering helper method from `_(...)` to `line(...)` (a refactor of the renderer's internal API) but keeps the same buggy argument order, confirming the bug was inherited rather than introduced there. Candidate_23 is essentially the fix commit itself, correcting the order back to (namespace, name).
+
+Therefore candidate_13 is the commit that introduced the bug.

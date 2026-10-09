@@ -1,0 +1,10 @@
+SELECTED: candidate_63
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit ensures iCalendar exports use the local timezone (fixing a daylight-savings-related bug) by switching from `Biweekly.write(ical).go()` to an explicit `ICalWriter` where `writer.getTimezoneInfo().setDefaultTimeZone(TimeZone.getDefault())` is called before serialization, in EventEmail.java, EventsExportEventsToICal.java, CalendarServlet.java, and CalendarExport.java.
+
+Candidate_63 is a biweekly library upgrade commit (bumping biweekly-0.3.3.jar to biweekly-0.4.3.jar, replacing the removed `biweekly.property.Version` API with `biweekly.ICalVersion`). As part of migrating to the new library API, this commit removed every explicit per-property timezone configuration call — `dstart.setLocalTime(false); dstart.setTimezoneId(TimeZone.getDefault().getID());` (and the equivalent for DateEnd/RecurrenceId) — across all four of the exact files later touched by the fix: EventEmail.java, EventsExportEventsToICal.java, CalendarServlet.java, and CalendarExport.java. These calls were previously present (introduced when the project first adopted the biweekly library, e.g. in candidate_56) and correctly told biweekly to interpret/emit each DTSTART/DTEND/RECURRENCE-ID in the server's local timezone.
+
+By stripping this per-field timezone configuration without adding any replacement (such as the writer-level `TimezoneInfo.setDefaultTimeZone` that biweekly 0.4.x expects), candidate_63 caused iCalendar exports to lose local-timezone information. This directly produced the daylight-savings bug that the fix commit addresses by reintroducing timezone awareness at the writer level. No later candidate (64–65) reintroduces or otherwise touches this timezone logic, confirming the bug persisted unchanged from candidate_63 until the fix.

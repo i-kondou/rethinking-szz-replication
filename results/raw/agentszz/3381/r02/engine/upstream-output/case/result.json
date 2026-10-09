@@ -1,0 +1,22 @@
+{
+  "fix_commit": "f03ca7e1753f67c63eaed8125a161a6bb743611a",
+  "bic": "5938ca78b6e6bd86364b6fdae7a84fcf7f65e761",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit rewrote ApplicationContextRequestMatcher.matches() to use `this.initialized.compareAndSet(false, true)` to gate the call to `initialized(context)`, then unconditionally calls `matches(request, context)` afterward without waiting for `initialized()` to complete on the thread that won the CAS. This introduces the exact race condition described in the fix (gh-18211): a second concurrent thread can proceed to call `matches()` before the first thread's `initialized()` call has finished, since the previous version used proper synchronized double-checked locking around the whole initialization block. The fix directly reverts to a synchronized approach with a lock object, replacing the buggy AtomicBoolean-based logic added here.",
+  "metrics": {
+    "case_elapsed_seconds": 12.531962,
+    "api_elapsed_seconds": 12.234143,
+    "tool_elapsed_seconds": 0.181676,
+    "other_elapsed_seconds": 0.116149,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 20381,
+    "completion_tokens": 784,
+    "total_tokens": 21165,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:42:27.081793"
+}

@@ -1,0 +1,22 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit reorders the constructor of FileHistoryPanelImpl so that `myPopupActions = createPopupActions();` happens before `createDualView();` is called. In the buggy version, `createDualView()` calls `PopupHandler.installPopupHandler(myDualView.getTreeView(), myPopupActions, ActionPlaces.UPDATE_POPUP, ActionManager.getInstance())`, passing `myPopupActions` directly as an argument. Since this call happens before `myPopupActions` is assigned (it's still null/default), this throws an IllegalArgumentException (EA-79438: IAE PopupHandler.installPopupHandler) at construction time.
+
+In files/old/FileHistoryPanelImpl.java, the constructor also calls `createDualView()` before `myPopupActions = createPopupActions()` (same relative ordering), but the implementation of `createDualView()` is entirely different: instead of calling `PopupHandler.installPopupHandler(...)` with the action group passed directly as an argument, it registers popup handling by adding anonymous `PopupHandler` mouse-listener subclasses to the tree/flat views:
+
+```java
+myDualView.getTreeView().addMouseListener(new PopupHandler() {
+  public void invokePopup(Component comp, int x, int y) {
+    ActionPopupMenu popupMenu = ActionManager.getInstance()
+      .createActionPopupMenu(ActionPlaces.UPDATE_POPUP, myPopupActions);
+    popupMenu.getComponent().show(comp, x, y);
+  }
+});
+```
+
+Here, `myPopupActions` is only read inside `invokePopup()`, which executes later (in response to an actual mouse popup-trigger event), not during the constructor/`createDualView()` call itself. By the time a popup is actually triggered, `myPopupActions` has already been assigned earlier in the constructor. So there is no code path in `old/` where a null `myPopupActions` is passed as an argument to an API that dereferences it immediately (unlike `PopupHandler.installPopupHandler`, which is the actual root cause of the IAE in the buggy version).
+
+Since the specific API usage that triggers the bug (`PopupHandler.installPopupHandler` receiving `myPopupActions` as a direct, eagerly-evaluated argument) does not exist in the old version at all, the initialization-order bug fixed by this commit cannot occur in files/old/.

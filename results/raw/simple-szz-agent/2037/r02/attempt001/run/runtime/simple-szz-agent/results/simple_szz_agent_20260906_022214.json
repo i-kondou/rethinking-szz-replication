@@ -1,0 +1,329 @@
+{
+  "metadata": {
+    "timestamp": "20260906_022214",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2037/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 48.515,
+      "max": 48.515,
+      "mean": 48.515,
+      "median": 48.515,
+      "total": 48.515,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 48.422,
+      "max": 48.422,
+      "mean": 48.422,
+      "median": 48.422,
+      "total": 48.422,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 11,
+      "max": 11,
+      "mean": 11,
+      "median": 11,
+      "total": 11,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 3939,
+      "max": 3939,
+      "mean": 3939,
+      "median": 3939,
+      "total": 3939,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 14265,
+      "max": 14265,
+      "mean": 14265,
+      "median": 14265,
+      "total": 14265,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 97697,
+      "max": 97697,
+      "mean": 97697,
+      "median": 97697,
+      "total": 97697,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.1740381,
+      "max": 0.1740381,
+      "mean": 0.1740381,
+      "median": 0.1740381,
+      "total": 0.1740381,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Glob": 1,
+      "Grep": 3,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 29,
+      "max": 29,
+      "mean": 29,
+      "median": 29,
+      "total": 29,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2037",
+      "fix_commit_hash": "8e17c7c41321e8a6fae4a0ca1b95111beec181ff",
+      "ground_truth_bics": [
+        "f2dbecb84ec45427f76bf02fc29fa1a8b2c9dd2e"
+      ],
+      "predicted_bics": [
+        "f2dbecb84ec45427f76bf02fc29fa1a8b2c9dd2e"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2037",
+      "fix_commit": "8e17c7c41321e8a6fae4a0ca1b95111beec181ff",
+      "ground_truth_bics": [
+        "f2dbecb84ec45427f76bf02fc29fa1a8b2c9dd2e"
+      ],
+      "total_candidates": 29,
+      "gt_in_candidates": true,
+      "selected_commit": "f2dbecb84ec45427f76bf02fc29fa1a8b2c9dd2e",
+      "selected_index": 25,
+      "confidence": "HIGH",
+      "explanation": "The fix commit's message states that mCurPage should be set to null (updated to prevPage) immediately when the last page is popped, even if a transition animation is going to play. The fix diff moves `mContainerView.removeView(removedPage.getView());` and `mCurPage = prevPage;` out of `doFinalWorkForPopPageInternal` (which only runs after the animation's postDelayed callback fires, or immediately if there's no animation) and hoists them to execute unconditionally and immediately in `popPageInter",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "PaginizeLib/src/net/neevek/android/lib/paginize/PageManager.java"
+      ],
+      "call_stats": {
+        "duration_s": 48.515,
+        "duration_api_s": 48.422,
+        "num_turns": 11,
+        "input_tokens": 18,
+        "output_tokens": 3939,
+        "cache_creation_input_tokens": 14265,
+        "cache_read_input_tokens": 97697,
+        "total_cost_usd": 0.1740381,
+        "total_tool_calls": 10,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Glob": 1,
+          "Grep": 3,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2037/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2037_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2037/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2037_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2037/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2037_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1001,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 732,
+            "cache_read_input_tokens": 10685,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "PageManager.java",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 540,
+            "cache_read_input_tokens": 11417,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "doFinalWorkForPopPageInternal",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "mCurPage = prevPage",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 861,
+            "cache_read_input_tokens": 11957,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2037/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2037_candidate_selection/candidates/candidate_29.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 893,
+            "cache_read_input_tokens": 12818,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2037/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2037_candidate_selection/candidates/candidate_26.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 7,
+            "cache_creation_input_tokens": 2034,
+            "cache_read_input_tokens": 13711,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2037/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2037_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_26\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit's message states that mCurPage should be set to null (updated to prevPage)\nimmediately when the last page is popped, even if a transition animation is going to play.\nThe fix diff moves `mContainerView.removeView(removedPage.getView());` and\n`mCurPage = prevPage;` out of `doFinalWorkForPopPageInternal` (which only runs after the\nanimation's postDelayed callback fires, or immediately if there's no animation) and hoists\nthem to execute unconditionally and immediately in `popPageInternal`, before the\nanimation-duration branch.\n\ncandidate_26 is exactly where this bug was introduced. Before this commit, the code set\n`mCurPage = prevPage;` immediately (right after `removedPage.onDetach()`), unconditionally,\nregardless of whether an animation would play afterward \u2014 i.e., the correct behavior. In\ncandidate_26, this logic was refactored: `mContainerView.removeView(...)`, `onDetach()`,\n`onHidden()`, and `mCurPage = prevPage` were all consolidated into a new\n`doFinalWorkForPopPageInternal(removedPage, prevPage)` method, which is invoked either inside\nthe `postDelayed` animation callback (i.e., only after the animation finishes) or immediately\nin the non-animated branch. This means that whenever a pop animation is playing,\n`mCurPage` is not updated to `prevPage` until the animation completes \u2014 reintroducing the\nexact stale-mCurPage bug that the fix commit later corrects by splitting the removeView/mCurPage\nassignment back out to run immediately, independent of the animation delay.\n\ncandidate_29 contains a diff textually identical to the fix commit itself (it reverts exactly\nwhat candidate_26 changed), confirming candidate_26 as the true bug-introducing commit and\ncandidate_29 as the fix being included among the candidates (not itself a plausible\nbug-introducing commit, since it corrects the bug rather than introduces it).\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1918,
+            "cache_read_input_tokens": 15745,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

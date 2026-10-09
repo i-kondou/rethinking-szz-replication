@@ -1,0 +1,22 @@
+{
+  "fix_commit": "333cd0d114de5bee2bdbfc3be91c7a373174dfe1",
+  "bic": "7434506f7fd3a069f899c1d535eaf0a876306c6f",
+  "confidence": "high",
+  "type": "refactor_penetration",
+  "reasoning": "This commit (\"Moved new JdtConvention actions to be local, where possible\") refactored ConventionJdt.java, moving logic from separate Action classes into inline lambdas within the DSL methods. In doing so, it dropped the `JavaVersion.toVersion(compilerComplianceLevel)` conversion that previously existed (`this.compilerComplianceLevel = JavaVersion.toVersion(compilerComplianceLevel);`), and instead directly called `compilerComplianceLevel.toString()` on the raw String parameter. This changed the semantics \u2014 the raw string was used instead of its normalized JavaVersion representation \u2014 which is exactly the bug fixed by commit 333cd0d114de5bee2bdbfc3be91c7a373174dfe1, which restores the `JavaVersion.toVersion(compilerComplianceLevel).toString()` call.",
+  "metrics": {
+    "case_elapsed_seconds": 23.60611,
+    "api_elapsed_seconds": 23.323146,
+    "tool_elapsed_seconds": 0.165953,
+    "other_elapsed_seconds": 0.117015,
+    "api_call_count": 7,
+    "tool_call_count": 6,
+    "prompt_tokens": 47029,
+    "completion_tokens": 1712,
+    "total_tokens": 48741,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:43:52.276286"
+}

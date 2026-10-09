@@ -1,0 +1,14 @@
+SELECTED: candidate_05
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit re-adds a "skip" parameter to CallerFinder.getStackForCallerOf(...) (defaulting the call site in LogContext.postProcess() to skip=1) and restores the comment explaining that skipping at least 1 stack frame is essential because postProcess() can be overridden, meaning the immediate stack frames above the throwable-creation point may belong to subclass postProcess()/shouldLog() overrides rather than the real caller.
+
+Tracing the history of this exact code:
+- candidate_01 originally introduced the call as `getStackForCallerOf(LogContext.class, new Throwable(), 2, stackSize.getMaxDepth())`, i.e. with an explicit skip count of 2, and CallerFinder's loop started at `index = skip`.
+- candidate_05 removed the skip parameter entirely: it changed the call to `getStackForCallerOf(LogContext.class, new Throwable(), stackSize.getMaxDepth())` (dropping the "2"), removed the `skip` parameter and its null/negative check from CallerFinder.getStackForCallerOf, and changed the loop from `for (int index = skip; index < depth; index++)` to `for (int index = 0; index < depth; index++)`. It also added the exact comment (later removed by the fix) claiming that starting at index 0 avoids Proguard-related frame-counting problems.
+- This is precisely the code state the fix commit corrects: starting the search at index 0 (no skip) causes the synthetic stack trace to begin scanning from the wrong frame when postProcess() is overridden by a subclass, producing an incorrect/incomplete synthetic stack (the reported "synthetic stack bug").
+- candidate_18 is the fix itself (it exactly matches fix_commit_diff.txt), so it is not the bug-introducing commit — it's included among the candidates but represents the corrective change, not the cause.
+
+Since candidate_05 is the commit that removed the skip-frame logic and replaced it with the flawed "always start at frame 0" approach that the fix later reverts, it is the bug-introducing commit.

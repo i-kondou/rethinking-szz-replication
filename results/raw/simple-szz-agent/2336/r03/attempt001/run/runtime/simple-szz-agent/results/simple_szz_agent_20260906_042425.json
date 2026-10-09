@@ -1,0 +1,468 @@
+{
+  "metadata": {
+    "timestamp": "20260906_042425",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 109.321,
+      "max": 109.321,
+      "mean": 109.321,
+      "median": 109.321,
+      "total": 109.321,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 109.123,
+      "max": 109.123,
+      "mean": 109.123,
+      "median": 109.123,
+      "total": 109.123,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 22,
+      "max": 22,
+      "mean": 22,
+      "median": 22,
+      "total": 22,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 28,
+      "max": 28,
+      "mean": 28,
+      "median": 28,
+      "total": 28,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 9594,
+      "max": 9594,
+      "mean": 9594,
+      "median": 9594,
+      "total": 9594,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 30501,
+      "max": 30501,
+      "mean": 30501,
+      "median": 30501,
+      "total": 30501,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 268752,
+      "max": 268752,
+      "mean": 268752,
+      "median": 268752,
+      "total": 268752,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.4076256,
+      "max": 0.4076256,
+      "mean": 0.4076256,
+      "median": 0.4076256,
+      "total": 0.4076256,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 21,
+      "max": 21,
+      "mean": 21,
+      "median": 21,
+      "total": 21,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 6,
+      "Grep": 14,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 281,
+      "max": 281,
+      "mean": 281,
+      "median": 281,
+      "total": 281,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2336",
+      "fix_commit_hash": "c34d7adf53e71e8998596689581a1611d0d0353f",
+      "ground_truth_bics": [
+        "d37442cdb1189c7202c177901832e34f582e2feb"
+      ],
+      "predicted_bics": [
+        "d37442cdb1189c7202c177901832e34f582e2feb"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2336",
+      "fix_commit": "c34d7adf53e71e8998596689581a1611d0d0353f",
+      "ground_truth_bics": [
+        "d37442cdb1189c7202c177901832e34f582e2feb"
+      ],
+      "total_candidates": 281,
+      "gt_in_candidates": true,
+      "selected_commit": "d37442cdb1189c7202c177901832e34f582e2feb",
+      "selected_index": 278,
+      "confidence": "HIGH",
+      "explanation": "The fix (fix_commit_diff.txt) changes the ESC-key handling condition in Minecraft.java from `if (!packetHandler.isLoadingLevel){ pause(); } else { Mouse.setGrabbed(false); }` to `if (!packetHandler.isLoadingLevel || !isOnline()){ pause(); } else { Mouse.setGrabbed(false); }`. This exact `if (!packetHandler.isLoadingLevel){ ... } else { Mouse.setGrabbed(false); }` construct was first introduced by candidate_279. Before that commit, the ESC key handler at that location simply called `pause();` unc",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/main/java/com/mojang/minecraft/Minecraft.java"
+      ],
+      "call_stats": {
+        "duration_s": 109.321,
+        "duration_api_s": 109.123,
+        "num_turns": 22,
+        "input_tokens": 28,
+        "output_tokens": 9594,
+        "cache_creation_input_tokens": 30501,
+        "cache_read_input_tokens": 268752,
+        "total_cost_usd": 0.4076256,
+        "total_tool_calls": 21,
+        "tool_calls_by_name": {
+          "Read": 6,
+          "Grep": 14,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 819,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isLoadingLevel",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isOnline",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1641,
+            "cache_read_input_tokens": 10503,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isLoadingLevel",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates/candidate_241.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isLoadingLevel",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates/candidate_242.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2993,
+            "cache_read_input_tokens": 12144,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "KEY_ESCAPE",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates/candidate_241.diff",
+                  "output_mode": "content",
+                  "-C": 10
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "KEY_ESCAPE",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates/candidate_242.diff",
+                  "output_mode": "content",
+                  "-C": 10
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1457,
+            "cache_read_input_tokens": 15137,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates/candidate_241.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates/candidate_242.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 6346,
+            "cache_read_input_tokens": 16594,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "packetHandler.isLoadingLevel",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isLoadingLevel",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates/candidate_243.diff",
+                  "output_mode": "content",
+                  "-C": 10
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1565,
+            "cache_read_input_tokens": 22940,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "Mouse.setGrabbed\\(false\\)",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1236,
+            "cache_read_input_tokens": 24505,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "Mouse.setGrabbed\\(false\\)",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates/candidate_01.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 813,
+            "cache_read_input_tokens": 25741,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "Mouse.setGrabbed\\(false\\)",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates/candidate_44.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "Mouse.setGrabbed\\(false\\)",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates/candidate_48.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 2382,
+            "cache_read_input_tokens": 26554,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isLoadingLevel\\)\\{",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "!isLoadingMap|!packetHandler.isLoadingLevel",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 12,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2775,
+            "cache_read_input_tokens": 28936,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/candidates/candidate_279.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 13,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 912,
+            "cache_read_input_tokens": 31711,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2336_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_279\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix (fix_commit_diff.txt) changes the ESC-key handling condition in Minecraft.java from\n`if (!packetHandler.isLoadingLevel){ pause(); } else { Mouse.setGrabbed(false); }`\nto\n`if (!packetHandler.isLoadingLevel || !isOnline()){ pause(); } else { Mouse.setGrabbed(false); }`.\n\nThis exact `if (!packetHandler.isLoadingLevel){ ... } else { Mouse.setGrabbed(false); }` construct\nwas first introduced by candidate_279. Before that commit, the ESC key handler at that location\nsimply called `pause();` unconditionally. candidate_279 replaced it with the conditional logic\nthat routes ESC to `Mouse.setGrabbed(false)` instead of `pause()` whenever\n`packetHandler.isLoadingLevel` is true, without considering whether the player was actually\nonline/connected to a server. Since `isLoadingLevel` could be true (or not properly reset) in a\nsingleplayer context, pressing ESC would never call `pause()`, meaning the pause menu would fail\nto show up in singleplayer \u2014 exactly the bug described in the fix commit message (\"Fixed a bug\nwhich was causing the menu to not show up in singleplayer\").\n\nThe subsequent fix commit (matching candidate_281 in the candidate set, which is essentially\nidentical to fix_commit_diff.txt) patches this by adding `|| !isOnline()` to the condition, so\nthat in singleplayer (offline) the pause menu always shows regardless of the isLoadingLevel state.\nNo candidate between 279 and 281 alters this specific condition, confirming candidate_279 as the\ncommit that introduced the bug.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 14,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1276,
+            "cache_read_input_tokens": 32623,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

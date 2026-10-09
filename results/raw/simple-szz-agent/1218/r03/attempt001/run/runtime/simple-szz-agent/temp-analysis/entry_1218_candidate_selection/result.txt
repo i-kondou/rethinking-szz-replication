@@ -1,0 +1,14 @@
+SELECTED: candidate_04
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit's diff changes SecurityConfig.java from `@EnableWebSecurity` back to `@Configuration` (with `@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)`), fixing a "MIME" error. Tracing the exact same line across the candidate history:
+
+- candidate_01: Creates SecurityConfig.java from scratch with `@EnableWebSecurity`.
+- candidate_02: Changes the annotation to `@Configuration` (this was working correctly, alongside enabling CSRF token repository and other config changes).
+- candidate_03: Only touches an unrelated block (commenting out the AuthenticationManagerBuilder override); the annotation remains `@Configuration`.
+- candidate_04: Changes the annotation from `@Configuration` back to `@EnableWebSecurity` — this is the exact inverse of what the fix commit later reverts, and it is the last change to that line before the fix.
+- candidate_05: Is identical to the fix commit itself (reverting `@EnableWebSecurity` -> `@Configuration`), so it is not the bug-introducing commit but rather the fix.
+
+Since the fix diff exactly undoes the change made in candidate_04 (line-for-line: `@EnableWebSecurity` -> `@Configuration`), candidate_04 is the commit that directly introduced the regression that caused the MIME error. Using `@EnableWebSecurity` in combination with `@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)` on a `WebSecurityConfigurerAdapter` causes Spring Boot's security auto-configuration to double-register filter chains, which is a known cause of static resources (JS/CSS) being served with incorrect/blocked MIME types.

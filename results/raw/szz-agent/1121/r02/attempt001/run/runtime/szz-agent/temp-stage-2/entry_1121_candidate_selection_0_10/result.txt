@@ -1,0 +1,44 @@
+SELECTED: candidate_01
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes org/sosy_lab/solver/z3/Z3UnsafeFormulaManager.java by (1) adding a
+`case Z3_QUANTIFIER_AST: return false;` branch to the `isAtom(Long t)` switch statement, and
+(2) adding `Preconditions.checkArgument(get_ast_kind(z3context, t) == Z3_APP_AST)` guards to
+`getArity` and `getArg`. The fix commit message states "Quantifiers are no Application terms
+any more", i.e. before the fix, a quantifier AST node (Z3_QUANTIFIER_AST) fell through to the
+switch's `default: return true` branch in `isAtom`, so quantifiers were incorrectly treated as
+atomic Application terms, and `getArity`/`getArg` could be called on a quantifier node without
+any validation that the node was actually a Z3_APP_AST.
+
+Tracing this method back through the candidates: candidate_01 is the initial commit that adds
+the entire codebase (including a brand-new z3/Z3UnsafeFormulaManager.java with 285 lines). In
+that very first version, `isAtom` already reads:
+
+    private final static Collection<Integer> nonAtomicOpTypes = ...
+    public boolean isAtom(Long t) {
+      int astKind = get_ast_kind(z3context, t);
+      switch (astKind) {
+      case Z3_APP_AST:
+        long decl = get_app_decl(z3context, t);
+        return !nonAtomicOpTypes.contains(get_decl_kind(z3context, decl));
+      default:
+        return true;
+      }
+    }
+    public int getArity(Long t) { return get_app_num_args(z3context, t); }
+    public Long getArg(Long t, int n) { return get_app_arg(z3context, t, n); }
+
+This is exactly the buggy pre-fix code: no Z3_QUANTIFIER_AST case in the switch, and no
+argument-kind checks in getArity/getArg. All the intervening candidates (02: pure file rename
+to new package layout; 03: whitespace/formatting cleanup; 04: import reordering; 05: license
+header rewording; 06: unrelated changes to replaceQuantifiedBody and doc comments; 07: renames
+the `nonAtomicOpTypes` field type from Collection to ImmutableSet; 08: renames the field to
+NON_ATOMIC_OP_TYPES) leave the `isAtom`/`getArity`/`getArg` logic itself completely untouched —
+the flawed switch statement and missing checks are carried forward unchanged from candidate_01
+all the way to the commit right before the fix (candidate_10, which merely adds regression
+tests with an `assume()` skip acknowledging "Bug in Z3QuantifiedFormulaManager" for Z3).
+
+Since the problematic code was never modified between its introduction and the fix, candidate_01
+is the commit that introduced the bug.

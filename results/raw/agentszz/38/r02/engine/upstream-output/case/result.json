@@ -1,0 +1,22 @@
+{
+  "fix_commit": "45bddf5b5c2d9df754f984fb1cf9bf6b6e254441",
+  "bic": "d6e4936fa54dc3577296dbadaeb556178dcad2c3",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"Introduce allowed keys table per API client\") added the erroneous fall-through migration case `case 7: // consolidate` followed immediately by `case 8:` with the actual migration logic, without properly incrementing DATABASE_VERSION to account for both steps distinctly. This created the double-counted/misaligned case numbering in the onUpgrade() switch statement that the fix commit corrects by removing the redundant \"// consolidate\" case and renumbering all subsequent case labels down by one. The blame on the modified lines in the fix directly traces to this commit as the origin of the case-7/case-8 split that caused the off-by-one migration bug.",
+  "metrics": {
+    "case_elapsed_seconds": 73.501855,
+    "api_elapsed_seconds": 73.176792,
+    "tool_elapsed_seconds": 0.214595,
+    "other_elapsed_seconds": 0.110471,
+    "api_call_count": 7,
+    "tool_call_count": 6,
+    "prompt_tokens": 58545,
+    "completion_tokens": 4445,
+    "total_tokens": 62990,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T17:34:36.905449"
+}

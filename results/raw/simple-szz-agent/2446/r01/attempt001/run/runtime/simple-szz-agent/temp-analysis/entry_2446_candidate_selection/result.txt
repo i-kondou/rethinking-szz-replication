@@ -1,0 +1,29 @@
+SELECTED: candidate_01
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the access/method modifiers of `RerouteActions.execute()` in
+sql/src/main/java/io/crate/executor/transport/RerouteActions.java from
+`static final CompletableFuture<Long> execute(...)` (package-private, with a redundant
+`final`) to `public static CompletableFuture<Long> execute(...)`. The commit message is
+"fix compile error", which matches this exact class of bug: a package-private method
+being invoked from a class in a different package.
+
+Candidate_01 is the commit that originally introduced RerouteActions.java (new file, blob
+hash da5e4d923, matching the "before" hash of the fix diff), including the
+`static final CompletableFuture<Long> execute(...)` declaration with default
+(package-private) visibility. In that same commit, DDLStatementDispatcher — which lives in
+package `io.crate.action.sql`, a different package than `io.crate.executor.transport` where
+RerouteActions resides — was modified to call `RerouteActions.execute(rerouteAction::execute,
+analysis, parameters)` directly. Because `execute` was not declared `public`, this
+cross-package call would not compile, producing exactly the compile error that the fix
+commit resolves by adding the `public` modifier (and removing the meaningless `final` on a
+static method).
+
+Candidate_02 contains only the fix's own diff (the `static final` -> `public static` change),
+so it is not an earlier bug-introducing candidate but essentially the fix itself.
+
+Therefore candidate_01 is the bug-introducing commit: it created RerouteActions.execute()
+with insufficient (package-private) visibility while simultaneously adding a cross-package
+caller, causing the compile error later fixed by widening the method's access modifier.

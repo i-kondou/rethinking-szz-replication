@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "timestamp": "20260906_215730",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2914/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 0,
+    "gt_in_szz_candidates_rate": 0.0,
+    "llm_accuracy": 0.0
+  },
+  "results": [
+    {
+      "id": "2914",
+      "fix_commit_hash": "d9853de000d36dd300e4b29bce34779725438770",
+      "bug_commit_hash": [
+        "c374ff3ebc6d11f67ac2ee1336f92a2fb96c6ff2"
+      ],
+      "szz_candidates": [
+        "71da58f79e350fca73a7541d535f0574936fdcde",
+        "7d7befd8290a2cbeb1ae7e01f897a7d78a5b60dc"
+      ],
+      "szz_num_candidates": 2,
+      "gt_in_szz_candidates": false,
+      "matching_gt_in_candidates": [],
+      "llm_selected_commit": "71da58f79e350fca73a7541d535f0574936fdcde",
+      "llm_abstained": false,
+      "llm_confidence": "MEDIUM",
+      "llm_explanation": "The fix commit changes two nearly identical lines in Input.java's time-parsing code, both of the form `return ret;` -> `return ret * 1e-6;`. The `ret` value is accumulated in microseconds (hh*usPerHr + mm*usPerMin + ss*usPerSec [+ us]), but the function is expected to return a value in seconds, so failing to multiply by 1e-6 is the bug in both cases. - Fix hunk 1 (the \"hh:mm:ss\" / isextendtime branch) exactly matches the code added by candidate_01 (\"JS: allow an extended time format in the TimeS",
+      "llm_correct": false,
+      "llm_error": null,
+      "repo_name": "subjects/2914",
+      "bug_fixing_commit": "d9853de000d36dd300e4b29bce34779725438770",
+      "bug_inducing_commit": [
+        "c374ff3ebc6d11f67ac2ee1336f92a2fb96c6ff2"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "jaamsim/jaamsim"
+    }
+  ]
+}

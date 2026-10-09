@@ -1,0 +1,12 @@
+SELECTED: candidate_01
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit ("fix ci error") modifies android/src/main/java/com/github/wuxudong/rncharts/charts/CustomPieChart.java by wrapping a loose `if (h != null && !h.equalTo(mLastHighlighted)) { ... }` block — which was sitting directly inside the anonymous PieRadarChartTouchListener class body, outside of any method — inside a proper `protected void performHighlight(Highlight h, MotionEvent e) { ... }` method override, and removes now-unused imports (View, ChartTouchListener, OnChartGestureListener).
+
+Candidate_01 is the commit that originally created CustomPieChart.java (new file) and it already contains this exact malformed structure: the `if` statement is placed directly in the anonymous class body instead of inside a method, which is invalid Java and would fail to compile — exactly the "ci error" the fix commit addresses. It also includes the imports (View, ChartTouchListener, OnChartGestureListener) that the fix later removes as unused.
+
+Candidate_02's diff is byte-for-byte identical to the fix commit's diff itself (it applies the same corrective change — adding the performHighlight method signature and removing the unused imports), so it represents the fix, not the bug introduction.
+
+Since candidate_01 is the sole commit that introduced the broken/non-compiling code, it is the bug-introducing commit.

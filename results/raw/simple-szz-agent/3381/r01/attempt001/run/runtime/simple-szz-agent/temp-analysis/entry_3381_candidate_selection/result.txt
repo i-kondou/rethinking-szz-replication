@@ -1,0 +1,22 @@
+SELECTED: candidate_13
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit modifies `ApplicationContextRequestMatcher.matches()` so that a `volatile boolean initialized` flag combined with a `synchronized` block on an `initializeLock` object is used, ensuring that concurrent callers block until the first caller's `initialized(context)` call has fully returned before any thread proceeds to `matches(request, context)`. The bug being fixed (gh-18211) was that the previous implementation used `AtomicBoolean.compareAndSet(false, true)` to gate the one-time `initialized(context)` call:
+
+    if (this.initialized.compareAndSet(false, true)) {
+        initialized(context);
+    }
+    return matches(request, context);
+
+Because `compareAndSet` flips the flag to `true` *before* `initialized(context)` finishes executing, a second thread arriving concurrently would see `initialized` as already `true`, skip the initialization branch, and immediately call `matches(request, context)` — even though the first thread's `initialized(context)` call had not yet completed. This is precisely the race described in the fix commit message ("the second call proceeded before the initialized method had returned").
+
+Examining the candidates' history of this file:
+- candidate_01 creates the original `ApplicationContextRequestMatcher` (later renamed/moved by candidate_03 and candidate_05).
+- candidates_06/07/08/10/11 evolve the file while it still uses a SAFE double-checked-locking pattern: a `volatile Supplier<C> context` field with a `contextLock` monitor, where `getContext()` synchronizes fully around both `initialized(context)` and the assignment of the context field — this pattern does not exhibit the race.
+- candidate_13 rewrites this method, replacing the safe `contextLock`-based double-checked locking with the new `AtomicBoolean initialized = new AtomicBoolean(false)` field and the `if (this.initialized.compareAndSet(false, true)) { initialized(context); }` pattern — introducing exactly the race condition that gh-18211 reports and that the fix commit reverts.
+- candidate_14 only changes a Javadoc word ("true" to "false"), unrelated to the concurrency bug.
+- candidate_15 contains a diff essentially identical to the actual fix commit (removing `AtomicBoolean`/`compareAndSet` and introducing `volatile boolean initialized` + `synchronized (initializeLock)`), i.e., it is the fix itself, not the bug introduction.
+
+Therefore candidate_13 is the commit that introduced the buggy `compareAndSet`-then-initialize race condition that the fix commit later corrects.

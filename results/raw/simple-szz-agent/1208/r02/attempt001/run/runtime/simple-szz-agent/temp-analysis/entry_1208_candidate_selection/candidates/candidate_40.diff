@@ -1,0 +1,211 @@
+diff --git a/pom.xml b/pom.xml
+index 37dd2ce..0aff5e5 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -4,7 +4,7 @@
+   <parent>
+ 		<groupId>sc.fiji</groupId>
+ 		<artifactId>pom-fiji</artifactId>
+-		<version>24.3.0</version>
++		<version>27.0.0</version>
+ 		<relativePath />
+ 	</parent>
+ 
+@@ -22,10 +22,6 @@
+ 	</repositories>
+ 	
+   <dependencies>
+-  	<dependency>
+-  		<groupId>net.imglib2</groupId>
+-  		<artifactId>imglib2</artifactId>
+-  	</dependency>
+   	<dependency>
+   		<groupId>net.imglib2</groupId>
+   		<artifactId>imglib2-algorithm-fft</artifactId>
+@@ -55,7 +51,6 @@
+   	<dependency>
+   		<groupId>net.imagej</groupId>
+   		<artifactId>imagej-ops</artifactId>
+-  		<version>0.30.0</version>
+   	</dependency>
+   	<dependency>
+   		<groupId>sc.fiji</groupId>
+@@ -65,7 +60,11 @@
+   	<dependency>
+   		<groupId>sc.fiji</groupId>
+   		<artifactId>bigdataviewer-core</artifactId>
+-  		<version>2.5.2-SNAPSHOT</version>
++  	</dependency>
++  	<dependency>
++  		<groupId>net.imglib2</groupId>
++  		<artifactId>imglib2</artifactId>
++  		<version>4.2.0</version>
+   	</dependency>
+   </dependencies>
+ </project>
+\ No newline at end of file
+diff --git a/src/main/java/gui/StitchingExplorerPanel.java b/src/main/java/gui/StitchingExplorerPanel.java
+index 2d3772b..b7e8d78 100644
+--- a/src/main/java/gui/StitchingExplorerPanel.java
++++ b/src/main/java/gui/StitchingExplorerPanel.java
+@@ -16,6 +16,7 @@ import java.util.Collection;
+ import java.util.Collections;
+ import java.util.HashSet;
+ import java.util.List;
++import java.util.Optional;
+ import java.util.Set;
+ import java.util.Vector;
+ import java.util.stream.Collector;
+@@ -28,6 +29,7 @@ import javax.swing.JCheckBox;
+ import javax.swing.JComboBox;
+ import javax.swing.JFrame;
+ import javax.swing.JLabel;
++import javax.swing.JOptionPane;
+ import javax.swing.JPanel;
+ import javax.swing.JPopupMenu;
+ import javax.swing.JScrollPane;
+@@ -37,6 +39,7 @@ import javax.swing.event.ListSelectionEvent;
+ import javax.swing.event.ListSelectionListener;
+ import javax.swing.table.DefaultTableCellRenderer;
+ 
++import algorithm.SpimDataFilteringAndGrouping;
+ import algorithm.SpimDataTools;
+ import algorithm.TransformTools;
+ import mpicbg.spim.data.SpimDataException;
+@@ -119,6 +122,9 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends
+ 	LinkExplorerPanel linkExplorer;
+ 	JFrame linkFrame;
+ 	
++	// save SpimDataFilteringAndGrouping so we can go preview -> global opt
++	SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > savedFilteringAndGrouping;
++	
+ 	// offset to get different "random" colors
+ 	private long colorOffset = 0;
+ 
+@@ -147,6 +153,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends
+ 				bdvPopup().bdv = BDVPopupStitching.createBDV( this, linkOverlay );
+ 		}
+ 
++		savedFilteringAndGrouping = null;
+ 	}
+ 	
+ 	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data, final String xml,
+@@ -185,6 +192,10 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends
+ 		}
+ 		else
+ 		{
++			boolean doGlobalOpt = false;
++			if (savedFilteringAndGrouping != null)
++				doGlobalOpt = JOptionPane.showConfirmDialog( linkFrame, "Proceed to Global Optimization?", "Optimize Globally?", JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION;
++
+ 			quitLinkExplorer();
+ 			linkOverlay.clearActiveLinks();
+ 			int oldFirstSelection = table.getSelectionModel().getMinSelectionIndex();
+@@ -192,6 +203,15 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends
+ 			table.setRowSelectionInterval( oldFirstSelection, oldFirstSelection );
+ 			if (bdvPopup().bdvRunning())
+ 				updateBDV( bdvPopup().bdv, colorMode, data, firstSelectedVD, selectedRows );
++
++			if (doGlobalOpt)
++			{
++				Optional< ExplorerWindowSetable > globalOptPopupOpt = popups.stream().filter( p -> OptimizeGloballyPopupExpertBatch.class.isInstance( p ) ).findFirst();
++				OptimizeGloballyPopupExpertBatch globalOptPopup = (OptimizeGloballyPopupExpertBatch) globalOptPopupOpt.get();
++				globalOptPopup.doClick();
++			}
++			// discard the temp. SpimDataFilteringAndGrouping
++			savedFilteringAndGrouping = null;
+ 		}
+ 	}
+ 
+@@ -935,4 +955,14 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends
+ 		} );
+ 	}
+ 
++	public SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > getSavedFilteringAndGrouping()
++	{
++		return savedFilteringAndGrouping;
++	}
++
++	public void setSavedFilteringAndGrouping(SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > savedFilteringAndGrouping)
++	{
++		this.savedFilteringAndGrouping = savedFilteringAndGrouping;
++	}
++
+ }
+diff --git a/src/main/java/gui/popup/CalculatePCPopup.java b/src/main/java/gui/popup/CalculatePCPopup.java
+index 7d51610..2bf8dad 100644
+--- a/src/main/java/gui/popup/CalculatePCPopup.java
++++ b/src/main/java/gui/popup/CalculatePCPopup.java
+@@ -267,7 +267,10 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
+ 					{
+ 						final int choice = JOptionPane.showConfirmDialog( (Component) panel, "Pairwise shift calculation done. Switch to preview mode?", "Preview Mode", JOptionPane.YES_NO_OPTION );
+ 						if (choice == JOptionPane.YES_OPTION)
++						{
++							((StitchingExplorerPanel< ?, ? >) panel).setSavedFilteringAndGrouping( filteringAndGrouping );
+ 							((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode();
++						}
+ 					}
+ 				}
+ 			} ).start();
+diff --git a/src/main/java/gui/popup/CalculatePCPopupExpertBatch.java b/src/main/java/gui/popup/CalculatePCPopupExpertBatch.java
+index cd5081f..cfc3022 100644
+--- a/src/main/java/gui/popup/CalculatePCPopupExpertBatch.java
++++ b/src/main/java/gui/popup/CalculatePCPopupExpertBatch.java
+@@ -143,7 +143,10 @@ public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWi
+ 					{
+ 						final int choice = JOptionPane.showConfirmDialog( (Component) panel, "Pairwise shift calculation done. Switch to preview mode?", "Preview Mode", JOptionPane.YES_NO_OPTION );
+ 						if (choice == JOptionPane.YES_OPTION)
++						{
++							((StitchingExplorerPanel< ?, ? >) panel).setSavedFilteringAndGrouping( filteringAndGrouping );
+ 							((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode();
++						}
+ 					}
+ 				}
+ 			}).run();
+diff --git a/src/main/java/gui/popup/OptimizeGloballyPopupExpertBatch.java b/src/main/java/gui/popup/OptimizeGloballyPopupExpertBatch.java
+index bc1b92b..0188558 100644
+--- a/src/main/java/gui/popup/OptimizeGloballyPopupExpertBatch.java
++++ b/src/main/java/gui/popup/OptimizeGloballyPopupExpertBatch.java
+@@ -18,6 +18,7 @@ import algorithm.SpimDataFilteringAndGrouping;
+ import algorithm.TransformTools;
+ import algorithm.globalopt.GlobalOptimizationParameters;
+ import algorithm.globalopt.GlobalTileOptimization;
++import gui.StitchingExplorerPanel;
+ import gui.StitchingResultsSettable;
+ import mpicbg.models.Tile;
+ import mpicbg.models.TranslationModel3D;
+@@ -85,16 +86,24 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
+ 			if (params == null)
+ 				return;
+ 			
+-			FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
+-			SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
+-			
+-			filteringAndGrouping.askUserForFiltering( panelFG );
+-			if (filteringAndGrouping.getDialogWasCancelled())
+-				return;
+-			
+-			filteringAndGrouping.askUserForGrouping( panelFG );
+-			if (filteringAndGrouping.getDialogWasCancelled())
+-				return;
++			SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping;
++			if (((StitchingExplorerPanel< ?, ? >) panel).getSavedFilteringAndGrouping() == null)
++			{
++				FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
++				filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
++				
++				filteringAndGrouping.askUserForFiltering( panelFG );
++				if (filteringAndGrouping.getDialogWasCancelled())
++					return;
++				
++				filteringAndGrouping.askUserForGrouping( panelFG );
++				if (filteringAndGrouping.getDialogWasCancelled())
++					return;
++			}
++			else
++			{
++				filteringAndGrouping = ((StitchingExplorerPanel< ?, ? >) panel).getSavedFilteringAndGrouping();
++			}
+ 			
+ 			
+ 			// why can type not be BasicViewDescription?

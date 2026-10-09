@@ -1,0 +1,13 @@
+SELECTED: candidate_11
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes `compilerComplianceLevel.toString()` to `JavaVersion.toVersion(compilerComplianceLevel).toString()` inside the lambda that populates the JDT compliance properties in `ConventionJdt.java`. This implies that at the point of the bug, `compilerComplianceLevel` inside that lambda was a raw `String` (so calling `.toString()` on it was a no-op that just returned the string unchanged, e.g. "1.8" as typed by the user), instead of being converted to a normalized `JavaVersion` value first.
+
+Tracing the history of this field/parameter:
+- candidate_08 originally introduced `compilerComplianceLevel(String compilerComplianceLevel)`, which correctly did `this.compilerComplianceLevel = JavaVersion.toVersion(compilerComplianceLevel);` storing a `JavaVersion` field. The property-writing code lived in a separate `JavaComplianceAction` class whose field `complianceLevel` was of type `JavaVersion`, so `complianceLevel.toString()` there was correct (producing a normalized version string).
+- candidate_11 refactored this code: it removed the `JavaVersion compilerComplianceLevel` field and the `JavaComplianceAction` class, and inlined the logic directly into the `compilerComplianceLevel(String compilerComplianceLevel)` method using `extension.workspaceProp(...)` with a lambda. Critically, inside this lambda the refactor now references the method's `String` parameter (also named `compilerComplianceLevel`) rather than converting it via `JavaVersion.toVersion(...)` first: `JDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, compilerComplianceLevel.toString()));`. Since the parameter is a `String`, `.toString()` is a no-op, silently dropping the normalization that `JavaVersion.toVersion(...)` used to provide (e.g. normalizing "8" vs "1.8" style version strings understood by Gradle's `JavaVersion`).
+- candidate_12 is identical to the actual fix diff itself (restoring `JavaVersion.toVersion(compilerComplianceLevel).toString()`), confirming it is the corrective commit, not the introducing one.
+
+Therefore, candidate_11 is the commit that introduced the bug by replacing the `JavaVersion`-based conversion with a direct (and incorrect) `String.toString()` call during the refactor, and candidate_12/the fix commit corrects it.

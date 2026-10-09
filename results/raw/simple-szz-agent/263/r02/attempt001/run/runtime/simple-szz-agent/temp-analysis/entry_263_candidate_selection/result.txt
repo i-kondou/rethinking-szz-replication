@@ -1,0 +1,43 @@
+SELECTED: candidate_25
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single line, `filesFromThisSite.clear();`, at the start of
+XMLFileReader.read(), right after `this.updateSite = updateSite;` is set. This
+ensures the `filesFromThisSite` set only ever contains files belonging to the
+update site currently being parsed.
+
+Searching the candidates for `filesFromThisSite` shows it only appears in
+candidate_25, candidate_26, and candidate_27:
+
+- candidate_27 is actually the fix commit itself (its diff is byte-for-byte
+  identical to fix_commit_diff.txt), so it cannot be the bug-introducing commit.
+- candidate_26 only changes `warnings.append(...)` calls to `files.log.warn(...)`
+  for logging shadowed-file warnings; it does not touch the `filesFromThisSite`
+  bookkeeping logic.
+- candidate_25 is the commit that FIRST introduces the `filesFromThisSite` field
+  (`protected Set<FileObject> filesFromThisSite = new HashSet<FileObject>();`)
+  and rewrites the file-merging logic in `read()` to use
+  `filesFromThisSite.contains(file)` instead of the previous
+  `updateSite.equals(file.updateSite)` check to decide whether a file being
+  parsed belongs to the same update site as an already-known file (needed to
+  correctly detect shadowing between update sites).
+
+However, candidate_25 never clears `filesFromThisSite` between successive calls
+to `read()` (which is called once per update site). Since `XMLFileReader` is
+reused across multiple update-site reads, `filesFromThisSite` accumulates
+entries from all previously-read sites. This means the `contains(file)` check
+used to decide "is this file already known from the site I'm currently
+parsing?" would incorrectly return true for files from OTHER update sites too,
+causing the code to take the "same site, just update the object" branch instead
+of the shadowing/override branch — effectively preventing any update site's
+files from properly shadowing (overriding) files from a different update site,
+exactly the symptom described in the fix commit message ("the bug would
+prevent any shadowing").
+
+The fix simply adds the missing `filesFromThisSite.clear()` call, which
+restores correct per-site scoping of the set introduced in candidate_25. Since
+candidate_25 is the commit that introduced this stateful field and the logic
+depending on it (without the necessary reset), it is the bug-introducing
+commit.

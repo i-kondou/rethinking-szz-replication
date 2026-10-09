@@ -1,0 +1,18 @@
+SELECTED: candidate_07
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the ZNode constructor in java/src/libbun/parser/ast/ZNode.java from:
+    ParentNode.SetChild(this, ZNode._EnforcedParent);
+back to:
+    this.ParentNode = ParentNode;
+(git blob transition 9b71d71 -> 54c0c73)
+
+Candidate_07 contains the exact inverse change to the same file/line, with the exact inverse blob transition (54c0c73 -> 9b71d71):
+    -		this.ParentNode = ParentNode;
+    +		ParentNode.SetChild(this, ZNode._EnforcedParent);
+
+This is a perfect match: candidate_07 is the commit that replaced the simple, safe field assignment with a call to ParentNode.SetChild(this, ...) inside the ZNode constructor. Calling SetChild on the parent from within the child's own constructor is problematic because `this` (the new child node) is not yet fully initialized (e.g. its AST array is not yet allocated when Size > 0, and SourceToken/other fields are not yet set), so any logic inside SetChild that inspects or manipulates the child node operates on a partially-constructed object. This is exactly the defect the fix commit corrects by reverting to the direct, safe `this.ParentNode = ParentNode;` assignment.
+
+Notably, candidate_08 in this candidate set is actually identical to the fix commit itself (same diff, same blob hashes), which further confirms that candidate_07 — the immediately preceding change to the same line — is the true bug-introducing commit. The same commit (candidate_07) also converted related direct assignments (`NewNode.ParentNode = this;` in ZBlockNode.ReplaceWith and `OriginalNode.ParentNode = this;` in ZDesugarNode) into SetChild(...) calls as part of a broader refactor to route parent-child linkage through SetChild, but the constructor case was the one that broke because of the object-not-yet-initialized issue.

@@ -1,0 +1,10 @@
+SELECTED: candidate_26
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit moves `mContainerView.removeView(removedPage.getView());` and `mCurPage = prevPage;` out of `doFinalWorkForPopPageInternal()` and into the main body of the pop-page method, so they execute immediately regardless of whether a transition animation is played. Previously, these two statements only executed inside `doFinalWorkForPopPageInternal()`, which is invoked either immediately (no animation) or from inside a `postDelayed()` callback (when animated) — meaning `mCurPage` was not nulled/updated until after the animation finished playing.
+
+candidate_26 is the commit that introduced this exact bug. Before this commit, `mContainerView.removeView(removedPage.getView())`, `removedPage.onDetach()`, and `mCurPage = prevPage;` were executed unconditionally and immediately, prior to the `if (animated && animationDuration != -1)` branch (visible as removed lines 18-22 in the diff). candidate_26 refactored the pop-page logic by extracting the "final work" (onHidden, onUncovered, and now also the moved removeView/onDetach/mCurPage assignment) into a new private method `doFinalWorkForPopPageInternal(Page removedPage, Page prevPage)`. Critically, it moved `mContainerView.removeView(...)` and `mCurPage = prevPage;` INTO this new method, which is only called either in the `postDelayed` callback (deferred until animation completes) or immediately in the non-animated else-branch. This means that when an animation is playing, `mCurPage` remains stale (pointing to the removed/popped page) for the duration of the animation instead of being updated immediately — exactly the bug described in the fix commit message: "mCurPage should be set to null immediately when last page is popped, even if there is a transition animation to play."
+
+No other candidate touches this code path in a way that reintroduces or creates this specific ordering issue; candidate_26 is where `doFinalWorkForPopPageInternal` and the associated mis-ordering of `mCurPage` assignment relative to animation was first introduced.

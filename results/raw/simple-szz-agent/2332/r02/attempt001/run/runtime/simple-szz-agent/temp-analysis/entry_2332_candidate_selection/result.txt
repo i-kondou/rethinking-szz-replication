@@ -1,0 +1,44 @@
+SELECTED: candidate_35
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit ("Fix synchronization in TS3Api") rewrites TS3Query's connect/exit/disconnect
+synchronization: it removes `public synchronized void exit()` and the plain
+`private volatile boolean connected`, replacing them with `AtomicBoolean connected` and a new
+`AtomicBoolean shuttingDown` guarded by a `compareAndSet`, and moves the actual teardown work
+into a separate `private synchronized shutDown()` method reached via a wait/notifyAll pattern.
+The exact code being removed by the fix is:
+
+    public synchronized void exit() {
+        if (connected) { ... }
+        ...
+    }
+
+This precise signature (`public synchronized void exit()`) together with `public synchronized void connect()`
+and `synchronized void doCommandAsync(Command c)` was introduced by candidate_35, which changes:
+
+    -public void connect() {
+    +public synchronized void connect() {
+    ...
+    -public void exit() {
+    +public synchronized void exit() {
+    ...
+    -void doCommandAsync(Command c) {
+    +synchronized void doCommandAsync(Command c) {
+
+Before candidate_35 (e.g. candidate_24, which first introduced the `connected` flag and the
+racy check-then-act pattern in `exit()`/`fireDisconnect()`), none of these methods were
+synchronized on `this`. Making `connect()` and `exit()` both `synchronized void` on the same
+monitor is what creates the deadlock/blocking hazard: `exit()` can block for a long time inside
+`doCommand()`/`api.quit()` waiting for a query response that may never arrive (e.g. if the
+socket already died), while holding the object's monitor — and any concurrent thread trying to
+call the now-synchronized `connect()` (e.g. a reconnect handler reacting to the same disconnect
+event) is blocked waiting on that same monitor, producing exactly the kind of synchronization
+bug the fix commit resolves by switching to atomic flags and narrowly-scoped synchronized
+blocks instead of locking the whole `exit()`/`connect()` methods.
+
+No candidate between 24 and 35 (checked 25-34) adds any `synchronized` keyword to TS3Query, so
+candidate_35 is the first commit that introduces this specific problematic synchronization
+pattern. (candidate_37 is essentially identical to the fix commit itself — it removes this
+exact code — so it cannot be the bug-introducing commit; it is the fix.)

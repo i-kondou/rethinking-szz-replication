@@ -1,0 +1,439 @@
+{
+  "metadata": {
+    "timestamp": "20260905_235842",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 61.22,
+      "max": 61.22,
+      "mean": 61.22,
+      "median": 61.22,
+      "total": 61.22,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 61.1,
+      "max": 61.1,
+      "mean": 61.1,
+      "median": 61.1,
+      "total": 61.1,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 21,
+      "max": 21,
+      "mean": 21,
+      "median": 21,
+      "total": 21,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 22,
+      "max": 22,
+      "mean": 22,
+      "median": 22,
+      "total": 22,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 5180,
+      "max": 5180,
+      "mean": 5180,
+      "median": 5180,
+      "total": 5180,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 25537,
+      "max": 25537,
+      "mean": 25537,
+      "median": 25537,
+      "total": 25537,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 162682,
+      "max": 162682,
+      "mean": 162682,
+      "median": 162682,
+      "total": 162682,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.27979260000000006,
+      "max": 0.27979260000000006,
+      "mean": 0.27979260000000006,
+      "median": 0.27979260000000006,
+      "total": 0.27979260000000006,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Glob": 1,
+      "Grep": 13,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "907",
+      "fix_commit_hash": "120201466dc5554166a2b5a894f50eb508a2d904",
+      "ground_truth_bics": [
+        "5c283580b03c1f25347914940097500178f92fe7"
+      ],
+      "predicted_bics": [
+        "02a5f3fff3110cdf2fc8e1770e2cc238efa36dff"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "907",
+      "fix_commit": "120201466dc5554166a2b5a894f50eb508a2d904",
+      "ground_truth_bics": [
+        "5c283580b03c1f25347914940097500178f92fe7"
+      ],
+      "total_candidates": 18,
+      "gt_in_candidates": false,
+      "selected_commit": "02a5f3fff3110cdf2fc8e1770e2cc238efa36dff",
+      "selected_index": 4,
+      "confidence": "HIGH",
+      "explanation": "The fix commit modifies CallerFinder.getStackForCallerOf() to add back a \"skip\" parameter and changes the scan loop from `for (int index = 0; index < depth; index++)` to `for (int index = skip; index < depth; index++)`, along with a new comment in LogContext.java explaining that skipping is \"essential for correctness\" because postProcess() can be overridden, producing a stack like: UserCode::someMethod LogContext::log LogContext::shouldLog",
+      "is_correct": false,
+      "num_files_touched_by_fix": 2,
+      "num_source_files_touched_by_fix": 2,
+      "files_analyzed": [
+        "api/src/main/java/com/google/common/flogger/LogContext.java",
+        "api/src/main/java/com/google/common/flogger/util/CallerFinder.java"
+      ],
+      "call_stats": {
+        "duration_s": 61.22,
+        "duration_api_s": 61.1,
+        "num_turns": 21,
+        "input_tokens": 22,
+        "output_tokens": 5180,
+        "cache_creation_input_tokens": 25537,
+        "cache_read_input_tokens": 162682,
+        "total_cost_usd": 0.27979260000000006,
+        "total_tool_calls": 20,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Glob": 1,
+          "Grep": 13,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_907_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 20,
+            "cache_creation_input_tokens": 1398,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_907_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_907_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2299,
+            "cache_read_input_tokens": 9678,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 16,
+            "cache_creation_input_tokens": 523,
+            "cache_read_input_tokens": 11977,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "CallerFinder|getStackForCallerOf|postProcess|LogSiteStackTrace",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 329,
+            "cache_read_input_tokens": 12500,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_907_candidate_selection/candidates/candidate_01.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 16,
+            "cache_creation_input_tokens": 320,
+            "cache_read_input_tokens": 12829,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getStackForCallerOf|CallerFinder|for \\(int index|foundCaller",
+                  "path": "candidates/candidate_01.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 7,
+            "cache_creation_input_tokens": 4873,
+            "cache_read_input_tokens": 13149,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "public static StackTraceElement\\[\\] getStackForCallerOf|for \\(int index = skip|for \\(int index = 0; index < depth",
+                  "path": "candidates/candidate_01.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2252,
+            "cache_read_input_tokens": 18022,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getStackForCallerOf|skip some variable|immediate .parent. frame|Proguard, which can fold",
+                  "path": "candidates/candidate_02.diff",
+                  "output_mode": "content",
+                  "-C": 8
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getStackForCallerOf|skip some variable|immediate .parent. frame|Proguard, which can fold",
+                  "path": "candidates/candidate_04.diff",
+                  "output_mode": "content",
+                  "-C": 8
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getStackForCallerOf|skip some variable|immediate .parent. frame|Proguard, which can fold",
+                  "path": "candidates/candidate_05.diff",
+                  "output_mode": "content",
+                  "-C": 8
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getStackForCallerOf|skip some variable|immediate .parent. frame|Proguard, which can fold",
+                  "path": "candidates/candidate_06.diff",
+                  "output_mode": "content",
+                  "-C": 8
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getStackForCallerOf|skip some variable|immediate .parent. frame|Proguard, which can fold",
+                  "path": "candidates/candidate_08.diff",
+                  "output_mode": "content",
+                  "-C": 8
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getStackForCallerOf|skip some variable|immediate .parent. frame|Proguard, which can fold",
+                  "path": "candidates/candidate_12.diff",
+                  "output_mode": "content",
+                  "-C": 8
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getStackForCallerOf|skip some variable|immediate .parent. frame|Proguard, which can fold",
+                  "path": "candidates/candidate_13.diff",
+                  "output_mode": "content",
+                  "-C": 8
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getStackForCallerOf|skip some variable|immediate .parent. frame|Proguard, which can fold",
+                  "path": "candidates/candidate_14.diff",
+                  "output_mode": "content",
+                  "-C": 8
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getStackForCallerOf|skip some variable|immediate .parent. frame|Proguard, which can fold",
+                  "path": "candidates/candidate_15.diff",
+                  "output_mode": "content",
+                  "-C": 8
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getStackForCallerOf|skip some variable|immediate .parent. frame|Proguard, which can fold",
+                  "path": "candidates/candidate_18.diff",
+                  "output_mode": "content",
+                  "-C": 8
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4976,
+            "cache_read_input_tokens": 20274,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_907_candidate_selection/candidates/candidate_05.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 2075,
+            "cache_read_input_tokens": 25250,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_907_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_05\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit modifies CallerFinder.getStackForCallerOf() to add back a \"skip\" parameter and\nchanges the scan loop from `for (int index = 0; index < depth; index++)` to\n`for (int index = skip; index < depth; index++)`, along with a new comment in LogContext.java\nexplaining that skipping is \"essential for correctness\" because postProcess() can be overridden,\nproducing a stack like:\n\n  UserCode::someMethod\n  LogContext::log\n  LogContext::shouldLog\n  OtherChildContext::postProcess\n  ChildContext::postProcess   << not the real caller\n  LogContext::postProcess     << current frame\n\nWithout skipping past the LogContext/subclass frames, the class-name-matching logic in\ngetStackForCallerOf can find and stop at the wrong \"caller\" frame (an overridden postProcess()\nin an intermediate subclass), producing a corrupted/incorrect synthetic stack trace.\n\ncandidate_05 is the commit that removed this exact skip mechanism. Originally (as seen in\ncandidate_01, the initial commit), getStackForCallerOf(Class target, Throwable throwable, int skip,\nint maxDepth) took an explicit skip count and looped with `for (int index = skip; index < depth; index++)`,\nwith LogContext.java calling it as `getStackForCallerOf(LogContext.class, new Throwable(), 2, stackSize.getMaxDepth())`\n(skipping 2 known frames: postProcess() and shouldLog()).\n\ncandidate_05's diff shows:\n- LogContext.java: removes the `2` skip argument entirely, calling\n  `getStackForCallerOf(LogContext.class, new Throwable(), stackSize.getMaxDepth())`\n- CallerFinder.java: removes the `skip` parameter and its validation, and replaces\n  `for (int index = skip; index < depth; index++)` with `for (int index = 0; index < depth; index++)`,\n  adding a comment claiming this change was needed because a fixed skip count was \"problematic in\n  the face of things like Proguard, which can fold method/classes and change the number of\n  intermediate stack frames.\"\n\nThis regression removed the ability to skip known intermediate frames, relying solely on\nclass-name matching to find the caller. That approach fails when postProcess() is overridden in a\nsubclass hierarchy (multiple frames match/are adjacent to LogContext-related classes), which is\nexactly the \"synthetic stack bug\" the fix commit addresses by reintroducing a skip count (this\ntime hardcoded to 1 rather than 2, as a narrower/safer fix). No other candidate touches\ngetStackForCallerOf, CallerFinder's loop logic, or the skip parameter, confirming candidate_05 as\nthe sole introduction point of this bug.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1610,
+            "cache_read_input_tokens": 27325,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

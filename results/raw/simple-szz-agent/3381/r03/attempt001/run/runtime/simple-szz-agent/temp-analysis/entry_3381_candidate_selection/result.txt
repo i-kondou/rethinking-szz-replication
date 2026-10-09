@@ -1,0 +1,34 @@
+SELECTED: candidate_13
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit modifies `ApplicationContextRequestMatcher.matches(HttpServletRequest)` so that concurrent callers never proceed to `matches(request, context)` before `initialized(context)` has finished running. Before the fix, the code used `AtomicBoolean.compareAndSet(false, true)` to guard the one-time `initialized(context)` call:
+
+```java
+if (this.initialized.compareAndSet(false, true)) {
+    initialized(context);
+}
+return matches(request, context);
+```
+
+The race is that `compareAndSet` only returns `true` for the single thread that performs the initialization; every other concurrent thread gets `false` and falls straight through to `return matches(request, context)` without waiting for the first thread's `initialized(context)` call to complete. This is exactly the "concurrent calls to matches could trigger unexpected errors ... the second call proceeded before initialized had returned" bug described in the fix commit message (gh-18211). The fix replaces this with a double-checked-locking `synchronized` block that forces later callers to block until initialization is complete.
+
+Examining candidate_13.diff, it rewrites `ApplicationContextRequestMatcher.java` and introduces exactly this problematic pattern. The pre-existing code (visible in the diff's removed lines) used a `synchronized (this.contextLock)` double-checked-locking pattern around a `Supplier<C> context` field that correctly blocked concurrent callers until context creation and `initialized()` had completed:
+
+```java
+if (this.context == null) {
+    synchronized (this.contextLock) {
+        if (this.context == null) {
+            Supplier<C> createdContext = createContext(request);
+            initialized(createdContext);
+            this.context = createdContext;
+        }
+    }
+}
+return this.context;
+```
+
+Candidate_13 replaced this safe, blocking design with the new `AtomicBoolean`/`compareAndSet` based `matches` implementation that does not block concurrent threads during initialization — introducing the race condition. No candidate between candidate_13 and the fix (checked via candidate_14) modifies this file or the initialization logic again, so candidate_13 is the first (and only) commit that introduces the buggy code path.
+
+Note: candidate_15.diff is textually identical to fix_commit_diff.txt (same before/after content and blob hashes ff1bc115cf..a56626e873), indicating it is effectively the fix commit itself rather than a bug-introducing candidate, so it was excluded from consideration as the bug-introducing commit.

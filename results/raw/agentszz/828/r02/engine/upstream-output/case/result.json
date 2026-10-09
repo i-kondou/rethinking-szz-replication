@@ -1,0 +1,22 @@
+{
+  "fix_commit": "7546a2336ef8e493f7074f1e6ff887a8174eb1ed",
+  "bic": "fab0f61a025f824f76980d54c3aa2cfa435a8c79",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"Bulkloader and Hadoop IO format config key changes\") introduced a new ConfigElement.getPath() overload where the default behavior excludes the root element name, and updated MapReduceIndexJobs.java, MapReduceIndexManagement.java, CassandraHadoopScanRunner.java, HBaseHadoopScanRunner.java, and CassandraScanJobIT.java to use ConfigElement.getPath(TitanHadoopConfiguration.GRAPH_CONFIG_KEYS) (without root inclusion) for building Hadoop config keys. This changed the namespace prefix used for scan job configuration, breaking the scanjob helper classes since the config keys no longer matched the expected namespace including root. The very next day's fix commit (7546a2336ef8) corrects this by passing `true` to include the root element in these exact same call sites, directly reversing the semantic change made in fab0f61a.",
+  "metrics": {
+    "case_elapsed_seconds": 24.81295,
+    "api_elapsed_seconds": 24.558438,
+    "tool_elapsed_seconds": 0.164197,
+    "other_elapsed_seconds": 0.090319,
+    "api_call_count": 4,
+    "tool_call_count": 4,
+    "prompt_tokens": 36053,
+    "completion_tokens": 1480,
+    "total_tokens": 37533,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:08:08.882857"
+}

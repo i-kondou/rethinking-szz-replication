@@ -1,0 +1,457 @@
+{
+  "metadata": {
+    "timestamp": "20260906_042613",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2357/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 103.288,
+      "max": 103.288,
+      "mean": 103.288,
+      "median": 103.288,
+      "total": 103.288,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 103.148,
+      "max": 103.148,
+      "mean": 103.148,
+      "median": 103.148,
+      "total": 103.148,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 23,
+      "max": 23,
+      "mean": 23,
+      "median": 23,
+      "total": 23,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 22,
+      "max": 22,
+      "mean": 22,
+      "median": 22,
+      "total": 22,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 9263,
+      "max": 9263,
+      "mean": 9263,
+      "median": 9263,
+      "total": 9263,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 24603,
+      "max": 24603,
+      "mean": 24603,
+      "median": 24603,
+      "total": 24603,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 160947,
+      "max": 160947,
+      "mean": 160947,
+      "median": 160947,
+      "total": 160947,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.3349131,
+      "max": 0.3349131,
+      "mean": 0.3349131,
+      "median": 0.3349131,
+      "total": 0.3349131,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 22,
+      "max": 22,
+      "mean": 22,
+      "median": 22,
+      "total": 22,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Glob": 1,
+      "Grep": 15,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 67,
+      "max": 67,
+      "mean": 67,
+      "median": 67,
+      "total": 67,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2357",
+      "fix_commit_hash": "e14efc033c90f363a3ce21445c5177f1077fa4a3",
+      "ground_truth_bics": [
+        "987608aa247272fa809414e8d07379fe1e6abfb2"
+      ],
+      "predicted_bics": [
+        "987608aa247272fa809414e8d07379fe1e6abfb2"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2357",
+      "fix_commit": "e14efc033c90f363a3ce21445c5177f1077fa4a3",
+      "ground_truth_bics": [
+        "987608aa247272fa809414e8d07379fe1e6abfb2"
+      ],
+      "total_candidates": 67,
+      "gt_in_candidates": true,
+      "selected_commit": "987608aa247272fa809414e8d07379fe1e6abfb2",
+      "selected_index": 65,
+      "confidence": "HIGH",
+      "explanation": "The fix commit (\"fixed findbug\") addresses three separate static-analysis warnings across two files. The most concrete and directly traceable one is in GitLabLogoutAction.java's getGitLabText() method, where the fix: - renames the local variable `Jenkins j` to `Jenkins jenkins` - removes the unused local variable `GitLabSecurityRealm glsr = (GitLabSecurityRealm) r;` (a classic dead-store/unused-variable FindBugs warning, since `glsr` was assigned but never referenced in that branch) candidate_66",
+      "is_correct": true,
+      "num_files_touched_by_fix": 2,
+      "num_source_files_touched_by_fix": 2,
+      "files_analyzed": [
+        "src/main/java/org/jenkinsci/plugins/GitLabLogoutAction.java",
+        "src/main/java/org/jenkinsci/plugins/GitLabSecurityRealm.java"
+      ],
+      "call_stats": {
+        "duration_s": 103.288,
+        "duration_api_s": 103.148,
+        "num_turns": 23,
+        "input_tokens": 22,
+        "output_tokens": 9263,
+        "cache_creation_input_tokens": 24603,
+        "cache_read_input_tokens": 160947,
+        "total_cost_usd": 0.3349131,
+        "total_tool_calls": 22,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Glob": 1,
+          "Grep": 15,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2357/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2357_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2357/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2357_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2357/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2357_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1840,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1668,
+            "cache_read_input_tokens": 11524,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "GitLabLogoutAction",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "JsonProcessingException",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "setValue",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 707,
+            "cache_read_input_tokens": 13192,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "GitLabLogoutAction|getGitLabText|Jenkins j|glsr",
+                  "path": "candidates/candidate_66.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "GitLabLogoutAction|getGitLabText|Jenkins j|glsr",
+                  "path": "candidates/candidate_67.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1268,
+            "cache_read_input_tokens": 13899,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2357/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2357_candidate_selection/candidates/candidate_67.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 1720,
+            "cache_read_input_tokens": 15167,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2357/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2357_candidate_selection/candidates/candidate_66.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 4160,
+            "cache_read_input_tokens": 16887,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "clientid|ConversionException|JsonProcessingException",
+                  "path": "candidates/candidate_09.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "JsonProcessingException",
+                  "path": "candidates/candidate_55.diff",
+                  "output_mode": "content",
+                  "-n": true,
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "JsonProcessingException",
+                  "path": "candidates/candidate_56.diff",
+                  "output_mode": "content",
+                  "-n": true,
+                  "-C": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2036,
+            "cache_read_input_tokens": 21047,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "clientid|clientsecret|gitlabweburi|gitlabapiuri",
+                  "path": "candidates/candidate_16.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "clientid|clientsecret|gitlabweburi|gitlabapiuri",
+                  "path": "candidates/candidate_17.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "clientid|clientsecret|gitlabweburi|gitlabapiuri",
+                  "path": "candidates/candidate_26.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "clientid|clientsecret|gitlabweburi|gitlabapiuri",
+                  "path": "candidates/candidate_27.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "clientid|clientsecret|gitlabweburi|gitlabapiuri",
+                  "path": "candidates/candidate_46.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "clientid|clientsecret|gitlabweburi|gitlabapiuri",
+                  "path": "candidates/candidate_50.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "clientid|clientsecret|gitlabweburi|gitlabapiuri",
+                  "path": "candidates/candidate_54.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1701,
+            "cache_read_input_tokens": 23083,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2357/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2357_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_66\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit (\"fixed findbug\") addresses three separate static-analysis\nwarnings across two files. The most concrete and directly traceable one is in\nGitLabLogoutAction.java's getGitLabText() method, where the fix:\n  - renames the local variable `Jenkins j` to `Jenkins jenkins`\n  - removes the unused local variable `GitLabSecurityRealm glsr =\n    (GitLabSecurityRealm) r;` (a classic dead-store/unused-variable FindBugs\n    warning, since `glsr` was assigned but never referenced in that branch)\n\ncandidate_66 is the commit that created GitLabLogoutAction.java from scratch\n(`new file mode 100644`), and it introduces getGitLabText() with exactly this\ncode:\n\n    Jenkins j = Jenkins.getInstance();\n    assert j != null;\n    SecurityRealm r = j.getSecurityRealm();\n    if (r instanceof GitLabSecurityRealm) {\n        GitLabSecurityRealm glsr = (GitLabSecurityRealm) r;\n        return \"GitLab\";\n    }\n\nThis is an exact match to the pre-fix code shown in fix_commit_diff.txt,\nincluding the identical variable names `j` and `glsr`. A search across all 67\ncandidates shows GitLabLogoutAction.java is only touched by candidate_66\n(creation) and candidate_67 (the fix itself), so candidate_66 is unambiguously\nthe sole origin of this bug pattern with no intervening modifications.\n\n(Note: the fix also touches an unrelated if/else-to-switch refactor in\nGitLabSecurityRealm.setValue(), whose if/else chain was first introduced much\nearlier in candidate_16, and a redundant JsonProcessingException catch block\nfirst introduced in candidate_55. These are independent, older bug\nintroductions for the other two hunks in this multi-part FindBugs cleanup\ncommit, but candidate_66 provides the cleanest, highest-confidence 1:1 match\nto a specific hunk in the fix.)\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 3217,
+            "cache_read_input_tokens": 24784,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

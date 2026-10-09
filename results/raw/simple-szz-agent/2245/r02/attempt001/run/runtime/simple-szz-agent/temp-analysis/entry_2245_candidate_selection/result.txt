@@ -1,0 +1,27 @@
+SELECTED: candidate_38
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit message states: "The Transactions were being looked up without the readLock and some of the controls for Read and Write lock were broken." The fix diff shows that in JournalImpl.java, getTransactionInfo(txID) (and, for commit/rollback, transactions.remove(txID)) were moved from being called synchronously on the calling thread (outside of journalLock) into the asynchronous Runnable submitted to appendExecutor, where they are now executed only after journalLock.readLock().lock() has been acquired.
+
+candidate_38 is the commit that introduced this exact broken pattern. Before candidate_38, appendAddRecordTransactional/appendUpdateRecordTransactional/appendDeleteRecordTransactional/appendPrepareRecord/appendCommitRecord/appendRollbackRecord all executed synchronously, with the sequence "journalLock.readLock().lock(); try { ...; JournalTransaction tx = getTransactionInfo(txID); synchronized(lockAppend) { appendRecord(...); } } finally { journalLock.readLock().unlock(); }" - i.e. the transaction lookup happened INSIDE the read lock, on the same thread that did the append.
+
+candidate_38 refactored JournalImpl to introduce an asynchronous single-thread `appendExecutor` and moved the actual appendRecord() work (and journalLock.readLock() acquisition) into a Runnable submitted to that executor. Critically, it left `getTransactionInfo(txID)` / `tx.checkErrorCondition()` (and, for commit/rollback, `transactions.remove(txID)`) executing synchronously on the caller's thread BEFORE the Runnable was submitted and BEFORE journalLock.readLock() was acquired:
+
+    final JournalTransaction tx = getTransactionInfo(txID);
+    tx.checkErrorCondition();
+    appendExecutor.submit(new Runnable() {
+       public void run() {
+          journalLock.readLock().lock();
+          ...
+       }
+    });
+
+Because compaction acquires journalLock.writeLock() (and compactorLock) to rebuild/replace the `transactions` map, looking up or removing a JournalTransaction outside of journalLock's read lock creates a race: a transaction can be looked up/removed from the live `transactions` map at the same moment compaction is capturing/replacing that structure, so the compacted transaction's records can be silently dropped ("Missing records after compacting"). This matches the bug description precisely.
+
+The subsequent fix (in fix_commit_diff.txt) undoes exactly this: it moves `getTransactionInfo(txID)` back inside the Runnable, after `journalLock.readLock().lock()`, and likewise moves `transactions.remove(txID)` for commit/rollback into the locked Runnable.
+
+candidate_43, which also touches this exact code, is actually the fix commit itself (its diff is byte-for-byte identical to fix_commit_diff.txt), so it cannot be the bug-introducing commit - it is the resolution. Candidate_39, which also modifies nearby code (submit->execute, SimpleFuture handling), does not touch the placement of getTransactionInfo() relative to the lock; that placement was already broken starting from candidate_38 and simply carried forward unchanged through candidate_39 to candidate_43 (the fix).
+
+Therefore candidate_38 is the commit that introduced the unlocked transaction lookup / broken read-write lock control described in the fix commit message.

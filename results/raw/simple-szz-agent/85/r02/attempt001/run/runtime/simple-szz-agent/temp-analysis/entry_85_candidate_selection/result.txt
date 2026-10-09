@@ -1,0 +1,43 @@
+SELECTED: candidate_214
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit modifies TransfersTableAdapter.java by removing the use of
+`java.util.Currency` / `java.text.NumberFormat` (specifically
+`Currency.getInstance(smartcoinAmount.getAsset().getSymbol())` combined with
+`Helper.newCurrencyFormat(getContext(), currency, locale)`), and restores the
+simpler, previously-working approach:
+`String fiatSymbol = Smartcoins.getFiatSymbol(smartcoinAmount.getAsset());`
+`String eqValue = String.format("~ %s %.2f", fiatSymbol, Util.fromBase(smartcoinAmount));`
+It also removes the `Locale` constructor parameter added to
+`TransfersTableAdapter` and the corresponding call site in
+`BalancesFragment.java`, reverting to the two-argument constructor.
+
+Examining the candidates, candidate_213 has the original, correct code using
+`Smartcoins.getFiatSymbol(...)` (matching what the fix restores). The very
+next relevant change, candidate_214, is the one that introduces the buggy
+pattern the fix later removes:
+- It adds `import java.util.Currency;` and `import java.text.NumberFormat;`
+  to TransfersTableAdapter.java.
+- It comments out the previously working
+  `Helper.fetchStringSharePref(...)` / `new Locale(language)` lines inside
+  `renderAmount`, and instead adds a `Locale locale` field populated via a new
+  constructor parameter.
+- Critically, it replaces the safe `Smartcoins.getFiatSymbol(...)` call with
+  `Currency.getInstance(smartcoinAmount.getAsset().getSymbol())`. Smartcoin
+  asset symbols in this codebase (e.g. "bitUSD", "bitCNY", or other
+  BitShares-specific smartcoin symbols) are not valid ISO 4217 currency
+  codes, so `Currency.getInstance()` throws an `IllegalArgumentException`
+  for any symbol that isn't a real-world currency code, crashing the
+  transfers table rendering — this is the bug the fix commit addresses.
+- It also updates `BalancesFragment.java` to call the new
+  `TransfersTableAdapter(getContext(), locale, account, ...)` constructor,
+  which is exactly the call site the fix commit reverts back to the
+  three-argument version.
+
+Since candidate_214 is the first commit to introduce the
+`Currency.getInstance(smartcoinAmount.getAsset().getSymbol())` /
+`Helper.newCurrencyFormat` logic (which the fix commit directly reverts) and
+no earlier candidate contains this pattern, candidate_214 is the
+bug-introducing commit.

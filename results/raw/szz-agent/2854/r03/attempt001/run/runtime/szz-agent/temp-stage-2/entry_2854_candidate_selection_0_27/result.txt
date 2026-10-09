@@ -1,0 +1,26 @@
+SELECTED: candidate_27
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit inserts a single line into CrossflowHandler.java's startExperiment() method:
+
+    workflow.getSerializer().setClassloader(classLoader);
+
+placed immediately after workflow instantiation and before workflow.setInstanceId(experimentId). Before the fix, that line was blank. This call is essential because the workflow is instantiated via a custom URLClassLoader (to dynamically load workflow-specific classes from an uploaded jar), and the XStream-based Serializer used for inter-node message (de)serialization needs to be told to use that same classloader — otherwise it cannot resolve/deserialize workflow-specific classes (e.g. ClassNotFoundException / deserialization failures) when messages are exchanged over the broker.
+
+Tracing the history of this exact code region:
+
+1. candidate_10 introduced the Serializer class, Workflow.getSerializer(), and the custom URLClassLoader-based instantiation in CrossflowHandler.java, including the setClassloader(classLoader) call — at this point the mechanism was present and correct (in a different position/formatting, but functionally present).
+
+2. candidate_24 (a full-file rewrite of CrossflowHandler.java) changed the workflow instantiation to pass the classLoader directly into the Workflow constructor instead:
+   .getConstructor(Mode.class, ClassLoader.class).newInstance(mode, classLoader);
+   and the explicit `workflow.getSerializer().setClassloader(classLoader);` call was removed from this method (superseded, in appearance, by constructor-based injection).
+
+3. candidate_27 then reverted the constructor call back to the single-argument form:
+   .getConstructor(Mode.class).newInstance(mode);
+   removing the ClassLoader constructor parameter — but WITHOUT restoring the setClassloader() call that had existed prior to candidate_24. This produced the exact "before" state that the fix commit later patches: workflow instantiation followed by a blank line, then setInstanceId(), with no mechanism at all to configure the serializer's classloader.
+
+4. candidate_28's diff is byte-for-byte identical to fix_commit_diff.txt (same before/after blob hashes 61f1c837..0647c89a), confirming candidate_28 is in fact the fix commit itself, and candidate_27 represents the last pre-fix state containing the bug.
+
+Because candidate_27 is the commit that produced the precise defective code (no classloader wired into the serializer) matching the fix's "before" state — and did so by removing the only classloader-passing mechanism present at the time (the constructor parameter from candidate_24) without reinstating the direct setClassloader call — it is the commit that directly introduced the observable bug fixed by this patch. Candidate_24 changed the *mechanism* for propagating the classloader but was not itself necessarily broken (the 2-arg constructor may have handled it internally); candidate_27 is where that mechanism was removed and never replaced, leaving the serializer completely unconfigured.

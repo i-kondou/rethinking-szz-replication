@@ -1,0 +1,324 @@
+{
+  "metadata": {
+    "timestamp": "20260906_033139",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 48.536,
+      "max": 48.536,
+      "mean": 48.536,
+      "median": 48.536,
+      "total": 48.536,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 48.108,
+      "max": 48.108,
+      "mean": 48.108,
+      "median": 48.108,
+      "total": 48.108,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 13,
+      "max": 13,
+      "mean": 13,
+      "median": 13,
+      "total": 13,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 4083,
+      "max": 4083,
+      "mean": 4083,
+      "median": 4083,
+      "total": 4083,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 39532,
+      "max": 39532,
+      "mean": 39532,
+      "median": 39532,
+      "total": 39532,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 128317,
+      "max": 128317,
+      "mean": 128317,
+      "median": 128317,
+      "total": 128317,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.3369741,
+      "max": 0.3369741,
+      "mean": 0.3369741,
+      "median": 0.3369741,
+      "total": 0.3369741,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 7,
+      "Glob": 1,
+      "Grep": 3,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "907",
+      "fix_commit_hash": "120201466dc5554166a2b5a894f50eb508a2d904",
+      "ground_truth_bics": [
+        "5c283580b03c1f25347914940097500178f92fe7"
+      ],
+      "predicted_bics": [
+        "02a5f3fff3110cdf2fc8e1770e2cc238efa36dff"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "907",
+      "fix_commit": "120201466dc5554166a2b5a894f50eb508a2d904",
+      "ground_truth_bics": [
+        "5c283580b03c1f25347914940097500178f92fe7"
+      ],
+      "total_candidates": 18,
+      "gt_in_candidates": false,
+      "selected_commit": "02a5f3fff3110cdf2fc8e1770e2cc238efa36dff",
+      "selected_index": 4,
+      "confidence": "HIGH",
+      "explanation": "The fix commit re-adds a \"skip\" parameter to CallerFinder.getStackForCallerOf(...) (defaulting the call site in LogContext.postProcess() to skip=1) and restores the comment explaining that skipping at least 1 stack frame is essential because postProcess() can be overridden, meaning the immediate stack frames above the throwable-creation point may belong to subclass postProcess()/shouldLog() overrides rather than the real caller. Tracing the history of this exact code: - candidate_01 originally i",
+      "is_correct": false,
+      "num_files_touched_by_fix": 2,
+      "num_source_files_touched_by_fix": 2,
+      "files_analyzed": [
+        "api/src/main/java/com/google/common/flogger/LogContext.java",
+        "api/src/main/java/com/google/common/flogger/util/CallerFinder.java"
+      ],
+      "call_stats": {
+        "duration_s": 48.536,
+        "duration_api_s": 48.108,
+        "num_turns": 13,
+        "input_tokens": 14,
+        "output_tokens": 4083,
+        "cache_creation_input_tokens": 39532,
+        "cache_read_input_tokens": 128317,
+        "total_cost_usd": 0.3369741,
+        "total_tool_calls": 12,
+        "tool_calls_by_name": {
+          "Read": 7,
+          "Glob": 1,
+          "Grep": 3,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_907_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 14,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_907_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_907_candidate_selection/fix_commit_diff.txt"
+                }
+              },
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2613,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "CallerFinder",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "Proguard|getStackForCallerOf|postProcess",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 751,
+            "cache_read_input_tokens": 12296,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_907_candidate_selection/candidates/candidate_01.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_907_candidate_selection/candidates/candidate_05.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_907_candidate_selection/candidates/candidate_12.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_907_candidate_selection/candidates/candidate_18.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 27150,
+            "cache_read_input_tokens": 13047,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getStackForCallerOf|for \\(int index\"",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1219,
+            "cache_read_input_tokens": 40197,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/907/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_907_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_05\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit re-adds a \"skip\" parameter to CallerFinder.getStackForCallerOf(...) (defaulting the call site in LogContext.postProcess() to skip=1) and restores the comment explaining that skipping at least 1 stack frame is essential because postProcess() can be overridden, meaning the immediate stack frames above the throwable-creation point may belong to subclass postProcess()/shouldLog() overrides rather than the real caller.\n\nTracing the history of this exact code:\n- candidate_01 originally introduced the call as `getStackForCallerOf(LogContext.class, new Throwable(), 2, stackSize.getMaxDepth())`, i.e. with an explicit skip count of 2, and CallerFinder's loop started at `index = skip`.\n- candidate_05 removed the skip parameter entirely: it changed the call to `getStackForCallerOf(LogContext.class, new Throwable(), stackSize.getMaxDepth())` (dropping the \"2\"), removed the `skip` parameter and its null/negative check from CallerFinder.getStackForCallerOf, and changed the loop from `for (int index = skip; index < depth; index++)` to `for (int index = 0; index < depth; index++)`. It also added the exact comment (later removed by the fix) claiming that starting at index 0 avoids Proguard-related frame-counting problems.\n- This is precisely the code state the fix commit corrects: starting the search at index 0 (no skip) causes the synthetic stack trace to begin scanning from the wrong frame when postProcess() is overridden by a subclass, producing an incorrect/incomplete synthetic stack (the reported \"synthetic stack bug\").\n- candidate_18 is the fix itself (it exactly matches fix_commit_diff.txt), so it is not the bug-introducing commit \u2014 it's included among the candidates but represents the corrective change, not the cause.\n\nSince candidate_05 is the commit that removed the skip-frame logic and replaced it with the flawed \"always start at frame 0\" approach that the fix later reverts, it is the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1514,
+            "cache_read_input_tokens": 41416,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

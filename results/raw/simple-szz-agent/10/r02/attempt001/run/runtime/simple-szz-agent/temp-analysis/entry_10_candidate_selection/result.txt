@@ -1,0 +1,34 @@
+SELECTED: candidate_99
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit ("fixed /help bug") completely removes a caching mechanism for
+command help text: it deletes `CommandParser.reload()`, `AbstractCommand.helpText`
+(a mutable cached field) and `AbstractCommand.reloadText()`, along with the
+overrides of `reloadText()` in `InvalidCommand`, `OnlinePlayerArgCommand`, and
+`PlayerArgCommand`. In their place it makes `getHelpText(prefix)` compute the
+help text on-the-fly every time from an immutable `help` field plus a live call
+to the translation function `t(commandCode)`.
+
+candidate_99 is the commit that originally introduced this exact caching design.
+It added the `Translations`/`t` localization system and, at the same time,
+changed `AbstractCommand` so that `helpText` is computed once from
+`t.get(commandCode)` in the constructor and cached, requiring a separate
+`reloadText()` method to refresh it later (called via the new
+`CommandParser.reload()`, itself invoked from `Server.loadResources()`).
+The same commit added matching `reloadText()` overrides to `InvalidCommand`,
+`OnlinePlayerArgCommand`, and `PlayerArgCommand` — the identical methods the
+fix commit deletes.
+
+Because help text was cached at construction time (before the configured
+server language could be loaded/changed) and only refreshed by the fragile
+`reload()`/`reloadText()` machinery, `/help` could show stale or untranslated
+text whenever the language changed or reload paths were missed. This is
+precisely the bug the fix eliminates by removing the caching layer entirely
+and computing help text dynamically. Since candidate_99 is the commit that
+introduced this caching/reload design (there is no earlier commit with the
+`t.get()`-based `reloadText()` pattern — candidate_55/58/59 only had a simple,
+non-cached-per-translation helpText, and candidate_78 merely added a `parser`
+reference without touching the caching logic), it is the most likely
+bug-introducing commit.

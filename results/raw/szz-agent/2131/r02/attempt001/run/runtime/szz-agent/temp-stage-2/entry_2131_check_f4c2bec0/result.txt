@@ -1,0 +1,42 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (EA-79438, "IAE: PopupHandler.installPopupHandler") reorders two statements in
+the FileHistoryPanelImpl constructor: it moves `myPopupActions = createPopupActions();` to
+BEFORE the call to `createDualView();`. In the buggy version, `createDualView()` runs first and
+calls:
+
+    PopupHandler.installPopupHandler(myDualView.getTreeView(), myPopupActions, ActionPlaces.UPDATE_POPUP, ActionManager.getInstance());
+    PopupHandler.installPopupHandler(myDualView.getFlatView(), myPopupActions, ActionPlaces.UPDATE_POPUP, ActionManager.getInstance());
+
+This passes the current (still unassigned/null) value of the final field `myPopupActions` as an
+argument, since the field is only assigned afterward. `PopupHandler.installPopupHandler` eagerly
+uses/validates the passed ActionGroup at call time, so passing null triggers an
+IllegalArgumentException — exactly the bug described in the fix.
+
+Examining files/old/FileHistoryPanelImpl.java, the analogous constructor also calls
+`createDualView()` before `myPopupActions = createPopupActions();` (same ordering as the buggy
+version). However, the old version's `createDualView()` does NOT use the static
+`PopupHandler.installPopupHandler(...)` API at all. Instead, it registers mouse listeners using
+anonymous inner subclasses of PopupHandler:
+
+    myDualView.getTreeView().addMouseListener(new PopupHandler() {
+      public void invokePopup(Component comp, int x, int y) {
+        ActionPopupMenu popupMenu = ActionManager.getInstance()
+          .createActionPopupMenu(ActionPlaces.UPDATE_POPUP, myPopupActions);
+        popupMenu.getComponent().show(comp, x, y);
+      }
+    });
+
+Here `myPopupActions` is only read lazily inside `invokePopup()`, which executes later in
+response to an actual mouse event — by which time the constructor has already completed and
+`myPopupActions` has been assigned a valid value. There is no eager evaluation of the
+not-yet-initialized field at listener-registration time, so no IllegalArgumentException can occur
+from this code path.
+
+Since the specific buggy code pattern (eagerly passing the uninitialized `myPopupActions` field
+directly into `PopupHandler.installPopupHandler`) does not exist in files/old/ — that API usage
+was introduced later, replacing the old lazy-reference anonymous-inner-class pattern — the bug
+fixed by this commit is not present in the old version.

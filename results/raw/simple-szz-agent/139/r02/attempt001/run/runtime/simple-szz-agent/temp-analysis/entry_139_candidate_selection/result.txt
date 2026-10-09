@@ -1,0 +1,33 @@
+SELECTED: candidate_12
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit narrows the RTL character range check in TextUtils.java from
+`(c >= 0xFE70 && c <= 0xFEFF)` to `(c >= 0xFE70 && c <= 0xFEFE)`, because
+0xFEFF is a special Unicode marker (BOM / zero-width no-break space) that
+should not be treated as an RTL character.
+
+Searching all 13 candidates for the `isRTLCharacter` method (the only place
+this range check exists) shows it is introduced for the first time in
+candidate_12. That commit adds the entire method:
+
+    public static boolean isRTLCharacter(char c) {
+        //range of RTL characters per unicode specification
+        return (c >= 0x0590 && c <= 0x05FF) ||
+               (c >= 0xFB1D && c <= 0xFB4F) ||
+               (c >= 0x0600 && c <= 0x07BF) ||
+               (c >= 0xFB50 && c <= 0xFDFF) ||
+               (c >= 0xFE70 && c <= 0xFEFF)    ;
+    }
+
+This is exactly the buggy range (inclusive of 0xFEFF) that the fix later
+corrects. No earlier candidate (01 through 11) contains this method or range
+check at all, confirming candidate_12 is the first commit to introduce the
+problematic code.
+
+Note: candidate_13 contains a diff that is byte-for-byte identical to the
+fix_commit_diff.txt (same blob hashes 88f725945..54bb57f0a and the exact
+FEFF->FEFE change), meaning candidate_13 is actually the fix commit itself
+rather than a bug-introducing candidate. It was therefore excluded from
+consideration as the introducer.

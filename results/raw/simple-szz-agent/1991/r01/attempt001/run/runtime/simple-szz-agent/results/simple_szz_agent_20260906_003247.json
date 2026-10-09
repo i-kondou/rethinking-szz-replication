@@ -1,0 +1,364 @@
+{
+  "metadata": {
+    "timestamp": "20260906_003247",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1991/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 78.706,
+      "max": 78.706,
+      "mean": 78.706,
+      "median": 78.706,
+      "total": 78.706,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 78.33,
+      "max": 78.33,
+      "mean": 78.33,
+      "median": 78.33,
+      "total": 78.33,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 22,
+      "max": 22,
+      "mean": 22,
+      "median": 22,
+      "total": 22,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 6605,
+      "max": 6605,
+      "mean": 6605,
+      "median": 6605,
+      "total": 6605,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 35890,
+      "max": 35890,
+      "mean": 35890,
+      "median": 35890,
+      "total": 35890,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 166362,
+      "max": 166362,
+      "mean": 166362,
+      "median": 166362,
+      "total": 166362,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.3643896,
+      "max": 0.3643896,
+      "mean": 0.3643896,
+      "median": 0.3643896,
+      "total": 0.3643896,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 13,
+      "max": 13,
+      "mean": 13,
+      "median": 13,
+      "total": 13,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 8,
+      "Grep": 4,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 173,
+      "max": 173,
+      "mean": 173,
+      "median": 173,
+      "total": 173,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "1991",
+      "fix_commit_hash": "618851364c831f071761028722b9ccd99442c998",
+      "ground_truth_bics": [
+        "9dc75038618786d9e4ae64b84a8f6ce7cff2d075"
+      ],
+      "predicted_bics": [
+        "8c16af0293cf9e1591441c5891bbe98ed5b0de1c"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "1991",
+      "fix_commit": "618851364c831f071761028722b9ccd99442c998",
+      "ground_truth_bics": [
+        "9dc75038618786d9e4ae64b84a8f6ce7cff2d075"
+      ],
+      "total_candidates": 173,
+      "gt_in_candidates": true,
+      "selected_commit": "8c16af0293cf9e1591441c5891bbe98ed5b0de1c",
+      "selected_index": 69,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes `int pageNum = 0;` to `int pageNum = -1;` inside the `getPageNumberFor(int index, int position)` method (by the time of the fix, this method lived in BookView.java). This initial value is the return value used to signal \"no valid page number\" / the title page, and initializing it to 0 instead of -1 caused the title page to incorrectly be reported as page number 0 (matching the fix commit message: \"Title-page has page-num 0 again\"). Tracing the history of this method across",
+      "is_correct": false,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/net/nightwhistler/pageturner/view/bookview/BookView.java"
+      ],
+      "call_stats": {
+        "duration_s": 78.706,
+        "duration_api_s": 78.33,
+        "num_turns": 14,
+        "input_tokens": 22,
+        "output_tokens": 6605,
+        "cache_creation_input_tokens": 35890,
+        "cache_read_input_tokens": 166362,
+        "total_cost_usd": 0.3643896,
+        "total_tool_calls": 13,
+        "tool_calls_by_name": {
+          "Read": 8,
+          "Grep": 4,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1991/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1991_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1401,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1991/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1991_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1991/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1991_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 814,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "pageNum = 0",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1991/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1991_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "pageNum",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1991/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1991_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1101,
+            "cache_read_input_tokens": 10497,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1991/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1991_candidate_selection/candidates/candidate_64.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 3526,
+            "cache_read_input_tokens": 11598,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "Looking for pageNumber",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1991/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1991_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 16,
+            "cache_creation_input_tokens": 448,
+            "cache_read_input_tokens": 15124,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1991/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1991_candidate_selection/candidates/candidate_157.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1468,
+            "cache_read_input_tokens": 15572,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1991/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1991_candidate_selection/candidates/candidate_166.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1991/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1991_candidate_selection/candidates/candidate_173.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1330,
+            "cache_read_input_tokens": 17040,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getPageNumberFor",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1991/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1991_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1117,
+            "cache_read_input_tokens": 18370,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1991/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1991_candidate_selection/candidates/candidate_70.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 17824,
+            "cache_read_input_tokens": 19487,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1991/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1991_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_70\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes `int pageNum = 0;` to `int pageNum = -1;` inside the `getPageNumberFor(int index, int position)` method (by the time of the fix, this method lived in BookView.java). This initial value is the return value used to signal \"no valid page number\" / the title page, and initializing it to 0 instead of -1 caused the title page to incorrectly be reported as page number 0 (matching the fix commit message: \"Title-page has page-num 0 again\").\n\nTracing the history of this method across the candidates, `getPageNumberFor` first appears in candidate_70, where it is added as a brand-new method on `PageTurnerSpine.java`:\n\n```java\npublic int getPageNumberFor( int index, int position ) {\n    int pageNum = 0;\n    if ( index >= pageOffsets.size() ) {\n        return -1;\n    }\n    for ( int i=0; i < index; i++ ) {\n        pageNum += pageOffsets.get(i).size();\n    }\n    List<Integer> offsets = pageOffsets.get(index);\n    for ( int i=0; i < offsets.size() && offsets.get(i) < position; i++ ) {\n        pageNum++;\n    }\n    return pageNum;\n}\n```\n\nThis is the very first introduction of the `int pageNum = 0;` initialization that the fix later corrects to `-1`. All subsequent candidates that touch this method (candidate_80, 84, 104, 126, 147, 148, 157, 162, 163, 166) only refactor it (moving it into BookView.java, adding logging, adjusting the offset-comparison loop, adding a null-spine guard, etc.) but retain the same `pageNum = 0` initialization inherited from candidate_70. No candidate earlier than 70 contains this method at all (confirmed via search for \"getPageNumberFor\" and \"pageNum\" across all 173 candidate diffs), so candidate_70 is the commit that introduced the underlying off-by-one/initial-value bug that was eventually fixed.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1977,
+            "cache_read_input_tokens": 37311,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "metadata": {
+    "timestamp": "20260906_105009",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1418/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "1418",
+      "fix_commit_hash": "b1c9edc398212a441cbee9a4bbb047a88f7fa8be",
+      "bug_commit_hash": [
+        "9501cccdbbeec3a4940dee8532b143ad5febe7c8"
+      ],
+      "szz_candidates": [
+        "ed24e8e9bbe0b1de8a24e3b76242b5c55a30384f",
+        "d01944fc4c8b42a1754b47e06a06ba15106ecdbe",
+        "9501cccdbbeec3a4940dee8532b143ad5febe7c8"
+      ],
+      "szz_num_candidates": 3,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "9501cccdbbeec3a4940dee8532b143ad5febe7c8"
+      ],
+      "llm_selected_commit": "9501cccdbbeec3a4940dee8532b143ad5febe7c8",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit (fix_commit_diff.txt) changes TripleAPlayer.java's move() method from this buggy code: if ((nonCombat && !m_soundPlayedAlreadyNonCombatMove) || (!nonCombat && !m_soundPlayedAlreadyCombatMove)) { ClipPlayer.play(SoundPath.CLIP_PHASE_MOVE_NONCOMBAT, id); m_soundPlayedAlreadyNonCombatMove = true; } to two separate if-blocks, one for the non-combat case and one for the combat case (which correctly sets m_soundPlayedAlreadyCombatMove). The bug was that a combined OR-condition triggered",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/1418",
+      "bug_fixing_commit": "b1c9edc398212a441cbee9a4bbb047a88f7fa8be",
+      "bug_inducing_commit": [
+        "9501cccdbbeec3a4940dee8532b143ad5febe7c8"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "DanVanAtta/triplea"
+    }
+  ]
+}

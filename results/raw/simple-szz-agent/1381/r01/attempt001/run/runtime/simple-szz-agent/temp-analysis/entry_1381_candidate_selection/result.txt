@@ -1,0 +1,22 @@
+SELECTED: candidate_01
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit ("fix ci error") modifies android/.../CustomPieChart.java by adding a missing method
+signature `protected void performHighlight(Highlight h, MotionEvent e) {` around a block of code
+that was otherwise sitting directly inside the anonymous PieRadarChartTouchListener subclass's body
+(not inside any method). Bare statements directly in a class body like that are invalid Java syntax
+and would fail to compile — exactly the kind of CI error the fix message references. It also removes
+now-unused imports (View, ChartTouchListener, OnChartGestureListener) that were left over from this
+broken structure.
+
+candidate_01 is the commit that originally created CustomPieChart.java (new file), and it already
+contains this exact broken pattern: the `if (h != null && !h.equalTo(mLastHighlighted)) {...}` block
+placed directly inside the anonymous class body with no enclosing method — an invalid/non-compiling
+construct. This is the first (and only) point where the problematic code was introduced, so
+candidate_01 is the bug-introducing commit.
+
+candidate_02 does not introduce this pattern — its diff on CustomPieChart.java is identical to the
+fix itself (adding the performHighlight method signature), so it is not a plausible bug-introducing
+candidate for this defect.

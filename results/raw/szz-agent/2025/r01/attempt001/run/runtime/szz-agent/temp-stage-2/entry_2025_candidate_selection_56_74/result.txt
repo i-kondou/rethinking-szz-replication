@@ -1,0 +1,36 @@
+SELECTED: candidate_04
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes JettyStart.java's "eXist Home" log line from
+`SystemProperties.getInstance().getSystemProperty("exist.home", "unknown")`
+back to `System.getProperty("exist.home", "unknown")`, and moves the log
+statement to right after the "Running as user" line. The root cause is that
+`SystemProperties.getInstance().getSystemProperty(...)` reads values from the
+bundled `system.properties` resource file (product-version, product-build,
+svn-revision, etc.), but `exist.home` is a JVM system property set at
+runtime/startup, not a value contained in `system.properties`. Looking it up
+through `SystemProperties` therefore always fell back to the default
+"unknown" string instead of the real eXist home directory.
+
+Candidate_04 is the commit that introduced this bug. It added the new
+`org.exist.SystemProperties` class and refactored several places (JettyStart,
+ClientFrame, InteractiveClient, SystemInfo, GetVersion, GetBuild, GetRevision,
+SystemProperty) to use it for reading product metadata. As part of that
+refactor, the previously correct line in JettyStart.java:
+
+    msg = "[eXist Home : " + System.getProperty("exist.home") + "]";
+
+was mistakenly changed to:
+
+    msg = "[eXist Home : " + SystemProperties.getInstance().getSystemProperty("exist.home", "unknown") + "]";
+
+incorrectly treating `exist.home` like the other build/version properties
+that legitimately live in `system.properties`. This is precisely the
+problematic pattern that the fix commit reverts/corrects.
+
+Later candidates (e.g. candidate_09, which restructures/reformats the
+JettyStart logging block) merely carry the buggy line forward without
+altering its semantics, confirming candidate_04 as the original
+bug-introducing commit.

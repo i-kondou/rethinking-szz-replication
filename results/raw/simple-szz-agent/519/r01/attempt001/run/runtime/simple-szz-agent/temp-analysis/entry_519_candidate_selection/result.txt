@@ -1,0 +1,57 @@
+SELECTED: candidate_38
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix changes `AbstractFile.onModification()` so that `validatePath()` is only
+invoked when the `application.filesystem.unique.paths` config switch
+(`validatePathUniqueness`) is enabled:
+
+    boolean valid = true;
+    if (validatePathUniqueness) {
+        valid = validatePath(securityContext, errorBuffer);
+    }
+    return valid && super.onModification(...);
+
+instead of the previous, unconditional:
+
+    final boolean valid = validatePath(securityContext, errorBuffer);
+    return valid && super.onModification(...);
+
+Tracing the history of `AbstractFile.java`:
+
+- candidate_33 introduced the `validatePathUniqueness` static flag (read from
+  `Services.APPLICATION_FILESYSTEM_UNIQUE_PATHS`) and put the actual gating
+  logic *inside* `validatePath()` itself:
+      public boolean validatePath(...) {
+          if (validatePathUniqueness) {
+              ... uniqueness check ...
+          }
+          return true;
+      }
+  At this point both `onCreation` and `onModification` called `validatePath()`
+  unconditionally, but since the config check lived inside `validatePath()`,
+  the switch was still correctly respected everywhere.
+
+- candidate_38 refactored `onCreation` to introduce
+  `validateAndRenameFileOnce()` and wrapped that call with
+  `if (validatePathUniqueness) { ... }` — but at the same time it REMOVED the
+  `if (validatePathUniqueness)` guard from inside `validatePath()` itself
+  (the uniqueness-check code now runs unconditionally whenever
+  `validatePath()` is called). It did NOT touch `onModification()`, which
+  still directly calls `validatePath(securityContext, errorBuffer)` without
+  any surrounding guard. As a result, from this commit onward, renaming/
+  modifying a file always ran the uniqueness validation regardless of the
+  `application.filesystem.unique.paths` setting, while file *creation*
+  correctly respected the switch (via the new guarded
+  `validateAndRenameFileOnce` call). This exact asymmetry — creation respects
+  the switch, modification/renaming does not — is precisely what the fix
+  commit corrects by adding the missing `if (validatePathUniqueness)` guard
+  around the `validatePath()` call in `onModification()`.
+
+Later candidates (candidate_34, candidate_36) only changed the method
+signature of `onModification` (adding `ModificationQueue`) or unrelated
+`isValid` logic, without altering this behavior, so the bug persisted
+unchanged from candidate_38 until it was fixed in the actual fix commit
+(candidate_40 in this list is in fact identical to the fix diff itself, i.e.
+the resolution — not the introduction — of the bug).

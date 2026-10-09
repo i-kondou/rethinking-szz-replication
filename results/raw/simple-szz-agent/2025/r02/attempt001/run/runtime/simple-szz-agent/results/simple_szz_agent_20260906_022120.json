@@ -1,0 +1,325 @@
+{
+  "metadata": {
+    "timestamp": "20260906_022120",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2025/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 59.313,
+      "max": 59.313,
+      "mean": 59.313,
+      "median": 59.313,
+      "total": 59.313,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 59.2,
+      "max": 59.2,
+      "mean": 59.2,
+      "median": 59.2,
+      "total": 59.2,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 5084,
+      "max": 5084,
+      "mean": 5084,
+      "median": 5084,
+      "total": 5084,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 22385,
+      "max": 22385,
+      "mean": 22385,
+      "median": 22385,
+      "total": 22385,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 122367,
+      "max": 122367,
+      "mean": 122367,
+      "median": 122367,
+      "total": 122367,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.24733409999999995,
+      "max": 0.24733409999999995,
+      "mean": 0.24733409999999995,
+      "median": 0.24733409999999995,
+      "total": 0.24733409999999995,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Grep": 3,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 75,
+      "max": 75,
+      "mean": 75,
+      "median": 75,
+      "total": 75,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2025",
+      "fix_commit_hash": "a8726173a9351b718b477ee1579a20c1b9a7a446",
+      "ground_truth_bics": [
+        "3dc5041e20f5949a6773fa00fab20aa6af60ab14"
+      ],
+      "predicted_bics": [
+        "3dc5041e20f5949a6773fa00fab20aa6af60ab14"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2025",
+      "fix_commit": "a8726173a9351b718b477ee1579a20c1b9a7a446",
+      "ground_truth_bics": [
+        "3dc5041e20f5949a6773fa00fab20aa6af60ab14"
+      ],
+      "total_candidates": 75,
+      "gt_in_candidates": true,
+      "selected_commit": "3dc5041e20f5949a6773fa00fab20aa6af60ab14",
+      "selected_index": 58,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes the \"eXist Home\" log line in src/org/exist/jetty/JettyStart.java from `SystemProperties.getInstance().getSystemProperty(\"exist.home\", \"unknown\")` back to `System.getProperty(\"exist.home\", \"unknown\")`. The bug is that `exist.home` is a JVM system property, not one of the build-time properties stored in src/org/exist/system.properties (which only contains things like product-version, product-build, svn-revision, git-commit), so reading it via SystemProperties.getInstance().g",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/org/exist/jetty/JettyStart.java"
+      ],
+      "call_stats": {
+        "duration_s": 59.313,
+        "duration_api_s": 59.2,
+        "num_turns": 10,
+        "input_tokens": 18,
+        "output_tokens": 5084,
+        "cache_creation_input_tokens": 22385,
+        "cache_read_input_tokens": 122367,
+        "total_cost_usd": 0.24733409999999995,
+        "total_tool_calls": 9,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Grep": 3,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2025/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2025_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2025/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2025_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2025/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2025_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 994,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "exist.home",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2025/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2025_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 751,
+            "cache_read_input_tokens": 10678,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "eXist Home",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2025/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2025_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 480,
+            "cache_read_input_tokens": 11429,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "eXist Home",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2025/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2025_candidate_selection/candidates",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 7922,
+            "cache_read_input_tokens": 11909,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2025/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2025_candidate_selection/candidates/candidate_59.diff",
+                  "offset": 160,
+                  "limit": 60
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 2911,
+            "cache_read_input_tokens": 19831,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2025/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2025_candidate_selection/candidates/candidate_66.diff",
+                  "offset": 50,
+                  "limit": 55
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1672,
+            "cache_read_input_tokens": 22742,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2025/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2025_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_59\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes the \"eXist Home\" log line in src/org/exist/jetty/JettyStart.java from\n`SystemProperties.getInstance().getSystemProperty(\"exist.home\", \"unknown\")` back to\n`System.getProperty(\"exist.home\", \"unknown\")`. The bug is that `exist.home` is a JVM system\nproperty, not one of the build-time properties stored in src/org/exist/system.properties (which\nonly contains things like product-version, product-build, svn-revision, git-commit), so reading it\nvia SystemProperties.getInstance().getSystemProperty() always returns \"unknown\".\n\nTracing the history of this line across the candidates:\n- candidate_28/29/33 (and others) correctly used `System.getProperty(\"exist.home\"...)` or\n  `System.getProperty(\"exist.home\")` \u2014 the correct JVM property lookup.\n- candidate_59 performs a refactor that replaces the whole block of version/build/home/svn info\n  lines to uniformly use `SystemProperties.getInstance().getSystemProperty(...)`, changing:\n    `msg = \"[eXist Home : \" + System.getProperty(\"exist.home\") + \"]\";`\n  to:\n    `msg = \"[eXist Home : \" + SystemProperties.getInstance().getSystemProperty(\"exist.home\", \"unknown\") + \"]\";`\n  This is exactly the erroneous pattern the fix commit later reverts. This candidate also\n  introduces the `SystemProperties` class usage and removes the old `Properties sysProperties`\n  loading code, consistent with the broader refactor context.\n- candidate_66 and candidate_69 subsequently only restyle the surrounding code (converting the\n  `msg` variable pattern into direct `logger.info(...)` calls, formatting changes) but retain the\n  same buggy `SystemProperties.getInstance().getSystemProperty(\"exist.home\", \"unknown\")` call,\n  showing the bug was inherited rather than reintroduced.\n- candidate_75 is essentially the fix itself, reverting `exist.home` lookup back to\n  `System.getProperty(...)`.\n\nSince candidate_59 is the first commit in the chronological candidate list to introduce the\nincorrect `SystemProperties.getInstance().getSystemProperty(\"exist.home\", \"unknown\")` call,\nit is the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1369,
+            "cache_read_input_tokens": 24414,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

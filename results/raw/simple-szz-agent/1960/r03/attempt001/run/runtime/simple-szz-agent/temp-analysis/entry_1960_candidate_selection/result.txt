@@ -1,0 +1,27 @@
+SELECTED: candidate_15
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single line back into MainActivityFragment.java:
+
+    gridview = (GridView) mainFragmentView.findViewById(R.id.gridView);
++   gridview.setAdapter(imageAdapter);
+
+immediately after the GridView is found via findViewById, restoring the direct/synchronous binding of the adapter to the grid view.
+
+Tracing the history of this exact line through the candidates shows that candidate_15 is the commit that removed it from this location. Before candidate_15, the code was:
+
+    GridView gridview = (GridView) mainFragmentView.findViewById(R.id.gridView);
+    gridview.setAdapter(imageAdapter);
+
+Candidate_15 changed this to:
+
+     gridview = (GridView) mainFragmentView.findViewById(R.id.gridView);
+    (setAdapter call removed here)
+
+and instead moved the `gridview.setAdapter(imageAdapter);` call into a `getActivity().runOnUiThread(new Runnable() { ... })` block inside the network response callback in `getMovies()`, so the adapter would only be (re)attached asynchronously after a network response was processed, rather than being attached immediately when the view/adapter is created.
+
+This refactor is the root cause of the bug: the GridView no longer gets a synchronous, deterministic adapter assignment on fragment creation, making correct display of the grid dependent on the timing/success of the async network callback. Subsequent candidate_16 only does an unrelated whitespace/formatting and URL/logging cleanup on this file and does not touch the adapter-binding logic at all — the moved-to-callback `setAdapter` call remains untouched through candidate_16. The fix commit then simply reverts candidate_15's change by re-adding the direct `gridview.setAdapter(imageAdapter);` call right after `findViewById`, which is byte-for-byte the same line/location that candidate_15 removed.
+
+(Note: candidate_17 in the provided candidate set is actually identical to the fix diff itself, i.e., index hash 72bd0be..cd46c06 — same before/after blob hashes as fix_commit_diff.txt — so it is not a genuine "candidate" bug-introducing commit but a duplicate of the fix and was excluded from consideration.)

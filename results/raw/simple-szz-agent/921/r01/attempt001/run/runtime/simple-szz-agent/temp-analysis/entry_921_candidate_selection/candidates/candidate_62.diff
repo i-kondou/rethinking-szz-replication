@@ -1,0 +1,256 @@
+diff --git a/JavaSource/org/unitime/timetable/defaults/ApplicationProperty.java b/JavaSource/org/unitime/timetable/defaults/ApplicationProperty.java
+index 8dcdb579..4e61918b 100644
+--- a/JavaSource/org/unitime/timetable/defaults/ApplicationProperty.java
++++ b/JavaSource/org/unitime/timetable/defaults/ApplicationProperty.java
+@@ -1101,6 +1101,16 @@ public enum ApplicationProperty {
+ 	@DefaultValue("true")
+ 	@Description("Room Timetable: allow to see all the rooms (when set to false)")
+ 	EventRoomTimetableAllRooms("unitime.event_timetable.event_rooms_only"),
++	
++	@Type(Boolean.class)
++	@DefaultValue("false")
++	@Description("Event Time Grid: display event title instead of event name in the header")
++	EventGridDisplayTitle("unitime.events.grid_display_title"),
++	
++	@Type(Boolean.class)
++	@DefaultValue("false")
++	@Description("Event ICS Calendar: include instructor names in the event description")
++	EventCalendarDisplayInstructorsInDescription("unitime.events.ics_instructors_in_description"),
+ 
+ 	@Type(Class.class)
+ 	@Implements(Email.class)
+diff --git a/JavaSource/org/unitime/timetable/events/EventPropertiesBackend.java b/JavaSource/org/unitime/timetable/events/EventPropertiesBackend.java
+index 17e20d71..c23d6805 100644
+--- a/JavaSource/org/unitime/timetable/events/EventPropertiesBackend.java
++++ b/JavaSource/org/unitime/timetable/events/EventPropertiesBackend.java
+@@ -104,6 +104,8 @@ public class EventPropertiesBackend extends EventAction<EventPropertiesRpcReques
+ 		if (tooEarly > 0)
+ 			response.setTooEarlySlot(tooEarly);
+ 		
++		response.setGridDisplayTitle(ApplicationProperty.EventGridDisplayTitle.isTrue());
++		
+ 		return response;
+ 	}
+ 	
+diff --git a/JavaSource/org/unitime/timetable/export/events/EventsExportEventsToICal.java b/JavaSource/org/unitime/timetable/export/events/EventsExportEventsToICal.java
+index fcf804aa..e544e937 100644
+--- a/JavaSource/org/unitime/timetable/export/events/EventsExportEventsToICal.java
++++ b/JavaSource/org/unitime/timetable/export/events/EventsExportEventsToICal.java
+@@ -30,6 +30,7 @@ import java.util.TreeSet;
+ import org.joda.time.DateTime;
+ import org.joda.time.DateTimeConstants;
+ import org.springframework.stereotype.Service;
++import org.unitime.timetable.defaults.ApplicationProperty;
+ import org.unitime.timetable.export.ExportHelper;
+ import org.unitime.timetable.gwt.client.events.EventComparator.EventMeetingSortBy;
+ import org.unitime.timetable.gwt.shared.EventInterface;
+@@ -216,8 +217,21 @@ public class EventsExportEventsToICal extends EventsExporter {
+         for (VEvent vevent: events) {
+             vevent.setSequence(event.getSequence());
+             vevent.setUid(event.getId().toString());
+-            vevent.setSummary(event.getName());
+-            vevent.setDescription(event.getInstruction() != null ? event.getInstruction() : event.getType().getName(CONSTANTS));
++            String name = event.getName();
++            String description = (event.hasInstruction() ? event.getInstruction() : event.getType().getName(CONSTANTS));
++			if (event.hasCourseTitles() && event.getType() == EventType.Class && ApplicationProperty.EventGridDisplayTitle.isTrue()) {
++				name = event.getCourseTitles().get(0);
++				if (event.hasInstruction() && event.hasExternalIds())
++					description = event.getInstruction() + " " + event.getExternalIds().get(0);
++				else if (event.hasInstruction() && event.hasSectionNumber())
++					description = event.getInstruction() + " " + event.getSectionNumber();
++			}
++			if (event.hasInstructors() && ApplicationProperty.EventCalendarDisplayInstructorsInDescription.isTrue()) {
++				for (ContactInterface instructor: event.getInstructors())
++					description += "\n" + instructor.getName(MESSAGES);
++			}
++			vevent.setSummary(name);
++            vevent.setDescription(description);
+             
+             if (event.hasTimeStamp()) {
+             	DateTimeStamp ts = new DateTimeStamp(event.getTimeStamp());
+diff --git a/JavaSource/org/unitime/timetable/gwt/client/events/EventResourceTimetable.java b/JavaSource/org/unitime/timetable/gwt/client/events/EventResourceTimetable.java
+index 424e7d38..8f42880c 100644
+--- a/JavaSource/org/unitime/timetable/gwt/client/events/EventResourceTimetable.java
++++ b/JavaSource/org/unitime/timetable/gwt/client/events/EventResourceTimetable.java
+@@ -562,7 +562,7 @@ public class EventResourceTimetable extends Composite implements EventMeetingTab
+ 				if (firstHour <= 7 && firstHour > 0 && ((firstSlot % 12) <= 6)) firstHour--;
+ 				HashMap<Long, String> colors = new HashMap<Long, String>();
+ 				
+-				final TimeGrid tg = new TimeGrid(colors, days, (int)(1000 / nrDays), 55, true, false, (firstHour < 7 ? firstHour : 7), (lastHour > 18 ? lastHour : 18));
++				final TimeGrid tg = new TimeGrid(colors, days, (int)(1000 / nrDays), 55, true, false, (firstHour < 7 ? firstHour : 7), (lastHour > 18 ? lastHour : 18), EventResourceTimetable.this);
+ 				tg.setResourceType(getResourceType());
+ 				tg.setSelectedWeeks(iWeekPanel.getSelected());
+ 				tg.setRoomResources(iRoomPanel.getSelected());
+@@ -1002,7 +1002,7 @@ public class EventResourceTimetable extends Composite implements EventMeetingTab
+ 				if (keepSelection) selections = iTimeGrid.getSelections();
+ 				iTimeGrid.destroy();
+ 			}
+-			iTimeGrid = new TimeGrid(colors, days, (int)(0.9 * ToolBox.getClientWidth() / nrDays), false, false, (firstHour < 7 ? firstHour : 7), (lastHour > 18 ? lastHour : 18));
++			iTimeGrid = new TimeGrid(colors, days, (int)(0.9 * ToolBox.getClientWidth() / nrDays), false, false, (firstHour < 7 ? firstHour : 7), (lastHour > 18 ? lastHour : 18), this);
+ 			iTimeGrid.addMeetingClickHandler(iMeetingClickHandler);
+ 
+ 			iTimeGrid.clear();
+diff --git a/JavaSource/org/unitime/timetable/gwt/client/events/EventRoomAvailability.java b/JavaSource/org/unitime/timetable/gwt/client/events/EventRoomAvailability.java
+index 87f3f2e5..db3a5dfd 100644
+--- a/JavaSource/org/unitime/timetable/gwt/client/events/EventRoomAvailability.java
++++ b/JavaSource/org/unitime/timetable/gwt/client/events/EventRoomAvailability.java
+@@ -244,7 +244,7 @@ public class EventRoomAvailability extends Composite implements AcademicSessionF
+ 							endHour = Math.min(24, (17 + iSelectedTimes.getEnd()) / 12);
+ 						}
+ 
+-						final TimeGrid grid = new TimeGrid(colors, days, (int)(1000 / days.length), 55, true, false, startHour, endHour);
++						final TimeGrid grid = new TimeGrid(colors, days, (int)(1000 / days.length), 55, true, false, startHour, endHour, EventRoomAvailability.this);
+ 						grid.setResourceType(ResourceType.ROOM);
+ 						grid.setSelectedWeeks(weeks);
+ 						List<ResourceInterface> rooms = new ArrayList<EventInterface.ResourceInterface>(iSelectedRooms);
+@@ -304,7 +304,7 @@ public class EventRoomAvailability extends Composite implements AcademicSessionF
+ 							endHour = Math.min(24, (17 + iSelectedTimes.getEnd()) / 12);
+ 						}
+ 
+-						final TimeGrid grid = new TimeGrid(colors, days, (int)(1000 / days.length), 55, true, false, startHour, endHour);
++						final TimeGrid grid = new TimeGrid(colors, days, (int)(1000 / days.length), 55, true, false, startHour, endHour, EventRoomAvailability.this);
+ 						grid.setResourceType(ResourceType.ROOM);
+ 						grid.setSelectedWeeks(weeks);
+ 						List<ResourceInterface> rooms = new ArrayList<EventInterface.ResourceInterface>(); rooms.add(room);
+@@ -936,7 +936,7 @@ public class EventRoomAvailability extends Composite implements AcademicSessionF
+ 					endHour = Math.min(24, (17 + iSelectedTimes.getEnd()) / 12);
+ 				}
+ 
+-				TimeGrid grid = new TimeGrid(colors, days, (int)(0.9 * ToolBox.getClientWidth() / days.length), false, false, startHour, endHour);
++				TimeGrid grid = new TimeGrid(colors, days, (int)(0.9 * ToolBox.getClientWidth() / days.length), false, false, startHour, endHour, this);
+ 				grid.setResourceType(ResourceType.ROOM);
+ 				grid.setSelectedWeeks(weeks);
+ 				List<ResourceInterface> rooms = new ArrayList<EventInterface.ResourceInterface>(iSelectedRooms);
+@@ -1008,7 +1008,7 @@ public class EventRoomAvailability extends Composite implements AcademicSessionF
+ 					endHour = Math.min(24, (17 + iSelectedTimes.getEnd()) / 12);
+ 				}
+ 
+-				TimeGrid grid = new TimeGrid(colors, days, (int)(0.9 * ToolBox.getClientWidth() / days.length), false, false, startHour, endHour);
++				TimeGrid grid = new TimeGrid(colors, days, (int)(0.9 * ToolBox.getClientWidth() / days.length), false, false, startHour, endHour, this);
+ 				grid.setResourceType(ResourceType.ROOM);
+ 				grid.setSelectedWeeks(weeks);
+ 				List<ResourceInterface> rooms = new ArrayList<EventInterface.ResourceInterface>(); rooms.add(room);
+diff --git a/JavaSource/org/unitime/timetable/gwt/client/events/TimeGrid.java b/JavaSource/org/unitime/timetable/gwt/client/events/TimeGrid.java
+index 54100603..ae2b297c 100644
+--- a/JavaSource/org/unitime/timetable/gwt/client/events/TimeGrid.java
++++ b/JavaSource/org/unitime/timetable/gwt/client/events/TimeGrid.java
+@@ -29,6 +29,7 @@ import java.util.TreeSet;
+ 
+ import org.unitime.timetable.gwt.client.GwtHint;
+ import org.unitime.timetable.gwt.client.ToolBox;
++import org.unitime.timetable.gwt.client.events.EventAdd.EventPropertiesProvider;
+ import org.unitime.timetable.gwt.client.rooms.RoomHint;
+ import org.unitime.timetable.gwt.client.widgets.P;
+ import org.unitime.timetable.gwt.client.widgets.SimpleForm;
+@@ -113,6 +114,7 @@ public class TimeGrid extends Composite {
+ 	
+ 	private List<ResourceInterface> iRoomResources = null;
+ 	private List<WeekInterface> iSelectedWeeks = null;
++	private EventPropertiesProvider iPropertiesProvider = null;
+ 	
+ 	private List<HandlerRegistration> iHandlerRegistrations = new ArrayList<HandlerRegistration>();
+ 	
+@@ -124,17 +126,18 @@ public class TimeGrid extends Composite {
+ 	
+ 	private Mode iMode = Mode.FILLSPACE;
+ 	
+-	public TimeGrid() {
+-		this(new HashMap<Long, String>(), new int[] {0, 1, 2, 3, 4}, (int) (0.9 * ToolBox.getClientWidth() / 5), false, false, 0, 24);
++	public TimeGrid(EventPropertiesProvider properties) {
++		this(new HashMap<Long, String>(), new int[] {0, 1, 2, 3, 4}, (int) (0.9 * ToolBox.getClientWidth() / 5), false, false, 0, 24, properties);
+ 	}
+ 	
+-	public TimeGrid(HashMap<Long, String> colors, int[] days, int cellWidth, boolean print, boolean scroll, int start, int end) {
+-		this(colors, days, cellWidth, 60, print, scroll, start, end);
++	public TimeGrid(HashMap<Long, String> colors, int[] days, int cellWidth, boolean print, boolean scroll, int start, int end, EventPropertiesProvider properties) {
++		this(colors, days, cellWidth, 60, print, scroll, start, end, properties);
+ 	}
+ 	
+ 	private List<P> iDayLabels = new ArrayList<P>();
+ 	
+-	public TimeGrid(HashMap<Long, String> colors, int[] days, int cellWidth, int cellHeight, boolean print, boolean scroll, int start, int end) {
++	public TimeGrid(HashMap<Long, String> colors, int[] days, int cellWidth, int cellHeight, boolean print, boolean scroll, int start, int end, EventPropertiesProvider properties) {
++		iPropertiesProvider = properties;
+ 		iColors = colors;
+ 		iDays = days;
+ 		iCellWidth = cellWidth;
+@@ -284,7 +287,7 @@ public class TimeGrid extends Composite {
+ 		int firstHour = firstSlot / 12;
+ 		if (firstHour <= 7 && firstHour > 0 && ((firstSlot % 12) <= 6)) firstHour--;
+ 		int lastHour = (11 + lastSlot()) / 12;
+-		TimeGrid tg = new TimeGrid(iColors, iDays, (int) (1000 / iDays.length), true, false, (firstHour < 7 ? firstHour : 7), (lastHour > 18 ? lastHour : 18));
++		TimeGrid tg = new TimeGrid(iColors, iDays, (int) (1000 / iDays.length), true, false, (firstHour < 7 ? firstHour : 7), (lastHour > 18 ? lastHour : 18), iPropertiesProvider);
+ 		tg.setSelectedWeeks(getSelectedWeeks());
+ 		tg.setRoomResources(getRoomResources());
+ 		tg.setResourceType(getResourceType());
+@@ -728,12 +731,34 @@ public class TimeGrid extends Composite {
+ 			if (event.hasSponsor())
+ 				notes.add(event.getSponsor().getName());
+ 			
++			String eventName = event.getName();
++			if (iPropertiesProvider.getProperties() != null && iPropertiesProvider.getProperties().isGridDisplayTitle() && event.hasCourseTitles() && event.getType() == EventType.Class) {
++				eventName = event.getCourseTitles().get(0);
++				if (event.hasInstruction()) {
++					if (event.hasExternalIds()) {
++						eventName += " (" + event.getInstruction() + " " + event.getExternalIds().get(0) + ")";
++					} else if (event.hasSectionNumber())
++						eventName += " (" + event.getInstruction() + " " + event.getSectionNumber() + ")";
++					else
++						eventName += " (" + event.getInstruction() + ")";
++				} else if (event.getType() != EventType.Unavailabile) {
++					eventName += " (" + CONSTANTS.eventTypeShort()[event.getType().ordinal()] + ")";
++				}
++			} else {
++				if (event.hasInstruction()) 
++					eventName += " (" + event.getInstruction() + ")";
++				else if (event.getType() != EventType.Unavailabile)
++					eventName += " (" + CONSTANTS.eventTypeShort()[event.getType().ordinal()] + ")";
++			}
++			if (!meeting.isApproved())
++				eventName = MESSAGES.gridEventHeaderNotApproved(eventName);
++			
+ 			Meeting m = addMeeting(
+ 					event, meeting,
+ 					meeting.getGridIndex(), meeting.getStartSlot(), 
+ 					meeting.getEndSlot() - meeting.getStartSlot(),
+ 					meeting.getStartOffset(), meeting.getEndOffset(),
+-					(meeting.isApproved() ? "" : "<i>") + event.getName() + (event.getType() == EventType.Unavailabile ? "" : " (" + (event.hasInstruction() ? event.getInstruction() : event.getType()) + ")" + (meeting.isApproved() ? "" : " -- not approved</i>")), 
++					eventName, 
+ 					notes, color, weekIndex(meeting), !isVerticalSplitByWeek() && iMode == Mode.OVERLAP ? rooms.size() : days.size(), done, dateString, roomString);
+ 			if (m != null) done.add(m);
+ 		}
+diff --git a/JavaSource/org/unitime/timetable/gwt/resources/GwtMessages.java b/JavaSource/org/unitime/timetable/gwt/resources/GwtMessages.java
+index 36225129..af718e70 100644
+--- a/JavaSource/org/unitime/timetable/gwt/resources/GwtMessages.java
++++ b/JavaSource/org/unitime/timetable/gwt/resources/GwtMessages.java
+@@ -3142,4 +3142,7 @@ public interface GwtMessages extends Messages {
+ 	
+ 	@DefaultMessage("Session Default")
+ 	String examStatusDefault();
++	
++	@DefaultMessage("<i>{0} -- not approved</i>")
++	String gridEventHeaderNotApproved(String header);
+ }
+\ No newline at end of file
+diff --git a/JavaSource/org/unitime/timetable/gwt/shared/EventInterface.java b/JavaSource/org/unitime/timetable/gwt/shared/EventInterface.java
+index 8686d121..57867ae0 100644
+--- a/JavaSource/org/unitime/timetable/gwt/shared/EventInterface.java
++++ b/JavaSource/org/unitime/timetable/gwt/shared/EventInterface.java
+@@ -1779,6 +1779,7 @@ public class EventInterface implements Comparable<EventInterface>, IsSerializabl
+ 		private Map<String, String> iFilterDefaults = null;
+ 		private Integer iTooEarlySlot = null;
+ 		private boolean iCanEditAcademicTitle = false;
++		private boolean iGridDisplayTitle = false;
+ 	
+ 		public EventPropertiesRpcResponse() {}
+ 		
+@@ -1849,6 +1850,9 @@ public class EventInterface implements Comparable<EventInterface>, IsSerializabl
+ 		
+ 		public boolean isCanEditAcademicTitle() { return iCanEditAcademicTitle; }
+ 		public void setCanEditAcademicTitle(boolean canEditAcademicTitle) { iCanEditAcademicTitle = canEditAcademicTitle; }
++		
++		public boolean isGridDisplayTitle() { return iGridDisplayTitle; }
++		public void setGridDisplayTitle(boolean gridDisplayTitle) { iGridDisplayTitle = gridDisplayTitle; }
+ 	}
+ 	
+ 	public static class EventDetailRpcRequest extends EventRpcRequest<EventInterface> {

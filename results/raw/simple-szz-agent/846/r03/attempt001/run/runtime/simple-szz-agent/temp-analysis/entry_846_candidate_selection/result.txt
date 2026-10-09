@@ -1,0 +1,23 @@
+SELECTED: candidate_161
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a null check `if (myDataChoices != null)` around a block of code in DisplayControlImpl.java's method that inspects `myDataChoices.get(0)` to determine whether a DerivedDataChoice's time driver property should be used. Before the fix, the code accessed `myDataChoices.size()` directly, which would throw a NullPointerException whenever `myDataChoices` was null at that point in execution.
+
+candidate_161 is the commit that first introduces this exact block of code:
+
+    if(myDataChoices.size() > 0 && myDataChoices.get(0) instanceof DerivedDataChoice){
+        List cdcs = ((DerivedDataChoice)myDataChoices.get(0)).getChoices();
+        if(cdcs.size() > 0)  {
+            DataChoice dc = (DataChoice)cdcs.get(0);
+            DataSelection ds = dc.getDataSelection();
+            if(ds != null){
+                ...
+            }
+        }
+    }
+
+This is a brand-new code addition (not present in any earlier candidate, since candidate_01 does not contain a `usesTimeDriver`-related block at all), and it lacks any null-guard for `myDataChoices`. Every subsequent candidate up through candidate_174 (the fix itself) preserves this same unguarded access, only reformatting whitespace/braces (see candidate_162, candidate_167) without adding the necessary null check. candidate_174 is the actual fix commit, which finally wraps the block in `if (myDataChoices != null)`.
+
+Since candidate_161 is the first commit to introduce the vulnerable pattern (direct access to `myDataChoices.size()`/`.get(0)` without a preceding null check), it is the bug-introducing commit.

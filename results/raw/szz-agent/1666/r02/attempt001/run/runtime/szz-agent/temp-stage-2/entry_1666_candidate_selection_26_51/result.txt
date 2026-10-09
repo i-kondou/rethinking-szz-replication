@@ -1,0 +1,45 @@
+SELECTED: candidate_25
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit's diff is a single-line addition of `break;` right after the debug
+log statement "Cover downloaded for ... from " + url + ", size=" + coverBytes.length,
+inside a `for (String url : coverUrls)` loop in CoverManager.java (the method that
+downloads cover bytes by trying each candidate URL returned by a cover retriever).
+
+Looking at candidate_25.diff, it refactors several methods in CoverManager.java
+(and AbstractWebCover.java) from an early-return style to a single-return-point
+style, in order to add proper resource cleanup (closing streams/buffers) in
+`finally` blocks. As part of this refactor, the exact same code location that the
+fix later patches was changed from:
+
+    d(..., "Cover downloaded for " + coverInfo.getAlbum() + " from " + url + ", size=" + coverBytes.length);
+    return coverBytes;
+
+to:
+
+    d(..., "Cover downloaded for " + coverInfo.getAlbum() + " from " + url + ", size=" + coverBytes.length);
+
+i.e. the `return coverBytes;` statement was deleted (consistent with the broader
+single-return refactor happening in that same commit for `download()`,
+`executeGetRequestWithConnection()`, `cleanGetRequest()`, `isWifi()`, etc.), but
+unlike a plain method return, this particular `return` was also implicitly
+breaking out of the enclosing `for (String url : coverUrls)` loop. No `break;`
+was added to preserve that loop-exit behavior.
+
+As a result, after this commit, once a cover was successfully downloaded from one
+candidate URL, the loop would keep iterating over the remaining candidate URLs
+returned by the cover retriever (instead of stopping), potentially overwriting
+the already-successfully-downloaded `coverBytes` with the result (or failure) of
+a subsequent, unnecessary download attempt. This is especially impactful for the
+local cover retriever, which can produce multiple candidate URLs (different
+subfolders/extensions/filenames), matching the fix commit's message "Fix local
+cover art". The fix commit simply re-adds the missing `break;` to restore the
+original loop-exit-on-success behavior while keeping the refactored
+single-return/resource-cleanup structure intact.
+
+No other candidate touches this loop or this code region in a way that removes
+the break/return-on-success behavior; candidate_24 (which chronologically
+touches the same method afterward) only adds stream-closing logic in the
+`finally` block and does not affect this control flow.

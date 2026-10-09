@@ -1,0 +1,26 @@
+SELECTED: candidate_279
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the escape-key handling in Minecraft.java from:
+
+    if (!packetHandler.isLoadingLevel){
+        pause();
+    } else {
+        Mouse.setGrabbed(false);
+    }
+
+to:
+
+    if (!packetHandler.isLoadingLevel || !isOnline()){
+        pause();
+    } else {
+        Mouse.setGrabbed(false);
+    }
+
+candidate_279.diff introduces exactly this pre-fix code. Before candidate_279, pressing Escape unconditionally called pause() (`if (Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) { pause(); }`). candidate_279 changed this to only call pause() when packetHandler.isLoadingLevel is false, otherwise it just ungrabs the mouse without opening the pause menu.
+
+This introduced the bug: in singleplayer, the game reuses the same networking/packet-handling machinery (an internal server), and packetHandler.isLoadingLevel apparently never gets reliably reset to false in that mode, so the `!packetHandler.isLoadingLevel` condition stays false and pause() is never invoked, meaning the pause menu never shows up when pressing Escape in singleplayer. The fix restores correct behavior by adding `|| !isOnline()`, which forces pause() to be called whenever the player isn't in an online (multiplayer) session, regardless of the isLoadingLevel flag's state.
+
+Since candidate_279 is the exact commit that introduced this conditional (replacing the previous unconditional pause() call), it is the bug-introducing commit.

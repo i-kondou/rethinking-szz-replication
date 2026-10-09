@@ -1,0 +1,23 @@
+SELECTED: candidate_08
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a null check to CourseEvent.getSession():
+    public Session getSession() {
++       if (getRelatedCourses() == null) return null;
+        for (RelatedCourseInfo rc: getRelatedCourses())
+            return rc.getCourse().getInstructionalOffering().getSession();
+        return null;
+    }
+This addresses a NullPointerException that occurs when getSession() is called before the event's related courses have been set (e.g. during creation of a new course-related event).
+
+Searching the candidate diffs for the introduction of this getSession() method in JavaSource/org/unitime/timetable/model/CourseEvent.java shows it does not exist in candidates 01, 02, 06, or 07 (CourseEvent.java is touched there for unrelated changes, e.g. adding getStudentClassEnrollments()). The method first appears as newly added code in candidate_08:
+
+    +       public Session getSession() {
+    +               for (RelatedCourseInfo rc: getRelatedCourses())
+    +                       return rc.getCourse().getInstructionalOffering().getSession();
+    +               return null;
+    +       }
+
+with no null check on getRelatedCourses() — exactly the code that the fix later patches. Candidate_09's diff also contains this same hunk (it appears to carry forward/duplicate the same file change alongside an additional Release-Notes.xml edit), but since candidates are ordered chronologically and candidate_08 is the earlier of the two containing this exact addition, candidate_08 is the commit that FIRST introduced the unguarded getSession() implementation, making it the bug-introducing commit.

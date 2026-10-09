@@ -1,0 +1,352 @@
+{
+  "metadata": {
+    "timestamp": "20260906_033242",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/921/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 53.088,
+      "max": 53.088,
+      "mean": 53.088,
+      "median": 53.088,
+      "total": 53.088,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 52.711,
+      "max": 52.711,
+      "mean": 52.711,
+      "median": 52.711,
+      "total": 52.711,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 4713,
+      "max": 4713,
+      "mean": 4713,
+      "median": 4713,
+      "total": 4713,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 44861,
+      "max": 44861,
+      "mean": 44861,
+      "median": 44861,
+      "total": 44861,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 169221,
+      "max": 169221,
+      "mean": 169221,
+      "median": 169221,
+      "total": 169221,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.39068729999999996,
+      "max": 0.39068729999999996,
+      "mean": 0.39068729999999996,
+      "median": 0.39068729999999996,
+      "total": 0.39068729999999996,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 11,
+      "max": 11,
+      "mean": 11,
+      "median": 11,
+      "total": 11,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Glob": 1,
+      "Grep": 4,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 66,
+      "max": 66,
+      "mean": 66,
+      "median": 66,
+      "total": 66,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 4,
+      "max": 4,
+      "mean": 4,
+      "median": 4,
+      "total": 4,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 4,
+      "max": 4,
+      "mean": 4,
+      "median": 4,
+      "total": 4,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "921",
+      "fix_commit_hash": "4ca7fd19017191f04546c2f90ab8b1d29e44459d",
+      "ground_truth_bics": [
+        "592152dea3d2b8489ffd7b639f416ede9488eaaf"
+      ],
+      "predicted_bics": [
+        "8359c9faaa074a4bbcdc677971a42ae17133356a"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "921",
+      "fix_commit": "4ca7fd19017191f04546c2f90ab8b1d29e44459d",
+      "ground_truth_bics": [
+        "592152dea3d2b8489ffd7b639f416ede9488eaaf"
+      ],
+      "total_candidates": 66,
+      "gt_in_candidates": true,
+      "selected_commit": "8359c9faaa074a4bbcdc677971a42ae17133356a",
+      "selected_index": 55,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes iCalendar export code in EventEmail.java, EventsExportEventsToICal.java, CalendarServlet.java, and CalendarExport.java, replacing calls to `Biweekly.write(ical).go(...)` with a manually constructed `biweekly.io.text.ICalWriter` whose timezone info is explicitly set via `writer.getTimezoneInfo().setDefaultTimeZone(TimeZone.getDefault())`. The commit message states the fix \"ensure[s] that the exported dates are in the local timezone\" and \"fixes the issue with daylight saving",
+      "is_correct": false,
+      "num_files_touched_by_fix": 4,
+      "num_source_files_touched_by_fix": 4,
+      "files_analyzed": [
+        "JavaSource/org/unitime/timetable/events/EventEmail.java",
+        "JavaSource/org/unitime/timetable/export/events/EventsExportEventsToICal.java",
+        "JavaSource/org/unitime/timetable/gwt/server/CalendarServlet.java",
+        "JavaSource/org/unitime/timetable/onlinesectioning/updates/CalendarExport.java"
+      ],
+      "call_stats": {
+        "duration_s": 53.088,
+        "duration_api_s": 52.711,
+        "num_turns": 12,
+        "input_tokens": 20,
+        "output_tokens": 4713,
+        "cache_creation_input_tokens": 44861,
+        "cache_read_input_tokens": 169221,
+        "total_cost_usd": 0.39068729999999996,
+        "total_tool_calls": 11,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Glob": 1,
+          "Grep": 4,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/921/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_921_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 20,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/921/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_921_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/921/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_921_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 3886,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1128,
+            "cache_read_input_tokens": 13569,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "Biweekly\\.write|EventEmail\\.java|EventsExportEventsToICal\\.java|CalendarServlet\\.java|CalendarExport\\.java",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1089,
+            "cache_read_input_tokens": 14697,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "Biweekly\\.write",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 301,
+            "cache_read_input_tokens": 15786,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "Biweekly\\.write",
+                  "path": "candidates/candidate_66.diff",
+                  "output_mode": "content",
+                  "-B": 5,
+                  "-A": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "Biweekly\\.write",
+                  "path": "candidates/candidate_56.diff",
+                  "output_mode": "content",
+                  "-B": 5,
+                  "-A": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2482,
+            "cache_read_input_tokens": 16087,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/921/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_921_candidate_selection/candidates/candidate_66.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 4077,
+            "cache_read_input_tokens": 18569,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/921/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_921_candidate_selection/candidates/candidate_56.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 23860,
+            "cache_read_input_tokens": 22646,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/921/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_921_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_56\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes iCalendar export code in EventEmail.java, EventsExportEventsToICal.java, CalendarServlet.java, and CalendarExport.java, replacing calls to `Biweekly.write(ical).go(...)` with a manually constructed `biweekly.io.text.ICalWriter` whose timezone info is explicitly set via `writer.getTimezoneInfo().setDefaultTimeZone(TimeZone.getDefault())`. The commit message states the fix \"ensure[s] that the exported dates are in the local timezone\" and \"fixes the issue with daylight savings.\" This shows the root cause was that the Biweekly library's default `Biweekly.write(ical).go()` convenience method did not use the JVM's local/default timezone when serializing date-time properties, so exported iCalendar dates were not adjusted for local time (and thus mishandled daylight saving time transitions).\n\nCandidate_56 is exactly the commit that introduced this exact API usage pattern across all four affected files. It migrates the iCalendar export logic in EventEmail.java, EventsExportEventsToICal.java, and CalendarServlet.java (and sets up CalendarExport.java's related exporter) from manual PrintWriter-based ICS text generation to the biweekly library, introducing the `import biweekly.Biweekly;` and the `Biweekly.write(ical).go(...)` calls that the fix later removes. Before this commit, dates were formatted manually using explicit UTC-based `SimpleDateFormat` instances (`iDateFormat`/`iTimeFormat` set to `TimeZone.getTimeZone(\"UTC\")`), which used a fixed, correctly-labeled UTC (\"Z\") suffix. Candidate_56 switched to biweekly's DateStart/DateEnd properties with `setTimezoneId(TimeZone.getDefault().getID())` but relying on `Biweekly.write(ical).go()`'s default serialization, which did not correctly honor that local timezone id when writing the VTIMEZONE/date values, producing the DST bug fixed later.\n\nOnly two candidates in the full history (candidate_56 and candidate_66) contain the `Biweekly.write` call pattern targeted by the fix. Candidate_66 is not the bug-introducing commit \u2014 its diff is effectively the same as the fix_commit_diff.txt itself (it replaces `Biweekly.write(ical).go()` with the corrected `ICalWriter` + `setDefaultTimeZone` code), meaning it IS the fix, not the bug's origin. Candidate_56, which is chronologically much earlier, is where the problematic `Biweekly.write(ical).go()` calls were first introduced into the codebase for all four affected files, making it the true bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1753,
+            "cache_read_input_tokens": 46506,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

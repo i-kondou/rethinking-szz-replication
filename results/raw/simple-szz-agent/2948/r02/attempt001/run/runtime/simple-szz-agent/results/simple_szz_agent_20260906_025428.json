@@ -1,0 +1,277 @@
+{
+  "metadata": {
+    "timestamp": "20260906_025428",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2948/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 39.209,
+      "max": 39.209,
+      "mean": 39.209,
+      "median": 39.209,
+      "total": 39.209,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 39.144,
+      "max": 39.144,
+      "mean": 39.144,
+      "median": 39.144,
+      "total": 39.144,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 8,
+      "max": 8,
+      "mean": 8,
+      "median": 8,
+      "total": 8,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 3349,
+      "max": 3349,
+      "mean": 3349,
+      "median": 3349,
+      "total": 3349,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 20136,
+      "max": 20136,
+      "mean": 20136,
+      "median": 20136,
+      "total": 20136,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 65263,
+      "max": 65263,
+      "mean": 65263,
+      "median": 65263,
+      "total": 65263,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.1906659,
+      "max": 0.1906659,
+      "mean": 0.1906659,
+      "median": 0.1906659,
+      "total": 0.1906659,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 7,
+      "max": 7,
+      "mean": 7,
+      "median": 7,
+      "total": 7,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Grep": 1,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 440,
+      "max": 440,
+      "mean": 440,
+      "median": 440,
+      "total": 440,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2948",
+      "fix_commit_hash": "0b59466d102d0a56a80e8059846bc4fdd8ffdb9c",
+      "ground_truth_bics": [
+        "b48fd4a88c599647535f6943a8a62b3d77c1d6e5"
+      ],
+      "predicted_bics": [
+        "b48fd4a88c599647535f6943a8a62b3d77c1d6e5"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2948",
+      "fix_commit": "0b59466d102d0a56a80e8059846bc4fdd8ffdb9c",
+      "ground_truth_bics": [
+        "b48fd4a88c599647535f6943a8a62b3d77c1d6e5"
+      ],
+      "total_candidates": 440,
+      "gt_in_candidates": true,
+      "selected_commit": "b48fd4a88c599647535f6943a8a62b3d77c1d6e5",
+      "selected_index": 438,
+      "confidence": "HIGH",
+      "explanation": "The fix commit (fix_commit_diff.txt) modifies NativeND2Reader.java's metadata parsing loop, changing: while (sb.charAt(sb.length() - 1) != ':' && sb.indexOf(\"_\") < 0 && i < lines.length) { to: while ((sb.length() == 0 || sb.charAt(sb.length() - 1) != ':') && sb.indexOf(\"_\") < 0 && i < lines.length) { This addresses a StringIndexOutOfBoundsException that occurs when `sb` is empty (i.e., `sb.length() == 0`), because calling `sb.charAt(sb.length() - 1)` on an empty StringBuffer evaluates to `sb.cha",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "components/formats-gpl/src/loci/formats/in/NativeND2Reader.java"
+      ],
+      "call_stats": {
+        "duration_s": 39.209,
+        "duration_api_s": 39.144,
+        "num_turns": 8,
+        "input_tokens": 12,
+        "output_tokens": 3349,
+        "cache_creation_input_tokens": 20136,
+        "cache_read_input_tokens": 65263,
+        "total_cost_usd": 0.1906659,
+        "total_tool_calls": 7,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Grep": 1,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2948/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2948_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1415,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2948/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2948_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2948/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2948_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 899,
+            "cache_read_input_tokens": 9697,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "sb.charAt\\(sb.length\\(\\) - 1\\)",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2948/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2948_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 487,
+            "cache_read_input_tokens": 10596,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2948/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2948_candidate_selection/candidates/candidate_439.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2948/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2948_candidate_selection/candidates/candidate_440.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 11124,
+            "cache_read_input_tokens": 11083,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2948/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2948_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_439\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit (fix_commit_diff.txt) modifies NativeND2Reader.java's metadata parsing loop, changing:\n\n    while (sb.charAt(sb.length() - 1) != ':' && sb.indexOf(\"_\") < 0 && i < lines.length) {\n\nto:\n\n    while ((sb.length() == 0 || sb.charAt(sb.length() - 1) != ':') && sb.indexOf(\"_\") < 0 && i < lines.length) {\n\nThis addresses a StringIndexOutOfBoundsException that occurs when `sb` is empty (i.e., `sb.length() == 0`), because calling `sb.charAt(sb.length() - 1)` on an empty StringBuffer evaluates to `sb.charAt(-1)`, which is invalid.\n\ncandidate_439 is the commit that introduced this exact buggy line. It refactored the surrounding key-parsing logic from plain String concatenation to StringBuffer usage:\n\n    - String key = lines[i++];\n    - while (!key.endsWith(\":\") && key.indexOf('_') < 0 && i < lines.length) {\n    -   key += \" \" + lines[i++];\n    + StringBuffer sb = new StringBuffer(lines[i++]);\n    + while (sb.charAt(sb.length() - 1) != ':' && sb.indexOf(\"_\") < 0 && i < lines.length) {\n    +   sb.append(\" \");\n    +   sb.append(lines[i++]);\n\nBefore this refactor, the code used `key.endsWith(\":\")`, which safely returns false for an empty string. The refactor to `sb.charAt(sb.length() - 1) != ':'` removed that safety, since StringBuffer's charAt() throws an exception on an empty buffer (which can happen if lines[i] is an empty string, e.g. from consecutive spaces in textString). This is precisely the bug that fix_commit_diff.txt corrects by re-adding the empty-length guard.\n\ncandidate_440 also touches this same line, but it is the fix commit itself (its diff is identical to fix_commit_diff.txt), so it is excluded as the bug-introducing commit. No other candidates reference this line, confirming candidate_439 as the sole introduction point.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1327,
+            "cache_read_input_tokens": 22207,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,189 @@
+This repository contains a bug that was introduced at some point in the past
+and later fixed. Below is the bug-fixing commit information.
+
+Your task is to identify the commit(s) that introduced the bug, and explain
+your reasoning.
+
+[Bug-Fixing Commit]
+- Commit hash: c07165245a6c08faab57bbd08f770b4517bcb817
+- Commit message: fix(imports): fix a static import bug (#1060)
+- Diff:
+```
+commit c07165245a6c08faab57bbd08f770b4517bcb817
+Author: Simon Urli <simon.urli@gmail.com>
+Date:   Tue Dec 20 17:17:02 2016 +0100
+
+    fix(imports): fix a static import bug (#1060)
+---
+ .../reflect/visitor/MinimalImportScanner.java      | 10 ++--
+ .../variable/AccessFullyQualifiedFieldTest.java    |  9 ++++
+ .../variable/testclasses/digest/DigestUtil.java    | 53 ++++++++++++++++++++++
+ .../variable/testclasses/digest/MessageDigest.java | 20 ++++++++
+ 4 files changed, 88 insertions(+), 4 deletions(-)
+
+diff --git a/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java b/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java
+index f3224126..d9022e17 100644
+--- a/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java
++++ b/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java
+@@ -30,6 +30,7 @@ import spoon.reflect.reference.CtReference;
+ import spoon.reflect.reference.CtTypeReference;
+ 
+ import java.util.HashSet;
++import java.util.LinkedList;
+ import java.util.List;
+ import java.util.Set;
+ 
+@@ -133,7 +134,7 @@ public class MinimalImportScanner extends ImportScannerImpl implements ImportSca
+ 			while (!(parent instanceof CtPackage)) {
+ 				if ((parent instanceof CtFieldReference) || (parent instanceof CtExecutableReference)) {
+ 					CtReference parentType = (CtReference) parent;
+-					Set<String> qualifiedNameTokens = new HashSet<>();
++					LinkedList<String> qualifiedNameTokens = new LinkedList<>();
+ 
+ 					// we don't want to test the current ref name, as we risk to create field import and make autoreference
+ 					if (parentType != parent) {
+@@ -157,7 +158,7 @@ public class MinimalImportScanner extends ImportScannerImpl implements ImportSca
+ 								qualifiedNameTokens.add(ctPackage.getSimpleName());
+ 
+ 								CtElement packParent = ctPackage.getParent();
+-								if (packParent.getParent() != null) {
++								if (packParent.getParent() != null && !((CtPackage) packParent).getSimpleName().equals(CtPackage.TOP_LEVEL_PACKAGE_NAME)) {
+ 									ctPackage = (CtPackage) packParent;
+ 								} else {
+ 									ctPackage = null;
+@@ -165,12 +166,13 @@ public class MinimalImportScanner extends ImportScannerImpl implements ImportSca
+ 							}
+ 						}
+ 					}
+-					for (String token : qualifiedNameTokens) {
+-						if (fieldAndMethodsNames.contains(token) || localVariablesOfBlock.contains(token)) {
++					if (!qualifiedNameTokens.isEmpty()) {
++						if (fieldAndMethodsNames.contains(qualifiedNameTokens.getLast()) || localVariablesOfBlock.contains(qualifiedNameTokens.getLast())) {
+ 							return true;
+ 						}
+ 					}
+ 
++
+ 				}
+ 				parent = parent.getParent();
+ 			}
+diff --git a/src/test/java/spoon/test/variable/AccessFullyQualifiedFieldTest.java b/src/test/java/spoon/test/variable/AccessFullyQualifiedFieldTest.java
+index d523e989..0c40056c 100644
+--- a/src/test/java/spoon/test/variable/AccessFullyQualifiedFieldTest.java
++++ b/src/test/java/spoon/test/variable/AccessFullyQualifiedFieldTest.java
+@@ -146,4 +146,13 @@ public class AccessFullyQualifiedFieldTest {
+ 		canBeBuilt(output, 7);
+ 	}
+ 
++	@Test
++	public void testPrivateStaticImportShouldNotBeImportedInSameClass() throws Exception {
++		String output = "target/spooned-" + this.getClass().getSimpleName()+"-privateStatic/";
++		String pathResource = "src/test/java/spoon/test/variable/testclasses/digest/DigestUtil.java";
++		String result = this.buildResourceAndReturnResult(pathResource, output);
++		assertTrue("The result should not contain a static import for STREAM_BUFFER_LENGTH", !result.contains("import static spoon.test.variable.testclasses.digest.DigestUtil.STREAM_BUFFER_LENGTH;"));
++
++		canBeBuilt(output, 7);
++	}
+ }
+diff --git a/src/test/java/spoon/test/variable/testclasses/digest/DigestUtil.java b/src/test/java/spoon/test/variable/testclasses/digest/DigestUtil.java
+new file mode 100644
+index 00000000..0874580c
+--- /dev/null
++++ b/src/test/java/spoon/test/variable/testclasses/digest/DigestUtil.java
+@@ -0,0 +1,53 @@
++/*
++ * Copyright (C) 2006-2016 INRIA and contributors
++ *  Spoon - http://spoon.gforge.inria.fr/
++ *
++ * This software is governed by the CeCILL-C License under French law and abiding by the rules of distribution of free software. You can use, modify and/or redistribute the software under the terms of the CeCILL-C license as circulated by CEA, CNRS and INRIA at http://www.cecill.info.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the CeCILL-C License for more details.
++ *
++ * The fact that you are presently reading this means that you have had knowledge of the CeCILL-C license and that you accept its terms.
++ */
++
++package spoon.test.variable.testclasses.digest;
++
++import java.io.IOException;
++import java.io.InputStream;
++
++/**
++ * Created by urli on 19/12/2016.
++ */
++public class DigestUtil {
++    private static final int STREAM_BUFFER_LENGTH = 1024;
++
++    public static MessageDigest getDigest(final String algorithm) {
++        return new MessageDigest();
++    }
++
++    public static MessageDigest getMd2Digest() {
++        return getDigest(MessageDigest.MD2);
++    }
++    public static MessageDigest getMd5Digest() {
++        return getDigest(MessageDigest.MD5);
++    }
++
++    public static byte[] digest(final java.security.MessageDigest messageDigest, final byte[] data) {
++        return messageDigest.digest(data);
++    }
++
++    public static byte[] digest(final java.security.MessageDigest messageDigest, final java.nio.ByteBuffer data) {
++        messageDigest.update(data);
++        return messageDigest.digest();
++    }
++
++    public static MessageDigest updateDigest(final MessageDigest digest, final InputStream data) throws IOException {
++        final byte[] buffer = new byte[STREAM_BUFFER_LENGTH];
++        int read = data.read(buffer, 0, STREAM_BUFFER_LENGTH);
++
++        while (read > -1) {
++            read = data.read(buffer, 0, STREAM_BUFFER_LENGTH);
++        }
++
++        return digest;
++    }
++}
+diff --git a/src/test/java/spoon/test/variable/testclasses/digest/MessageDigest.java b/src/test/java/spoon/test/variable/testclasses/digest/MessageDigest.java
+new file mode 100644
+index 00000000..d11d7838
+--- /dev/null
++++ b/src/test/java/spoon/test/variable/testclasses/digest/MessageDigest.java
+@@ -0,0 +1,20 @@
++/*
++ * Copyright (C) 2006-2016 INRIA and contributors
++ *  Spoon - http://spoon.gforge.inria.fr/
++ *
++ * This software is governed by the CeCILL-C License under French law and abiding by the rules of distribution of free software. You can use, modify and/or redistribute the software under the terms of the CeCILL-C license as circulated by CEA, CNRS and INRIA at http://www.cecill.info.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the CeCILL-C License for more details.
++ *
++ * The fact that you are presently reading this means that you have had knowledge of the CeCILL-C license and that you accept its terms.
++ */
++
++package spoon.test.variable.testclasses.digest;
++
++/**
++ * Created by urli on 19/12/2016.
++ */
++public class MessageDigest {
++    public static final String MD2 = "MD2";
++    public static final String MD5 = "MD5";
++}
+```
+
+Investigate the repository using local tools. Do not use web search.
+
+When you have identified the bug-introducing commit(s), conclude your
+response with the following two sections:
+
+## Bug-Introducing Commits
+BIC: <hash1>, <hash2>, ... (or "BIC: NONE")
+
+## Reasoning
+Explain:
+(1) How you investigated and what led you to this candidate.
+(2) What specific change in this commit you believe introduced the bug.
+(3) What evidence in the repository supports this conclusion.
+
+Be honest about uncertainty if any.

@@ -1,0 +1,20 @@
+SELECTED: candidate_99
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a call to `spe.generateNASAThermoData()` immediately after `spe.setName(spe.getThermoData().getName())` inside `Species.java`, with a comment explaining that the Chemkin-formatted NASA polynomials contain the species name and must be regenerated whenever the name is changed. This confirms the bug: when a species' name is set from the primary thermo library, the already-generated NASA thermo data (which embeds the old name) is never regenerated, so the Chemkin output ends up with the old species name in the thermo section.
+
+candidate_99 is the commit that first introduces this exact code block:
+```java
+if ((p_name == null || p_name.length()==0) && p_chemGraph.fromprimarythermolibrary){
+    name = spe.getThermoData().getName();
+    if (name.matches("s\\d{8}")){
+        // it's an ugly PrIMe ID! Ignore it.
+    } else{
+        // use the name from the primary thermo library!
+        spe.setName(spe.getThermoData().getName());
+    }
+}
+```
+This is precisely the logic that calls `spe.setName(...)` without regenerating the NASA thermo data, matching the bug described in the fix commit message ("the Chemkin file ended up with a thermo section containing the old species name"). A search across all 101 candidate diffs for this code (the "use the name from the primary thermo library!" comment and the associated setName call) found it only in candidate_99 (introduction) and candidate_101 (the fix itself, which adds the missing regenerateNASAThermoData call). No candidate between 99 and 101 modifies this code block (e.g., candidate_100 touches unrelated DeltaEDown refactoring in the same file but doesn't touch this section). This makes candidate_99 the clear, sole bug-introducing commit.

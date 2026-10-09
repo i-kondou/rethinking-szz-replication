@@ -1,0 +1,366 @@
+{
+  "metadata": {
+    "timestamp": "20260906_035303",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1470/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 64.418,
+      "max": 64.418,
+      "mean": 64.418,
+      "median": 64.418,
+      "total": 64.418,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 64.086,
+      "max": 64.086,
+      "mean": 64.086,
+      "median": 64.086,
+      "total": 64.086,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 15,
+      "max": 15,
+      "mean": 15,
+      "median": 15,
+      "total": 15,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 5871,
+      "max": 5871,
+      "mean": 5871,
+      "median": 5871,
+      "total": 5871,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 34335,
+      "max": 34335,
+      "mean": 34335,
+      "median": 34335,
+      "total": 34335,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 127709,
+      "max": 127709,
+      "mean": 127709,
+      "median": 127709,
+      "total": 127709,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.33244170000000006,
+      "max": 0.33244170000000006,
+      "mean": 0.33244170000000006,
+      "median": 0.33244170000000006,
+      "total": 0.33244170000000006,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Glob": 1,
+      "Grep": 7,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "1470",
+      "fix_commit_hash": "ddd19d8307447856b7823d91a2e7b3141f0c9f0d",
+      "ground_truth_bics": [
+        "c6633a157eec1712116d294eb3785a96cba4e331"
+      ],
+      "predicted_bics": [
+        "480e354558d542095f33ff599e9e14db88c8adbc"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "1470",
+      "fix_commit": "ddd19d8307447856b7823d91a2e7b3141f0c9f0d",
+      "ground_truth_bics": [
+        "c6633a157eec1712116d294eb3785a96cba4e331"
+      ],
+      "total_candidates": 14,
+      "gt_in_candidates": false,
+      "selected_commit": "480e354558d542095f33ff599e9e14db88c8adbc",
+      "selected_index": 12,
+      "confidence": "HIGH",
+      "explanation": "The fix commit removes a single dead-store line in AbstractStickyAssignor.generalAssign(): boolean isFreshAssignment = currentAssignment.isEmpty(); because spotBugs flagged it as an unused (\"dead store\") local variable. Tracing the history of `isFreshAssignment`: - candidate_01/02/09/12 introduce and repeatedly thread `isFreshAssignment` through as a real parameter to the `sortPartitions(...)` method, where it is actively used in the condition `if (!isFreshAssignment && areSubscriptionsIdentical",
+      "is_correct": false,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "clients/src/main/java/org/apache/kafka/clients/consumer/internals/AbstractStickyAssignor.java"
+      ],
+      "call_stats": {
+        "duration_s": 64.418,
+        "duration_api_s": 64.086,
+        "num_turns": 15,
+        "input_tokens": 18,
+        "output_tokens": 5871,
+        "cache_creation_input_tokens": 34335,
+        "cache_read_input_tokens": 127709,
+        "total_cost_usd": 0.33244170000000006,
+        "total_tool_calls": 14,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Glob": 1,
+          "Grep": 7,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1470/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1470_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1470/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1470_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1470/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1470_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1033,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 409,
+            "cache_read_input_tokens": 10717,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isFreshAssignment",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 240,
+            "cache_read_input_tokens": 11126,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isFreshAssignment",
+                  "path": "candidates/candidate_01.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isFreshAssignment",
+                  "path": "candidates/candidate_02.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isFreshAssignment",
+                  "path": "candidates/candidate_09.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isFreshAssignment",
+                  "path": "candidates/candidate_12.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isFreshAssignment",
+                  "path": "candidates/candidate_13.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isFreshAssignment",
+                  "path": "candidates/candidate_14.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 6512,
+            "cache_read_input_tokens": 11366,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1470/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1470_candidate_selection/candidates/candidate_14.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 7,
+            "cache_creation_input_tokens": 956,
+            "cache_read_input_tokens": 17878,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1470/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1470_candidate_selection/candidates/candidate_13.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 7,
+            "cache_creation_input_tokens": 17590,
+            "cache_read_input_tokens": 18834,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1470/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1470_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_13\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit removes a single dead-store line in AbstractStickyAssignor.generalAssign():\n    boolean isFreshAssignment = currentAssignment.isEmpty();\nbecause spotBugs flagged it as an unused (\"dead store\") local variable.\n\nTracing the history of `isFreshAssignment`:\n- candidate_01/02/09/12 introduce and repeatedly thread `isFreshAssignment` through as a real parameter to the `sortPartitions(...)` method, where it is actively used in the condition `if (!isFreshAssignment && areSubscriptionsIdentical(...))`. At this point the variable is live and meaningful.\n- candidate_13 performs a large refactor of AbstractStickyAssignor (introducing constrainedAssign/generalAssign split, rewriting sortPartitions, etc.). Critically, it changes the call site from\n    sortPartitions(currentAssignment, prevAssignment.keySet(), isFreshAssignment, partition2AllPotentialConsumers, consumer2AllPotentialPartitions)\n  to\n    sortPartitions(partition2AllPotentialConsumers)\n  and rewrites sortPartitions() itself to no longer take an `isFreshAssignment` parameter at all (the entire old branch depending on `isFreshAssignment`/`areSubscriptionsIdentical` was deleted). However, the local variable declaration\n    boolean isFreshAssignment = currentAssignment.isEmpty();\n  was left untouched in the diff (it appears as an unmodified context line), so after this commit it is computed but never read anywhere \u2014 exactly the dead-store condition spotBugs later reported.\n- candidate_14 is identical to the fix commit itself (removes this now-dead declaration), confirming candidate_13 is the point right before the bug existed in its final, unused form.\n\nTherefore candidate_13 is the commit that introduced the bug (the dead store) by removing all usages of `isFreshAssignment` while forgetting to remove its declaration.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1309,
+            "cache_read_input_tokens": 36424,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

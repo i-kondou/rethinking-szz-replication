@@ -1,0 +1,27 @@
+SELECTED: candidate_101
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes RemoveVmCommand.java's catch block from
+`failedRemoveCinderDisks.addAll(cinderDisks);` to `failedRemoveCinderDisks = cinderDisks;`
+to resolve a findbugs-detected potential NullPointerException.
+
+candidate_101 is the commit that originally introduced this exact code. It adds a new
+private method `removeCinderDisks()` that:
+1. Declares `Collection<CinderDisk> failedRemoveCinderDisks = null;`
+2. In the try block, assigns it via `failedRemoveCinderDisks = future.get().getActionReturnValue();`
+3. In the catch block (InterruptedException | ExecutionException), calls
+   `failedRemoveCinderDisks.addAll(cinderDisks);`
+
+If the exception is thrown before the try-block assignment completes (or if the async
+call returns null), `failedRemoveCinderDisks` remains null when `.addAll()` is invoked
+in the catch block, causing a NullPointerException. This is precisely the bug findbugs
+flagged and the fix commit corrects by reassigning the reference directly
+(`failedRemoveCinderDisks = cinderDisks;`) instead of calling a method on a
+possibly-null object.
+
+candidate_102 contains the actual fix (identical to fix_commit_diff.txt) and therefore
+is not the bug-introducing commit — it is the corrective commit. candidate_101 is the
+first (and only) commit among the candidates that introduces the flawed
+null-then-addAll pattern, making it the bug-introducing commit.

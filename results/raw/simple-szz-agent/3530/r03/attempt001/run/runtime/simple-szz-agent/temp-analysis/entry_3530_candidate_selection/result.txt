@@ -1,0 +1,36 @@
+SELECTED: candidate_34
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) modifies `setHalfwayBuffer` in
+src/jpcsp/HLE/modules/sceAtrac3plus.java, replacing:
+
+    int maxSizeBeforeFirstWrap = bufferSize - ((bufferSize - info.inputFileDataOffset) % info.atracBytesPerFrame);
+    int maxSizeAfterFirstWrap = bufferSize - (bufferSize % info.atracBytesPerFrame);
+    inputBuffer = new pspFileBuffer(addr, maxSizeBeforeFirstWrap, maxSizeAfterFirstWrap, readSize, readSize);
+
+with a version that only performs this alignment when `readSize < bufferSize`
+(i.e. only when the buffer is not already full), otherwise it just uses the
+raw `bufferSize` for both values. The bug was that the alignment computation
+was applied unconditionally, even when the buffer was already fully read
+(readSize == bufferSize), causing an incorrect (too small) maxSize to be used
+for a fully-populated buffer, leading to wrong wrap-around behavior in
+sceAtracGetStreamDataInfo/related streaming logic.
+
+candidate_34's diff introduces exactly these three lines verbatim as a new
+addition:
+  - It changes `inputBuffer = new pspFileBuffer(addr, bufferSize, readSize, readSize);`
+    (previously present, with no alignment logic at all) to
+    the unconditional alignment computation identical to what the fix commit
+    later guards with the `if (readSize < bufferSize)` check.
+  - It also adds the corresponding `maxSizeBeforeFirstWrap`/`maxSizeAfterFirstWrap`
+    fields and the new pspFileBuffer constructor overload in pspFileBuffer.java
+    to support the (now buggy) two-value buffer sizing scheme.
+
+Earlier candidates (e.g. candidate_16, which introduced setHalfwayBuffer)
+only had the simple, non-aligned `new pspFileBuffer(addr, bufferSize, readSize, readSize)`
+call, which did not exhibit the bug. candidate_25 only added debug logging
+unrelated to this logic. candidate_34 is therefore the first commit to
+introduce the exact unconditional alignment logic that the fix commit
+corrects, making it the bug-introducing commit.

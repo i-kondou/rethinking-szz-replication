@@ -1,0 +1,16 @@
+SELECTED: candidate_09
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a `destroy(Context)` method to `DownloadManagerInterface` (which calls `context.unregisterReceiver(downloadCompletionReceiver)` and nulls the singleton instance) and calls it from `MainActivity.onDestroy()`. This addresses a resource leak: `DownloadManagerInterface` registers a `BroadcastReceiver` via `context.registerReceiver(downloadCompletionReceiver, filter)` but nothing ever unregisters it.
+
+Before candidate_09, the download-completion broadcast receiver lived directly in `MainActivity` and was correctly registered in `onCreate` and unregistered in `onDestroy` (visible in candidate_08's diff, where `MainActivity.onDestroy()` calls `getApplicationContext().unregisterReceiver(downloadCompletionReceiver)`).
+
+Candidate_09 refactors this logic into a new class `DownloadManagerInterface` (`data/DownloadManagerInterface.java`). This new class:
+- Registers the receiver in a private `registerReceiver()` method, invoked once from the static `init()` method.
+- Provides no counterpart method to unregister the receiver.
+
+At the same time, candidate_09 deletes `MainActivity`'s `onDestroy()` override entirely (along with the `unregisterReceiver` call it used to make), since the receiver registration/lifecycle was moved into the new singleton. This means from candidate_09 onward, the receiver registered by `DownloadManagerInterface` is never unregistered anywhere in the codebase — introducing the leak that the fix commit later resolves by adding `DownloadManagerInterface.destroy()` and calling it from `MainActivity.onDestroy()`.
+
+Later candidates (e.g., candidate_10) only adjust the `init()` logic to use `getApplicationContext()` and guard against double-initialization; they do not add any unregister/destroy logic, so the bug persists unchanged from candidate_09 through candidate_17.

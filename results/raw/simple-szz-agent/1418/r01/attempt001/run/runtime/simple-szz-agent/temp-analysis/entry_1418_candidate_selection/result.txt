@@ -1,0 +1,44 @@
+SELECTED: candidate_190
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (in TripleAPlayer.java's move() method) splits a single, incorrectly-merged
+if-condition into two separate if-blocks so that the combat-move sound
+(SoundPath.CLIP_PHASE_MOVE_COMBAT) and the non-combat-move sound
+(SoundPath.CLIP_PHASE_MOVE_NONCOMBAT) are each played correctly for their respective phase.
+Before the fix, the buggy code read:
+
+    if ((nonCombat && !m_soundPlayedAlreadyNonCombatMove) || (!nonCombat && !m_soundPlayedAlreadyCombatMove)) {
+      ClipPlayer.play(SoundPath.CLIP_PHASE_MOVE_NONCOMBAT, id);
+      m_soundPlayedAlreadyNonCombatMove = true;
+    }
+
+This single combined condition always plays the NON-COMBAT sound clip (and only sets the
+non-combat "already played" flag) even when the game is actually in a COMBAT move phase,
+and it never sets m_soundPlayedAlreadyCombatMove — so combat moves never get their own sound
+and the flag meant to guard repeated combat-move sound playback is never updated.
+
+Tracing the blob hashes through the candidate diffs shows the exact point this bug was
+introduced. candidate_190 modifies TripleAPlayer.java from blob e7570dbe6 to c009b19c7, and
+in that diff the move-sound logic is changed from two separate, correct if/else-if branches:
+
+    if (nonCombat && !m_soundPlayedAlreadyNonCombatMove) {
+      DefaultSoundChannel.playSoundOnLocalMachine(SoundPath.CLIP_PHASE_MOVE_NONCOMBAT, id.getName());
+      m_soundPlayedAlreadyNonCombatMove = true;
+    } else if (!nonCombat && !m_soundPlayedAlreadyCombatMove) {
+      DefaultSoundChannel.playSoundOnLocalMachine(SoundPath.CLIP_PHASE_MOVE_COMBAT, id.getName());
+      m_soundPlayedAlreadyCombatMove = true;
+    }
+
+into the single, buggy combined condition shown above (while simultaneously switching the
+sound-playing API from DefaultSoundChannel.playSoundOnLocalMachine back to ClipPlayer.play).
+This is precisely the erroneous code pattern that the fix commit later corrects by
+re-splitting it into two separate if-blocks (one for nonCombat, one for combat), each with
+its own ClipPlayer.play call and its own "already played" flag update.
+
+Subsequent candidate_189 (blob c009b19c7 -> 01443c98b) only changes an unrelated parameter
+type (id.getName() -> id) and leaves the buggy merged condition untouched, and candidate_191
+is the fix commit itself (01443c98b -> bceb3ed93, identical to fix_commit_diff.txt).
+Therefore candidate_190 is the commit that first introduced the problematic merged
+condition that caused combat-move sounds to never play correctly.

@@ -1,0 +1,33 @@
+SELECTED: candidate_32
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a 6th "left" entry to the column-alignment array used for the
+non-timetable branch of the instructor's class-assignment table in
+InstructorDetailAction.java:
+
+    new String[] {"left", "left","left", "left", "left"},
+ -> new String[] {"left", "left","left", "left", "left", "left"},
+
+This array is paired with a header-labels array that has 6 entries
+(MSG.columnClass(), MSG.columnInstructorCheckConflicts(), MSG.columnInstructorShare(),
+MSG.columnTeachingResponsibility(), MSG.columnLimit(), MSG.columnManager()) and a
+WebTable declared with column count 6. Because the alignment array only had 5
+entries while the table expected 6 columns, WebTable threw an
+ArrayIndexOutOfBoundsException whenever an instructor had class assignments but no
+committed timetable yet (issue #27).
+
+Candidate_32 is where this mismatch was introduced. In this commit, the
+"no timetable" WebTable was changed from 5 to 6 columns: the column count changed
+from `new WebTable(5, ...)` to `new WebTable(6, ...)`, and MSG.columnTeachingResponsibility()
+was added to the header-labels array (making it 6 elements). However, the
+alignment array `new String[] {"left", "left","left", "left", "left"}` was left
+unchanged at 5 elements. This is precisely the pattern (extra header/column count
+without a corresponding alignment entry) that the fix commit corrects by appending
+the missing 6th "left".
+
+Earlier candidates (e.g. candidate_26) show the header and alignment arrays for
+this branch both correctly sized at 5 elements, confirming the mismatch did not
+exist before candidate_32. No later candidate before the fix modifies this specific
+alignment array, so candidate_32 is the first and only commit introducing the bug.

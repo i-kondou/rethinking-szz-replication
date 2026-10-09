@@ -1,0 +1,22 @@
+{
+  "fix_commit": "4ca7fd19017191f04546c2f90ab8b1d29e44459d",
+  "bic": "8359c9faaa074a4bbcdc677971a42ae17133356a",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit introduced the Biweekly library-based iCalendar export (Biweekly.write(ical).go()) across EventEmail.java, EventsExportEventsToICal.java, CalendarServlet.java, and CalendarExport.java. It replaced the previous manual VCALENDAR text output with the Biweekly writer, but never configured a default timezone on the writer/timezone info, meaning exported date/time values were not properly localized, causing the daylight-savings bug that the fix addresses by adding writer.getTimezoneInfo().setDefaultTimeZone(TimeZone.getDefault()) to each export path. The fix directly modifies the same call sites and export logic that this commit created.",
+  "metrics": {
+    "case_elapsed_seconds": 11.834621,
+    "api_elapsed_seconds": 11.558651,
+    "tool_elapsed_seconds": 0.163194,
+    "other_elapsed_seconds": 0.112781,
+    "api_call_count": 3,
+    "tool_call_count": 3,
+    "prompt_tokens": 22508,
+    "completion_tokens": 920,
+    "total_tokens": 23428,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:12:37.645757"
+}

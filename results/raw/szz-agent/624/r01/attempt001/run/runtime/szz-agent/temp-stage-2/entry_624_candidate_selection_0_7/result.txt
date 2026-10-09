@@ -1,0 +1,38 @@
+SELECTED: candidate_04
+
+CONFIDENCE: MEDIUM
+
+EXPLANATION:
+The fix commit resolves a build error in StartUpView.java: the anonymous
+implementation of IPlayerClientListener.onUpdateCheckpointDirection() is
+changed from a no-argument method to onUpdateCheckpointDirection(Position pos),
+plus an added import of at.fhv.audioracer.core.util.Position. This means
+somewhere in the project history the IPlayerClientListener contract for this
+callback came to require a Position parameter, but the StartUpView.java
+override was never updated to match, so the code failed to compile
+("fix build error").
+
+Tracing the exact line that had to change:
+- candidate_03 introduces the IPlayerClientListener interface itself with the
+  signature `void onUpdateCheckpointDirection();` (no parameters).
+- candidate_04 creates AudioRacer-PlayerSimulator/.../StartUpView.java and adds
+  the anonymous IPlayerClientListener implementation, including the exact line
+  `public void onUpdateCheckpointDirection() { // TODO Auto-generated method
+  stub }` — a correct match for the interface at that time.
+- candidate_05, candidate_06, and candidate_07 all touch StartUpView.java for
+  unrelated reasons (getPlayerServer() rename, Integer->Byte car IDs, minor
+  formatting) but never modify the onUpdateCheckpointDirection method body or
+  signature; it is carried forward unchanged from candidate_04.
+- The exact line that the fix commit deletes/replaces
+  (`public void onUpdateCheckpointDirection() {`) was therefore last written in
+  candidate_04 and never touched again until the fix. Under blame-based SZZ
+  reasoning, the commit that last introduced/modified the specific broken line
+  is the bug-introducing candidate.
+
+Note: candidate_08's diff is textually identical to the fix commit's diff
+(same StartUpView.java hunk adding the Position parameter). Since it already
+contains the fix itself, it cannot be the bug-introducing commit — it looks
+like a duplicate/artifact in the candidate set rather than a plausible
+regression point. Excluding it, candidate_04 is the commit where the
+now-mismatched implementation line was first written and is the most
+defensible choice among the remaining candidates.

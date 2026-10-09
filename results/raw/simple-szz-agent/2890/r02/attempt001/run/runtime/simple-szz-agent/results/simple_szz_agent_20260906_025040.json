@@ -1,0 +1,463 @@
+{
+  "metadata": {
+    "timestamp": "20260906_025040",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 80.342,
+      "max": 80.342,
+      "mean": 80.342,
+      "median": 80.342,
+      "total": 80.342,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 80.224,
+      "max": 80.224,
+      "mean": 80.224,
+      "median": 80.224,
+      "total": 80.224,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 24,
+      "max": 24,
+      "mean": 24,
+      "median": 24,
+      "total": 24,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 8433,
+      "max": 8433,
+      "mean": 8433,
+      "median": 8433,
+      "total": 8433,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 30585,
+      "max": 30585,
+      "mean": 30585,
+      "median": 30585,
+      "total": 30585,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 187226,
+      "max": 187226,
+      "mean": 187226,
+      "median": 187226,
+      "total": 187226,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.3662328,
+      "max": 0.3662328,
+      "mean": 0.3662328,
+      "median": 0.3662328,
+      "total": 0.3662328,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 23,
+      "max": 23,
+      "mean": 23,
+      "median": 23,
+      "total": 23,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 4,
+      "Grep": 18,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 128,
+      "max": 128,
+      "mean": 128,
+      "median": 128,
+      "total": 128,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2890",
+      "fix_commit_hash": "fb5db894da2532b3ff6d7aa464114567437dc5b4",
+      "ground_truth_bics": [
+        "88ddbe5ac6ac5aa0f18ade50aa376b25546fb058"
+      ],
+      "predicted_bics": [
+        "88ddbe5ac6ac5aa0f18ade50aa376b25546fb058"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2890",
+      "fix_commit": "fb5db894da2532b3ff6d7aa464114567437dc5b4",
+      "ground_truth_bics": [
+        "88ddbe5ac6ac5aa0f18ade50aa376b25546fb058"
+      ],
+      "total_candidates": 128,
+      "gt_in_candidates": true,
+      "selected_commit": "88ddbe5ac6ac5aa0f18ade50aa376b25546fb058",
+      "selected_index": 124,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes `onFoodLevelChange` in ArenaListener.java so that, when the arena is running, food level changes are only cancelled if `arena.inArena(p) && lockFoodLevel` \u2014 previously it only checked `lockFoodLevel`, meaning the food-lock affected every player on the server, not just those inside the arena. Tracing this method's history through the candidates: candidate_04 (its original introduction) had `if (!arena.isRunning()) return; if (!(event.getEntity() instanceof Player) || !arena",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/main/java/com/garbagemule/MobArena/ArenaListener.java"
+      ],
+      "call_stats": {
+        "duration_s": 80.342,
+        "duration_api_s": 80.224,
+        "num_turns": 24,
+        "input_tokens": 20,
+        "output_tokens": 8433,
+        "cache_creation_input_tokens": 30585,
+        "cache_read_input_tokens": 187226,
+        "total_cost_usd": 0.3662328,
+        "total_tool_calls": 23,
+        "tool_calls_by_name": {
+          "Read": 4,
+          "Grep": 18,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 833,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "lockFoodLevel|FoodLevelChange|foodLevel",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "cache_creation_input_tokens": 497,
+            "cache_read_input_tokens": 10517,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "lockFoodLevel|FoodLevelChange|isRunning\\(\\)",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_04.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "lockFoodLevel|FoodLevelChange|isRunning\\(\\)",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_05.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "lockFoodLevel|FoodLevelChange|isRunning\\(\\)",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_07.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "lockFoodLevel|FoodLevelChange|isRunning\\(\\)",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_08.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "lockFoodLevel|FoodLevelChange|isRunning\\(\\)",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_09.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 12810,
+            "cache_read_input_tokens": 11014,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "onFoodLevelChange|FoodLevelChangeEvent",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_04.diff",
+                  "output_mode": "content",
+                  "-A": 10
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "onFoodLevelChange",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_09.diff",
+                  "output_mode": "content",
+                  "-A": 10
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "onFoodLevelChange",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_14.diff",
+                  "output_mode": "content",
+                  "-A": 10
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "onFoodLevelChange",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_18.diff",
+                  "output_mode": "content",
+                  "-A": 10
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "onFoodLevelChange",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_34.diff",
+                  "output_mode": "content",
+                  "-A": 10
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "onFoodLevelChange",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_37.diff",
+                  "output_mode": "content",
+                  "-A": 10
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2613,
+            "cache_read_input_tokens": 23824,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "FoodLevelChangeEvent",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_37.diff",
+                  "output_mode": "content",
+                  "-A": 20
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "FoodLevelChangeEvent",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_85.diff",
+                  "output_mode": "content",
+                  "-A": 20
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "FoodLevelChangeEvent",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_97.diff",
+                  "output_mode": "content",
+                  "-A": 20
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "FoodLevelChangeEvent",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_125.diff",
+                  "output_mode": "content",
+                  "-A": 20
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "FoodLevelChangeEvent",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_128.diff",
+                  "output_mode": "content",
+                  "-A": 20
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 3896,
+            "cache_read_input_tokens": 26437,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_128.diff",
+                  "offset": 1,
+                  "limit": 60
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 9,
+            "cache_creation_input_tokens": 634,
+            "cache_read_input_tokens": 30333,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "onFoodLevelChange",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/candidates/candidate_125.diff",
+                  "output_mode": "content",
+                  "-B": 5,
+                  "-A": 30
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1803,
+            "cache_read_input_tokens": 30967,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2890/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2890_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_125\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes `onFoodLevelChange` in ArenaListener.java so that, when the arena is running, food level changes are only cancelled if `arena.inArena(p) && lockFoodLevel` \u2014 previously it only checked `lockFoodLevel`, meaning the food-lock affected every player on the server, not just those inside the arena.\n\nTracing this method's history through the candidates: candidate_04 (its original introduction) had `if (!arena.isRunning()) return; if (!(event.getEntity() instanceof Player) || !arena.inArena((Player) event.getEntity())) return; if (lockFoodLevel) event.setCancelled(true);` \u2014 this correctly restricted the effect to players in the arena.\n\ncandidate_125 rewrites this method entirely:\n```\nif (!(event.getEntity() instanceof Player)) return;\nPlayer p = (Player) event.getEntity();\nif (arena.isRunning()) {\n    if (lockFoodLevel) {\n        event.setCancelled(true);\n    }\n} else {\n    // Always locked in lobby/spec\n    if (arena.inLobby(p) || arena.inSpec(p)) {\n        event.setCancelled(true);\n    }\n}\n```\nThis refactor drops the `arena.inArena(p)` guard from the \"arena is running\" branch, so `lockFoodLevel` now cancels the food level change event for ANY player on the server whenever the arena is running \u2014 exactly the bug described in the fix commit message (\"otherwise it affects everyone on the server\").\n\nThe fix commit's diff (`if (lockFoodLevel)` -> `if (arena.inArena(p) && lockFoodLevel)`) applies precisely to the structure introduced in candidate_125, confirming this is the bug-introducing commit. (Note: candidate_128 has an identical diff to the fix commit itself and thus is the actual fix, not the bug-introducing commit \u2014 it was likely included at the boundary of the candidate range.)\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1213,
+            "cache_read_input_tokens": 32770,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+SELECTED: candidate_11
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes `JDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, compilerComplianceLevel.toString()));` to `JDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, JavaVersion.toVersion(compilerComplianceLevel).toString()));` in ConventionJdt.java, i.e. it wraps `compilerComplianceLevel` in `JavaVersion.toVersion(...)` before calling `.toString()`.
+
+Tracing the history of `compilerComplianceLevel`:
+- candidate_08 introduced the feature correctly: the public setter `compilerComplianceLevel(String compilerComplianceLevel)` converted the incoming String immediately via `this.compilerComplianceLevel = JavaVersion.toVersion(compilerComplianceLevel);` and stored it as a `JavaVersion` field. The later `JavaComplianceAction.execute()` then called `complianceLevel.toString()` on that properly-typed `JavaVersion` object, which is correct/normalized behavior.
+- candidate_11 refactored this code (inlining the `workspaceProp` action directly into the setter and removing the `JavaComplianceAction`/`JavaClasspathVariableAction` classes and the `compilerComplianceLevel` field). In doing so, it dropped the `JavaVersion.toVersion(...)` conversion entirely and instead called `.toString()` directly on the raw String method parameter `compilerComplianceLevel` (a no-op since it's already a String). This reintroduced the exact buggy pattern that the fix commit later corrects: using the unconverted, unnormalized String value instead of a properly normalized `JavaVersion` value.
+- candidate_12 shows the same buggy line as its "before" state and is functionally identical to the fix commit diff itself (same before/after code, same file hashes), confirming that the bug the fix addresses was present starting at candidate_11 and persisted until the fix commit.
+
+Because candidate_11 is the point where the code changed from correctly using `JavaVersion.toVersion(...)` to calling `.toString()` on the raw String parameter, it is the commit that introduced the bug.

@@ -1,0 +1,52 @@
+SELECTED: candidate_25
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) adds exactly one line to
+`XMLFileReader.read(String updateSite, InputStream in, long timestamp)`:
+
+    this.updateSite = updateSite;
+    filesFromThisSite.clear();      // <-- added by the fix
+    newTimestamp = timestamp;
+
+This tells us the bug is: the field `filesFromThisSite` (a `Set<FileObject>`
+that tracks which FileObject instances were added while parsing the *current*
+update site's db.xml.gz) is never cleared at the start of a new `read()` call.
+Since `XMLFileDownloader` calls `reader.read(name, in, timestamp)` once per
+configured update site in a loop, `filesFromThisSite` silently accumulates
+FileObjects across every site processed in that loop. This breaks the
+"shadowing" logic in `startElement()`, which relies on
+`filesFromThisSite.contains(file)` to decide whether a filename collision is
+just a newer record for the *same* site (merge in place) versus a collision
+between two different update sites (which should trigger the rank-based
+shadowing/override logic and the shadow warning). With the stale set never
+cleared, files from earlier-processed sites are incorrectly treated as
+"belonging to the current site", so the override/warning logic never fires -
+exactly matching the fix commit's description: "the bug would prevent any
+shadowing (update sites overriding other update sites' files)".
+
+Tracing `XMLFileReader.java` across all 27 chronologically-ordered candidates:
+- Candidates 1-24: No `filesFromThisSite` field exists anywhere in the file.
+  Shadowing/override logic before this point is based on other mechanisms
+  (a `rank`-comparison via `getRank()`, `overriddenUpdateSites` lists, and a
+  direct `updateSite.equals(file.updateSite)` check to detect "same site").
+- candidate_25: Introduces the field for the first time:
+      protected Set<FileObject> filesFromThisSite = new HashSet<FileObject>();
+  and rewrites the collision-handling branch in `startElement()` to test
+  `filesFromThisSite.contains(file)` instead of the previous
+  `updateSite.equals(file.updateSite)` check, adding entries to the set via
+  `filesFromThisSite.add(...)` in multiple places. Critically, no code in
+  this commit (or the `read()` method) ever clears this set between calls to
+  `read()` for different update sites. This is precisely the omission that
+  the fix commit later corrects.
+- candidate_26: Only changes a warning mechanism (`warnings.append(...)` ->
+  `files.log.warn(...)`); does not touch `filesFromThisSite` initialization
+  or clearing.
+- candidate_27: This is the fix commit itself - it adds the missing
+  `filesFromThisSite.clear();` call, exactly matching fix_commit_diff.txt.
+
+Since candidate_25 is the sole commit that introduces `filesFromThisSite`
+(and the bug of never clearing it), and every candidate between 25 and the
+fix (26) leaves this omission untouched, candidate_25 is unambiguously the
+first commit that introduced the bug.

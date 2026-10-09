@@ -1,0 +1,29 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the WebTable column-style array from
+{"left","left","left","left","left"} (5 elements) to
+{"left","left","left","left","left","left"} (6 elements), for the
+non-timetable branch of InstructorDetailAction.java. In the buggy version,
+this style array has only 5 elements while the corresponding header array
+{MSG.columnClass(), MSG.columnInstructorCheckConflicts(),
+MSG.columnInstructorShare(), MSG.columnTeachingResponsibility(),
+MSG.columnLimit(), MSG.columnManager()} has 6 elements (a "Teaching
+Responsibility" column was added to the header but the style array was not
+updated to match), causing WebTable to throw an
+ArrayIndexOutOfBoundsException when an instructor has class assignments but
+no committed timetable.
+
+In files/old/InstructorDetailAction.java, the equivalent non-timetable
+branch is:
+  headers:  {"Class", "Check Conflicts", "Share", "Limit", "Manager"} (5 items)
+  styles:   {"left", "left", "left", "left", "left"} (5 items)
+These arrays are consistent (both 5 elements) — there is no "Teaching
+Responsibility" column present at all in this older version, and the
+timetable branch (8 headers / 8 styles) is likewise consistent. The
+mismatched-array bug was introduced later when the Teaching Responsibility
+column was added to the header list without a corresponding update to the
+style array, which does not occur in the old version. Therefore the bug is
+not present in files/old/.

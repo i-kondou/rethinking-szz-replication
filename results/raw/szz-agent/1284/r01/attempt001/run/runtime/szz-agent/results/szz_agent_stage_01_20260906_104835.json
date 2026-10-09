@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "timestamp": "20260906_104835",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1284/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "1284",
+      "fix_commit_hash": "757580a52ff4357da96d21b9ed5d0382191b2f0c",
+      "bug_commit_hash": [
+        "dcec42bbee3b983c4bbcd2a258f84f69be20b124"
+      ],
+      "szz_candidates": [
+        "dcec42bbee3b983c4bbcd2a258f84f69be20b124"
+      ],
+      "szz_num_candidates": 1,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "dcec42bbee3b983c4bbcd2a258f84f69be20b124"
+      ],
+      "llm_selected_commit": "dcec42bbee3b983c4bbcd2a258f84f69be20b124",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit changes exactly one line: - private static final int HIGH_SCORES_FILENAME = \"TetrisHighScores.txt\"; + private static final String HIGH_SCORES_FILENAME = \"TetrisHighScores.txt\"; This is a type-mismatch compile error: an `int` field being assigned a `String` literal, which does not compile in Java. The fix commit message \"fix build error\" confirms this was a build-breaking bug. Candidate_01's diff introduces this exact erroneous line: `private static final int HIGH_SCORES_FILENAME =",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/1284",
+      "bug_fixing_commit": "757580a52ff4357da96d21b9ed5d0382191b2f0c",
+      "bug_inducing_commit": [
+        "dcec42bbee3b983c4bbcd2a258f84f69be20b124"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "tswift242/tetris"
+    }
+  ]
+}

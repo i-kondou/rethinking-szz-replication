@@ -1,0 +1,325 @@
+{
+  "metadata": {
+    "timestamp": "20260906_045454",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3530/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 45.249,
+      "max": 45.249,
+      "mean": 45.249,
+      "median": 45.249,
+      "total": 45.249,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 45.103,
+      "max": 45.103,
+      "mean": 45.103,
+      "median": 45.103,
+      "total": 45.103,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 3742,
+      "max": 3742,
+      "mean": 3742,
+      "median": 3742,
+      "total": 3742,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 18683,
+      "max": 18683,
+      "mean": 18683,
+      "median": 18683,
+      "total": 18683,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 117108,
+      "max": 117108,
+      "mean": 117108,
+      "median": 117108,
+      "total": 117108,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.20341440000000002,
+      "max": 0.20341440000000002,
+      "mean": 0.20341440000000002,
+      "median": 0.20341440000000002,
+      "total": 0.20341440000000002,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 4,
+      "Grep": 4,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 35,
+      "max": 35,
+      "mean": 35,
+      "median": 35,
+      "total": 35,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "3530",
+      "fix_commit_hash": "11f82fb8ee7111a072d4f44ee7b2adf21b16a9d1",
+      "ground_truth_bics": [
+        "84e97c4979c18cfc68054137098f4df71a1bba45"
+      ],
+      "predicted_bics": [
+        "e98ea09934cea64ca7b9f8b7be6416c5afc23a4b"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "3530",
+      "fix_commit": "11f82fb8ee7111a072d4f44ee7b2adf21b16a9d1",
+      "ground_truth_bics": [
+        "84e97c4979c18cfc68054137098f4df71a1bba45"
+      ],
+      "total_candidates": 35,
+      "gt_in_candidates": false,
+      "selected_commit": "e98ea09934cea64ca7b9f8b7be6416c5afc23a4b",
+      "selected_index": 33,
+      "confidence": "HIGH",
+      "explanation": "The fix commit (fix_commit_diff.txt) modifies `setHalfwayBuffer` in src/jpcsp/HLE/modules/sceAtrac3plus.java, replacing: int maxSizeBeforeFirstWrap = bufferSize - ((bufferSize - info.inputFileDataOffset) % info.atracBytesPerFrame); int maxSizeAfterFirstWrap = bufferSize - (bufferSize % info.atracBytesPerFrame); inputBuffer = new pspFileBuffer(addr, maxSizeBeforeFirstWrap, maxSizeAfterFirstWrap, readSize, readSize); with a version that only performs this alignment when `readSize < bufferSize` (i.",
+      "is_correct": false,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/jpcsp/HLE/modules/sceAtrac3plus.java"
+      ],
+      "call_stats": {
+        "duration_s": 45.249,
+        "duration_api_s": 45.103,
+        "num_turns": 10,
+        "input_tokens": 18,
+        "output_tokens": 3742,
+        "cache_creation_input_tokens": 18683,
+        "cache_read_input_tokens": 117108,
+        "total_cost_usd": 0.20341440000000002,
+        "total_tool_calls": 9,
+        "tool_calls_by_name": {
+          "Read": 4,
+          "Grep": 4,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3530/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3530_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3530/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3530_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3530/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3530_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2223,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "maxSizeBeforeFirstWrap|setHalfwayBuffer",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3530/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3530_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 716,
+            "cache_read_input_tokens": 11907,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "maxSizeBeforeFirstWrap|setHalfwayBuffer",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3530/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3530_candidate_selection/candidates/candidate_16.diff",
+                  "output_mode": "content",
+                  "-C": 10
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 3009,
+            "cache_read_input_tokens": 12623,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "maxSizeBeforeFirstWrap|setHalfwayBuffer",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3530/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3530_candidate_selection/candidates/candidate_25.diff",
+                  "output_mode": "content",
+                  "-C": 8
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 766,
+            "cache_read_input_tokens": 15632,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "maxSizeBeforeFirstWrap|maxSizeAfterFirstWrap|setHalfwayBuffer",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3530/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3530_candidate_selection/candidates/candidate_34.diff",
+                  "output_mode": "content",
+                  "-C": 10
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2113,
+            "cache_read_input_tokens": 16398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3530/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3530_candidate_selection/candidates/candidate_34.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 2162,
+            "cache_read_input_tokens": 18511,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3530/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3530_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_34\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit (fix_commit_diff.txt) modifies `setHalfwayBuffer` in\nsrc/jpcsp/HLE/modules/sceAtrac3plus.java, replacing:\n\n    int maxSizeBeforeFirstWrap = bufferSize - ((bufferSize - info.inputFileDataOffset) % info.atracBytesPerFrame);\n    int maxSizeAfterFirstWrap = bufferSize - (bufferSize % info.atracBytesPerFrame);\n    inputBuffer = new pspFileBuffer(addr, maxSizeBeforeFirstWrap, maxSizeAfterFirstWrap, readSize, readSize);\n\nwith a version that only performs this alignment when `readSize < bufferSize`\n(i.e. only when the buffer is not already full), otherwise it just uses the\nraw `bufferSize` for both values. The bug was that the alignment computation\nwas applied unconditionally, even when the buffer was already fully read\n(readSize == bufferSize), causing an incorrect (too small) maxSize to be used\nfor a fully-populated buffer, leading to wrong wrap-around behavior in\nsceAtracGetStreamDataInfo/related streaming logic.\n\ncandidate_34's diff introduces exactly these three lines verbatim as a new\naddition:\n  - It changes `inputBuffer = new pspFileBuffer(addr, bufferSize, readSize, readSize);`\n    (previously present, with no alignment logic at all) to\n    the unconditional alignment computation identical to what the fix commit\n    later guards with the `if (readSize < bufferSize)` check.\n  - It also adds the corresponding `maxSizeBeforeFirstWrap`/`maxSizeAfterFirstWrap`\n    fields and the new pspFileBuffer constructor overload in pspFileBuffer.java\n    to support the (now buggy) two-value buffer sizing scheme.\n\nEarlier candidates (e.g. candidate_16, which introduced setHalfwayBuffer)\nonly had the simple, non-aligned `new pspFileBuffer(addr, bufferSize, readSize, readSize)`\ncall, which did not exhibit the bug. candidate_25 only added debug logging\nunrelated to this logic. candidate_34 is therefore the first commit to\nintroduce the exact unconditional alignment logic that the fix commit\ncorrects, making it the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1408,
+            "cache_read_input_tokens": 20673,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

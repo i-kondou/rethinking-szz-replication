@@ -1,0 +1,306 @@
+{
+  "metadata": {
+    "timestamp": "20260906_005634",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2513/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 157.734,
+      "max": 157.734,
+      "mean": 157.734,
+      "median": 157.734,
+      "total": 157.734,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 157.418,
+      "max": 157.418,
+      "mean": 157.418,
+      "median": 157.418,
+      "total": 157.418,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 16105,
+      "max": 16105,
+      "mean": 16105,
+      "median": 16105,
+      "total": 16105,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 82211,
+      "max": 82211,
+      "mean": 82211,
+      "median": 82211,
+      "total": 82211,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 118913,
+      "max": 118913,
+      "mean": 118913,
+      "median": 118913,
+      "total": 118913,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.7705508999999999,
+      "max": 0.7705508999999999,
+      "mean": 0.7705508999999999,
+      "median": 0.7705508999999999,
+      "total": 0.7705508999999999,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 11,
+      "max": 11,
+      "mean": 11,
+      "median": 11,
+      "total": 11,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 8,
+      "Glob": 1,
+      "Grep": 1,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 4,
+      "max": 4,
+      "mean": 4,
+      "median": 4,
+      "total": 4,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 4,
+      "max": 4,
+      "mean": 4,
+      "median": 4,
+      "total": 4,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2513",
+      "fix_commit_hash": "c07165245a6c08faab57bbd08f770b4517bcb817",
+      "ground_truth_bics": [
+        "adb2fd7420b3bf01e696be87f4791759bfb6de53"
+      ],
+      "predicted_bics": [
+        "7b1204417230cbba54a9f31d79ac70662607c774"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2513",
+      "fix_commit": "c07165245a6c08faab57bbd08f770b4517bcb817",
+      "ground_truth_bics": [
+        "adb2fd7420b3bf01e696be87f4791759bfb6de53"
+      ],
+      "total_candidates": 9,
+      "gt_in_candidates": true,
+      "selected_commit": "7b1204417230cbba54a9f31d79ac70662607c774",
+      "selected_index": 7,
+      "confidence": "HIGH",
+      "explanation": "The fix (fix_commit_diff.txt) modifies `MinimalImportScanner.shouldTypeBeImported()` in `src/main/java/spoon/reflect/visitor/MinimalImportScanner.java`. Specifically it changes the `qualifiedNameTokens` collection from a `Set<String>` (HashSet) that is iterated in full to a `LinkedList<String>` where only the *last* token (`qualifiedNameTokens.getLast()`) is checked against `fieldAndMethodsNames`/`localVariablesOfBlock`, instead of checking every token (including intermediate package-name segmen",
+      "is_correct": false,
+      "num_files_touched_by_fix": 4,
+      "num_source_files_touched_by_fix": 4,
+      "files_analyzed": [
+        "src/main/java/spoon/reflect/visitor/MinimalImportScanner.java",
+        "src/test/java/spoon/test/variable/AccessFullyQualifiedFieldTest.java",
+        "src/test/java/spoon/test/variable/testclasses/digest/DigestUtil.java",
+        "src/test/java/spoon/test/variable/testclasses/digest/MessageDigest.java"
+      ],
+      "call_stats": {
+        "duration_s": 157.734,
+        "duration_api_s": 157.418,
+        "num_turns": 12,
+        "input_tokens": 12,
+        "output_tokens": 16105,
+        "cache_creation_input_tokens": 82211,
+        "cache_read_input_tokens": 118913,
+        "total_cost_usd": 0.7705508999999999,
+        "total_tool_calls": 11,
+        "tool_calls_by_name": {
+          "Read": 8,
+          "Glob": 1,
+          "Grep": 1,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 20,
+            "cache_creation_input_tokens": 1285,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "fix_commit_diff.txt"
+                }
+              },
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 3736,
+            "cache_read_input_tokens": 9567,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "MinimalImportScanner",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 14,
+            "cache_creation_input_tokens": 314,
+            "cache_read_input_tokens": 13303,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "candidates/candidate_04.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "candidates/candidate_06.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "candidates/candidate_07.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "candidates/candidate_08.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "candidates/candidate_09.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 57129,
+            "cache_read_input_tokens": 13617,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "result.txt",
+                  "content": "SELECTED: candidate_08\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix (fix_commit_diff.txt) modifies `MinimalImportScanner.shouldTypeBeImported()` in\n`src/main/java/spoon/reflect/visitor/MinimalImportScanner.java`. Specifically it changes the\n`qualifiedNameTokens` collection from a `Set<String>` (HashSet) that is iterated in full to a\n`LinkedList<String>` where only the *last* token (`qualifiedNameTokens.getLast()`) is checked\nagainst `fieldAndMethodsNames`/`localVariablesOfBlock`, instead of checking every token\n(including intermediate package-name segments) as before:\n\n    for (String token : qualifiedNameTokens) {\n        if (fieldAndMethodsNames.contains(token) || localVariablesOfBlock.contains(token)) {\n            return true;\n        }\n    }\n\nThis exact block of code \u2014 including the field/variable names `fieldAndMethodsNames` and\n`localVariablesOfBlock`, and the surrounding `lookForLocalVariables`/`AccessibleVariablesFinder`\nmachinery \u2014 was first introduced in candidate_08. Prior to candidate_08 (candidate_04,\ncandidate_06, candidate_07), the equivalent set was called `namedElements` and the matching\nlogic, while similar in spirit, did not yet have this precise shape.\n\nCrucially, candidate_08 also changed `addFieldImport`/`addMethodImport` in\n`MinimalImportScanner` to no longer delegate to `super.addFieldImport()` /\n`super.addMethodImport()` (which contains the safety check\n`declaringType.equals(targetType) -> return false`, preventing a class from importing its own\nstatic members). Instead, candidate_08 inserts directly into `fieldImports`/`methodImports`\nwhenever `shouldTypeBeImported()` returns true, bypassing that safety net entirely.\n\nBecause `shouldTypeBeImported()` iterates over *all* qualifiedNameTokens \u2014 which include\npackage-name segments in addition to the field/class name \u2014 a package segment can spuriously\ncollide with an unrelated field/method/local-variable name elsewhere in scope, causing\n`shouldTypeBeImported()` to incorrectly return `true` for a private static field that is\nreferenced from within its own declaring class (e.g., `DigestUtil.STREAM_BUFFER_LENGTH` used\ninside `DigestUtil` itself). Combined with the loss of the same-class safety check, this results\nin an incorrect `import static ...DigestUtil.STREAM_BUFFER_LENGTH;` being emitted \u2014 exactly the\nbug the fix's new test `testPrivateStaticImportShouldNotBeImportedInSameClass` guards against.\n\nNo candidate between candidate_08 and the fix (candidate_09 is textually identical to the fix\nitself, i.e., it *is* the fix, not a bug-introducing commit) touches this code, confirming that\ncandidate_08 is the commit whose state the fix directly patches, and therefore the\nbug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 14863,
+            "cache_read_input_tokens": 70746,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

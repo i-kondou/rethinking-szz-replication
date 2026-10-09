@@ -1,0 +1,45 @@
+SELECTED: candidate_46
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes RuleSet.java's getParents() implementation from
+`SConceptOperations.getAllSuperConcepts(nextConcept, false)` to
+`SConceptOperations.getDirectSuperConcepts(nextConcept, false)`. The
+getParents() method is used by SingleTermRules.computeRules() as the
+BFS "parent" expansion function to walk up the concept hierarchy one
+level at a time while collecting applicable typesystem rules. Feeding
+it getAllSuperConcepts (which returns the full transitive closure of
+ancestors, not just direct parents) instead of the direct parents
+breaks the BFS traversal semantics and causes rules from certain
+ancestor concepts to be looked up/overridden incorrectly, producing
+exactly the kind of spurious typesystem error described in the bug
+report (`String a="abc"; a+='d';` failing with a typesystem error,
+since a compound-assignment/concatenation rule higher in the type
+hierarchy is not resolved correctly).
+
+Tracing the history of this specific line across the candidates:
+- candidate_44 is a large refactor of RuleSet/SingleTermRules from
+  String-based concept FQNames to SAbstractConcept objects. As part of
+  this refactor it introduces the buggy line:
+      return SConceptOperations.getAllSuperConcepts(nextConcept, false);
+  (blob hash transition ee0b05cccbec -> 53149bffcaa7)
+- candidate_45 is an exact revert of candidate_44 for this file
+  (53149bffcaa7 -> ee0b05cccbec), restoring the old String-based code
+  and removing the bug.
+- candidate_46 re-applies the identical refactor as candidate_44,
+  byte-for-byte (ee0b05cccbec -> 53149bffcaa7 again), reintroducing
+  the getAllSuperConcepts bug. This is the version that survives.
+- candidate_47 only adds an unrelated import (log4j Logger) to the
+  same file and does not touch the getParents() line
+  (53149bffcaa7 -> 3923bba53778).
+- candidate_48 is the actual fix commit, changing
+  getAllSuperConcepts -> getDirectSuperConcepts (3923bba53778 ->
+  bb4495098cc6), matching fix_commit_diff.txt exactly.
+
+Because candidate_44's introduction of the bug was undone by
+candidate_45's revert, the line that was actually present and broken
+at the time of the fix was last written by candidate_46, making it the
+true bug-introducing commit under SZZ blame tracing (git blame on the
+buggy line just before the fix would point to candidate_46, not
+candidate_44, since 44's change was overwritten by the revert).

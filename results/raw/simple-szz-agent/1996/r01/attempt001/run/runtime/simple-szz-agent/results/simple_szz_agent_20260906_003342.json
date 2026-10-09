@@ -1,0 +1,292 @@
+{
+  "metadata": {
+    "timestamp": "20260906_003342",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1996/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 49.715,
+      "max": 49.715,
+      "mean": 49.715,
+      "median": 49.715,
+      "total": 49.715,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 49.657,
+      "max": 49.657,
+      "mean": 49.657,
+      "median": 49.657,
+      "total": 49.657,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 4483,
+      "max": 4483,
+      "mean": 4483,
+      "median": 4483,
+      "total": 4483,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 17296,
+      "max": 17296,
+      "mean": 17296,
+      "median": 17296,
+      "total": 17296,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 62770,
+      "max": 62770,
+      "mean": 62770,
+      "median": 62770,
+      "total": 62770,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.18988800000000003,
+      "max": 0.18988800000000003,
+      "mean": 0.18988800000000003,
+      "median": 0.18988800000000003,
+      "total": 0.18988800000000003,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 6,
+      "Glob": 1,
+      "Grep": 1,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "1996",
+      "fix_commit_hash": "333cd0d114de5bee2bdbfc3be91c7a373174dfe1",
+      "ground_truth_bics": [
+        "7434506f7fd3a069f899c1d535eaf0a876306c6f"
+      ],
+      "predicted_bics": [
+        "7434506f7fd3a069f899c1d535eaf0a876306c6f"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "1996",
+      "fix_commit": "333cd0d114de5bee2bdbfc3be91c7a373174dfe1",
+      "ground_truth_bics": [
+        "7434506f7fd3a069f899c1d535eaf0a876306c6f"
+      ],
+      "total_candidates": 12,
+      "gt_in_candidates": true,
+      "selected_commit": "7434506f7fd3a069f899c1d535eaf0a876306c6f",
+      "selected_index": 10,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes `JDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, compilerComplianceLevel.toString()));` to `JDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, JavaVersion.toVersion(compilerComplianceLevel).toString()));` in ConventionJdt.java, i.e. it wraps `compilerComplianceLevel` in `JavaVersion.toVersion(...)` before calling `.toString()`. Tracing the history of `compilerComplianceLevel`: - candidate_08 introduced the feature correctly: the public setter `compilerComplianceLevel(String com",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/main/java/com/diffplug/gradle/oomph/ConventionJdt.java"
+      ],
+      "call_stats": {
+        "duration_s": 49.715,
+        "duration_api_s": 49.657,
+        "num_turns": 10,
+        "input_tokens": 12,
+        "output_tokens": 4483,
+        "cache_creation_input_tokens": 17296,
+        "cache_read_input_tokens": 62770,
+        "total_cost_usd": 0.18988800000000003,
+        "total_tool_calls": 9,
+        "tool_calls_by_name": {
+          "Read": 6,
+          "Glob": 1,
+          "Grep": 1,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1996/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1996_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1996/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1996_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1996/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1996_candidate_selection/fix_commit_diff.txt"
+                }
+              },
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1367,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "compilerComplianceLevel",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1017,
+            "cache_read_input_tokens": 11051,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1996/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1996_candidate_selection/candidates/candidate_08.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1996/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1996_candidate_selection/candidates/candidate_11.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1996/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1996_candidate_selection/candidates/candidate_12.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 6219,
+            "cache_read_input_tokens": 12068,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1996/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1996_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_11\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes `JDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, compilerComplianceLevel.toString()));` to `JDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, JavaVersion.toVersion(compilerComplianceLevel).toString()));` in ConventionJdt.java, i.e. it wraps `compilerComplianceLevel` in `JavaVersion.toVersion(...)` before calling `.toString()`.\n\nTracing the history of `compilerComplianceLevel`:\n- candidate_08 introduced the feature correctly: the public setter `compilerComplianceLevel(String compilerComplianceLevel)` converted the incoming String immediately via `this.compilerComplianceLevel = JavaVersion.toVersion(compilerComplianceLevel);` and stored it as a `JavaVersion` field. The later `JavaComplianceAction.execute()` then called `complianceLevel.toString()` on that properly-typed `JavaVersion` object, which is correct/normalized behavior.\n- candidate_11 refactored this code (inlining the `workspaceProp` action directly into the setter and removing the `JavaComplianceAction`/`JavaClasspathVariableAction` classes and the `compilerComplianceLevel` field). In doing so, it dropped the `JavaVersion.toVersion(...)` conversion entirely and instead called `.toString()` directly on the raw String method parameter `compilerComplianceLevel` (a no-op since it's already a String). This reintroduced the exact buggy pattern that the fix commit later corrects: using the unconverted, unnormalized String value instead of a properly normalized `JavaVersion` value.\n- candidate_12 shows the same buggy line as its \"before\" state and is functionally identical to the fix commit diff itself (same before/after code, same file hashes), confirming that the bug the fix addresses was present starting at candidate_11 and persisted until the fix commit.\n\nBecause candidate_11 is the point where the code changed from correctly using `JavaVersion.toVersion(...)` to calling `.toString()` on the raw String parameter, it is the commit that introduced the bug.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 2407,
+            "cache_read_input_tokens": 18287,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

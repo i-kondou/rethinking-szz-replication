@@ -1,0 +1,311 @@
+{
+  "metadata": {
+    "timestamp": "20260906_044039",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 57.924,
+      "max": 57.924,
+      "mean": 57.924,
+      "median": 57.924,
+      "total": 57.924,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 57.362,
+      "max": 57.362,
+      "mean": 57.362,
+      "median": 57.362,
+      "total": 57.362,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 11,
+      "max": 11,
+      "mean": 11,
+      "median": 11,
+      "total": 11,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 5025,
+      "max": 5025,
+      "mean": 5025,
+      "median": 5025,
+      "total": 5025,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 97666,
+      "max": 97666,
+      "mean": 97666,
+      "median": 97666,
+      "total": 97666,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 189364,
+      "max": 189364,
+      "mean": 189364,
+      "median": 189364,
+      "total": 189364,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.7182222,
+      "max": 0.7182222,
+      "mean": 0.7182222,
+      "median": 0.7182222,
+      "total": 0.7182222,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 7,
+      "Glob": 1,
+      "Grep": 1,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 157,
+      "max": 157,
+      "mean": 157,
+      "median": 157,
+      "total": 157,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 6,
+      "max": 6,
+      "mean": 6,
+      "median": 6,
+      "total": 6,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 6,
+      "max": 6,
+      "mean": 6,
+      "median": 6,
+      "total": 6,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2911",
+      "fix_commit_hash": "1084c112ee85c7269baadafa0defc319f6c7ffc0",
+      "ground_truth_bics": [
+        "e33ec10aa400f32c2e0278c15ea80a0f624e5919"
+      ],
+      "predicted_bics": [
+        "8399707f054e5d387e1af18384efab4cd1b26e57"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2911",
+      "fix_commit": "1084c112ee85c7269baadafa0defc319f6c7ffc0",
+      "ground_truth_bics": [
+        "e33ec10aa400f32c2e0278c15ea80a0f624e5919"
+      ],
+      "total_candidates": 157,
+      "gt_in_candidates": true,
+      "selected_commit": "8399707f054e5d387e1af18384efab4cd1b26e57",
+      "selected_index": 136,
+      "confidence": "HIGH",
+      "explanation": "The fix commit modifies bookkeeper-common/src/main/java/org/apache/bookkeeper/common/util/OrderedScheduler.java to correct two bugs: 1. In TimedRunnable.safeRun(), `taskPendingStats.registerSuccessfulEvent(initNanos, TimeUnit.NANOSECONDS)` incorrectly recorded the raw `initNanos` timestamp as the queued duration instead of the actual elapsed time. The fix changes this to `taskPendingStats.registerSuccessfulEvent(MathUtils.elapsedNanos(initNanos), TimeUnit.NANOSECONDS)`. 2. The `submitOrdered(lon",
+      "is_correct": false,
+      "num_files_touched_by_fix": 6,
+      "num_source_files_touched_by_fix": 6,
+      "files_analyzed": [
+        "bookkeeper-common/src/main/java/org/apache/bookkeeper/common/util/OrderedScheduler.java",
+        "bookkeeper-server/src/main/java/org/apache/bookkeeper/conf/ServerConfiguration.java",
+        "bookkeeper-server/src/main/java/org/apache/bookkeeper/proto/BookieRequestProcessor.java",
+        "bookkeeper-server/src/test/java/org/apache/bookkeeper/test/BookKeeperClusterTestCase.java",
+        "bookkeeper-server/src/test/java/org/apache/bookkeeper/test/OpStatTest.java",
+        "bookkeeper-server/src/test/java/org/apache/bookkeeper/test/TestStatsProvider.java"
+      ],
+      "call_stats": {
+        "duration_s": 57.924,
+        "duration_api_s": 57.362,
+        "num_turns": 11,
+        "input_tokens": 14,
+        "output_tokens": 5025,
+        "cache_creation_input_tokens": 97666,
+        "cache_read_input_tokens": 189364,
+        "total_cost_usd": 0.7182222,
+        "total_tool_calls": 10,
+        "tool_calls_by_name": {
+          "Read": 7,
+          "Glob": 1,
+          "Grep": 1,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2911_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2911_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2911_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 12164,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1875,
+            "cache_read_input_tokens": 21848,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "OrderedScheduler.java",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 247,
+            "cache_read_input_tokens": 23723,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2911_candidate_selection/candidates/candidate_137.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2911_candidate_selection/candidates/candidate_145.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2911_candidate_selection/candidates/candidate_153.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2911_candidate_selection/candidates/candidate_157.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 74489,
+            "cache_read_input_tokens": 23970,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2911_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_137\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit modifies bookkeeper-common/src/main/java/org/apache/bookkeeper/common/util/OrderedScheduler.java to correct two bugs:\n\n1. In TimedRunnable.safeRun(), `taskPendingStats.registerSuccessfulEvent(initNanos, TimeUnit.NANOSECONDS)` incorrectly recorded the raw `initNanos` timestamp as the queued duration instead of the actual elapsed time. The fix changes this to `taskPendingStats.registerSuccessfulEvent(MathUtils.elapsedNanos(initNanos), TimeUnit.NANOSECONDS)`.\n\n2. The `submitOrdered(long orderingKey, ...)` and `submitOrdered(int orderingKey, ...)` overloads called `chooseThread(orderingKey).execute(r)` directly with the raw runnable `r`, instead of wrapping it with `timedRunnable(r)`. This meant task execution time was never tracked for these overloads. The fix wraps the runnable: `chooseThread(orderingKey).execute(timedRunnable(r))`.\n\nCandidate_137 is the commit that originally created OrderedScheduler.java (as a brand new file, git diff shows \"new file mode\" with index 00000000..41a7fa06). This newly created file already contains both buggy patterns verbatim:\n- `taskPendingStats.registerSuccessfulEvent(initNanos, TimeUnit.NANOSECONDS);` (raw timestamp bug)\n- `public void submitOrdered(long orderingKey, SafeRunnable r) { chooseThread(orderingKey).execute(r); }` and the `int` overload, both missing the `timedRunnable()` wrapper.\n\nI traced the subsequent history of this file: candidate_145 modifies OrderedScheduler.java (adding maxTasksInQueue/BoundedScheduledExecutorService support) but does not touch these specific buggy lines. candidate_153 modifies OrderedScheduler.java again (only a logging statement reformat) and also leaves the buggy lines untouched. candidate_157 is the fix commit itself (its diff is identical to fix_commit_diff.txt), finally correcting both bugs.\n\nSince the buggy code was present unchanged from the moment the file was created in candidate_137 all the way through to the fix in candidate_157, candidate_137 is the commit that introduced the bug.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 2605,
+            "cache_read_input_tokens": 98459,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

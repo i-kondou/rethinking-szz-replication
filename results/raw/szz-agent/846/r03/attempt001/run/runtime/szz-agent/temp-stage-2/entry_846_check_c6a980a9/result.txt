@@ -1,0 +1,16 @@
+VERDICT: BUG_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) adds a null check `if (myDataChoices != null) { ... }` wrapping a block in DisplayControlImpl.java that previously accessed `myDataChoices.size()` and `myDataChoices.get(0)` directly without checking for null, risking a NullPointerException.
+
+Examining files/old/src/ucar/unidata/idv/control/DisplayControlImpl.java, the same code block appears (around line 1139):
+
+    if ((myDataChoices.size() > 0)
+            && (myDataChoices.get(0) instanceof DerivedDataChoice)) {
+        List cdcs =
+            ((DerivedDataChoice) myDataChoices.get(0)).getChoices();
+        ...
+
+This is structurally and textually identical to the buggy version, with no surrounding `if (myDataChoices != null)` guard. Since the vulnerable code (missing null check on myDataChoices) already existed in the old version exactly as in the buggy version, the bug is present in files/old/.

@@ -1,0 +1,19 @@
+SELECTED: candidate_09
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit removes the MOUSE_TRANSPARENT property-based save/restore mechanism in TransitionHandler.java, replacing:
+  previousNode.setMouseTransparent((Boolean) previousNode.getProperties().get(MOUSE_TRANSPARENT));
+with:
+  view.setMouseTransparent(false);
+and replacing:
+  previousNode.getProperties().put(MOUSE_TRANSPARENT, previousNode.isMouseTransparent());
+  previousNode.setMouseTransparent(true);
+with:
+  view.setMouseTransparent(true);
+It also deletes the MOUSE_TRANSPARENT constant entirely. The fix commit message states "Set mouseTransparent of the whole view, fix bug" — indicating the bug was that mouse transparency was only being toggled on individual nodes (previousNode) instead of the whole container view, which could leave the view in an inconsistent mouse-interactable state during/after transitions.
+
+candidate_09 is the commit that first introduces this exact buggy pattern: it adds the MOUSE_TRANSPARENT constant, adds the properties-based save of previousNode.isMouseTransparent(), and sets previousNode.setMouseTransparent(true) instead of applying it to the whole view. This is precisely the code structure the fix later removes.
+
+candidate_10 subsequently modifies TransitionHandler.java but only wraps the same buggy block inside Platform.runLater() without changing the underlying mouseTransparent logic — it inherits the bug rather than introducing it. candidate_11's diff is identical to the fix_commit_diff itself (same hunks, same before/after hashes cec4a9d4..b350bb9a), meaning it is the fix, not the bug's origin. No candidate prior to candidate_09 contains any MOUSE_TRANSPARENT or related setMouseTransparent logic, confirming candidate_09 is where the buggy behavior was first introduced.

@@ -1,0 +1,25 @@
+SELECTED: candidate_02
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the signature of RerouteActions.execute() from
+`static final CompletableFuture<Long> execute(...)` (package-private) to
+`public static CompletableFuture<Long> execute(...)`, fixing a compile error
+caused by the method being inaccessible from outside its declaring package.
+
+candidate_02 is the commit that introduced this bug. It creates the new file
+sql/src/main/java/io/crate/executor/transport/RerouteActions.java, which
+defines `execute()` without an access modifier (package-private), placing it
+in package io.crate.executor.transport. In the same commit, it also modifies
+sql/src/main/java/io/crate/action/sql/DDLStatementDispatcher.java (package
+io.crate.action.sql — a different package) to call
+`RerouteActions.execute(rerouteAction::execute, analysis, parameters)` in the
+visitRerouteMoveShard and visitRerouteAllocateReplicaShard methods.
+
+Because `execute()` is package-private and DDLStatementDispatcher lives in a
+different package, this call would not compile — exactly the compile error
+that the fix commit resolves by adding the `public` modifier.
+
+candidate_01 only touches CHANGES.txt (documentation) and is unrelated to the
+compile error.

@@ -1,0 +1,14 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a block/position-convention implementation of the "distinct from" (IS_DISTINCT_FROM) scalar operators, replacing/augmenting the older NULL_FLAG-based implementations that required extracting native values out of Blocks via readNativeValue(). The "bug" being fixed is the inefficient NULL_FLAG-based isDistinctFrom implementation (present across many type operator classes, e.g. ArrayDistinctFromOperator, BigintOperators, etc.) that caused a performance issue.
+
+Examining files/old/ for the same paths shows that these files predate the entire feature:
+
+1. files/old/.../ArrayDistinctFromOperator.java does not contain an ArrayDistinctFromOperator class at all — the file at that path instead contains an unrelated, much older ArrayEqualOperator class (implementing only array EQUAL, using the old com.facebook.presto.metadata.OperatorType / SqlOperator specialize() pattern, not the annotation-based @ScalarOperator/@SqlType/@IsNull framework used in buggy/fixed).
+
+2. files/old/.../BigintOperators.java likewise uses the old com.facebook.presto.metadata.OperatorType import style and contains no isDistinctFrom method whatsoever — it only has add/subtract/multiply/etc. and basic equal/notEqual operators.
+
+Both independent checks show that at the point in history represented by files/old/, the annotation-based @ScalarOperator(IS_DISTINCT_FROM) isDistinctFrom methods (the exact code that the fix commit later optimizes) had not yet been introduced into the codebase. Since the relevant code section does not exist in files/old/, the specific inefficient NULL_FLAG-based implementation (the target of this fix) cannot be present. This matches the documented scenario: "If the relevant code section doesn't exist in old/, the bug cannot be present."

@@ -1,0 +1,410 @@
+{
+  "metadata": {
+    "timestamp": "20260906_012804",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/85/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 68.416,
+      "max": 68.416,
+      "mean": 68.416,
+      "median": 68.416,
+      "total": 68.416,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 68.246,
+      "max": 68.246,
+      "mean": 68.246,
+      "median": 68.246,
+      "total": 68.246,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 15,
+      "max": 15,
+      "mean": 15,
+      "median": 15,
+      "total": 15,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 28,
+      "max": 28,
+      "mean": 28,
+      "median": 28,
+      "total": 28,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 5107,
+      "max": 5107,
+      "mean": 5107,
+      "median": 5107,
+      "total": 5107,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 37056,
+      "max": 37056,
+      "mean": 37056,
+      "median": 37056,
+      "total": 37056,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 259792,
+      "max": 259792,
+      "mean": 259792,
+      "median": 259792,
+      "total": 259792,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.3769626,
+      "max": 0.3769626,
+      "mean": 0.3769626,
+      "median": 0.3769626,
+      "total": 0.3769626,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 6,
+      "Grep": 6,
+      "Write": 1,
+      "Glob": 1
+    },
+    "num_candidates": {
+      "min": 216,
+      "max": 216,
+      "mean": 216,
+      "median": 216,
+      "total": 216,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "85",
+      "fix_commit_hash": "5f10b3f730c31576da8ae967341fee7294dd6643",
+      "ground_truth_bics": [
+        "65efaa932ee6d0bcda6f97bf03616f1b7024aeaa"
+      ],
+      "predicted_bics": [
+        "65efaa932ee6d0bcda6f97bf03616f1b7024aeaa"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "85",
+      "fix_commit": "5f10b3f730c31576da8ae967341fee7294dd6643",
+      "ground_truth_bics": [
+        "65efaa932ee6d0bcda6f97bf03616f1b7024aeaa"
+      ],
+      "total_candidates": 216,
+      "gt_in_candidates": true,
+      "selected_commit": "65efaa932ee6d0bcda6f97bf03616f1b7024aeaa",
+      "selected_index": 213,
+      "confidence": "HIGH",
+      "explanation": "The fix commit modifies TransfersTableAdapter.java by removing the use of `java.util.Currency` / `java.text.NumberFormat` (specifically `Currency.getInstance(smartcoinAmount.getAsset().getSymbol())` combined with `Helper.newCurrencyFormat(getContext(), currency, locale)`), and restores the simpler, previously-working approach: `String fiatSymbol = Smartcoins.getFiatSymbol(smartcoinAmount.getAsset());` `String eqValue = String.format(\"~ %s %.2f\", fiatSymbol, Util.fromBase(smartcoinAmount));` It a",
+      "is_correct": true,
+      "num_files_touched_by_fix": 2,
+      "num_source_files_touched_by_fix": 2,
+      "files_analyzed": [
+        "app/src/main/java/de/bitshares_munich/adapters/TransfersTableAdapter.java",
+        "app/src/main/java/de/bitshares_munich/fragments/BalancesFragment.java"
+      ],
+      "call_stats": {
+        "duration_s": 68.416,
+        "duration_api_s": 68.246,
+        "num_turns": 15,
+        "input_tokens": 28,
+        "output_tokens": 5107,
+        "cache_creation_input_tokens": 37056,
+        "cache_read_input_tokens": 259792,
+        "total_cost_usd": 0.3769626,
+        "total_tool_calls": 14,
+        "tool_calls_by_name": {
+          "Read": 6,
+          "Grep": 6,
+          "Write": 1,
+          "Glob": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/85/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_85_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 20,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/85/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_85_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/85/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_85_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2542,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "newCurrencyFormat|Currency.getInstance|NumberFormat",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/85/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_85_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1363,
+            "cache_read_input_tokens": 12225,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "TransfersTableAdapter",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/85/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_85_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 634,
+            "cache_read_input_tokens": 13588,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "Currency|NumberFormat|fetchStringSharePref|locale",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/85/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_85_candidate_selection/candidates/candidate_159.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1347,
+            "cache_read_input_tokens": 14222,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "TransfersTableAdapter.java",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/85/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_85_candidate_selection/candidates/candidate_159.diff",
+                  "output_mode": "content"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 469,
+            "cache_read_input_tokens": 15569,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/85/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_85_candidate_selection/candidates/candidate_159.diff",
+                  "offset": 344,
+                  "limit": 150
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 3456,
+            "cache_read_input_tokens": 16038,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "smartcoinAmount",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/85/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_85_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 433,
+            "cache_read_input_tokens": 19494,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "smartcoinAmount|Currency|fiatSymbol|NumberFormat|newCurrencyFormat",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/85/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_85_candidate_selection/candidates/candidate_213.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 808,
+            "cache_read_input_tokens": 19927,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/85/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_85_candidate_selection/candidates/candidate_213.diff",
+                  "offset": 1,
+                  "limit": 330
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 6984,
+            "cache_read_input_tokens": 20735,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/85/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_85_candidate_selection/candidates/candidate_214.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 12,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 10955,
+            "cache_read_input_tokens": 27719,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/85/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_85_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_214\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit modifies TransfersTableAdapter.java by removing the use of\n`java.util.Currency` / `java.text.NumberFormat` (specifically\n`Currency.getInstance(smartcoinAmount.getAsset().getSymbol())` combined with\n`Helper.newCurrencyFormat(getContext(), currency, locale)`), and restores the\nsimpler, previously-working approach:\n`String fiatSymbol = Smartcoins.getFiatSymbol(smartcoinAmount.getAsset());`\n`String eqValue = String.format(\"~ %s %.2f\", fiatSymbol, Util.fromBase(smartcoinAmount));`\nIt also removes the `Locale` constructor parameter added to\n`TransfersTableAdapter` and the corresponding call site in\n`BalancesFragment.java`, reverting to the two-argument constructor.\n\nExamining the candidates, candidate_213 has the original, correct code using\n`Smartcoins.getFiatSymbol(...)` (matching what the fix restores). The very\nnext relevant change, candidate_214, is the one that introduces the buggy\npattern the fix later removes:\n- It adds `import java.util.Currency;` and `import java.text.NumberFormat;`\n  to TransfersTableAdapter.java.\n- It comments out the previously working\n  `Helper.fetchStringSharePref(...)` / `new Locale(language)` lines inside\n  `renderAmount`, and instead adds a `Locale locale` field populated via a new\n  constructor parameter.\n- Critically, it replaces the safe `Smartcoins.getFiatSymbol(...)` call with\n  `Currency.getInstance(smartcoinAmount.getAsset().getSymbol())`. Smartcoin\n  asset symbols in this codebase (e.g. \"bitUSD\", \"bitCNY\", or other\n  BitShares-specific smartcoin symbols) are not valid ISO 4217 currency\n  codes, so `Currency.getInstance()` throws an `IllegalArgumentException`\n  for any symbol that isn't a real-world currency code, crashing the\n  transfers table rendering \u2014 this is the bug the fix commit addresses.\n- It also updates `BalancesFragment.java` to call the new\n  `TransfersTableAdapter(getContext(), locale, account, ...)` constructor,\n  which is exactly the call site the fix commit reverts back to the\n  three-argument version.\n\nSince candidate_214 is the first commit to introduce the\n`Currency.getInstance(smartcoinAmount.getAsset().getSymbol())` /\n`Helper.newCurrencyFormat` logic (which the fix commit directly reverts) and\nno earlier candidate contains this pattern, candidate_214 is the\nbug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 13,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1566,
+            "cache_read_input_tokens": 38674,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "result.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 14,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 214,
+            "cache_read_input_tokens": 40240,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

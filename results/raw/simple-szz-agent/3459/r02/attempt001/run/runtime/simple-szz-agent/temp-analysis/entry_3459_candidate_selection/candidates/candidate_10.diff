@@ -1,0 +1,653 @@
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/OrgsDao.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/OrgsDao.java
+new file mode 100644
+index 000000000..55fd3a99a
+--- /dev/null
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ds/OrgsDao.java
+@@ -0,0 +1,165 @@
++package org.georchestra.ldapadmin.ds;
++
++
++import org.georchestra.ldapadmin.dto.Org;
++import org.springframework.ldap.core.AttributesMapper;
++import org.springframework.ldap.core.LdapTemplate;
++import org.springframework.ldap.filter.AndFilter;
++import org.springframework.ldap.filter.EqualsFilter;
++import org.springframework.ldap.filter.Filter;
++import org.springframework.ldap.support.LdapNameBuilder;
++
++import javax.naming.Name;
++import javax.naming.directory.Attribute;
++import javax.naming.directory.Attributes;
++import javax.naming.NamingException;
++import javax.naming.directory.BasicAttribute;
++import javax.naming.directory.BasicAttributes;
++import java.util.Arrays;
++import java.util.Enumeration;
++import java.util.LinkedList;
++import java.util.List;
++
++public class OrgsDao {
++
++    private LdapTemplate ldapTemplate;
++    private Name orgsSearchBaseDN;
++    private Name userSearchBaseDN;
++
++    public void setLdapTemplate(LdapTemplate ldapTemplate) {
++        this.ldapTemplate = ldapTemplate;
++    }
++
++    public void setOrgsSearchBaseDN(String orgsSearchBaseDN) {
++        this.orgsSearchBaseDN = LdapNameBuilder.newInstance(orgsSearchBaseDN).build();
++    }
++
++    public void setUserSearchBaseDN(String userSearchBaseDN) {
++        this.userSearchBaseDN = LdapNameBuilder.newInstance(userSearchBaseDN).build();
++    }
++
++    public List<Org> findAll(){
++        EqualsFilter filter = new EqualsFilter("objectClass", "groupOfMembers");
++        return ldapTemplate.search(this.orgsSearchBaseDN, filter.encode(), new OrgsDao.OrgAttributesMapper());
++    }
++
++    public Org findByCommonName(String commonName) {
++        Name dn = LdapNameBuilder.newInstance(this.orgsSearchBaseDN).add("cn", commonName).build();
++        return this.ldapTemplate.lookup(dn, new OrgsDao.OrgAttributesMapper());
++    }
++
++    public Org findForUser(String user) throws DataServiceException {
++
++        Name userDn = LdapNameBuilder.newInstance(this.userSearchBaseDN).add("uid", user).build();
++
++        AndFilter filter  = new AndFilter();
++        filter.and(new EqualsFilter("member", userDn.toString()));
++        filter.and(new EqualsFilter("objectClass", "groupOfMembers"));
++        List<Org> res = ldapTemplate.search(this.orgsSearchBaseDN, filter.encode(), new OrgsDao.OrgAttributesMapper());
++        if(res.size() > 1)
++            throw new DataServiceException("Multiple org for one user");
++        if(res.size() == 1)
++            return res.get(0);
++        else
++            return null;
++
++    }
++
++    public List<String> findUsers(final String org) throws DataServiceException {
++
++        Filter filter = new EqualsFilter("cn", org);
++        List<List<String>> res = ldapTemplate.search(this.orgsSearchBaseDN, filter.encode(),  new AttributesMapper<List<String>>() {
++            public List<String> mapFromAttributes(Attributes attrs) throws NamingException {
++
++                Attribute member = attrs.get("member");
++                List<String> res = new LinkedList<String>();
++                for (Enumeration vals = member.getAll(); vals.hasMoreElements();)
++                    res.add((String) ((Attribute) vals.nextElement()).get());
++                return res;
++            }
++         });
++
++        if(res.size() > 1)
++            throw new DataServiceException("Multiple org for one user");
++        if(res.size() == 1)
++            return res.get(0);
++        else
++            return null;
++
++    }
++
++
++    public void insert(Org org){
++
++        Name dn = LdapNameBuilder.newInstance(this.orgsSearchBaseDN).add("cn", org.getId()).build();
++        this.ldapTemplate.bind(dn, null, buildAttributes(org));
++
++    }
++
++
++    /*
++    public abstract void delete(final String commonName);
++    public abstract void addUser(String org, String user);
++
++
++    public void deleteUser(String user) throws DataServiceException {
++
++        Org org = this.findForUser(user);
++        this.deleteUser(org.getId(), user);
++
++    }
++
++    public abstract void deleteUser(String org, String user);
++*/
++
++
++
++    private Attributes buildAttributes(Org org) {
++        Attributes attrs = new BasicAttributes();
++        BasicAttribute ocattr = new BasicAttribute("objectclass");
++        ocattr.add("top");
++        ocattr.add("groupOfMembers");
++
++        attrs.put(ocattr);
++        attrs.put("cn", org.getId());
++        attrs.put("o", org.getName());
++        attrs.put("ou", org.getShortName());
++        attrs.put("description", org.getCities());
++        attrs.put("businessCategory", org.getStatus());
++
++        return attrs;
++    }
++
++
++    private class OrgAttributesMapper implements AttributesMapper<Org> {
++
++        public Org mapFromAttributes(Attributes attrs) throws NamingException {
++            Org org = new Org();
++            org.setId(asString(attrs.get("cn")));
++            org.setName(asString(attrs.get("o")));
++            org.setShortName(asString(attrs.get("ou")));
++            org.setCities(Arrays.asList(asString(attrs.get("description")).split(",")));
++            org.setStatus(asString(attrs.get("businessCategory")));
++            org.setMembers(asListString(attrs.get("member")));
++            return org;
++        }
++
++        public String asString(Attribute att) throws NamingException {
++            if(att == null)
++                return null;
++            else
++                return (String) att.get();
++        }
++
++        public List<String> asListString(Attribute att) throws NamingException {
++            if(att == null)
++                return null;
++
++            List<String> res = new LinkedList<String>();
++            for(int i=0; i< att.size();i++)
++                res.add((String) att.get(i));
++
++            return res;
++        }
++    }
++}
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/dto/Org.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/dto/Org.java
+new file mode 100644
+index 000000000..4e047b39d
+--- /dev/null
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/dto/Org.java
+@@ -0,0 +1,96 @@
++package org.georchestra.ldapadmin.dto;
++
++
++import org.json.JSONArray;
++import org.json.JSONException;
++import org.json.JSONObject;
++
++import java.util.List;
++
++public class Org {
++
++    private String id;
++    private String name;
++    private String shortName;
++    private List<String> cities;
++    private String status;
++    private List<String> members;
++
++    public String getId() {
++        return id;
++    }
++
++    public void setId(String id) {
++        this.id = id;
++    }
++
++    public String getName() {
++        return name;
++    }
++
++    public void setName(String name) {
++        this.name = name;
++    }
++
++    public String getShortName() {
++        return shortName;
++    }
++
++    public void setShortName(String shortName) {
++        this.shortName = shortName;
++    }
++
++    public List<String> getCities() {
++        return cities;
++    }
++
++    public void setCities(List<String> cities) {
++        this.cities = cities;
++    }
++
++    public String getStatus() {
++        return status;
++    }
++
++    public void setStatus(String status) {
++        this.status = status;
++    }
++
++    public List<String> getMembers() {
++        return members;
++    }
++
++    public void setMembers(List<String> members) {
++        this.members = members;
++    }
++
++    public JSONObject toJson() throws JSONException {
++        JSONObject res = new JSONObject();
++        res.put("id", this.getId());
++        res.put("name", this.getName());
++        res.put("shortName", this.getShortName());
++        JSONArray cities = new JSONArray();
++        for(String city : this.getCities())
++            cities.put(city);
++        res.put("cities", cities);
++        res.put("status", this.getStatus());
++        JSONArray members = new JSONArray();
++        for(String member : this.getMembers())
++            members.put(member);
++        res.put("members", members);
++        return res;
++    }
++
++    public String toString(){
++        return this.getName();
++    }
++
++    public static Org createBrief(String name, String shortName){
++        Org res = new Org();
++        res.setName(name);
++        res.setShortName(shortName);
++        res.setId(name.replaceAll("[^\\w]", "_"));
++        return res;
++
++    }
++}
+\ No newline at end of file
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/orgs/OrgsController.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/orgs/OrgsController.java
+new file mode 100644
+index 000000000..dca89e34a
+--- /dev/null
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/orgs/OrgsController.java
+@@ -0,0 +1,81 @@
++/*
++ * Copyright (C) 2009-2016 by the geOrchestra PSC
++ *
++ * This file is part of geOrchestra.
++ *
++ * geOrchestra is free software: you can redistribute it and/or modify it under
++ * the terms of the GNU General Public License as published by the Free
++ * Software Foundation, either version 3 of the License, or (at your option)
++ * any later version.
++ *
++ * geOrchestra is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * geOrchestra.  If not, see <http://www.gnu.org/licenses/>.
++ */
++
++package org.georchestra.ldapadmin.ws.backoffice.orgs;
++
++import org.apache.commons.logging.Log;
++import org.apache.commons.logging.LogFactory;
++import org.georchestra.ldapadmin.ds.OrgsDao;
++import org.georchestra.ldapadmin.dto.Org;
++import org.georchestra.ldapadmin.ws.backoffice.utils.ResponseUtil;
++import org.json.JSONArray;
++import org.json.JSONObject;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.ldap.filter.EqualsFilter;
++import org.springframework.stereotype.Controller;
++import org.springframework.web.bind.annotation.RequestMapping;
++import org.springframework.web.bind.annotation.RequestMethod;
++
++import javax.servlet.http.HttpServletRequest;
++import javax.servlet.http.HttpServletResponse;
++import java.io.IOException;
++import java.util.HashMap;
++import java.util.List;
++
++@Controller
++public class OrgsController {
++
++    private static final Log LOG = LogFactory.getLog(OrgsDao.class.getName());
++
++
++    private static final String BASE_MAPPING = "/private";
++    private static final String BASE_RESOURCE = "orgs";
++    private static final String REQUEST_MAPPING = BASE_MAPPING + "/" + BASE_RESOURCE;
++
++    @Autowired
++    private OrgsDao orgDao;
++
++    @Autowired
++    public OrgsController(OrgsDao dao) {
++        this.orgDao = dao;
++    }
++
++    @RequestMapping(value = REQUEST_MAPPING, method = RequestMethod.GET)
++    public void findAll(HttpServletRequest request, HttpServletResponse response) throws IOException {
++
++        try {
++            List<Org> orgs = this.orgDao.findAll();
++            JSONArray res = new JSONArray();
++            for (Org org : orgs)
++                res.put(org.toJson());
++
++            ResponseUtil.buildResponse(response, res.toString(4), HttpServletResponse.SC_OK);
++
++        } catch (Exception e) {
++            LOG.error(e.getMessage());
++            ResponseUtil.buildResponse(response, ResponseUtil.buildResponseMessage(false, e.getMessage()),
++                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
++
++            throw new IOException(e);
++        }
++
++
++    }
++
++}
+\ No newline at end of file
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/utils/ResponseUtil.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/utils/ResponseUtil.java
+index f5ca29999..0981439c4 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/utils/ResponseUtil.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/backoffice/utils/ResponseUtil.java
+@@ -19,12 +19,12 @@
+ 
+ package org.georchestra.ldapadmin.ws.backoffice.utils;
+ 
+-import java.io.IOException;
+-import java.io.PrintWriter;
++import org.json.JSONException;
++import org.json.JSONObject;
+ 
+ import javax.servlet.http.HttpServletResponse;
+-
+-import org.springframework.http.MediaType;
++import java.io.IOException;
++import java.io.PrintWriter;
+ 
+ /**
+  * Utility class which contains useful method to prepare the http response.
+@@ -52,14 +52,17 @@ final public class ResponseUtil {
+ 	}
+ 	
+ 	public static String buildResponseMessage(Boolean status, String errorMessage){
+-		
+-		String error;
+-		if(errorMessage == null){
+-			error = "{ \"success\": "+ status.toString() +" }";
+-		} else {
+-			error = "{ \"success\": "+ status.toString() +" , \"error\": \"" +errorMessage+ "\" }";
++
++		JSONObject res = new JSONObject();
++		try {
++			res.put("success", status);
++			if(errorMessage != null){
++				res.put("error", errorMessage);
++			}
++		} catch (JSONException e) {
++			throw new RuntimeException(e);
+ 		}
+-		return error;
++		return res.toString();
+ 	}
+ 
+ 
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/AccountFormBean.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/AccountFormBean.java
+index 8cad99cd3..5864b5ec4 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/AccountFormBean.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/AccountFormBean.java
+@@ -46,6 +46,9 @@ public class AccountFormBean implements Serializable{
+ 
+ 	private String recaptcha_challenge_field;
+ 	private String recaptcha_response_field;
++	private Boolean createOrg;
++	private String orgName;
++	private String orgShortName;
+ 
+ 	public String getRecaptcha_challenge_field() {
+ 		return recaptcha_challenge_field;
+@@ -126,6 +129,30 @@ public class AccountFormBean implements Serializable{
+ 
+ 		this.surname = sn;
+ 	}
++
++	public Boolean getCreateOrg() {
++		return createOrg;
++	}
++
++	public void setCreateOrg(Boolean createOrg) {
++		this.createOrg = createOrg;
++	}
++
++	public String getOrgShortName() {
++		return orgShortName;
++	}
++
++	public void setOrgShortName(String orgShortName) {
++		this.orgShortName = orgShortName;
++	}
++
++	public String getOrgName() {
++		return orgName;
++	}
++
++	public void setOrgName(String orgName) {
++		this.orgName = orgName;
++	}
+ 	@Override
+ 	public String toString() {
+ 		return "AccountFormBean [uid=" + uid + ", firstName=" + firstName
+diff --git a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormController.java b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormController.java
+index bcc9c859f..deb3931b4 100644
+--- a/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormController.java
++++ b/ldapadmin/src/main/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormController.java
+@@ -20,6 +20,10 @@
+ package org.georchestra.ldapadmin.ws.newaccount;
+ 
+ import java.io.IOException;
++import java.util.HashMap;
++import java.util.LinkedList;
++import java.util.List;
++import java.util.Map;
+ 
+ 
+ import javax.servlet.ServletContext;
+@@ -33,13 +37,11 @@ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
+ import org.georchestra.ldapadmin.bs.Moderator;
+ import org.georchestra.ldapadmin.bs.ReCaptchaParameters;
+-import org.georchestra.ldapadmin.ds.AccountDao;
+-import org.georchestra.ldapadmin.ds.DataServiceException;
+-import org.georchestra.ldapadmin.ds.DuplicatedEmailException;
+-import org.georchestra.ldapadmin.ds.DuplicatedUidException;
++import org.georchestra.ldapadmin.ds.*;
+ import org.georchestra.ldapadmin.dto.Account;
+ import org.georchestra.ldapadmin.dto.AccountFactory;
+ import org.georchestra.ldapadmin.dto.Group;
++import org.georchestra.ldapadmin.dto.Org;
+ import org.georchestra.ldapadmin.mailservice.MailService;
+ import org.georchestra.ldapadmin.ws.utils.EmailUtils;
+ import org.georchestra.ldapadmin.ws.utils.PasswordUtils;
+@@ -76,6 +78,7 @@ public final class NewAccountFormController {
+ 	private static final Log LOG = LogFactory.getLog(NewAccountFormController.class.getName());
+ 
+ 	private AccountDao accountDao;
++	private OrgsDao orgDao;
+ 
+ 	private MailService mailService;
+ 
+@@ -89,9 +92,10 @@ public final class NewAccountFormController {
+ 	    "title", "description", "uid", "password", "confirmPassword"};
+ 
+ 	@Autowired
+-	public NewAccountFormController(AccountDao dao, MailService mailSrv, Moderator moderatorRule,
+-	        ReCaptcha reCaptcha, ReCaptchaParameters reCaptchaParameters) {
++	public NewAccountFormController(AccountDao dao, OrgsDao orgDao, MailService mailSrv, Moderator moderatorRule,
++									ReCaptcha reCaptcha, ReCaptchaParameters reCaptchaParameters) {
+ 		this.accountDao = dao;
++		this.orgDao = orgDao;
+ 		this.mailService = mailSrv;
+ 		this.moderator = moderatorRule;
+ 		this.reCaptcha = reCaptcha;
+@@ -109,8 +113,15 @@ public final class NewAccountFormController {
+ 
+ 		HttpSession session = request.getSession();
+ 		AccountFormBean formBean = new AccountFormBean();
++		Map<String, String> options = new HashMap<String, String>();
++
++		List<Org> orgs = this.orgDao.findAll();
++		for(Org org : orgs)
++			options.put(org.getId(), org.getName());
+ 
+ 		model.addAttribute(formBean);
++		model.addAttribute("orgs", options);
++
+ 		session.setAttribute("reCaptchaPublicKey", this.reCaptchaParameters.getPublicKey());
+ 		for (String f : fields) {
+ 			if (Validation.isFieldRequired(f)) {
+@@ -174,6 +185,13 @@ public final class NewAccountFormController {
+ 
+ 			this.accountDao.insert(account, groupID, request.getHeader("sec-username"));
+ 
++			// Organisation
++			if(formBean.getCreateOrg()){
++				Org org = Org.createBrief(formBean.getOrgName(), formBean.getOrgShortName());
++				this.orgDao.insert(org);
++			}
++
++
+ 			final ServletContext servletContext = request.getSession().getServletContext();
+ 			if(this.moderator.moderatedSignup() ){
+ 
+diff --git a/ldapadmin/src/main/webapp/WEB-INF/spring/webmvc-config.xml b/ldapadmin/src/main/webapp/WEB-INF/spring/webmvc-config.xml
+index cf65255f2..11acb319a 100644
+--- a/ldapadmin/src/main/webapp/WEB-INF/spring/webmvc-config.xml
++++ b/ldapadmin/src/main/webapp/WEB-INF/spring/webmvc-config.xml
+@@ -85,6 +85,13 @@
+     <property name="groupSearchBaseDN" value="${groupSearchBaseDN}"/>
+   </bean>
+ 
++  <bean id="orgsDao" class="org.georchestra.ldapadmin.ds.OrgsDao">
++    <property name="ldapTemplate" ref="ldapTemplate"/>
++    <property name="orgsSearchBaseDN" value="${orgsSearchBaseDN}"/>
++    <property name="userSearchBaseDN" value="${userSearchBaseDN}"/>
++  </bean>
++
++
+   <bean id="accountDao" class="org.georchestra.ldapadmin.ds.AccountDaoImpl">
+     <constructor-arg ref="ldapTemplate"/>
+     <constructor-arg ref="groupDao"/>
+diff --git a/ldapadmin/src/main/webapp/WEB-INF/tags/list.tag b/ldapadmin/src/main/webapp/WEB-INF/tags/list.tag
+new file mode 100644
+index 000000000..887458456
+--- /dev/null
++++ b/ldapadmin/src/main/webapp/WEB-INF/tags/list.tag
+@@ -0,0 +1,37 @@
++<%@tag description="Extended select tag to allow for sophisticated errors" pageEncoding="UTF-8"%>
++<%@taglib prefix="spring" uri="http://www.springframework.org/tags" %>
++<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
++<%@taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
++<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
++<%@attribute name="path" required="true" type="java.lang.String"%>
++<%@attribute name="items" required="true" type="java.util.Map<java.lang.String, java.lang.String>"%>
++<%@attribute name="cssClass" required="false" type="java.lang.String"%>
++<%@attribute name="label" required="false" type="java.lang.String"%>
++<%@attribute name="required" required="false" type="java.lang.Boolean"%>
++<%@attribute name="onchange" required="false" type="java.lang.String"%>
++<%@attribute name="onkeyup" required="false" type="java.lang.String"%>
++<%@attribute name="appendIcon" required="false" type="java.lang.String"%>
++<c:if test="${empty label}">
++	<c:set var="label" value="${fn:toUpperCase(fn:substring(path, 0, 1))}${fn:toLowerCase(fn:substring(path, 1,fn:length(path)))}" />
++</c:if>
++<spring:bind path="${path}">
++	<div id="div-${path}" class="form-group ${status.error ? 'has-error' : '' }">
++		<label class="control-label col-lg-4" for="${path}">${label}<c:if test="${required}"><span class="required">&nbsp;*</span></c:if></label>
++		<div class="col-lg-8">
++			<c:if test="${not empty appendIcon}">
++				<div class="input-group">
++			</c:if>
++				<form:select path="${path}" cssClass="${empty cssClass ? 'form-control' : cssClass}" onkeyup="${onkeyup}" onchange="${onchange}">
++					<form:option value="-" label=""/>
++					<form:options items="${items}"/>
++				</form:select>
++			<c:if test="${not empty appendIcon}">
++					<span class="input-group-addon"><i class="glyphicon glyphicon-${appendIcon}"></i></span>
++				</div>
++			</c:if>
++			<c:if test="${status.error}">
++				<span id="span-error" class="help-block">${status.errorMessage}</span>
++			</c:if>
++		</div>
++	</div>
++</spring:bind>
+diff --git a/ldapadmin/src/main/webapp/WEB-INF/views/createAccountForm.jsp b/ldapadmin/src/main/webapp/WEB-INF/views/createAccountForm.jsp
+index 85fcb62a1..8cb337a24 100644
+--- a/ldapadmin/src/main/webapp/WEB-INF/views/createAccountForm.jsp
++++ b/ldapadmin/src/main/webapp/WEB-INF/views/createAccountForm.jsp
+@@ -25,6 +25,7 @@
+ <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+ <%@ taglib uri="http://www.springframework.org/tags" prefix="s" %>
+ <%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
++
+ <%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
+ 
+ <%@ page import="net.tanesha.recaptcha.ReCaptcha" %>
+@@ -82,9 +83,9 @@
+ 				<t:input path="phone" required="${phoneRequired}">
+ 					<jsp:attribute name="label"><s:message code="phone.label" /></jsp:attribute>
+ 				</t:input>
+-				<t:input path="org" required="${orgRequired}">
++				<t:list path="org" required="${orgRequired}" items="${orgs}">
+ 					<jsp:attribute name="label"><s:message code="org.label" /></jsp:attribute>
+-				</t:input>
++				</t:list>
+ 				<t:input path="title" required="${titleRequired}">
+ 					<jsp:attribute name="label"><s:message code="title.label" /></jsp:attribute>
+ 				</t:input>
+diff --git a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormControllerTest.java b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormControllerTest.java
+index 568a0f7f4..b3a4a78d4 100644
+--- a/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormControllerTest.java
++++ b/ldapadmin/src/test/java/org/georchestra/ldapadmin/ws/newaccount/NewAccountFormControllerTest.java
+@@ -12,10 +12,7 @@ import net.tanesha.recaptcha.ReCaptchaResponse;
+ 
+ import org.georchestra.ldapadmin.bs.Moderator;
+ import org.georchestra.ldapadmin.bs.ReCaptchaParameters;
+-import org.georchestra.ldapadmin.ds.AccountDao;
+-import org.georchestra.ldapadmin.ds.DataServiceException;
+-import org.georchestra.ldapadmin.ds.DuplicatedEmailException;
+-import org.georchestra.ldapadmin.ds.DuplicatedUidException;
++import org.georchestra.ldapadmin.ds.*;
+ import org.georchestra.ldapadmin.dto.Account;
+ import org.georchestra.ldapadmin.dto.AccountFactory;
+ 
+@@ -41,6 +38,7 @@ public class NewAccountFormControllerTest {
+     // Mocked objects needed by the controller default constructor
+     private NewAccountFormController ctrl ;
+     private AccountDao dao = Mockito.mock(AccountDao.class);
++    private OrgsDao org = Mockito.mock(OrgsDao.class);
+     private EmailFactoryImpl efi = Mockito.mock(EmailFactoryImpl.class);
+     private MailService srv = new MailService(efi);
+     private Moderator  mod = new Moderator();
+@@ -81,7 +79,7 @@ public class NewAccountFormControllerTest {
+ 
+     @Before
+     public void setUp() throws Exception {
+-        ctrl = new NewAccountFormController(dao, srv, mod, rec, rep);
++        ctrl = new NewAccountFormController(dao, org, srv, mod, rec, rep);
+ 
+         // Mock admin account
+         DistinguishedName dn = new DistinguishedName();

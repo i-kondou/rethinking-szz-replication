@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "timestamp": "20260906_203600",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1275/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "1275",
+      "fix_commit_hash": "0ee0b96338c7fbd2de425134662b2724a5430cf2",
+      "bug_commit_hash": [
+        "13b64ad6e3d4841c4f7b49aef0858c196cb2b5e6"
+      ],
+      "szz_candidates": [
+        "13b64ad6e3d4841c4f7b49aef0858c196cb2b5e6"
+      ],
+      "szz_num_candidates": 1,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "13b64ad6e3d4841c4f7b49aef0858c196cb2b5e6"
+      ],
+      "llm_selected_commit": "13b64ad6e3d4841c4f7b49aef0858c196cb2b5e6",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit adds an early-return guard `if (udts.isEmpty()) { return; }` to `loadUserTypes` in BulkLoader.java, and removes the now-redundant `if (notLoaded.size() > 0)` check before the recursive call. This addresses a bug where, if the input `udts` collection is empty (i.e., a keyspace has no user-defined types), the for-loop over `udts` never executes, leaving `notLoaded` empty as well. The check `notLoaded.size() == udts.size()` then evaluates to `0 == 0`, which is true, causing the metho",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/1275",
+      "bug_fixing_commit": "0ee0b96338c7fbd2de425134662b2724a5430cf2",
+      "bug_inducing_commit": [
+        "13b64ad6e3d4841c4f7b49aef0858c196cb2b5e6"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "scylladb/scylla-tools-java"
+    }
+  ]
+}

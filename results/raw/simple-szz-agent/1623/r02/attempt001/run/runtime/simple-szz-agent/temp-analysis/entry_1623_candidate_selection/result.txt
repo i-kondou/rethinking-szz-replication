@@ -1,0 +1,14 @@
+SELECTED: candidate_30
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes two lines in FlamingoThemeIT.java's validateColorThemeFeatures test, inside the block that handles the ViewThemePage:
+- `editThemePage.waitUntilPreviewIsLoaded();` -> `themePage.waitUntilPreviewIsLoaded();`
+- `editThemePage = new EditThemePage();` -> `themePage = new ViewThemePage();`
+
+This is a copy-paste error: the code is operating on a `ViewThemePage themePage` object (created via `themeApplicationWebHomePage.seeTheme(testMethodName)`), but the try/catch retry logic incorrectly references `editThemePage`/`EditThemePage`, which belong to a different, unrelated code path/scope in the same test class (the theme-editing section uses `EditThemePage editThemePage`).
+
+candidate_30 is exactly where this bug was introduced. It replaces the previously correct single line `themePage.waitUntilPreviewIsLoaded();` with a new try/catch block that adds the retry-on-timeout logic, but mistakenly uses `editThemePage.waitUntilPreviewIsLoaded()` and `editThemePage = new EditThemePage()` instead of `themePage.waitUntilPreviewIsLoaded()` and `themePage = new ViewThemePage()`. This introduces a compile-time/logic error (referencing the wrong variable/type in the ViewThemePage context) that the fix commit later corrects, restoring the correct `themePage`/`ViewThemePage` usage.
+
+No other candidate introduces this exact incorrect variable substitution in the `seeTheme`/`ViewThemePage themePage` block; other candidates matching "editThemePage.waitUntilPreviewIsLoaded()" (e.g. candidate_03, candidate_05, candidate_10, candidate_18, candidate_21, candidate_27) refer to the separate, legitimately-scoped `EditThemePage editThemePage` variable in the theme-creation/editing section of the same test, which is correct usage and unrelated to this bug.

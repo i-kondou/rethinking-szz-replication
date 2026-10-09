@@ -1,0 +1,14 @@
+SELECTED: candidate_34
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix (fix_commit_diff.txt) modifies `setHalfwayBuffer` in sceAtrac3plus.java, changing the unconditional computation of `maxSizeBeforeFirstWrap`/`maxSizeAfterFirstWrap` (based on aligning the buffer to a multiple of `atracBytesPerFrame`) into a conditional computation that only applies the alignment when `readSize < bufferSize`, otherwise defaulting both values to `bufferSize`. The comment added in the fix ("If the buffer is not already full, try to align it on multiple of atracBytesPerFrame") makes clear the bug: when the halfway buffer was already fully read (readSize == bufferSize), the old code still computed an aligned (and potentially smaller/incorrect) `maxSizeBeforeFirstWrap`/`maxSizeAfterFirstWrap`, causing the pspFileBuffer to be sized incorrectly and leading to the reported issue in sceAtracGetStreamDataInfo.
+
+candidate_34 is exactly the commit that introduced this problematic unconditional computation:
+```
+int maxSizeBeforeFirstWrap = bufferSize - ((bufferSize - info.inputFileDataOffset) % info.atracBytesPerFrame);
+int maxSizeAfterFirstWrap = bufferSize - (bufferSize % info.atracBytesPerFrame);
+inputBuffer = new pspFileBuffer(addr, maxSizeBeforeFirstWrap, maxSizeAfterFirstWrap, readSize, readSize);
+```
+This same code (byte-for-byte) is what the fix commit (candidate_35, which is identical to fix_commit_diff.txt) replaces with the guarded version. Prior to candidate_34, setHalfwayBuffer simply used `new pspFileBuffer(addr, bufferSize, readSize, readSize)` with no alignment logic at all (seen in candidate_16's initial file creation), and pspFileBuffer itself did not even support separate before/after-wrap sizes until candidate_34 also modified pspFileBuffer.java to add the `maxSizeBeforeFirstWrap`/`maxSizeAfterFirstWrap` constructor and wrap-detection logic. Thus candidate_34 is the commit that both introduced the wrap-alignment feature and the accompanying bug that the fix later corrects.

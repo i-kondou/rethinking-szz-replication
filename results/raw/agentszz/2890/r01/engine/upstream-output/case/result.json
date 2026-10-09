@@ -1,0 +1,22 @@
+{
+  "fix_commit": "fb5db894da2532b3ff6d7aa464114567437dc5b4",
+  "bic": "88ddbe5ac6ac5aa0f18ade50aa376b25546fb058",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "Prior to this commit, the food level change handler checked `arena.inArena((Player) event.getEntity())` before applying the lockFoodLevel logic. This commit refactored the method to split logic between \"arena running\" and \"lobby/spec\" branches, but in doing so dropped the inArena check from the `arena.isRunning()` branch, causing the lockFoodLevel cancellation to apply to all players when the arena is running, regardless of whether they are actually in the arena. The fix commit fb5db894 restores this missing check by adding `arena.inArena(p) &&` back to the condition.",
+  "metrics": {
+    "case_elapsed_seconds": 8.051442,
+    "api_elapsed_seconds": 7.863715,
+    "tool_elapsed_seconds": 0.081074,
+    "other_elapsed_seconds": 0.106659,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 13643,
+    "completion_tokens": 631,
+    "total_tokens": 14274,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:28:06.121291"
+}

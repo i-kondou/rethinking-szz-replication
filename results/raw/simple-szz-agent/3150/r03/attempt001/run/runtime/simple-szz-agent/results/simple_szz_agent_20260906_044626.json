@@ -1,0 +1,297 @@
+{
+  "metadata": {
+    "timestamp": "20260906_044626",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3150/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 63.074,
+      "max": 63.074,
+      "mean": 63.074,
+      "median": 63.074,
+      "total": 63.074,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 63.011,
+      "max": 63.011,
+      "mean": 63.011,
+      "median": 63.011,
+      "total": 63.011,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 11,
+      "max": 11,
+      "mean": 11,
+      "median": 11,
+      "total": 11,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 5719,
+      "max": 5719,
+      "mean": 5719,
+      "median": 5719,
+      "total": 5719,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 30541,
+      "max": 30541,
+      "mean": 30541,
+      "median": 30541,
+      "total": 30541,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 75140,
+      "max": 75140,
+      "mean": 75140,
+      "median": 75140,
+      "total": 75140,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.291609,
+      "max": 0.291609,
+      "mean": 0.291609,
+      "median": 0.291609,
+      "total": 0.291609,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 7,
+      "Grep": 2,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 55,
+      "max": 55,
+      "mean": 55,
+      "median": 55,
+      "total": 55,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "3150",
+      "fix_commit_hash": "cd415ee4963ede69562b8a616fdf3b37048345bc",
+      "ground_truth_bics": [
+        "e44a62e455053aed84a67fb57d5ab82e27491202"
+      ],
+      "predicted_bics": [
+        "772fb534d65aa4efa2043d91a908a59b4416d804"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "3150",
+      "fix_commit": "cd415ee4963ede69562b8a616fdf3b37048345bc",
+      "ground_truth_bics": [
+        "e44a62e455053aed84a67fb57d5ab82e27491202"
+      ],
+      "total_candidates": 55,
+      "gt_in_candidates": true,
+      "selected_commit": "772fb534d65aa4efa2043d91a908a59b4416d804",
+      "selected_index": 53,
+      "confidence": "HIGH",
+      "explanation": "The fix removes an \"if (sourceTrack != null)\" guard around track creation in Util.retargetAnimation() / retargetTrack() and replaces it with logic that synthesizes a single-keyframe bind-pose track when sourceTrack is null, instead of silently skipping the bone track altogether. This is the \"retargeting logic error\": when a source animation has no track for a given bone, the old code simply omitted the target bone's track from the retargeted animation, which is incorrect (it should fall back to ",
+      "is_correct": false,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/main/java/maud/Util.java"
+      ],
+      "call_stats": {
+        "duration_s": 63.074,
+        "duration_api_s": 63.011,
+        "num_turns": 11,
+        "input_tokens": 12,
+        "output_tokens": 5719,
+        "cache_creation_input_tokens": 30541,
+        "cache_read_input_tokens": 75140,
+        "total_cost_usd": 0.291609,
+        "total_tool_calls": 10,
+        "tool_calls_by_name": {
+          "Read": 7,
+          "Grep": 2,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3150/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3150_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3150/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3150_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3150/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3150_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1566,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "handle null sourceTrack",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3150/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3150_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "sourceTrack",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3150/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3150_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 963,
+            "cache_read_input_tokens": 11250,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3150/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3150_candidate_selection/candidates/candidate_36.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3150/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3150_candidate_selection/candidates/candidate_53.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3150/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3150_candidate_selection/candidates/candidate_54.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3150/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3150_candidate_selection/candidates/candidate_55.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 18100,
+            "cache_read_input_tokens": 12213,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3150/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3150_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_54\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix removes an \"if (sourceTrack != null)\" guard around track creation in Util.retargetAnimation() / retargetTrack() and replaces it with logic that synthesizes a single-keyframe bind-pose track when sourceTrack is null, instead of silently skipping the bone track altogether. This is the \"retargeting logic error\": when a source animation has no track for a given bone, the old code simply omitted the target bone's track from the retargeted animation, which is incorrect (it should fall back to the bind pose).\n\nTracing the history of Util.retargetTrack/retargetAnimation across the candidates:\n\n- candidate_36 introduces the original retargetTrack()/retargetAnimation() methods. Here retargetTrack() looks up sourceTrack internally via MyAnimation.findTrack() and immediately calls sourceTrack.getTimes() with NO null check at all \u2014 a latent NullPointerException risk, but no track-skipping behavior yet.\n\n- candidate_54 is the commit that changes this method signature so sourceTrack is now resolved in retargetAnimation() and passed in, and \u2014 critically \u2014 wraps the call to retargetTrack() in `if (sourceTrack != null) { ... result.addTrack(track); }`, silently skipping the target bone's track whenever no matching source track exists. It also adds `Validate.nonNull(sourceTrack, \"source track\")` inside retargetTrack(), reinforcing that null tracks are treated as an error/skip case rather than falling back to bind pose. This is exactly the flawed behavior later corrected by the fix.\n\n- candidate_53 makes only a cosmetic change, appending the comment `// handle null sourceTrack` to the existing `if (sourceTrack != null) {` line introduced in candidate_54; the logic itself is unchanged, so it doesn't introduce new bug behavior.\n\n- candidate_55 is identical to the fix commit itself (removes the null check and adds proper bind-pose fallback), so it is the fix, not the introducing commit.\n\nSince candidate_54 is the first commit to introduce the \"skip track if sourceTrack is null\" logic that the fix commit explicitly reverses, it is the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 3626,
+            "cache_read_input_tokens": 30313,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,486 @@
+diff --git a/src/main/java/algorithm/SpimDataFilteringAndGrouping.java b/src/main/java/algorithm/SpimDataFilteringAndGrouping.java
+index b352829..c008367 100644
+--- a/src/main/java/algorithm/SpimDataFilteringAndGrouping.java
++++ b/src/main/java/algorithm/SpimDataFilteringAndGrouping.java
+@@ -27,6 +27,7 @@ import mpicbg.spim.data.sequence.Tile;
+ import mpicbg.spim.data.sequence.TimePoint;
+ import net.imglib2.util.Pair;
+ import net.imglib2.util.ValuePair;
++import spim.fiji.datasetmanager.FileListDatasetDefinition;
+ import spim.fiji.spimdata.SpimDataTools;
+ import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
+ import spim.fiji.spimdata.explorer.GroupedRowWindow;
+@@ -51,6 +52,8 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
+ 	AS data;
+ 	GroupedViewAggregator gva;
+ 	
++	boolean dialogWasCancelled = false;
++	
+ 	public SpimDataFilteringAndGrouping(AS data)
+ 	{
+ 		groupingFactors = new HashSet<>();
+@@ -255,14 +258,39 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
+ 		return new ArrayList<>(res);
+ 	}
+ 	
++	public boolean getDialogWasCancelled()
++	{
++		return dialogWasCancelled;
++	}
++	
++	// convenience method if we do not know selected views
++	public SpimDataFilteringAndGrouping< AS> askUserForFiltering()
++	{
++		// select all
++		return askUserForFiltering( data.getSequenceDescription().getViewDescriptions().values() );
++	}
+ 	
+-	public static <AS extends AbstractSpimData< ? > > SpimDataFilteringAndGrouping< AS> askUserForGrouping(FilteredAndGroupedExplorerPanel< AS, ?> panel)
++	// convenience method if have a panel (which can give us selected views)
++	public SpimDataFilteringAndGrouping< AS> askUserForFiltering(FilteredAndGroupedExplorerPanel< AS, ?> panel)
+ 	{
++		List< BasicViewDescription< ? extends BasicViewSetup > > views;
+ 		
++		if (panel instanceof GroupedRowWindow)
++		{
++			Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > selectedRowsGroups = ((GroupedRowWindow)panel).selectedRowsGroups();
++			views = selectedRowsGroups.stream().reduce( new ArrayList<>(), (x, y) -> {x.addAll(y); return x;} );
++		}
++		else
++			views = panel.selectedRows();
+ 		
+-		SpimDataFilteringAndGrouping< AS > res = new SpimDataFilteringAndGrouping< AS >( panel.getSpimData() );
++		SpimDataFilteringAndGrouping< AS > res = askUserForFiltering( views );
++		return res;
+ 		
+-		Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > selectedRowsGroups = ((GroupedRowWindow)panel).selectedRowsGroups();		
++	}
++	
++	public SpimDataFilteringAndGrouping< AS> askUserForFiltering(Collection<? extends BasicViewDescription< ? extends BasicViewSetup > > views)
++	{
++
+ 		GenericDialogPlus gdp1 = new GenericDialogPlus( "Select Views To Process" );
+ 		
+ 		gdp1.addMessage( "<html><strong>Select wether you want to process all instances of an attribute <br>"
+@@ -273,25 +301,54 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
+ 		
+ 		for (Class<? extends Entity> cl : entityClasses)
+ 		{
+-			boolean allSelected = (getInstancesOfAttributeGrouped( selectedRowsGroups, cl ).containsAll(SpimDataTools.getInstancesOfAttribute( panel.getSpimData().getSequenceDescription(), cl )));
++			boolean allSelected = (getInstancesOfAttribute(views, cl ).containsAll(SpimDataTools.getInstancesOfAttribute( data.getSequenceDescription(), cl )));
+ 			gdp1.addChoice( cl.getSimpleName(), viewSelectionChoices, allSelected ? viewSelectionChoices[0] : viewSelectionChoices[1] );			
+ 		}
+ 		
+ 		gdp1.showDialog();
+ 		if (gdp1.wasCanceled())
+-			return null;
++		{
++			dialogWasCancelled = true;
++			return this;
++		}
+ 		
+ 		for (Class<? extends Entity> cl : entityClasses)
+ 		{
+ 			boolean useCurrent = gdp1.getNextChoiceIndex() == 1;
+ 			if (useCurrent)
+-				res.addFilter( cl, new ArrayList<>(getInstancesOfAttributeGrouped( selectedRowsGroups, cl )) );
++				addFilter( cl, new ArrayList<>(getInstancesOfAttribute(views, cl )) );
+ 		}
+ 		
++		return this;
++	
++	}
++	
++	public SpimDataFilteringAndGrouping< AS> askUserForGrouping()
++	{
++		// use the current filtering as preset
++		return askUserForGrouping( SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), getFilters() ), new ArrayList<>() );
++	}
++	
++	public SpimDataFilteringAndGrouping< AS> askUserForGrouping( FilteredAndGroupedExplorerPanel< AS, ?> panel)
++	{
++		List< BasicViewDescription< ? extends BasicViewSetup > > views;
+ 		
++		if (panel instanceof GroupedRowWindow)
++		{
++			Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > selectedRowsGroups = ((GroupedRowWindow)panel).selectedRowsGroups();
++			views = selectedRowsGroups.stream().reduce( new ArrayList<>(), (x, y) -> {x.addAll(y); return x;} );
++		}
++		else
++			views = panel.selectedRows();
+ 		
+-		
+-		
++		return askUserForGrouping( views,	panel.getTableModel().getGroupingFactors());
++	}
++	
++	
++	public SpimDataFilteringAndGrouping< AS> askUserForGrouping( 
++					Collection<? extends BasicViewDescription< ? extends BasicViewSetup > > views,
++					Collection<Class<? extends Entity>> groupingFactors)
++	{	
+ 		GenericDialogPlus gdp2 = new GenericDialogPlus( "Select How to Process Views" );
+ 		
+ 		gdp2.addMessage( "<html><strong>Select how to process the different attributes </strong> <br>"
+@@ -300,49 +357,55 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
+ 				+ "<strong>TREAT INDIVIDUALLY:</strong> process instances one after the other, but do not compare or group <br> </html>");
+ 
+ 		
+-		System.err.println( panel.getTableModel().getFilters() );
+ 		
+ 		String[] computeChoices = new String[] {"compare", "group", "treat individually"};
+ 		for (Class<? extends Entity> cl : entityClasses)
+ 		{
+-			boolean isGrouping = panel.getTableModel().getGroupingFactors().contains( cl );
+-			boolean isFilterOrSingleton = panel.getTableModel().getFilters().keySet().contains( cl ) || getInstancesOfAttributeGrouped( selectedRowsGroups, cl ).size() <= 1;
++			boolean isGrouping = groupingFactors.contains( cl );
++			boolean isFilterOrSingleton = getFilters().keySet().contains( cl ) || getInstancesOfAttribute(views, cl ).size() <= 1;
+ 			int idx = isGrouping ? 1 : isFilterOrSingleton ? 2 : 0;
+ 			gdp2.addChoice( cl.getSimpleName(), computeChoices, computeChoices[idx] );
+ 		}
+ 		
+ 		gdp2.showDialog();
+ 		if (gdp2.wasCanceled())
+-			return null;
++		{
++			dialogWasCancelled = true;
++			return this;
++		}
+ 		
+ 		for (Class<? extends Entity> cl : entityClasses)
+ 		{
+ 			int selection = gdp2.getNextChoiceIndex();
+ 			if (selection == 0)
+-				res.addComparisonAxis( cl );
++				addComparisonAxis( cl );
+ 			else if (selection == 1)
+-				res.addGroupingFactor( cl );
++				addGroupingFactor( cl );
+ 			else
+-				res.addApplicationAxis( cl );
++				addApplicationAxis( cl );
+ 		}
+ 		
+-		
++		return this;
++	}
++	
++	
++	public SpimDataFilteringAndGrouping< AS> askUserForGroupingAggregator()
++	{	
+ 		
+ 		// ask what to do with grouped views
+ 		
+-		GenericDialogPlus gdp3 = new GenericDialogPlus( "Select How to Treat Grouped Views" );
+-		
++		GenericDialogPlus gdp3 = new GenericDialogPlus( "Select How to Treat Grouped Views" );		
+ 		gdp3.addMessage( "<html><strong>Select which instances of attributes to use in Grouped Views </strong> <br></html>");
+ 		
+ 		
+ 		// filter first
+ 		final List<BasicViewDescription< ? > > ungroupedElements =
+-						SpimDataTools.getFilteredViewDescriptions( panel.getSpimData().getSequenceDescription(), res.getFilters());
++						SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), getFilters());
+ 		// then group
+ 		final List< List< BasicViewDescription< ?  > >> groupedElements = 
+-						SpimDataTools.groupByAttributes(ungroupedElements, res.getGroupingFactors());
++						SpimDataTools.groupByAttributes(ungroupedElements, getGroupingFactors());
+ 		
+-		for (Class<? extends Entity> cl : res.getGroupingFactors())
++		for (Class<? extends Entity> cl : getGroupingFactors())
+ 		{
+ 			List<String> selection = new ArrayList<>();
+ 			selection.add( "average" );
+@@ -362,29 +425,24 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
+ 		
+ 		gdp3.showDialog();
+ 		if (gdp3.wasCanceled())
+-			return null;
++		{
++			dialogWasCancelled = true;
++			return this;
++		}
+ 		
+-		for (Class<? extends Entity> cl : res.getGroupingFactors())
++		for (Class<? extends Entity> cl : getGroupingFactors())
+ 		{
+ 			List< ? extends Entity > instancesInAllGroups = getInstancesInAllGroups( groupedElements, cl );
+ 			int nextChoiceIndex = gdp3.getNextChoiceIndex();
+ 			if (nextChoiceIndex == 0)
+-				res.getGroupedViewAggregator().addAction( ActionType.AVERAGE, cl, null );
++				getGroupedViewAggregator().addAction( ActionType.AVERAGE, cl, null );
+ 			else if (nextChoiceIndex == 1)
+-				res.getGroupedViewAggregator().addAction( ActionType.PICK_BRIGHTEST, cl, null );
++				getGroupedViewAggregator().addAction( ActionType.PICK_BRIGHTEST, cl, null );
+ 			else
+-				res.getGroupedViewAggregator().addAction( ActionType.PICK_SPECIFIC, cl, instancesInAllGroups.get( nextChoiceIndex - 2 ) );
++				getGroupedViewAggregator().addAction( ActionType.PICK_SPECIFIC, cl, instancesInAllGroups.get( nextChoiceIndex - 2 ) );
+ 		}
+ 		
+-		System.out.println("Filters: " + res.getFilters() );
+-		System.out.println("Grouping: " + res.getGroupingFactors() );
+-		System.out.println("Application: " + res.getAxesOfApplication() );
+-		System.out.println("Comparison: " + res.getAxesOfComparison() );
+-		
+-		System.out.println( res.getComparisons() );
+-		System.out.println( res.getGroupedViewAggregator() );
+-		
+-		return res;
++		return this;
+ 	}
+ 	
+ 	
+diff --git a/src/main/java/gui/popup/CalculatePCPopup.java b/src/main/java/gui/popup/CalculatePCPopup.java
+index 5208d5a..6d6644f 100644
+--- a/src/main/java/gui/popup/CalculatePCPopup.java
++++ b/src/main/java/gui/popup/CalculatePCPopup.java
+@@ -8,6 +8,7 @@ import java.util.Collections;
+ import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.List;
++import java.util.Optional;
+ import java.util.Set;
+ 
+ import javax.swing.JComponent;
+@@ -30,6 +31,7 @@ import mpicbg.spim.data.generic.AbstractSpimData;
+ import mpicbg.spim.data.generic.base.Entity;
+ import mpicbg.spim.data.generic.base.NamedEntity;
+ import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
++import mpicbg.spim.data.generic.sequence.BasicViewDescription;
+ import mpicbg.spim.data.registration.ViewRegistrations;
+ import mpicbg.spim.data.sequence.Channel;
+ import mpicbg.spim.data.sequence.Illumination;
+@@ -41,6 +43,7 @@ import net.imglib2.realtransform.AffineTransform3D;
+ import net.imglib2.realtransform.TranslationGet;
+ import net.imglib2.util.Pair;
+ import net.imglib2.util.ValuePair;
++import spim.fiji.spimdata.SpimData2;
+ import spim.fiji.spimdata.explorer.ExplorerWindow;
+ import spim.fiji.spimdata.explorer.GroupedRowWindow;
+ import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+@@ -79,31 +82,87 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
+ 		return this;
+ 	}
+ 
+-	static long[] askForDownsampling(boolean is2d)
++	public static long[] askForDownsampling(AbstractSpimData< ? > data, boolean is2d)
+ 	{
++		// get first non-missing viewDescription
++		final Optional<? extends BasicViewDescription< ? > > firstPresent = 
++				data.getSequenceDescription().getViewDescriptions().values().stream().filter( v -> v.isPresent() ).findFirst();
++		
++		boolean askForManualDownsampling = true;
++		final long[] downSamplingFactors = new long[] {1, 1, 1};
++		
++		// ask for precomputed levels if we have at least one present view and a MultiResolutionImgLoader
++		if (firstPresent.isPresent())
++		{
++			if (MultiResolutionImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ))
++			{
++				// by default, we do not ask for manual ds if we have multiresolution data
++				askForManualDownsampling = false;
++				
++				GenericDialog gd = new GenericDialog( "Use precomputed downsampling" );
++				
++				final MultiResolutionImgLoader mrImgLoader = (MultiResolutionImgLoader) data.getSequenceDescription().getImgLoader();
++				final double[][] mipmapResolutions = mrImgLoader.getSetupImgLoader( firstPresent.get().getViewSetupId()).getMipmapResolutions();
++				final String[] dsStrings = new String[mipmapResolutions.length];
++				
++				for (int i = 0; i<mipmapResolutions.length; i++)
++				{
++					final String fx = ((Long)Math.round( mipmapResolutions[i][0] )).toString(); 
++					final String fy = ((Long)Math.round( mipmapResolutions[i][1] )).toString(); 
++					final String fz = ((Long)Math.round( mipmapResolutions[i][2] )).toString();
++					final String dsString = String.join( ", ", fx, fy, fz );
++					dsStrings[i] = dsString;
++				}
++				
++				gd.addChoice( "downsampling (x, y, z)", dsStrings, dsStrings[0] );
++				gd.addCheckbox( "manually select downsampling", false );
++				
++				gd.showDialog();
++
++				if ( gd.wasCanceled() )
++					return null;
++				
++				final String dsChoice = gd.getNextChoice();
++				final String[] choiceSplit = dsChoice.split( ", " );
++				downSamplingFactors[0] = Long.parseLong( choiceSplit[0] );
++				downSamplingFactors[1] = Long.parseLong( choiceSplit[1] );
++				downSamplingFactors[2] = Long.parseLong( choiceSplit[2] );
++				
++				askForManualDownsampling = gd.getNextBoolean();
++			
++			}
++		}
++		
++		if (!askForManualDownsampling)
++			return downSamplingFactors;
++		
+ 		GenericDialogPlus gdp = new GenericDialogPlus( "Manual downsampling" );
+-		gdp.addChoice( "downsample x", ds, ds[0] );
+-		gdp.addChoice( "downsample y", ds, ds[0] );
++		gdp.addChoice( "downsample x", ds, Long.toString( downSamplingFactors[0] ));
++		gdp.addChoice( "downsample y", ds, Long.toString( downSamplingFactors[1] ) );
+ 		if ( !is2d )
+ 		{
+-			gdp.addChoice( "downsample z", ds, ds[0] );
++			gdp.addChoice( "downsample z", ds, Long.toString( downSamplingFactors[2] ) );
+ 		}
+ 		
+ 		gdp.showDialog();
+-		long[] dsFactors = new long[] {1,1,1};
+ 		
+-		if (!gdp.wasCanceled())
+-		{
+-			dsFactors[0] = Integer.parseInt( gdp.getNextChoice() );
+-			dsFactors[1] = Integer.parseInt( gdp.getNextChoice() );
++		if (gdp.wasCanceled())
++			return null;
++			
++			downSamplingFactors[0] = Integer.parseInt( gdp.getNextChoice() );
++			downSamplingFactors[1] = Integer.parseInt( gdp.getNextChoice() );
+ 			if ( !is2d )
+ 			{
+-				dsFactors[2] = Integer.parseInt( gdp.getNextChoice() );
++				downSamplingFactors[2] = Integer.parseInt( gdp.getNextChoice() );
+ 			}
+-		}
+ 		
+-		return dsFactors;
++		
++		return downSamplingFactors;
+ 	}
++		
++		
++		
++
+ 
+ 	public class MyActionListener implements ActionListener
+ 	{
+@@ -159,31 +218,6 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
+ 					gd.addChoice( "illumination to use", illuminationNames.toArray( new String[0] ), "pick brightest" );
+ 					
+ 					
+-					// Ask for downsampling factors
+-					
+-					// we have a HDF5 dataset - display mipmap resolutins present as choices
+-					if ( MultiResolutionImgLoader.class.isInstance( sd.getImgLoader() ))
+-					{
+-						MultiResolutionImgLoader mrImgLoader = (MultiResolutionImgLoader) sd.getImgLoader();
+-						// we consider the resolutions present for the first selected ViewId
+-						double[][] mipmapResolutions = mrImgLoader.getSetupImgLoader( panel.firstSelectedVD().getViewSetupId()).getMipmapResolutions();
+-						String[] dsStrings = new String[mipmapResolutions.length];
+-						
+-						for (int i = 0; i<mipmapResolutions.length; i++)
+-						{
+-							String fx = ((Long)Math.round( mipmapResolutions[i][0] )).toString(); 
+-							String fy = ((Long)Math.round( mipmapResolutions[i][1] )).toString(); 
+-							String fz = ((Long)Math.round( mipmapResolutions[i][2] )).toString();
+-							String dsString = String.join( ", ", fx, fy, fz );
+-							dsStrings[i] = dsString;
+-						}
+-						
+-						gd.addChoice( "downsampling (x, y, z)", dsStrings, dsStrings[0] );
+-						
+-					}
+-					
+-					gd.addCheckbox( "manually select downsampling", false );
+-					
+ 					gd.showDialog();
+ 
+ 					if ( gd.wasCanceled() )
+@@ -193,29 +227,10 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
+ 					String illum = gd.getNextChoice();
+ 					
+ 
+-					//long[] downSamplingFactors = !is2d ? new long[3] : new long[2];
+-					long[] downSamplingFactors = new long[] {1, 1, 1};
+-					
+-					if (( MultiResolutionImgLoader.class.isInstance( sd.getImgLoader() )))
+-					{
+-						String dsChoice = gd.getNextChoice();
+-						String[] choiceSplit = dsChoice.split( ", " );
+-						downSamplingFactors[0] = Long.parseLong( choiceSplit[0] );
+-						downSamplingFactors[1] = Long.parseLong( choiceSplit[1] );
+-						downSamplingFactors[2] = Long.parseLong( choiceSplit[2] );
+-					}
+ 					
+-					boolean manualDownsampling = gd.getNextBoolean();
+-					
+-					if (manualDownsampling)
+-						downSamplingFactors = askForDownsampling( is2d );
+-					
+-					
+-					
+-					/*
+-		
+-					
+-					*/
++					final long[] downSamplingFactors = askForDownsampling( panel.getSpimData(), is2d );
++					if (downSamplingFactors == null)
++						return;
+ 
+ 					PairwiseStitchingParameters params = PairwiseStitchingParameters.askUserForParameters();
+ 					if ( params == null )
+diff --git a/src/main/java/gui/popup/CalculatePCPopupExpertBatch.java b/src/main/java/gui/popup/CalculatePCPopupExpertBatch.java
+index 2984eaa..ee00f73 100644
+--- a/src/main/java/gui/popup/CalculatePCPopupExpertBatch.java
++++ b/src/main/java/gui/popup/CalculatePCPopupExpertBatch.java
+@@ -70,14 +70,27 @@ public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWi
+ 				@Override
+ 				public void run()
+ 				{
++				
++					FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
++					SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
+ 					
+-					SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 
+-							SpimDataFilteringAndGrouping.askUserForGrouping( (FilteredAndGroupedExplorerPanel< ? extends AbstractSpimData< ? >, ? > ) panel);
++					filteringAndGrouping.askUserForFiltering( panelFG );
++					if (filteringAndGrouping.getDialogWasCancelled())
++						return;
+ 					
++					filteringAndGrouping.askUserForGrouping( panelFG );
++					if (filteringAndGrouping.getDialogWasCancelled())
++						return;
++					
++					filteringAndGrouping.askUserForGroupingAggregator();
++					if (filteringAndGrouping.getDialogWasCancelled())
++						return;
+ 					
+ 					PairwiseStitchingParameters params = PairwiseStitchingParameters.askUserForParameters();
+ 					
+-					long[] dsFactors = CalculatePCPopup.askForDownsampling( false );
++					long[] dsFactors = CalculatePCPopup.askForDownsampling( panel.getSpimData(), false );
++					if (dsFactors == null)
++						return;
+ 					
+ 					
+ 					List< Pair< ViewId, ViewId > > pairs = filteringAndGrouping.getComparisons().stream().map( 
+diff --git a/src/main/java/gui/popup/OptimizeGloballyPopupExpertBatch.java b/src/main/java/gui/popup/OptimizeGloballyPopupExpertBatch.java
+index 292f063..6e4d2a3 100644
+--- a/src/main/java/gui/popup/OptimizeGloballyPopupExpertBatch.java
++++ b/src/main/java/gui/popup/OptimizeGloballyPopupExpertBatch.java
+@@ -75,9 +75,19 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
+ 			if (params == null)
+ 				return;
+ 			
+-			final SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = SpimDataFilteringAndGrouping.askUserForGrouping( (FilteredAndGroupedExplorerPanel<? extends AbstractSpimData< ? >, ? >) panel );
++			FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
++			SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
+ 			
+-			// why can type not be BasicViewDescriotion?
++			filteringAndGrouping.askUserForFiltering( panelFG );
++			if (filteringAndGrouping.getDialogWasCancelled())
++				return;
++			
++			filteringAndGrouping.askUserForGrouping( panelFG );
++			if (filteringAndGrouping.getDialogWasCancelled())
++				return;
++			
++			
++			// why can type not be BasicViewDescription?
+ 			PairwiseSetup< ViewId > setup = new PairwiseSetup< ViewId >(
+ 					filteringAndGrouping.getFilteredViews().stream().map( x -> (ViewId) x ).collect( Collectors.toList() ),
+ 					filteringAndGrouping.getGroupedViews( false ).stream().map( x -> 

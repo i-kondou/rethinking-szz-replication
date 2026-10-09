@@ -1,0 +1,22 @@
+VERDICT: BUG_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (EA-79438) reorders initialization statements in FileHistoryPanelImpl's constructor so that `myPopupActions = createPopupActions();` is called BEFORE `createDualView();` (and before the `isStaticEmbedded` handling), instead of after. This fixes an initialization order issue causing an IllegalArgumentException (IAE) in PopupHandler.installPopupHandler, presumably because createDualView() (or setIsStaticAndEmbedded()) ends up depending on myPopupActions being already initialized, and calling createPopupActions() too late leaves myPopupActions null/uninitialized when it is needed.
+
+In files/buggy/FileHistoryPanelImpl.java, the order is:
+  createDualView();
+  if (isStaticEmbedded) { setIsStaticAndEmbedded(isStaticEmbedded); }
+  myPopupActions = createPopupActions();
+which is the buggy order.
+
+In files/fixed/FileHistoryPanelImpl.java, the order is corrected to:
+  myPopupActions = createPopupActions();
+  createDualView();
+  if (isStaticEmbedded) { setIsStaticAndEmbedded(isStaticEmbedded); }
+
+Examining files/old/FileHistoryPanelImpl.java (an earlier historical version), the relevant code shows:
+  createDualView();
+  myPopupActions = createPopupActions();
+i.e., createDualView() is called BEFORE createPopupActions(), matching the same problematic order as in the buggy version. Although this old version lacks the `isStaticEmbedded` block (a later addition), the core ordering defect — createDualView() running before myPopupActions is assigned — is already present. Since the bug is specifically about this initialization order, and that same order exists in the old version, the bug is present in files/old/.

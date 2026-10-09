@@ -1,0 +1,25 @@
+SELECTED: candidate_02
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds an early-return guard (`if (udts.isEmpty()) { return; }`) to `BulkLoader.loadUserTypes()` and simplifies the trailing recursive call, because the previous logic threw a spurious `RuntimeException("Unable to load user types [])")` whenever a keyspace had zero user-defined types. The root cause is that when `udts` is empty, the `for` loop never runs, so `notLoaded` stays empty, and the check `notLoaded.size() == udts.size()` evaluates to `0 == 0` (true), incorrectly triggering the "unable to load" exception instead of recognizing there was simply nothing to load.
+
+candidate_01 only creates the initial `BulkLoader.java` (plus build/script changes) and does not yet contain a `loadUserTypes` method at all, so the bug cannot have existed there.
+
+candidate_02 introduces the entire `loadUserTypes(Collection<UserType> udts, KSMetaData ks)` method verbatim with the flawed logic:
+```java
+private static void loadUserTypes(Collection<UserType> udts, KSMetaData ks) {
+    LinkedList<UserType> notLoaded = new LinkedList<UserType>();
+    for (UserType ut : udts) { ... }
+    if (notLoaded.size() == udts.size()) {
+        throw new RuntimeException("Unable to load user types " + notLoaded);
+    }
+    if (notLoaded.size() > 0) {
+        loadUserTypes(notLoaded, ks);
+    }
+}
+```
+This is exactly the code the fix commit patches (same pre-image, same line numbers), and it is also called unconditionally from the constructor via `loadUserTypes(keyspaceMetadata.getUserTypes(), ksMetaData);` — meaning any keyspace with no user types would immediately hit the bug. This is the first point at which the problematic code exists, so candidate_02 is the bug-introducing commit.
+
+candidate_03's diff is identical (same before/after blob hashes) to the actual fix_commit_diff.txt provided — it is the fix itself, not a bug-introducing candidate, so it is excluded from consideration.

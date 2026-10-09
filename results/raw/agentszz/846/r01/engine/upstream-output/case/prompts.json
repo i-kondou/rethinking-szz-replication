@@ -1,0 +1,361 @@
+[
+  {
+    "round": 1,
+    "agent": "executor",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are an expert at identifying Bug-Introducing Commits (BICs) in the Linux kernel.\n\nGiven a fix commit, find the commit that originally introduced the bug.\n\n## Tools\n\n1. **git_show(commit, context_lines, stat_only, file_filter)** \u2014 View commit message and diff. Use file_filter for one file's changes in large commits.\n2. **git_blame(file_path, commit, line_start, line_end)** \u2014 Show which commit last modified each line.\n3. **git_log_s(search_string, path, after, before)** \u2014 Search commits that added or removed a string (-S).\n4. **git_log_func(function_name, file_path, after, before)** \u2014 Track function body change history.\n5. **git_grep(search_string, commit, path)** \u2014 Search codebase at a commit snapshot.\n\n## Workflow\n\n### Step 1: git_blame at fix~1\n\nYour first tool call should be git_blame on the changed lines at fix~1 \u2014 this is the most efficient starting point for nearly all cases:\n- MODIFIED or REMOVED lines \u2192 blame those exact lines\n- ONLY ADDED lines (omission fix) \u2192 no deleted or modified lines to trace. Blame surrounding context (adjacent lines, function signature, callers) to find which commit established the code structure that should have included this logic. If context blame is inconclusive, use git_log_s or git_log_func to trace the related identifier's history.\n\nOnly start with git_log_s or git_grep instead if the fix message clearly describes a cross-file behavior change (file A's fix caused by a change in file B) or an omission bug where the surrounding context provides no useful blame signal.\n\n### Step 2: Evaluate Blame Results\n\nBlame returns multiple commits. When two or more distinct commits appear, git_show at least the most frequent one and the one directly on the buggy line. If they are the same commit, one git_show is sufficient.\n\nFor each, run git_show (use file_filter for multi-file commits) and classify:\n\n**Non-semantic change?** Signals:\n- Refactoring: message says refactor/rename/move/extract/split/accessor/cleanup/\"no functional change\"; diff is mechanical; semantics unchanged.\n- Merge or cherry-pick: commit merges branches or backports code without introducing new logic.\n- Meta-change: whitespace adjustment, comment-only edit, formatting, copyright update, import reordering.\n\n\u2192 If the commit message indicates refactoring, merge/cherry-pick, or meta-change, treat it as non-semantic and trace further back via git_blame at this_commit~1. Only reconsider if the diff contains changes clearly beyond what the message describes.\n\u2192 Exception: if the commit moves/adds an entire driver or subsystem (e.g. \"Move driver from staging\", \"Add new driver\"), it IS the BIC \u2014 it introduced the buggy code into the tree the fix targets. Do not trace back into staging or the original source.\n\u2192 If re-blame cannot continue (e.g., file was renamed or blame chain breaks), fall back to git_log_s on the relevant symbol to trace its origin across renames.\n\n**Semantic introduction?** The commit added new logic, changed an expression's meaning, or created the code the fix corrects.\n\n**Initial commit (1da177e4c3f4)?** Valid BIC \u2014 bug existed from start of git history. Report with high confidence. Also check the fix commit message: if it describes a long-standing issue, says the code \"never had\" something, or does not reference any specific introducing commit, and blame traces back to 1da177e4c3f4, that strongly confirms this is the BIC. Do not keep searching for a newer commit when blame already points here. Note: if the fix message says another commit \"exposed\", \"triggered\", or \"made visible\" the problem, that commit is NOT the BIC \u2014 it merely revealed a pre-existing bug.\n\n**Multiple semantic candidates?** The BIC is the one that introduced the CORE buggy logic. Ask: \"if this commit had never been written, would the bug exist?\" A later commit that adjusted existing logic is not the BIC.\n\n### Step 3: Report\n\nConfirm before outputting:\n- Candidate introduced buggy logic, not just reformatted code\n- Direct causal link to what the fix corrects\n- Evidence found \u2192 report it. Uncertainty is not a reason to return empty.\n\n<r>\nBIC: <full_commit_hash>\nconfidence: <high|medium|low>\ntype: <introduction|omission|cross_file|refactor_penetration>\nreasoning: <brief explanation>\n</r>\n\n## Tool Rules\n\n- git_log_s: include a path when possible; broaden only if empty. Use the fix commit date as the `before` upper bound \u2014 the BIC must predate the fix.\n- git_show on large commits: use file_filter.\n- Do not git_show the same commit more than twice.\n- Timeout \u2192 retry with narrower parameters.\n- file_filter returns \"no changes\" \u2192 file was at a different path in that commit. Try git_show WITHOUT file_filter to see the actual paths, or blame at commit~1."
+      },
+      {
+        "role": "user",
+        "content": "## Fix Commit\n\ncommit 9e0625d8d0827221dea0a9f6114ad8376ccc76b1\nDate: Thu Oct 18 15:23:45 2012 -0600\n\nfixing a bug\n\ndiff --git a/src/ucar/unidata/idv/control/DisplayControlImpl.java b/src/ucar/unidata/idv/control/DisplayControlImpl.java\nindex 7ffcabb77..6148ad531 100644\n--- a/src/ucar/unidata/idv/control/DisplayControlImpl.java\n+++ b/src/ucar/unidata/idv/control/DisplayControlImpl.java\n@@ -1136,28 +1136,32 @@ public abstract class DisplayControlImpl extends DisplayControlBase implements D\n             return;\n         }\n \n-        if ((myDataChoices.size() > 0)\n-                && (myDataChoices.get(0) instanceof DerivedDataChoice)) {\n-            List cdcs =\n-                ((DerivedDataChoice) myDataChoices.get(0)).getChoices();\n-            if (cdcs.size() > 0) {\n-                DataChoice    dc = (DataChoice) cdcs.get(0);\n-                DataSelection ds = dc.getDataSelection();\n-                if (ds != null) {\n-                    List   dtimes = ds.getTimeDriverTimes();\n-                    Object ud1    =\n-                        ds.getProperty(DataSelection.PROP_USESTIMEDRIVER);\n-                    //if ((dtimes != null) && (dtimes.size() > 0)\n-                    //        && (ud1 != null)) {\n-                    if (ud1 != null) {\n-                        this.usesTimeDriver = ((Boolean) ud1).booleanValue();\n+        if (myDataChoices != null) {\n+            if ((myDataChoices.size() > 0)\n+                    && (myDataChoices.get(0) instanceof DerivedDataChoice)) {\n+                List cdcs =\n+                    ((DerivedDataChoice) myDataChoices.get(0)).getChoices();\n+                if (cdcs.size() > 0) {\n+                    DataChoice    dc = (DataChoice) cdcs.get(0);\n+                    DataSelection ds = dc.getDataSelection();\n+                    if (ds != null) {\n+                        List   dtimes = ds.getTimeDriverTimes();\n+                        Object ud1    =\n+                            ds.getProperty(DataSelection.PROP_USESTIMEDRIVER);\n+                        //if ((dtimes != null) && (dtimes.size() > 0)\n+                        //        && (ud1 != null)) {\n+                        if (ud1 != null) {\n+                            this.usesTimeDriver =\n+                                ((Boolean) ud1).booleanValue();\n+                        }\n+                        //}\n                     }\n-                    //}\n                 }\n             }\n         }\n \n \n+\n         //Check if we have been removed\n         if (hasBeenRemoved) {\n             return;\n\n**Fix commit date: 2012-10-18**. The BIC must be before this date. Use this as the upper bound for any date-based searches.\n\nFind the Bug-Introducing Commit (BIC) for this fix.\n"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01SuBNxZQSA5GZjezijXpP7Z",
+            "function": {
+              "arguments": "{\"file_path\": \"src/ucar/unidata/idv/control/DisplayControlImpl.java\", \"commit\": \"9e0625d8d0827221dea0a9f6114ad8376ccc76b1~1\", \"line_start\": 1130, \"line_end\": 1163}",
+              "name": "git_blame"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01SuBNxZQSA5GZjezijXpP7Z",
+        "content": "L1130: 5d2429b9bc56 | \nL1131: 5d2429b9bc56 |         if ( !init(myDataChoices)) {\nL1132: 5d2429b9bc56 |             displayControlFailed();\nL1133: 5d2429b9bc56 |             if (getProperty(\"control.ignoreerrors\", false)) {\nL1134: 5d2429b9bc56 |                 addToControlContext();\nL1135: 5d2429b9bc56 |             }\nL1136: 5d2429b9bc56 |             return;\nL1137: 5d2429b9bc56 |         }\nL1138: 5d2429b9bc56 | \nL1139: 5d2429b9bc56 |         if ((myDataChoices.size() > 0)\nL1140: 5d2429b9bc56 |                 && (myDataChoices.get(0) instanceof DerivedDataChoice)) {\nL1141: 5d2429b9bc56 |             List cdcs =\nL1142: 5d2429b9bc56 |                 ((DerivedDataChoice) myDataChoices.get(0)).getChoices();\nL1143: 5d2429b9bc56 |             if (cdcs.size() > 0) {\nL1144: 5d2429b9bc56 |                 DataChoice    dc = (DataChoice) cdcs.get(0);\nL1145: 5d2429b9bc56 |                 DataSelection ds = dc.getDataSelection();\nL1146: 5d2429b9bc56 |                 if (ds != null) {\nL1147: 36c7007c86a7 |                     List   dtimes = ds.getTimeDriverTimes();\nL1148: 36c7007c86a7 |                     Object ud1    =\nL1149: 5d2429b9bc56 |                         ds.getProperty(DataSelection.PROP_USESTIMEDRIVER);\nL1150: 3482516b37a1 |                     //if ((dtimes != null) && (dtimes.size() > 0)\nL1151: 3482516b37a1 |                     //        && (ud1 != null)) {\nL1152: 36c7007c86a7 |                     if (ud1 != null) {\nL1153: 5d2429b9bc56 |                         this.usesTimeDriver = ((Boolean) ud1).booleanValue();\nL1154: 36c7007c86a7 |                     }\nL1155: 3482516b37a1 |                     //}\nL1156: 5d2429b9bc56 |                 }\nL1157: 5d2429b9bc56 |             }\nL1158: 5d2429b9bc56 |         }\nL1159: 5d2429b9bc56 | \nL1160: 5d2429b9bc56 | \nL1161: 5d2429b9bc56 |         //Check if we have been removed\nL1162: 5d2429b9bc56 |         if (hasBeenRemoved) {\nL1163: 5d2429b9bc56 |             return;\n\nCommits referenced:\n  5d2429b9bc56  new design of time matching in the chooser\n  36c7007c86a7  When autocreating a display, check for the DataSource property that says\n  3482516b37a1  so far the testing went well, found and fixed a few bugs\n"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01P71grYa1EFXzeo8XzbniJe",
+            "function": {
+              "arguments": "{\"commit\": \"5d2429b9bc56\", \"file_filter\": \"src/ucar/unidata/idv/control/DisplayControlImpl.java\"}",
+              "name": "git_show"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01P71grYa1EFXzeo8XzbniJe",
+        "content": "commit 5d2429b9bc565572474aae7936fb17a4666074b5\nDate: Mon Aug 13 09:47:18 2012 -0600\n\nnew design of time matching in the chooser\n\n\n[diff: context lines stripped, 2 lines dropped]\ndiff --git a/src/ucar/unidata/idv/control/DisplayControlImpl.java b/src/ucar/unidata/idv/control/DisplayControlImpl.java\nindex fb6cb058c..54abe4d9e 100644\n--- a/src/ucar/unidata/idv/control/DisplayControlImpl.java\n+++ b/src/ucar/unidata/idv/control/DisplayControlImpl.java\n@@ -1,12211 +1,12211 @@\n-/*\n- * Copyright 1997-2011 Unidata Program Center/University Corporation for\n- * Atmospheric Research, P.O. Box 3000, Boulder, CO 80307,\n- * support@unidata.ucar.edu.\n- * \n- * This library is free software; you can redistribute it and/or modify it\n- * under the terms of the GNU Lesser General Public License as published by\n- * the Free Software Foundation; either version 2.1 of the License, or (at\n- * your option) any later version.\n- * \n- * This library is distributed in the hope that it will be useful, but\n- * WITHOUT ANY WARRANTY; without even the implied warranty of\n- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser\n- * General Public License for more details.\n- * \n- * You should have received a copy of the GNU Lesser General Public License\n- * along with this library; if not, write to the Free Software Foundation,\n- * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA\n- */\n-\n-package ucar.unidata.idv.control;\n-\n-\n-import ucar.unidata.collab.Sharable;\n-import ucar.unidata.collab.SharableImpl;\n-import ucar.unidata.data.*;\n-import ucar.unidata.data.grid.GridDataInstance;\n-import ucar.unidata.data.grid.GridUtil;\n-import ucar.unidata.idv.ControlContext;\n-import ucar.unidata.idv.ControlDescriptor;\n-import ucar.unidata.idv.DisplayControl;\n-import ucar.unidata.idv.DisplayConventions;\n-import ucar.unidata.idv.DisplayInfo;\n-import ucar.unidata.idv.IdvConstants;\n-import ucar.unidata.idv.IntegratedDataViewer;\n\n... [120 diff lines omitted, 1 hunks total] ...\n\n-import javax.swing.AbstractButton;\n-import javax.swing.BorderFactory;\n-import javax.swing.ImageIcon;\n-import javax.swing.JButton;\n-import javax.swing.JCheckBox;\n-import javax.swing.JCheckBoxMenuItem;\n-import javax.swing.JColorChooser;\n-import javax.swing.JComboBox;\n-import javax.swing.JComponent;\n-import javax.swing.JDialog;\n-import javax.swing.JEditorPane;\n-import javax.swing.JFileChooser;\n-import javax.swing.JFrame;\n-import javax.swing.JLabel;\n-import javax.swing.JMenu;\n-import javax.swing.JMenuBar;\n-import javax.swing.JMenuItem;\n-import javax.swing.JPanel;\n-import javax.swing.JPopupMenu;\n-import javax.swing.JScrollPane;\n-import javax.swing.JSlider;\n-import javax.swing.JTabbedPane;\n-import javax.swing.JTextArea;\n-import javax.swing.JTextField;\n-import javax.swing.JViewport;\n-import javax.swing.ScrollPaneConstants;\n-import javax.swing.SwingConstants;\n-import javax.swing.SwingUtilities;\n-import javax.swing.event.ChangeEvent;\n-import javax.swing.event.ChangeListener;\n-import javax.swing.event.HyperlinkEvent;\n-import javax.swing.event.HyperlinkListener;\n-import javax.swing.event.MenuEvent;\n-import javax.swing.event.MenuListener;\n-import javax.swing.text.JTextComponent;\n-\n-\n-/**\n- * This is the main base class for all DisplayControls.\n- * @author IDV development team"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01RKAHWyCSn6m4N7xuf9oXnE",
+            "function": {
+              "arguments": "{\"search_string\": \"this.usesTimeDriver = ((Boolean) ud1).booleanValue();\", \"path\": \"src/ucar/unidata/idv/control/DisplayControlImpl.java\", \"before\": \"2012-10-18\", \"max_commits\": 20}",
+              "name": "git_log_s"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01RKAHWyCSn6m4N7xuf9oXnE",
+        "content": "commit 9564f1eba432926795339765345abf476a0830c9\nDate: Mon Dec 12 20:22:00 2011 +0000\n\n    re-org"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01FA5D1TLV5q27BdYbtVyop9",
+            "function": {
+              "arguments": "{\"commit\": \"9564f1eba432926795339765345abf476a0830c9\", \"file_filter\": \"src/ucar/unidata/idv/control/DisplayControlImpl.java\"}",
+              "name": "git_show"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01FA5D1TLV5q27BdYbtVyop9",
+        "content": "commit 9564f1eba432926795339765345abf476a0830c9\nDate: Mon Dec 12 20:22:00 2011 +0000\n\nre-org\n\n\n[diff: context lines stripped, 3 lines dropped]\ndiff --git a/src/ucar/unidata/idv/control/DisplayControlImpl.java b/src/ucar/unidata/idv/control/DisplayControlImpl.java\nindex 000000000..3ae1c954a\n--- /dev/null\n+++ b/src/ucar/unidata/idv/control/DisplayControlImpl.java\n@@ -0,0 +1,12191 @@\n+/*\n+ * Copyright 1997-2011 Unidata Program Center/University Corporation for\n+ * Atmospheric Research, P.O. Box 3000, Boulder, CO 80307,\n+ * support@unidata.ucar.edu.\n+ * \n+ * This library is free software; you can redistribute it and/or modify it\n+ * under the terms of the GNU Lesser General Public License as published by\n+ * the Free Software Foundation; either version 2.1 of the License, or (at\n+ * your option) any later version.\n+ * \n+ * This library is distributed in the hope that it will be useful, but\n+ * WITHOUT ANY WARRANTY; without even the implied warranty of\n+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser\n+ * General Public License for more details.\n+ * \n+ * You should have received a copy of the GNU Lesser General Public License\n+ * along with this library; if not, write to the Free Software Foundation,\n+ * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA\n+ */\n+\n+package ucar.unidata.idv.control;\n+\n+\n+import ucar.unidata.collab.Sharable;\n+import ucar.unidata.collab.SharableImpl;\n+import ucar.unidata.data.*;\n+import ucar.unidata.data.grid.GridDataInstance;\n+import ucar.unidata.data.grid.GridUtil;\n+import ucar.unidata.idv.ControlContext;\n+import ucar.unidata.idv.ControlDescriptor;\n+import ucar.unidata.idv.DisplayControl;\n+import ucar.unidata.idv.DisplayConventions;\n+import ucar.unidata.idv.DisplayInfo;\n+import ucar.unidata.idv.IdvConstants;\n+import ucar.unidata.idv.IntegratedDataViewer;\n\n... [119 diff lines omitted, 1 hunks total] ...\n\n+\n+import javax.swing.AbstractButton;\n+import javax.swing.BorderFactory;\n+import javax.swing.ImageIcon;\n+import javax.swing.JButton;\n+import javax.swing.JCheckBox;\n+import javax.swing.JCheckBoxMenuItem;\n+import javax.swing.JColorChooser;\n+import javax.swing.JComboBox;\n+import javax.swing.JComponent;\n+import javax.swing.JDialog;\n+import javax.swing.JEditorPane;\n+import javax.swing.JFileChooser;\n+import javax.swing.JFrame;\n+import javax.swing.JLabel;\n+import javax.swing.JMenu;\n+import javax.swing.JMenuBar;\n+import javax.swing.JMenuItem;\n+import javax.swing.JPanel;\n+import javax.swing.JPopupMenu;\n+import javax.swing.JScrollPane;\n+import javax.swing.JSlider;\n+import javax.swing.JTabbedPane;\n+import javax.swing.JTextArea;\n+import javax.swing.JTextField;\n+import javax.swing.JViewport;\n+import javax.swing.ScrollPaneConstants;\n+import javax.swing.SwingConstants;\n+import javax.swing.SwingUtilities;\n+import javax.swing.event.ChangeEvent;\n+import javax.swing.event.ChangeListener;\n+import javax.swing.event.HyperlinkEvent;\n+import javax.swing.event.HyperlinkListener;\n+import javax.swing.event.MenuEvent;\n+import javax.swing.event.MenuListener;\n+import javax.swing.text.JTextComponent;\n+\n+\n+/**\n+ * This is the main base class for all DisplayControls."
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01LZjsoSmKxpDTC9ugs7pJG8",
+            "function": {
+              "arguments": "{\"search_string\": \"myDataChoices.get(0) instanceof DerivedDataChoice\", \"path\": \"src/ucar/unidata/idv/control/DisplayControlImpl.java\", \"before\": \"2012-10-18\", \"max_commits\": 30}",
+              "name": "git_log_s"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01LZjsoSmKxpDTC9ugs7pJG8",
+        "content": "commit 9564f1eba432926795339765345abf476a0830c9\nDate: Mon Dec 12 20:22:00 2011 +0000\n\n    re-org"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_015gWEfAqrBoQzaWr5kTvgEj",
+            "function": {
+              "arguments": "{\"commit\": \"9564f1eba432926795339765345abf476a0830c9\", \"stat_only\": true}",
+              "name": "git_show"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_015gWEfAqrBoQzaWr5kTvgEj",
+        "content": "commit 9564f1eba432926795339765345abf476a0830c9\nDate: Mon Dec 12 20:22:00 2011 +0000\n\nre-org\n\nsrc/ucar/IDV-Style.xjs                             |  9878 ++++++++\n src/ucar/LICENSE                                   |   504 +\n src/ucar/NC-Style.xjs                              |  4896 ++++\n src/ucar/build.xml                                 |   848 +\n src/ucar/svnignoreprops                            |    24 +\n src/ucar/unidata/apps/africa/Converter.java        |   515 +\n .../unidata/apps/africa/MeningitisAttackRate.ism   |   158 +\n src/ucar/unidata/apps/africa/build.xml             |    57 +\n src/ucar/unidata/apps/africa/bundles.xml           |     4 +\n src/ucar/unidata/apps/africa/nigeriaorig.csv       |     1 +\n src/ucar/unidata/apps/africa/projections.xml       |    22 +\n src/ucar/unidata/apps/africa/rate.ism              |   136 +\n src/ucar/unidata/apps/africa/rateandregion.ism     |   288 +\n .../unidata/apps/example/ExampleArgsManager.java   |    87 +\n src/ucar/unidata/apps/example/ExampleChooser.java  |   277 +\n .../unidata/apps/example/ExampleDataSource.java    |   276 +\n src/ucar/unidata/apps/example/ExampleIdv.java      |   161 +\n .../unidata/apps/example/ExampleUIManager.java     |   191 +\n .../unidata/apps/example/ExampleViewManager.java   |   407 +\n src/ucar/unidata/apps/example/WxTextChooser.java   |   236 +\n .../unidata/apps/example/WxTextDataSource.java     |   242 +\n .../unidata/apps/example/WxTextDisplayControl.java |   207 +\n src/ucar/unidata/apps/example/build.xml            |    53 +\n src/ucar/unidata/apps/example/datasource.xml       |    24 +\n src/ucar/unidata/apps/example/example.txt          |     3 +\n src/ucar/unidata/apps/example/examplecatalog.xml   |    15 +\n src/ucar/unidata/apps/example/idv.rbi              |   179 +\n src/ucar/unidata/apps/example/logo.gif             |   Bin 0 -> 13255 bytes\n .../unidata/apps/example/resources/HelloWorld.gif  |   Bin 0 -> 449 bytes\n .../unidata/apps/example/resources/actions.xml     |     8 +\n .../unidata/apps/example/resources/choosers.xml    |    13 +\n .../unidata/apps/example/resources/controls.xml    |    12 +\n .../unidata/apps/example/resources/datasource.xml  |    19 +\n .../unidata/apps/example/resources/defaultmenu.xml |    18 +\n .../unidata/apps/example/resources/idv.properties  |   153 +\n src/ucar/unidata/apps/example/resources/skin.xml   |    30 +\n .../unidata/apps/example/resources/toolbar.xml     |    10 +\n src/ucar/unidata/apps/example/runExample.sh        |     3 +\n src/ucar/unidata/apps/example/test.html            |    78 +\n src/ucar/unidata/apps/example/ui_form.html         |    54 +\n .../unidata/apps/example/wind_speed_tutorial.html  |   209 +\n src/ucar/unidata/apps/geopod/geopod.properties     |     8 +\n src/ucar/unidata/apps/geopod/geopod.rbi            |     7 +\n src/ucar/unidata/apps/globe/build.xml              |    53 +\n src/ucar/unidata/apps/globe/choosers.xml           |    99 +\n src/ucar/unidata/apps/globe/dashboard.xml          |    11 +\n src/ucar/unidata/apps/globe/defaultmenu.xml        |   149 +\n src/ucar/unidata/apps/globe/globe.jpg              |   Bin 0 -> 4700 bytes\n src/ucar/unidata/apps/globe/header.jpg             |   Bin 0 -> 5531 bytes\n src/ucar/unidata/apps/globe/idv.properties         |    16 +\n src/ucar/unidata/apps/globe/idv.rbi                |    36 +\n src/ucar/unidata/apps/globe/intro.qhtml            |    20 +\n src/ucar/unidata/apps/globe/latestmodels.xml       |    34 +\n src/ucar/unidata/apps/globe/model.xidv             |  1878 ++\n src/ucar/unidata/apps/globe/places.xml             |    24 +\n src/ucar/unidata/apps/globe/point.xidv             |  1878 ++\n src/ucar/unidata/apps/globe/satellite.xidv         |  1878 ++\n src/ucar/unidata/apps/globe/skin.xml               |    17 +\n src/ucar/unidata/apps/globe/toolbar.xml            |    17 +\n .../apps/imageviewer/IDV_imageviewer_logo.jpg      |   Bin 0 -> 6540 bytes\n src/ucar/unidata/apps/imageviewer/iv.properties    |    46 +\n src/ucar/unidata/apps/imageviewer/ivchoosers.xml   |    57 +\n src/ucar/unidata/apps/imageviewer/ivcontrols.xml   |    64 +\n src/ucar/unidata/apps/imageviewer/ivdatasource.xml |    14 +\n src/ucar/unidata/apps/imageviewer/ivmaps.xml       |    87 +\n src/ucar/unidata/apps/imageviewer/ivmenu.xml       |    63 +\n .../unidata/apps/imageviewer/paramdefaults.xml     |    24 +\n src/ucar/unidata/apps/lead/Tb0Idv.jnlp             |    33 +\n src/ucar/unidata/apps/lead/lead_logo.jpg           |   Bin 0 -> 5704 bytes\n src/ucar/unidata/apps/lead/leadidv.manifest        |     3 +\n .../unidata/apps/lead/siege/SiegeBoundsGlyph.java  |   206 +\n .../apps/lead/siege/SiegeDrawingControl.java       |   297 +\n src/ucar/unidata/apps/lead/siege/build.xml         |    47 +\n src/ucar/unidata/apps/lead/siege/controls.xml      |    16 +\n src/ucar/unidata/apps/lead/tb0.properties          |    21 +\n src/ucar/unidata/apps/lead/tb0.rbi                 |    39 +\n src/ucar/unidata/apps/lead/tb0Catalog.xml          |    16 +\n src/ucar/unidata/apps/lead/tb0choosers.xml         |   141 +\n src/ucar/unidata/apps/nacp/NacpTreeDataSource.java |   172 +\n src/ucar/unidata/apps/nacp/build.xml               |    51 +\n .../apps/nacp/layoutmodels/treecolorandscale.ism   |   248 +\n .../unidata/apps/nacp/layoutmodels/treedata.ism    |   782 +\n src/ucar/unidata/apps/nacp/lvisdatasource.xml      |    13 +\n src/ucar/unidata/apps/nacp/treedatasource.xml      |     4 +\n src/ucar/unidata/apps/noaacsi/build.xml            |    31 +\n src/ucar/unidata/apps/noaacsi/csialiases.xml       |    12 +\n src/ucar/unidata/apps/noaacsi/noaa_logo.gif        |   Bin 0 -> 2404 bytes\n src/ucar/unidata/apps/noaacsi/noaa_logo.png        |   Bin 0 -> 4838 bytes\n src/ucar/unidata/apps/noaacsi/noaa_logo_3d.png     |   Bin 0 -> 20840 bytes\n src/ucar/unidata/apps/noaacsi/noaacsi.properties   |    75 +\n src/ucar/unidata/apps/rico/README                  |    32 +\n src/ucar/unidata/apps/rico/RicoIdv.java            |   114 +\n src/ucar/unidata/apps/rico/aliases.xml             |    30 +\n src/ucar/unidata/apps/rico/caribbeanlocations.xml  |    61 +\n src/ucar/unidata/apps/rico/locations.xml           |     8 +\n src/ucar/unidata/apps/rico/logo.jpg                |   Bin 0 -> 60338 bytes\n src/ucar/unidata/apps/rico/makeInstaller.sh        |     1 +\n src/ucar/unidata/apps/rico/maps.xml                |    87 +\n src/ucar/unidata/apps/rico/paramdefaults.xml       |     7 +\n src/ucar/unidata/apps/rico/projections.xml         |    83 +\n src/ucar/unidata/apps/rico/rico.manifest           |     3 +\n src/ucar/unidata/apps/rico/rico.map                | 22874 +++++++++++++++++++\n src/ucar/unidata/apps/rico/rico.properties         |   138 +\n src/ucar/unidata/apps/rico/rico.rbi                |   108 +\n src/ucar/unidata/apps/rico/runRICO                 |    25 +\n src/ucar/unidata/apps/rico/runRICO.bat             |     1 +\n src/ucar/unidata/apps/rico/savechoosers.xml        |   268 +\n src/ucar/unidata/apps/rico/stationmodels.xml       |   339 +\n src/ucar/unidata/apps/rico/template.iap_xml        |  2185 ++\n src/ucar/unidata/apps/simple/build.xml             |    53 +\n src/ucar/unidata/apps/simple/choosers.xml          |   133 +\n src/ucar/unidata/apps/simple/defaultmenu.xml       |   149 +\n src/ucar/unidata/apps/simple/idv.properties        |   170 +\n src/ucar/unidata/apps/simple/idv.rbi               |    32 +\n src/ucar/unidata/apps/simple/intro.qhtml           |    32 +\n src/ucar/unidata/apps/simple/latestmodels.xml      |    34 +\n src/ucar/unidata/apps/simple/places.xml            |    24 +\n src/ucar/unidata/apps/simple/toolbar.xml           |    17 +\n src/ucar/unidata/apps/sti/STIDatabaseChooser.java  |   156 +\n src/ucar/unidata/apps/sti/backgroundwms.xml        |   173 +\n src/ucar/unidata/apps/sti/build.xml                |    58 +\n src/ucar/unidata/apps/sti/choosers.xml             |    13 +\n src/ucar/unidata/apps/sti/cities.xml               |   123 +\n src/ucar/unidata/apps/sti/controls.xml             |    14 +\n src/ucar/unidata/apps/sti/datasource.xml           |    33 +\n src/ucar/unidata/apps/sti/index.qhtml              |    19 +\n src/ucar/unidata/apps/sti/locations.xml            |     4 +\n src/ucar/unidata/apps/sti/maps/chinacounty.shp     |   Bin 0 -> 2706480 bytes\n src/ucar/unidata/apps/sti/maps/chinalake.shp       |   Bin 0 -> 203680 bytes\n src/ucar/unidata/apps/sti/maps/chinamaps_maps.xml  |    42 +\n src/ucar/unidata/apps/sti/maps/chinaprovince.shp   |   Bin 0 -> 447532 bytes\n src/ucar/unidata/apps/sti/maps/chinariver.shp      |   Bin 0 -> 1862852 bytes\n src/ucar/unidata/apps/sti/paramdefaults.xml        |    50 +\n src/ucar/unidata/apps/sti/sti.manifest             |     3 +\n src/ucar/unidata/apps/sti/sti.properties           |    55 +\n src/ucar/unidata/apps/sti/sti.py                   |    27 +\n src/ucar/unidata/apps/sti/sti.rbi                  |     7 +\n src/ucar/unidata/apps/sti/stilogo.gif              |   Bin 0 -> 2940 bytes\n src/ucar/unidata/apps/trex/README                  |    32 +\n .../unidata/apps/trex/ShapefileToLocation.java     |    89 +\n src/ucar/unidata/apps/trex/TODO                    |    56 +\n src/ucar/unidata/apps/trex/TrexIdv.java            |   114 +\n src/ucar/unidata/apps/trex/backgroundwms.xml       |    39 +\n src/ucar/unidata/apps/trex/build.xml               |    70 +\n src/ucar/unidata/apps/trex/catalog.xml             |     9 +\n src/ucar/unidata/apps/trex/choosers.xml            |   117 +\n src/ucar/unidata/apps/trex/controls.xml            |    27 +\n src/ucar/unidata/apps/trex/data/ca_counties.xml    |    96 +\n src/ucar/unidata/apps/trex/data/ca_nv_counties.xml |   113 +\n src/ucar/unidata/apps/trex/data/cities.xml         |    14 +\n src/ucar/unidata/apps/trex/data/elev.nc            |   Bin 0 -> 4518348 bytes\n src/ucar/unidata/apps/trex/data/federallands.xml   |  6742 ++++++\n src/ucar/unidata/apps/trex/data/inyoroads.shp      |   Bin 0 -> 2714964 bytes\n .../apps/trex/data/sensors/asu_doppler_lidar.dbf   |   Bin 0 -> 77 bytes\n .../apps/trex/data/sensors/asu_doppler_lidar.shp   |   Bin 0 -> 128 bytes\n .../apps/trex/data/sensors/asu_doppler_lidar.shx   |   Bin 0 -> 108 bytes\n .../apps/trex/data/sensors/asu_doppler_lidar.xml   |     4 +\n .../apps/trex/data/sensors/dlr_doppler_lidar.dbf   |   Bin 0 -> 77 bytes\n .../apps/trex/data/sensors/dlr_doppler_lidar.shp   |   Bin 0 -> 128 bytes\n .../apps/trex/data/sensors/dlr_doppler_lidar.shx   |   Bin 0 -> 108 bytes\n .../apps/trex/data/sensors/dlr_doppler_lidar.xml   |     4 +\n src/ucar/unidata/apps/trex/data/sensors/dri.xml    |    31 +\n .../unidata/apps/trex/data/sensors/dri_aws.dbf     |   Bin 0 -> 529 bytes\n .../unidata/apps/trex/data/sensors/dri_aws.shp     |   Bin 0 -> 548 bytes\n .../unidata/apps/trex/data/sensors/dri_aws.shx     |   Bin 0 -> 228 bytes\n .../unidata/apps/trex/data/sensors/dri_aws.xml     |    19 +\n src/ucar/unidata/apps/trex/data/sensors/gps.dbf    |   Bin 0 -> 77 bytes\n src/ucar/unidata/apps/trex/data/sensors/gps.shp    |   Bin 0 -> 128 bytes\n src/ucar/unidata/apps/trex/data/sensors/gps.shx    |   Bin 0 -> 108 bytes\n src/ucar/unidata/apps/trex/data/sensors/gps.xml    |     4 +\n src/ucar/unidata/apps/trex/data/sensors/hobos.dbf  |   Bin 0 -> 737 bytes\n src/ucar/unidata/apps/trex/data/sensors/hobos.shp  |   Bin 0 -> 1668 bytes\n src/ucar/unidata/apps/trex/data/sensors/hobos.shx  |   Bin 0 -> 548 bytes\n src/ucar/unidata/apps/trex/data/sensors/hobos.xml  |    59 +\n .../apps/trex/data/sensors/houston_flux_tower.dbf  |   Bin 0 -> 77 bytes\n .../apps/trex/data/sensors/houston_flux_tower.shp  |   Bin 0 -> 128 bytes\n .../apps/trex/data/sensors/houston_flux_tower.shx  |   Bin 0 -> 108 bytes\n .../apps/trex/data/sensors/houston_flux_tower.xml  |     4 +\n .../apps/trex/data/sensors/houston_sodar.dbf       |   Bin 0 -> 77 bytes\n .../apps/trex/data/sensors/houston_sodar.shp       |   Bin 0 -> 128 bytes\n .../apps/trex/data/sensors/houston_sodar.shx       |   Bin 0 -> 108 bytes\n .../apps/trex/data/sensors/houston_sodar.xml       |     4 +\n .../apps/trex/data/sensors/innsbruck_car.dbf       |   Bin 0 -> 77 bytes\n .../apps/trex/data/sensors/innsbruck_car.shp       |   Bin 0 -> 128 bytes\n .../apps/trex/data/sensors/innsbruck_car.shx       |   Bin 0 -> 108 bytes\n .../apps/trex/data/sensors/innsbruck_car.xml       |     4 +\n .../unidata/apps/trex/data/sensors/leeds_aws.dbf   |   Bin 0 -> 453 bytes\n .../unidata/apps/trex/data/sensors/leeds_aws.shp   |   Bin 0 -> 436 bytes\n .../unidata/apps/trex/data/sensors/leeds_aws.shx   |   Bin 0 -> 196 bytes\n .../unidata/apps/trex/data/sensors/leeds_aws.xml   |    15 +\n .../apps/trex/data/sensors/leeds_flux_towers.dbf   |   Bin 0 -> 179 bytes\n .../apps/trex/data/sensors/leeds_flux_towers.shp   |   Bin 0 -> 156 bytes\n .../apps/trex/data/sensors/leeds_flux_towers.shx   |   Bin 0 -> 116 bytes\n .../apps/trex/data/sensors/leeds_flux_towers.xml   |     5 +\n .../apps/trex/data/sensors/leeds_sodars.dbf        |   Bin 0 -> 204 bytes\n .../apps/trex/data/sensors/leeds_sodars.shp        |   Bin 0 -> 184 bytes\n .../apps/trex/data/sensors/leeds_sodars.shx        |   Bin 0 -> 124 bytes\n .../apps/trex/data/sensors/leeds_sodars.xml        |     6 +\n .../unidata/apps/trex/data/sensors/mergelocs.tcl   |    30 +\n src/ucar/unidata/apps/trex/data/sensors/mglass.dbf |   Bin 0 -> 77 bytes\n\n... [truncated: 200/3695 lines]"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01WiyV32U4BKoCzT7o3Gofka",
+            "function": {
+              "arguments": "{\"search_string\": \"public abstract class DisplayControlImpl extends DisplayControlBase\", \"before\": \"2011-12-13\", \"max_commits\": 10}",
+              "name": "git_log_s"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01WiyV32U4BKoCzT7o3Gofka",
+        "content": "commit f46e79b7d715348a9332c8f83d5b8e457081a65a\nDate: Wed Aug 22 15:00:16 2007 +0000\n\n    initial IDV import"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_017KXEdPCEpweRqeLBy3o5RK",
+            "function": {
+              "arguments": "{\"search_string\": \"usesTimeDriver\", \"path\": \"src/ucar/unidata/idv/control/DisplayControlImpl.java\", \"before\": \"2012-10-18\", \"max_commits\": 30}",
+              "name": "git_log_s"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_017KXEdPCEpweRqeLBy3o5RK",
+        "content": "commit 36c7007c86a790a4957ce8a054fa48eda7cc1f05\nDate: Mon Aug 20 15:54:43 2012 -0400\n\n    When autocreating a display, check for the DataSource property that says we wanted to match times.  If this is true, then create a dataselection with the USETIMEDRIVER property set and pass that along.  This keeps the separation between the DataSource and DisplayControl.\n\ncommit 2adf69e3e39c3896df489a699754d9c47ebe88ac\nDate: Mon Aug 13 16:03:17 2012 -0600\n\n    fix the bug when the create display is check at chooser level\n\ncommit 9564f1eba432926795339765345abf476a0830c9\nDate: Mon Dec 12 20:22:00 2011 +0000\n\n    re-org"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01YLJ9CbDGJevKg8BspDcRWv",
+            "function": {
+              "arguments": "{\"search_string\": \"myDataChoices =\", \"commit\": \"9e0625d8d0827221dea0a9f6114ad8376ccc76b1~1\", \"path\": \"src/ucar/unidata/idv/control/DisplayControlImpl.java\"}",
+              "name": "git_grep"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01YLJ9CbDGJevKg8BspDcRWv",
+        "content": "src/ucar/unidata/idv/control/DisplayControlImpl.java:2832:        if (myDataChoices == null) {\nsrc/ucar/unidata/idv/control/DisplayControlImpl.java:2833:            myDataChoices = new ArrayList();\nsrc/ucar/unidata/idv/control/DisplayControlImpl.java:2850:        if (myDataChoices == null) {\nsrc/ucar/unidata/idv/control/DisplayControlImpl.java:2851:            myDataChoices = new ArrayList();\nsrc/ucar/unidata/idv/control/DisplayControlImpl.java:2864:        myDataChoices = newList;\nsrc/ucar/unidata/idv/control/DisplayControlImpl.java:2875:        if (myDataChoices == null) {\nsrc/ucar/unidata/idv/control/DisplayControlImpl.java:2876:            myDataChoices = new ArrayList();\nsrc/ucar/unidata/idv/control/DisplayControlImpl.java:7059:        if (myDataChoices == null) {\nsrc/ucar/unidata/idv/control/DisplayControlImpl.java:8939:        if (myDataChoices == null) {"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01RtCNR7hfoVsBSWGvGZJ1b2",
+            "function": {
+              "arguments": "{\"commit\": \"9e0625d8d0827221dea0a9f6114ad8376ccc76b1~1\", \"file_filter\": \"src/ucar/unidata/idv/control/DisplayControlImpl.java\", \"context_lines\": 0}",
+              "name": "git_show"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01RtCNR7hfoVsBSWGvGZJ1b2",
+        "content": "commit df22c998560b4644fad1b6b021c638eb9b472797\nDate: Thu Oct 18 10:07:50 2012 -0600\n\nfixing typo\n\n[no changes to 'src/ucar/unidata/idv/control/DisplayControlImpl.java' in this commit \u2014 the file may have been at a different path in this older commit. Try git_show without file_filter, or skip this and git_blame at this_commit~1 to continue tracing.]"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01JA13wCa96fM3qmSXWaH4Fw",
+            "function": {
+              "arguments": "{\"search_string\": \"private void checkTimeDriver\", \"commit\": \"9e0625d8d0827221dea0a9f6114ad8376ccc76b1~1\"}",
+              "name": "git_grep"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01JA13wCa96fM3qmSXWaH4Fw",
+        "content": "No matches found for 'private void checkTimeDriver' at 9e0625d8d0827221dea0a9f6114ad8376ccc76b1~1"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01Ns1R3m2tRD3dAq6AaxC4zr",
+            "function": {
+              "arguments": "{\"search_string\": \"this.usesTimeDriver = ((Boolean) ud1).booleanValue();\", \"commit\": \"9e0625d8d0827221dea0a9f6114ad8376ccc76b1~1\"}",
+              "name": "git_grep"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01Ns1R3m2tRD3dAq6AaxC4zr",
+        "content": "src/ucar/unidata/idv/control/DisplayControlImpl.java:1153:                        this.usesTimeDriver = ((Boolean) ud1).booleanValue();"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01512RSW7dvYZKrvBjQ1iFAE",
+            "function": {
+              "arguments": "{\"search_string\": \"void initDone\", \"commit\": \"9e0625d8d0827221dea0a9f6114ad8376ccc76b1~1\"}",
+              "name": "git_grep"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01512RSW7dvYZKrvBjQ1iFAE",
+        "content": "[44 matches across 44 files: src/ucar/unidata/apps/lead/siege/SiegeDrawingControl.java (1), src/ucar/unidata/idv/ArgsManager.java (1), src/ucar/unidata/idv/IntegratedDataViewer.java (1), src/ucar/unidata/idv/control/AnimationTextControl.java (1), src/ucar/unidata/idv/control/AudioControl.java (1), src/ucar/unidata/idv/control/CappiControl.java (1), src/ucar/unidata/idv/control/ColorRhiControl.java (1), src/ucar/unidata/idv/control/CrossSectionControl.java (1), src/ucar/unidata/idv/control/DisplayControlImpl.java (1), src/ucar/unidata/idv/control/FlowCrossSectionControl.java (1), src/ucar/unidata/idv/control/FlowTimeHeightControl.java (1), src/ucar/unidata/idv/control/GriddedSoundingControl.java (1), src/ucar/unidata/idv/control/HovmollerControl.java (1), src/ucar/unidata/idv/control/ImageMovieControl.java (1), src/ucar/unidata/idv/control/ImageSequenceControl.java (1), src/ucar/unidata/idv/control/JythonControl.java (1), src/ucar/unidata/idv/control/Level2ColorCrossSectionControl.java (1), src/ucar/unidata/idv/control/MovieDisplayControl.java (1), src/ucar/unidata/idv/control/PlanViewControl.java (1), src/ucar/unidata/idv/control/ProbeControl.java (1), src/ucar/unidata/idv/control/ProfileControl.java (1), src/ucar/unidata/idv/control/ProfilerControl.java (1), src/ucar/unidata/idv/control/RadarCrossSectionControl.java (1), src/ucar/unidata/idv/control/RadarRhiControl.java (1), src/ucar/unidata/idv/control/StationLocationControl.java (1), src/ucar/unidata/idv/control/StationModelControl.java (1), src/ucar/unidata/idv/control/ThreeDSurfaceControl.java (1), src/ucar/unidata/idv/control/TimeHeightControl.java (1), src/ucar/unidata/idv/control/TimeSeriesControl.java (1), src/ucar/unidata/idv/control/TransectDrawingControl.java (1), src/ucar/unidata/idv/control/ValuePlanViewControl.java (1), src/ucar/unidata/idv/control/VerticalProfileControl.java (1), src/ucar/unidata/idv/control/WMSControl.java (1), src/ucar/unidata/idv/control/chart/ChartWrapper.java (1), src/ucar/unidata/idv/control/chart/TimeSeriesChartWrapper.java (1), src/ucar/unidata/idv/control/multi/DisplayComponent.java (1), src/ucar/unidata/idv/control/multi/DisplayGroup.java (1), src/ucar/unidata/idv/control/multi/MultiDisplayHolder.java (1), src/ucar/unidata/idv/control/storm/StormDisplayState.java (1), src/ucar/unidata/idv/control/storm/StormTrackControl.java (1), src/ucar/unidata/idv/ui/IdvUIManager.java (1), src/ucar/unidata/ui/drawing/Glyph.java (1), src/ucar/unidata/ui/drawing/ImageGlyph.java (1), src/ucar/unidata/util/ResourceManager.java (1)]\nsrc/ucar/unidata/apps/lead/siege/SiegeDrawingControl.java:160:    public void initDone() {\nsrc/ucar/unidata/idv/ArgsManager.java:396:    protected void initDone() {\nsrc/ucar/unidata/idv/IntegratedDataViewer.java:710:    public void initDone() {\nsrc/ucar/unidata/idv/control/AnimationTextControl.java:118:    public void initDone() {\nsrc/ucar/unidata/idv/control/AudioControl.java:138:    public void initDone() {\nsrc/ucar/unidata/idv/control/CappiControl.java:68:    public void initDone() {\nsrc/ucar/unidata/idv/control/ColorRhiControl.java:155:    public void initDone() {\nsrc/ucar/unidata/idv/control/CrossSectionControl.java:568:    public void initDone() {\nsrc/ucar/unidata/idv/control/DisplayControlImpl.java:1481:    public void initDone() {}\nsrc/ucar/unidata/idv/control/FlowCrossSectionControl.java:99:    public void initDone() {\nsrc/ucar/unidata/idv/control/FlowTimeHeightControl.java:134:    public void initDone() {\nsrc/ucar/unidata/idv/control/GriddedSoundingControl.java:199:    public void initDone() {\nsrc/ucar/unidata/idv/control/HovmollerControl.java:287:    public void initDone() {\nsrc/ucar/unidata/idv/control/ImageMovieControl.java:1716:    public void initDone() {\nsrc/ucar/unidata/idv/control/ImageSequenceControl.java:298:    public void initDone() {\nsrc/ucar/unidata/idv/control/JythonControl.java:277:    public void initDone() {\nsrc/ucar/unidata/idv/control/Level2ColorCrossSectionControl.java:76:    public void initDone() {\nsrc/ucar/unidata/idv/control/MovieDisplayControl.java:191:    public void initDone() {\nsrc/ucar/unidata/idv/control/PlanViewControl.java:509:    public void initDone() {\nsrc/ucar/unidata/idv/control/ProbeControl.java:374:    public void initDone() {\nsrc/ucar/unidata/idv/control/ProfileControl.java:205:    public void initDone() {\nsrc/ucar/unidata/idv/control/ProfilerControl.java:161:    public void initDone() {\nsrc/ucar/unidata/idv/control/RadarCrossSectionControl.java:79:    public void initDone() {\nsrc/ucar/unidata/idv/control/RadarRhiControl.java:129:    public void initDone() {\nsrc/ucar/unidata/idv/control/StationLocationControl.java:531:    public void initDone() {\nsrc/ucar/unidata/idv/control/StationModelControl.java:541:    public void initDone() {\nsrc/ucar/unidata/idv/control/ThreeDSurfaceControl.java:178:    public void initDone() {\nsrc/ucar/unidata/idv/control/TimeHeightControl.java:264:    public void initDone() {\nsrc/ucar/unidata/idv/control/TimeSeriesControl.java:208:    public void initDone() {\nsrc/ucar/unidata/idv/control/TransectDrawingControl.java:224:    public void initDone() {\nsrc/ucar/unidata/idv/control/ValuePlanViewControl.java:135:    public void initDone() {\nsrc/ucar/unidata/idv/control/VerticalProfileControl.java:167:    public void initDone() {\nsrc/ucar/unidata/idv/control/WMSControl.java:264:    public void initDone() {\nsrc/ucar/unidata/idv/control/chart/ChartWrapper.java:256:    public void initDone() {\nsrc/ucar/unidata/idv/control/chart/TimeSeriesChartWrapper.java:1793:    public void initDone() {\nsrc/ucar/unidata/idv/control/multi/DisplayComponent.java:142:    public void initDone() {\nsrc/ucar/unidata/idv/control/multi/DisplayGroup.java:185:    public void initDone() {\nsrc/ucar/unidata/idv/control/multi/MultiDisplayHolder.java:188:    public void initDone() {\nsrc/ucar/unidata/idv/control/storm/StormDisplayState.java:945:    public void initDone() {\nsrc/ucar/unidata/idv/control/storm/StormTrackControl.java:1402:    public void initDone() {\n... [4 more matches omitted]"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01YBtYZdrTeNyMvCJCPu6qhp",
+            "function": {
+              "arguments": "{\"file_path\": \"src/ucar/unidata/idv/control/DisplayControlImpl.java\", \"commit\": \"9e0625d8d0827221dea0a9f6114ad8376ccc76b1~1\", \"line_start\": 1080, \"line_end\": 1140}",
+              "name": "git_blame"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01YBtYZdrTeNyMvCJCPu6qhp",
+        "content": "[65 lines, 2 unique commits: 36c7007c86a7, 5d2429b9bc56]\nL1080: 36c7007c86a7 |         this.usesTimeDriver =\nL1081: 36c7007c86a7 |             this.dataSelection.getProperty(DataSelection.PROP_USESTIMEDRIVER,\nL1082: 36c7007c86a7 |                                            false);\nL1083: 36c7007c86a7 |         if ( !this.isTimeDriver) {\nL1084: 36c7007c86a7 |             this.isTimeDriver = this.dataSelection.getProperty(\nL1085: 36c7007c86a7 |                 DataSelection.PROP_ASTIMEDRIVER, false);\nL1086: 36c7007c86a7 |             if (this.isTimeDriver) {  // make sure only one driver per view manager\nL1087: 36c7007c86a7 |                 ViewManager vm = getViewManager();\nL1088: 36c7007c86a7 |                 vm.ensureOnlyOneTimeDriver(this);\nL1089: 36c7007c86a7 |             }\nL1090: 36c7007c86a7 |         }\nL1091: 36c7007c86a7 | \nL1092: 5d2429b9bc56 | \nL1093: 5d2429b9bc56 |         if (properties != null) {\nL1094: 5d2429b9bc56 |             applyProperties(properties);\nL1095: 5d2429b9bc56 |         }\nL1096: 5d2429b9bc56 | \nL1097: 5d2429b9bc56 |         if (checkFlag(FLAG_COLOR) && (color == null)) {\nL1098: 5d2429b9bc56 |             color = getDisplayConventions().getColor();\nL1099: 5d2429b9bc56 |         }\nL1100: 5d2429b9bc56 | \nL1101: 5d2429b9bc56 |         // set the sampling mode\nL1102: 5d2429b9bc56 |         defaultSamplingMode = getObjectStore().get(PREF_SAMPLING_MODE,\nL1103: 5d2429b9bc56 |                 DEFAULT_SAMPLING_MODE);\nL1104: 5d2429b9bc56 | \nL1105: 5d2429b9bc56 |         //Check if we have been removed\nL1106: 5d2429b9bc56 |         if (hasBeenRemoved) {\nL1107: 5d2429b9bc56 |             return;\nL1108: 5d2429b9bc56 |         }\nL1109: 5d2429b9bc56 | \nL1110: 5d2429b9bc56 |         if (initialSettings != null) {\nL1111: 5d2429b9bc56 |             try {\nL1112: 5d2429b9bc56 |                 for (int i = 0; i < initialSettings.size(); i++) {\nL1113: 5d2429b9bc56 |                     applyDisplaySetting(\nL1114: 5d2429b9bc56 |                         (DisplaySetting) initialSettings.get(i));\nL1115: 5d2429b9bc56 |                 }\nL1116: 5d2429b9bc56 |                 initialSettings = null;\nL1117: 5d2429b9bc56 |             } catch (Exception exc) {\nL1118: 5d2429b9bc56 |                 logException(\"Initializing with settings\", exc);\nL1119: 5d2429b9bc56 |             }\nL1120: 5d2429b9bc56 |         }\nL1121: 5d2429b9bc56 | \nL1122: 5d2429b9bc56 |         // we do this here because time driver properties \nL1123: 5d2429b9bc56 |         // might be changed by the display settings.\nL1124: 5d2429b9bc56 |         updateDataSelection(this.dataSelection);\nL1125: 5d2429b9bc56 | \nL1126: 5d2429b9bc56 | \nL1127: 5d2429b9bc56 |         //Call the derived class init method.\nL1128: 5d2429b9bc56 |         //        System.err.println(\"CALLING INIT \" + mycnt);\nL1129: 5d2429b9bc56 | \nL1130: 5d2429b9bc56 | \nL1131: 5d2429b9bc56 |         if ( !init(myDataChoices)) {\nL1132: 5d2429b9bc56 |             displayControlFailed();\nL1133: 5d2429b9bc56 |             if (getProperty(\"control.ignoreerrors\", false)) {\nL1134: 5d2429b9bc56 |                 addToControlContext();\nL1135: 5d2429b9bc56 |             }\nL1136: 5d2429b9bc56 |             return;\nL1137: 5d2429b9bc56 |         }\nL1138: 5d2429b9bc56 | \nL1139: 5d2429b9bc56 |         if ((myDataChoices.size() > 0)\nL1140: 5d2429b9bc56 |                 && (myDataChoices.get(0) instanceof DerivedDataChoice)) {\n\nCommits referenced:\n  36c7007c86a7  When autocreating a display, check for the DataSource property that says\n  5d2429b9bc56  new design of time matching in the chooser\n"
+      },
+      {
+        "content": "",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "toolu_01CoY6UjTjeHnsaVePbCJf66",
+            "function": {
+              "arguments": "{\"search_string\": \"myDataChoices.get(0) instanceof DerivedDataChoice\", \"path\": \"src/ucar/unidata/idv/control/DisplayControlImpl.java\", \"before\": \"2012-10-18\", \"max_commits\": 30}",
+              "name": "git_log_s"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "toolu_01CoY6UjTjeHnsaVePbCJf66",
+        "content": "commit 9564f1eba432926795339765345abf476a0830c9\nDate: Mon Dec 12 20:22:00 2011 +0000\n\n    re-org"
+      }
+    ]
+  }
+]

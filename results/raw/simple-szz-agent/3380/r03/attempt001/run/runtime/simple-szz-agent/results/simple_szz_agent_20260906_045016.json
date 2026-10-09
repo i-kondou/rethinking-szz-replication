@@ -1,0 +1,353 @@
+{
+  "metadata": {
+    "timestamp": "20260906_045016",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3380/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 80.092,
+      "max": 80.092,
+      "mean": 80.092,
+      "median": 80.092,
+      "total": 80.092,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 79.627,
+      "max": 79.627,
+      "mean": 79.627,
+      "median": 79.627,
+      "total": 79.627,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 16,
+      "max": 16,
+      "mean": 16,
+      "median": 16,
+      "total": 16,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 7658,
+      "max": 7658,
+      "mean": 7658,
+      "median": 7658,
+      "total": 7658,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 50578,
+      "max": 50578,
+      "mean": 50578,
+      "median": 50578,
+      "total": 50578,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 149994,
+      "max": 149994,
+      "mean": 149994,
+      "median": 149994,
+      "total": 149994,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.4633782,
+      "max": 0.4633782,
+      "mean": 0.4633782,
+      "median": 0.4633782,
+      "total": 0.4633782,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 15,
+      "max": 15,
+      "mean": 15,
+      "median": 15,
+      "total": 15,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 8,
+      "Glob": 1,
+      "Grep": 5,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 5,
+      "max": 5,
+      "mean": 5,
+      "median": 5,
+      "total": 5,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 5,
+      "max": 5,
+      "mean": 5,
+      "median": 5,
+      "total": 5,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 5,
+      "max": 5,
+      "mean": 5,
+      "median": 5,
+      "total": 5,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "3380",
+      "fix_commit_hash": "d4074e2644e722ce9febf7ac074dbb06a51e21fb",
+      "ground_truth_bics": [
+        "42400ef32d3644fe1632f4c0f3f9d299c49c6bc6"
+      ],
+      "predicted_bics": [
+        "42400ef32d3644fe1632f4c0f3f9d299c49c6bc6"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "3380",
+      "fix_commit": "d4074e2644e722ce9febf7ac074dbb06a51e21fb",
+      "ground_truth_bics": [
+        "42400ef32d3644fe1632f4c0f3f9d299c49c6bc6"
+      ],
+      "total_candidates": 5,
+      "gt_in_candidates": true,
+      "selected_commit": "42400ef32d3644fe1632f4c0f3f9d299c49c6bc6",
+      "selected_index": 2,
+      "confidence": "HIGH",
+      "explanation": "The fix commit removes the properties `OUTPUT_ENCODING` (\"html.outputEncoding\") and `SOURCE_ENCODING` (\"html.sourceEncoding\") \u2014 explicitly labeled in the code as \"addition parameters by terry\" \u2014 and restores the original `OUT_ENCODING`/`IN_ENCODING` scheme (adding a new `IN_ENCODING` property alongside the pre-existing `OUT_ENCODING`). It reverts all call sites (html/txt/xml ReportGenerator classes) from `getOutputEncoding()`/`getSourceEncoding()` back to `getOutEncoding()`/`getInEncoding()`. Se",
+      "is_correct": true,
+      "num_files_touched_by_fix": 5,
+      "num_source_files_touched_by_fix": 5,
+      "files_analyzed": [
+        "src/main/java/com/vladium/emma/report/IReportProperties.java",
+        "src/main/java/com/vladium/emma/report/ReportProperties.java",
+        "src/main/java/com/vladium/emma/report/html/ReportGenerator.java",
+        "src/main/java/com/vladium/emma/report/txt/ReportGenerator.java",
+        "src/main/java/com/vladium/emma/report/xml/ReportGenerator.java"
+      ],
+      "call_stats": {
+        "duration_s": 80.092,
+        "duration_api_s": 79.627,
+        "num_turns": 16,
+        "input_tokens": 14,
+        "output_tokens": 7658,
+        "cache_creation_input_tokens": 50578,
+        "cache_read_input_tokens": 149994,
+        "total_cost_usd": 0.4633782,
+        "total_tool_calls": 15,
+        "tool_calls_by_name": {
+          "Read": 8,
+          "Glob": 1,
+          "Grep": 5,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3380/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3380_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3380/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3380_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3380/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3380_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 5077,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 16,
+            "cache_creation_input_tokens": 378,
+            "cache_read_input_tokens": 14761,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3380/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3380_candidate_selection/candidates/candidate_01.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3380/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3380_candidate_selection/candidates/candidate_02.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3380/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3380_candidate_selection/candidates/candidate_03.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3380/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3380_candidate_selection/candidates/candidate_04.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3380/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3380_candidate_selection/candidates/candidate_05.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 32064,
+            "cache_read_input_tokens": 15139,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "OUTPUT_ENCODING|SOURCE_ENCODING|OUT_ENCODING|IN_ENCODING|terry",
+                  "path": "candidates/candidate_01.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "OUTPUT_ENCODING|SOURCE_ENCODING|OUT_ENCODING|IN_ENCODING|terry",
+                  "path": "candidates/candidate_02.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "OUTPUT_ENCODING|SOURCE_ENCODING|OUT_ENCODING|IN_ENCODING|terry",
+                  "path": "candidates/candidate_03.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "OUTPUT_ENCODING|SOURCE_ENCODING|OUT_ENCODING|IN_ENCODING|terry",
+                  "path": "candidates/candidate_04.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "OUTPUT_ENCODING|SOURCE_ENCODING|OUT_ENCODING|IN_ENCODING|terry",
+                  "path": "candidates/candidate_05.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 10,
+            "cache_creation_input_tokens": 4324,
+            "cache_read_input_tokens": 47203,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3380/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3380_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_03\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit removes the properties `OUTPUT_ENCODING` (\"html.outputEncoding\") and `SOURCE_ENCODING` (\"html.sourceEncoding\") \u2014 explicitly labeled in the code as \"addition parameters by terry\" \u2014 and restores the original `OUT_ENCODING`/`IN_ENCODING` scheme (adding a new `IN_ENCODING` property alongside the pre-existing `OUT_ENCODING`). It reverts all call sites (html/txt/xml ReportGenerator classes) from `getOutputEncoding()`/`getSourceEncoding()` back to `getOutEncoding()`/`getInEncoding()`.\n\nSearching the candidates for these exact symbols shows:\n- candidate_01: contains only `OUT_ENCODING` (the original, correct scheme) \u2014 bug not yet present.\n- candidate_02: no encoding-related changes.\n- candidate_03: introduces `OUTPUT_ENCODING`/`SOURCE_ENCODING` for the first time, with the literal comment \"addition parameters by terry\", adds `setOutputEncoding`/`setSourceEncoding` to `ParsedProperties`, and switches `ReportProperties.parse()` to read from these new properties instead of `OUT_ENCODING`. It also changes source-file reading in the HTML report generator from `FileReader` (platform default encoding) to an explicit `InputStreamReader` using the new `getSourceEncoding()`, and switches multiple `getOutEncoding()` call sites to `getOutputEncoding()`.\n- candidate_04: unrelated change (renames a directory constant from \"_files\" to \"files\").\n- candidate_05: reverts back to `OUT_ENCODING`/`IN_ENCODING` (content matching the eventual fix), meaning the buggy scheme introduced in candidate_03 was still present up through candidate_04.\n\nBecause candidate_03 is the first commit to introduce the `OUTPUT_ENCODING`/`SOURCE_ENCODING` properties (the exact code structure and naming that the fix commit removes), it is the bug-introducing commit. The unrelated candidate_04 confirms the bug persisted until directly addressed.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2449,
+            "cache_read_input_tokens": 51527,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

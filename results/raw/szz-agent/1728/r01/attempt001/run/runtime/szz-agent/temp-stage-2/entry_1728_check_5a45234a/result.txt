@@ -1,0 +1,10 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a `destroy(Context)` method to `DownloadManagerInterface` (which unregisters `downloadCompletionReceiver` and clears the singleton instance) and calls it from a new `MainActivity.onDestroy()` override. The bug being fixed is that the `DownloadManagerInterface` singleton, once initialized in `onCreate`/`initializeApplicationServices()`, registers a `BroadcastReceiver` but never unregisters it, leaking the receiver (and the Activity context it implicitly holds via `context.registerReceiver`) when the Activity is destroyed.
+
+Examining `files/old/MainActivity.java`, this file predates the `DownloadManagerInterface` refactor entirely: there is no `DownloadManagerInterface` class involved, no `initializeApplicationServices()` method, and a much older architecture (extends `Activity` instead of `AppCompatActivity`, uses `NavigationFragment.Callback`, etc.). In this old architecture, `MainActivity` itself directly registers its own `downloadCompletionReceiver` in `onCreate()` (line 76: `getApplicationContext().registerReceiver(downloadCompletionReceiver, DOWNLOAD_COMPLETED_BROADCASTS)`) and correctly unregisters it in its own `onDestroy()` (lines 80-83: `getApplicationContext().unregisterReceiver(downloadCompletionReceiver); super.onDestroy();`).
+
+Since the singleton-based `DownloadManagerInterface` (the component with the missing-teardown bug) does not exist in this version of the code, and the equivalent receiver-registration logic that does exist in `old/` already properly unregisters its receiver in `onDestroy`, the specific bug fixed by this commit cannot be present in `files/old/`. The buggy pattern was introduced later, when the download manager logic was refactored into the singleton `DownloadManagerInterface` class without carrying over the corresponding unregister-on-destroy logic.

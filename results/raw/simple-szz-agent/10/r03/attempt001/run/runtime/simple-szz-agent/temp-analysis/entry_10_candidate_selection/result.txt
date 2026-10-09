@@ -1,0 +1,52 @@
+SELECTED: candidate_99
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) removes the entire reload/reloadText
+mechanism from CommandParser, Server, and the Command classes, replacing the
+mutable `helpText` field with an immutable `help` field that is combined with
+`t(commandCode)` on every call to getHelpText(). This is a direct fix for a
+bug in the /help text that occurred after a reload: helpText was rebuilt from
+the AbstractCommand's `name` field, but `name` had already been truncated to
+just the first word (before any arguments) during construction, while the
+help text originally built at construction time used the full, untruncated
+name (including arguments, e.g. "kick <player>").
+
+In AbstractCommand's constructor:
+    if (name != null) {
+      helpText = name + Color.WHITE + " : " + t(commandCode);  // uses FULL name
+      int splitIndex = name.indexOf(" ");
+      if (splitIndex != -1) {
+        name = name.substring(0, splitIndex);                  // name now truncated
+      }
+    }
+    this.name = name;  // stores the TRUNCATED name
+
+But reloadText() (called whenever the server config/translations were
+reloaded) rebuilt helpText using the already-truncated `this.name` field:
+    public void reloadText() {
+      if (name != null) {
+        helpText = name + Color.WHITE + " : " + t(commandCode);  // uses TRUNCATED name
+      } ...
+    }
+
+As a result, after any reload, /help entries for commands with arguments
+(e.g. "kick <player>") would lose their argument portion, showing only the
+bare command name. The final fix eliminates this discrepancy entirely by
+storing the original full name in a separate immutable `help` field and
+always computing the display text from `help + " : " + t(commandCode)`,
+removing the need for any reload/reloadText mechanism.
+
+candidate_99 is the commit that FIRST introduced this exact buggy pattern:
+it adds the `reload()` method to CommandParser, `commandParser.reload()` call
+in Server, and the `reloadText()` overrides in AbstractCommand,
+InvalidCommand, OnlinePlayerArgCommand, and PlayerArgCommand — all using the
+same name/helpText mismatch that the fix later corrects. Before candidate_99,
+helpText was a `private final String` set once at construction with no
+reload capability, so the bug could not exist. Later candidates
+(108, 110, 117, 126) only perform cosmetic changes (switching between
+Translations.getInstance()/t.get() and a static t() helper, replacing
+literal color codes like "§f" with Color.WHITE constants) while
+preserving the same buggy reloadText() logic introduced in candidate_99.
+candidate_131 is the fix commit itself, matching fix_commit_diff.txt exactly.

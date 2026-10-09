@@ -1,0 +1,18 @@
+SELECTED: candidate_68
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit modifies the fall-through switch statement in KeychainDatabase.onUpgrade(), removing a spurious extra `case 8:` label (merging it into `case 7:`) and renumbering every subsequent case (9->8, 10->9, 11->10, 12->11, 13->12, 14->13, 15->14). This is the "ridiculous database migration bug": at some point an extra, unnecessary case label was inserted into the fall-through chain, causing every migration step added afterward to be off by one relative to the actual DATABASE_VERSION it corresponds to.
+
+candidate_68 is where this exact problematic pattern was first introduced. In this commit:
+- `DATABASE_VERSION` is bumped from 7 to 8.
+- A new `CREATE_API_APPS_ALLOWED_KEYS` table/migration is added.
+- Crucially, the migration code is added as TWO separate case labels instead of one:
+    case 7:
+        // consolidate
+    case 8:
+        // new table for allowed key ids in API
+        try { db.execSQL(CREATE_API_APPS_ALLOWED_KEYS); } ...
+
+This is the precise code block (word-for-word, including the "// consolidate" comment and the API_APPS_ALLOWED_KEYS try/catch) that the fix commit later collapses into a single `case 7:` before renumbering all later cases down by one. No other candidate introduces or contains this "case 7: // consolidate" followed by a distinct "case 8:" pattern — it originates exactly here. Because the switch statement relies purely on fall-through with no breaks, this extra case label silently introduced an extra "slot" in the migration sequence that every subsequently-added case (9, 10, 11, ...) inherited, compounding the numbering bug until it was corrected in the fix commit.

@@ -1,0 +1,381 @@
+{
+  "metadata": {
+    "timestamp": "20260906_035902",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1666/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 75.523,
+      "max": 75.523,
+      "mean": 75.523,
+      "median": 75.523,
+      "total": 75.523,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 75.053,
+      "max": 75.053,
+      "mean": 75.053,
+      "median": 75.053,
+      "total": 75.053,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 17,
+      "max": 17,
+      "mean": 17,
+      "median": 17,
+      "total": 17,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 6124,
+      "max": 6124,
+      "mean": 6124,
+      "median": 6124,
+      "total": 6124,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 65608,
+      "max": 65608,
+      "mean": 65608,
+      "median": 65608,
+      "total": 65608,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 316746,
+      "max": 316746,
+      "mean": 316746,
+      "median": 316746,
+      "total": 316746,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.5805918000000001,
+      "max": 0.5805918000000001,
+      "mean": 0.5805918000000001,
+      "median": 0.5805918000000001,
+      "total": 0.5805918000000001,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 16,
+      "max": 16,
+      "mean": 16,
+      "median": 16,
+      "total": 16,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 8,
+      "Glob": 1,
+      "Grep": 6,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 52,
+      "max": 52,
+      "mean": 52,
+      "median": 52,
+      "total": 52,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "1666",
+      "fix_commit_hash": "59efa8e8b6dbcbdaecffdf6884c232186d3f2c00",
+      "ground_truth_bics": [
+        "3b43497b3183e914fc04a11aa7645eef77e2ce6f"
+      ],
+      "predicted_bics": [
+        "3b43497b3183e914fc04a11aa7645eef77e2ce6f"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "1666",
+      "fix_commit": "59efa8e8b6dbcbdaecffdf6884c232186d3f2c00",
+      "ground_truth_bics": [
+        "3b43497b3183e914fc04a11aa7645eef77e2ce6f"
+      ],
+      "total_candidates": 52,
+      "gt_in_candidates": true,
+      "selected_commit": "3b43497b3183e914fc04a11aa7645eef77e2ce6f",
+      "selected_index": 50,
+      "confidence": "HIGH",
+      "explanation": "The fix commit adds a single `break;` statement right after the \"Cover downloaded for ...\" debug log line inside the loop over candidate cover URLs in `CoverManager.getCoverBytes()`. Without this `break`, once a cover is successfully downloaded/read, the loop keeps iterating over the remaining URLs for that same retriever, which can overwrite the already-successfully-fetched `coverBytes` with a later (possibly null or wrong) result \u2014 this is the \"local cover art\" bug described in the fix message",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "MPDroid/src/com/namelessdev/mpdroid/helpers/CoverManager.java"
+      ],
+      "call_stats": {
+        "duration_s": 75.523,
+        "duration_api_s": 75.053,
+        "num_turns": 17,
+        "input_tokens": 20,
+        "output_tokens": 6124,
+        "cache_creation_input_tokens": 65608,
+        "cache_read_input_tokens": 316746,
+        "total_cost_usd": 0.5805918000000001,
+        "total_tool_calls": 16,
+        "tool_calls_by_name": {
+          "Read": 8,
+          "Glob": 1,
+          "Grep": 6,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1666/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1666_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1415,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1666/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1666_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1666/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1666_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 846,
+            "cache_read_input_tokens": 9697,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "coverBytes.length\" -B 30\" -A 10",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1184,
+            "cache_read_input_tokens": 10543,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "Cover downloaded for",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "CoverManager",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1074,
+            "cache_read_input_tokens": 11727,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "candidates/candidate_04.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "candidates/candidate_12.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "candidates/candidate_36.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "candidates/candidate_51.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "candidates/candidate_52.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 50787,
+            "cache_read_input_tokens": 12801,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "for.*url.*urls|getCoverBytes|coverBytes = null\" -B 5 -A 30",
+                  "path": "candidates/candidate_51.diff",
+                  "output_mode": "content"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1165,
+            "cache_read_input_tokens": 63588,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getCoverBytes|for \\(String url",
+                  "path": "candidates/candidate_51.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 207,
+            "cache_read_input_tokens": 64753,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "Cover downloaded for",
+                  "path": "candidates/candidate_04.diff",
+                  "output_mode": "content",
+                  "-C": 25
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2037,
+            "cache_read_input_tokens": 64960,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1666/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1666_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_51\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit adds a single `break;` statement right after the \"Cover downloaded for ...\" debug log line inside the loop over candidate cover URLs in `CoverManager.getCoverBytes()`. Without this `break`, once a cover is successfully downloaded/read, the loop keeps iterating over the remaining URLs for that same retriever, which can overwrite the already-successfully-fetched `coverBytes` with a later (possibly null or wrong) result \u2014 this is the \"local cover art\" bug described in the fix message.\n\nTracing the history of this exact method:\n- candidate_04 is the commit that originally introduced `CoverManager.java` (and the `getCoverBytes(String[] coverUrls, CoverInfo coverInfo)` method). At that point the loop body read:\n  ```\n  if (coverBytes != null) {\n      ...\n      return coverBytes;\n  }\n  ```\n  The `return coverBytes;` here functioned exactly like a `break` \u2014 it immediately exited the loop (and the method) as soon as a valid cover was found, so the bug did not exist yet.\n\n- candidate_51 refactored this same method (and sibling methods like `executeGetRequest`/`cleanGetRequest`/`isWifi`) to a \"single exit point\" style, pre-declaring the return variable and removing early `return`s in favor of falling through to one `return` at the end of the method. In doing so, it deleted the `return coverBytes;` line from inside the `if (coverBytes != null) { ... }` block but did NOT add a `break;` in its place. This is the exact diff:\n  ```\n  d(CoverManager.class.getSimpleName(),\n          \"Cover downloaded for \" + coverInfo.getAlbum() + \" from \" + url\n                  + \", size=\" + coverBytes.length);\n  -                    return coverBytes;\n  }\n  ```\n  This change silently converted the early-exit into a no-op fall-through, so the loop continued to the next URL even after a cover was already found \u2014 introducing the local-cover-art overwrite bug.\n\n- candidate_52 (a later, unrelated-looking commit) coincidentally touches the very same lines and its diff is textually identical to the fix commit's diff (adding `break;` back at this location, same line numbers and same before/after hashes as the fix). This indicates candidate_52 is effectively the fix commit itself (or an equivalent re-application of it), not a bug-introducing candidate \u2014 selecting it would be circular.\n\nGiven that candidate_04 had correct (return-based) early-exit behavior and candidate_51 is the commit that removed that early exit without substituting a `break`, candidate_51 is the commit that introduced the bug fixed by the target commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2009,
+            "cache_read_input_tokens": 66997,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

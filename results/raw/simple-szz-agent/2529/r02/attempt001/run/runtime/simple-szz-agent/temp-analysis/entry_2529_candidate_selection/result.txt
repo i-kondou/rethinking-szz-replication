@@ -1,0 +1,15 @@
+SELECTED: candidate_24
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit addresses a bug in StatusUpdaterBolt where a routing field name configured as "metadata.<name>" was no longer recognized as belonging under "metadata" once periods in the field name had already been replaced with "%2E". The fix introduces a boolean flag (routingFieldNameInMetadata) set once at configuration time, before the "%2E" substitution is applied, so the later checks in store() no longer rely on a corrupted string.
+
+Tracing the history of fieldNameForRoutingKey in StatusUpderBolt.java across the candidates:
+
+- candidate_09 introduces fieldNameForRoutingKey and doRouting/partitioner logic, but at this point there is no "metadata." prefix handling at all — the routing key is just written as a plain field.
+- candidate_21 adds the "metadata." prefix handling: in store(), it checks `fieldNameForRoutingKey.startsWith("metadata.")` to decide whether to store the value nested under "metadata" (stripping the prefix) or as a top-level field. At this point, fieldNameForRoutingKey still holds the raw configured value (e.g. "metadata.hostname"), so the startsWith check works correctly.
+- candidate_24 adds, in prepare(), a transformation that replaces all periods in fieldNameForRoutingKey with "%2E" ("periods are not allowed in ES2"). This transformation happens BEFORE the field name reaches the startsWith("metadata.") checks added in candidate_21. As a result, a configured value like "metadata.hostname" becomes "metadata%2Ehostname", which no longer starts with "metadata.", silently breaking the metadata-nesting feature added in candidate_21. This is precisely the bug the fix commit resolves (by tracking whether the field was originally under "metadata" via a flag set before the %2E substitution).
+- candidate_25 is effectively the fix commit itself (identical diff to fix_commit_diff.txt).
+
+Since candidate_24 is the commit that introduced the ordering flaw (doing the "%2E" substitution before the "metadata." prefix check), it is the bug-introducing commit.

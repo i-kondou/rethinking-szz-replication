@@ -1,0 +1,18 @@
+SELECTED: candidate_137
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit modifies bookkeeper-common/src/main/java/org/apache/bookkeeper/common/util/OrderedScheduler.java to correct two bugs:
+
+1. In TimedRunnable.safeRun(), `taskPendingStats.registerSuccessfulEvent(initNanos, TimeUnit.NANOSECONDS)` incorrectly recorded the raw `initNanos` timestamp as the queued duration instead of the actual elapsed time. The fix changes this to `taskPendingStats.registerSuccessfulEvent(MathUtils.elapsedNanos(initNanos), TimeUnit.NANOSECONDS)`.
+
+2. The `submitOrdered(long orderingKey, ...)` and `submitOrdered(int orderingKey, ...)` overloads called `chooseThread(orderingKey).execute(r)` directly with the raw runnable `r`, instead of wrapping it with `timedRunnable(r)`. This meant task execution time was never tracked for these overloads. The fix wraps the runnable: `chooseThread(orderingKey).execute(timedRunnable(r))`.
+
+Candidate_137 is the commit that originally created OrderedScheduler.java (as a brand new file, git diff shows "new file mode" with index 00000000..41a7fa06). This newly created file already contains both buggy patterns verbatim:
+- `taskPendingStats.registerSuccessfulEvent(initNanos, TimeUnit.NANOSECONDS);` (raw timestamp bug)
+- `public void submitOrdered(long orderingKey, SafeRunnable r) { chooseThread(orderingKey).execute(r); }` and the `int` overload, both missing the `timedRunnable()` wrapper.
+
+I traced the subsequent history of this file: candidate_145 modifies OrderedScheduler.java (adding maxTasksInQueue/BoundedScheduledExecutorService support) but does not touch these specific buggy lines. candidate_153 modifies OrderedScheduler.java again (only a logging statement reformat) and also leaves the buggy lines untouched. candidate_157 is the fix commit itself (its diff is identical to fix_commit_diff.txt), finally correcting both bugs.
+
+Since the buggy code was present unchanged from the moment the file was created in candidate_137 all the way through to the fix in candidate_157, candidate_137 is the commit that introduced the bug.

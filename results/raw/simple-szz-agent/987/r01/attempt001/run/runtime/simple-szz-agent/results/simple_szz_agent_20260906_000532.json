@@ -1,0 +1,288 @@
+{
+  "metadata": {
+    "timestamp": "20260906_000532",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/987/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 51.473,
+      "max": 51.473,
+      "mean": 51.473,
+      "median": 51.473,
+      "total": 51.473,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 51.103,
+      "max": 51.103,
+      "mean": 51.103,
+      "median": 51.103,
+      "total": 51.103,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 4909,
+      "max": 4909,
+      "mean": 4909,
+      "median": 4909,
+      "total": 4909,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 61849,
+      "max": 61849,
+      "mean": 61849,
+      "median": 61849,
+      "total": 61849,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 95496,
+      "max": 95496,
+      "mean": 95496,
+      "median": 95496,
+      "total": 95496,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.47340780000000005,
+      "max": 0.47340780000000005,
+      "mean": 0.47340780000000005,
+      "median": 0.47340780000000005,
+      "total": 0.47340780000000005,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 11,
+      "max": 11,
+      "mean": 11,
+      "median": 11,
+      "total": 11,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 10,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 7,
+      "max": 7,
+      "mean": 7,
+      "median": 7,
+      "total": 7,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "987",
+      "fix_commit_hash": "b76c93fc8c6cb9e9e8165f19b4512a71461082ae",
+      "ground_truth_bics": [
+        "4473d460b995ba11a5984694f95da032ad20f94f"
+      ],
+      "predicted_bics": [
+        "4473d460b995ba11a5984694f95da032ad20f94f"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "987",
+      "fix_commit": "b76c93fc8c6cb9e9e8165f19b4512a71461082ae",
+      "ground_truth_bics": [
+        "4473d460b995ba11a5984694f95da032ad20f94f"
+      ],
+      "total_candidates": 7,
+      "gt_in_candidates": true,
+      "selected_commit": "4473d460b995ba11a5984694f95da032ad20f94f",
+      "selected_index": 4,
+      "confidence": "HIGH",
+      "explanation": "The fix corrects two bugs in DokanyDriver.java: 1. The shutdown() method incorrectly used `isMounted.set(NativeMethods.DokanRemoveMountPoint(deviceOptions.MountPoint))`, which sets `isMounted` to the return value of the unmount call. Since `DokanRemoveMountPoint` returns `true` on a *successful* unmount, this line actually set `isMounted` to `true` right after a successful unmount (and to `false` on failure) \u2014 the exact opposite of correct behavior (\"Wrongly set isMounted variable during shutdow",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/main/java/com/dokany/java/DokanyDriver.java"
+      ],
+      "call_stats": {
+        "duration_s": 51.473,
+        "duration_api_s": 51.103,
+        "num_turns": 12,
+        "input_tokens": 10,
+        "output_tokens": 4909,
+        "cache_creation_input_tokens": 61849,
+        "cache_read_input_tokens": 95496,
+        "total_cost_usd": 0.47340780000000005,
+        "total_tool_calls": 11,
+        "tool_calls_by_name": {
+          "Read": 10,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/987/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_987_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 20,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/987/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_987_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/987/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_987_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1740,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/987/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_987_candidate_selection/candidates/candidate_01.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/987/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_987_candidate_selection/candidates/candidate_02.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/987/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_987_candidate_selection/candidates/candidate_03.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/987/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_987_candidate_selection/candidates/candidate_04.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/987/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_987_candidate_selection/candidates/candidate_05.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/987/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_987_candidate_selection/candidates/candidate_06.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/987/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_987_candidate_selection/candidates/candidate_07.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 51289,
+            "cache_read_input_tokens": 11423,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/987/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_987_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_05\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix corrects two bugs in DokanyDriver.java:\n1. The shutdown() method incorrectly used `isMounted.set(NativeMethods.DokanRemoveMountPoint(deviceOptions.MountPoint))`, which sets `isMounted` to the return value of the unmount call. Since `DokanRemoveMountPoint` returns `true` on a *successful* unmount, this line actually set `isMounted` to `true` right after a successful unmount (and to `false` on failure) \u2014 the exact opposite of correct behavior (\"Wrongly set isMounted variable during shutdown\"). The fix replaces this with an explicit local `unmounted` boolean and only calls `isMounted.set(false)` when unmounting succeeds.\n2. Because `isMounted` was wrongly left `true` after a successful unmount, subsequent shutdown attempts would still think the filesystem was mounted, matching the \"Not able to unmount filesystem\" symptom.\n\nTracing the candidates:\n- candidate_01 (initial DokanyDriver.java): no `isMounted` field exists at all; shutdown is a static `stop()` method with no mount-state tracking.\n- candidate_02, candidate_03, candidate_04: only touch javadoc, exception handling, and shutdown-hook ordering; the `shutdown()`/mount-status logic is unrelated to `isMounted`.\n- candidate_05: introduces the `AtomicBoolean isMounted` field and, critically, introduces the exact buggy line:\n  `isMounted.set(NativeMethods.DokanRemoveMountPoint(deviceOptions.MountPoint));`\n  followed by `if (isMounted.get()) { LOG.error(\"Unable to unmount...\"); }` \u2014 this is precisely the faulty logic that the fix commit rewrites.\n- candidate_06: only adds a `//TODO` comment on that same line, not a logic change.\n- candidate_07: is identical to the fix commit itself (same diff/hashes), i.e., it IS the fix, not a bug-introducing candidate.\n\nSince candidate_05 is the first commit where this specific incorrect assignment (`isMounted.set(...)` using the unmount success value directly instead of tracking the negation) was introduced, it is the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 2535,
+            "cache_read_input_tokens": 62712,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

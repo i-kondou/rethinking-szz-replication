@@ -1,0 +1,51 @@
+SELECTED: candidate_68
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit renumbers the `switch (oldVersion)` fall-through cases in
+KeychainDatabase.java's onUpgrade() method, converting a broken sequence
+(case 7 -> case 8 -> case 9 -> case 10 ...) into a correct, consecutive
+sequence (case 7 -> case 8 -> case 9 ...) by removing a spurious extra
+case label. Specifically, the fix removes:
+
+    case 7:
+        // consolidate
+    case 8:
+        // new table for allowed key ids in API
+        ...
+
+and replaces it with just:
+
+    case 7:
+        // new table for allowed key ids in API
+        ...
+
+then shifts every subsequent case number down by one (case 9->8, 10->9,
+11->10, 12->11, 13->12, 14->13, 15->14). This means at some point two
+case labels (an empty "case 7: // consolidate" followed immediately by
+"case 8: // new table...") were introduced where there should only have
+been one, causing DATABASE_VERSION bumps to no longer line up correctly
+with the case numbers in the upgrade switch statement further down (an
+off-by-one migration bug).
+
+candidate_68 is exactly where this problematic pattern was first
+introduced. It bumps DATABASE_VERSION from 7 to 8, adds the new
+CREATE_API_APPS_ALLOWED_KEYS table/columns, and inserts the migration
+logic as:
+
+    case 7:
+        // consolidate
+    case 8:
+        // new table for allowed key ids in API
+        try {
+            db.execSQL(CREATE_API_APPS_ALLOWED_KEYS);
+        } catch (Exception e) {
+            // never mind, the column probably already existed
+        }
+
+This is the precise buggy code (extra/duplicate "consolidate" case
+label preceding the real migration case) that the fix commit later
+removes and renumbers. No other candidate before or after touches these
+case labels, confirming candidate_68 as the commit that introduced the
+migration numbering bug.

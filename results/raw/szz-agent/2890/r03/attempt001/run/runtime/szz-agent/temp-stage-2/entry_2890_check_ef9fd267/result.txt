@@ -1,0 +1,34 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit modifies `onFoodLevelChange` in ArenaListener.java by adding an `arena.inArena(p) &&` check to the condition inside the `arena.isRunning()` branch, so the food level lock only cancels the event for players who are actually in the arena, rather than for every player on the server.
+
+Buggy version (files/buggy):
+```java
+if (arena.isRunning()) {
+    if (lockFoodLevel) {
+        event.setCancelled(true);
+    }
+}
+```
+There is no check that the player is in the arena here, so when the arena is running and food-level lock is enabled, the food level change event is cancelled for ALL players on the server, not just arena participants.
+
+Old version (files/old), found at the same method (lines 766-776), has a different but semantically equivalent structure to the fixed version:
+```java
+public void onFoodLevelChange(FoodLevelChangeEvent event) {
+    if (!arena.isRunning())
+        return;
+
+    if (!(event.getEntity() instanceof Player) || !arena.inArena((Player) event.getEntity()))
+        return;
+
+    // If the food level is locked, cancel all changes.
+    if (lockFoodLevel)
+        event.setCancelled(true);
+}
+```
+This old implementation already returns early if the event's entity is not a Player or is not in the arena (`!arena.inArena(...)`), before ever reaching the `lockFoodLevel` check. This means food level changes are only cancelled for players who are actually in the arena — exactly the intended, non-buggy behavior described in the fix.
+
+This indicates the code was later refactored (restructured from early-return guards into nested if-blocks), and during that refactor the `inArena` check was accidentally dropped, introducing the bug. The fix commit then restored the missing check (in the new nested-if style). Since the old version predates this regression and already contains the correct guard, the bug is not present in files/old.

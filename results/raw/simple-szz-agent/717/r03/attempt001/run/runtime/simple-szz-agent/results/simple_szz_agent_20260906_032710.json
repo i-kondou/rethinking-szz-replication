@@ -1,0 +1,289 @@
+{
+  "metadata": {
+    "timestamp": "20260906_032710",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/717/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 32.518,
+      "max": 32.518,
+      "mean": 32.518,
+      "median": 32.518,
+      "total": 32.518,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 32.426,
+      "max": 32.426,
+      "mean": 32.426,
+      "median": 32.426,
+      "total": 32.426,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 8,
+      "max": 8,
+      "mean": 8,
+      "median": 8,
+      "total": 8,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 2548,
+      "max": 2548,
+      "mean": 2548,
+      "median": 2548,
+      "total": 2548,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 10355,
+      "max": 10355,
+      "mean": 10355,
+      "median": 10355,
+      "total": 10355,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 67019,
+      "max": 67019,
+      "mean": 67019,
+      "median": 67019,
+      "total": 67019,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.1204977,
+      "max": 0.1204977,
+      "mean": 0.1204977,
+      "median": 0.1204977,
+      "total": 0.1204977,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 7,
+      "max": 7,
+      "mean": 7,
+      "median": 7,
+      "total": 7,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 4,
+      "Grep": 2,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 85,
+      "max": 85,
+      "mean": 85,
+      "median": 85,
+      "total": 85,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "717",
+      "fix_commit_hash": "734fedf361e6073d47f6a511b2ca81c40116cd57",
+      "ground_truth_bics": [
+        "e4403c131f5615bfd27a224c777bab7fcf77a2e8"
+      ],
+      "predicted_bics": [
+        "0d968cce2a511a00caeae7a2963364b65922a744"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "717",
+      "fix_commit": "734fedf361e6073d47f6a511b2ca81c40116cd57",
+      "ground_truth_bics": [
+        "e4403c131f5615bfd27a224c777bab7fcf77a2e8"
+      ],
+      "total_candidates": 85,
+      "gt_in_candidates": true,
+      "selected_commit": "0d968cce2a511a00caeae7a2963364b65922a744",
+      "selected_index": 64,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes `addBootCP` in src/polyglot/main/Options.java from `bootclasspathDirectories().addAll(value);` to `bootclasspathDirectories().addAll(0, value);`, i.e. it makes the added paths get prepended to the bootclasspath list instead of appended. candidate_65 is the commit that first introduces the `addBootCP` method (and the corresponding `-addbootcp` command-line flag). The flag's own help text explicitly says it should \"prepend <path> to the bootclasspath\", but the method body im",
+      "is_correct": false,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/polyglot/main/Options.java"
+      ],
+      "call_stats": {
+        "duration_s": 32.518,
+        "duration_api_s": 32.426,
+        "num_turns": 8,
+        "input_tokens": 14,
+        "output_tokens": 2548,
+        "cache_creation_input_tokens": 10355,
+        "cache_read_input_tokens": 67019,
+        "total_cost_usd": 0.1204977,
+        "total_tool_calls": 7,
+        "tool_calls_by_name": {
+          "Read": 4,
+          "Grep": 2,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/717/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_717_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/717/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_717_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/717/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_717_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 702,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "addBootCP|bootclasspathDirectories",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/717/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_717_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 534,
+            "cache_read_input_tokens": 10385,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "addBootCP|bootclasspathDirectories",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/717/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_717_candidate_selection/candidates/candidate_65.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 704,
+            "cache_read_input_tokens": 10919,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/717/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_717_candidate_selection/candidates/candidate_65.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1108,
+            "cache_read_input_tokens": 11623,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/717/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_717_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_65\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes `addBootCP` in src/polyglot/main/Options.java from\n`bootclasspathDirectories().addAll(value);` to\n`bootclasspathDirectories().addAll(0, value);`, i.e. it makes the added\npaths get prepended to the bootclasspath list instead of appended.\n\ncandidate_65 is the commit that first introduces the `addBootCP` method\n(and the corresponding `-addbootcp` command-line flag). The flag's own\nhelp text explicitly says it should \"prepend <path> to the bootclasspath\",\nbut the method body implemented in this commit is:\n\n    protected void addBootCP(List<File> value) {\n        bootclasspath_directories.addAll(value);\n    }\n\nThis appends rather than prepends, directly contradicting the documented\nbehavior of the flag and matching precisely the defect that the fix\ncommit later corrects (by switching to `addAll(0, value)`). No other\ncandidate introduces or first touches this method \u2014 the remaining\nmatches (candidates 66, 67, 72, 78, 80, 85) only involve later,\nunrelated modifications to the surrounding code/refactors of the field\nname (bootclasspath_directories -> bootclasspathDirectories()) without\nchanging this append semantics. Therefore candidate_65 is the\nbug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1022,
+            "cache_read_input_tokens": 12731,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

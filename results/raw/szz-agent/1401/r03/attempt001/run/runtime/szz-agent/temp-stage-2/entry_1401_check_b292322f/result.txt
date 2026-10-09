@@ -1,0 +1,42 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes a single line in createHighlightInfo() in
+LocalInspectionsPass.java:
+
+  tooltip = XmlStringUtil.wrapInHtml(message.startsWith("<html>") ? ... : ...) + link;
+->
+  tooltip = XmlStringUtil.wrapInHtml((message.startsWith("<html>") ? ... : ...) + link);
+
+The bug was that `link` was being appended *outside* the wrapInHtml(...) call,
+i.e. outside the <html> wrapper, so the "more..." link markup ended up outside
+the HTML tooltip body and was not rendered/displayed, causing some warnings'
+extended-description links (and effectively the tooltip) to not show up
+correctly in the editor.
+
+Examining files/old/.../LocalInspectionsPass.java, the file is much shorter
+(487 lines vs. the buggy version's 600+) and uses an entirely different,
+older implementation of createHighlightInfo(). In the old version:
+
+- There is no `descriptor.showTooltip()` check at all.
+- There is no call to `XmlStringUtil.wrapInHtml(...)` combined with `link`
+  in the buggy pattern.
+- The tooltip is built with a different branch structure:
+    if (message.startsWith("<html>")) {
+      tooltip = message.contains("</body>") ? message.replace(...) : message.replace(...);
+    } else {
+      tooltip = "<html><body>" + XmlStringUtil.escapeString(message) + link + "</body></html>";
+    }
+  Here `link` is already correctly placed inside the "<html><body>...</body></html>"
+  wrapper (or inserted before the closing tag in the html-message branch), so
+  the specific bug (link appended outside the HTML wrapper due to operator
+  precedence/parenthesization in wrapInHtml(...) + link) cannot occur — that
+  code path doesn't exist yet.
+
+Since the buggy code construct was introduced later in the project's history
+(as part of a rewrite of createHighlightInfo/tooltip building, including
+introduction of showTooltip(), stripHtml, and the wrapInHtml(...) + link
+pattern), and this exact code section does not exist in files/old/, the bug
+cannot be present in the old version.

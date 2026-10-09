@@ -1,0 +1,22 @@
+{
+  "fix_commit": "734fedf361e6073d47f6a511b2ca81c40116cd57",
+  "bic": "0d968cce2a511a00caeae7a2963364b65922a744",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit introduced the `-addbootcp` option and `addBootCP()` method, explicitly documented as intended to \"prepend <path> to the bootclasspath\". However, the implementation used `bootclasspath_directories.addAll(value)` (appending) instead of prepending at index 0. The fix commit corrects exactly this by changing it to `addAll(0, value)` to match the documented \"prepend\" semantics. The intervening commit (05d060549f4a) only refactored the field access into a getter method (`bootclasspathDirectories()`) without changing the append/prepend behavior, so it's non-semantic w.r.t. this bug.",
+  "metrics": {
+    "case_elapsed_seconds": 11.731718,
+    "api_elapsed_seconds": 11.522814,
+    "tool_elapsed_seconds": 0.097482,
+    "other_elapsed_seconds": 0.111429,
+    "api_call_count": 3,
+    "tool_call_count": 3,
+    "prompt_tokens": 14068,
+    "completion_tokens": 773,
+    "total_tokens": 14841,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:04:10.632664"
+}

@@ -1,0 +1,1634 @@
+diff --git a/platform/platform-api/src/com/intellij/openapi/progress/ProgressManager.java b/platform/platform-api/src/com/intellij/openapi/progress/ProgressManager.java
+index ac6acededc5..3022e37eb15 100644
+--- a/platform/platform-api/src/com/intellij/openapi/progress/ProgressManager.java
++++ b/platform/platform-api/src/com/intellij/openapi/progress/ProgressManager.java
+@@ -19,7 +19,6 @@ import com.intellij.openapi.components.ServiceManager;
+ import com.intellij.openapi.project.Project;
+ import com.intellij.openapi.util.Computable;
+ import com.intellij.openapi.util.ThrowableComputable;
+-import com.intellij.util.messages.Topic;
+ import org.jetbrains.annotations.Nls;
+ import org.jetbrains.annotations.NotNull;
+ import org.jetbrains.annotations.Nullable;
+@@ -27,7 +26,6 @@ import org.jetbrains.annotations.Nullable;
+ import javax.swing.*;
+ 
+ public abstract class ProgressManager {
+-  public static Topic<Runnable> CANCEL_CALLED = new Topic<Runnable>("ProgressManager.CANCEL_CALLED", Runnable.class);
+   private static final ProgressManager ourInstance = ServiceManager.getService(ProgressManager.class);
+ 
+   static {
+diff --git a/platform/platform-impl/src/com/intellij/openapi/progress/impl/ProgressManagerImpl.java b/platform/platform-impl/src/com/intellij/openapi/progress/impl/ProgressManagerImpl.java
+index a200687f211..d929587dbdd 100644
+--- a/platform/platform-impl/src/com/intellij/openapi/progress/impl/ProgressManagerImpl.java
++++ b/platform/platform-impl/src/com/intellij/openapi/progress/impl/ProgressManagerImpl.java
+@@ -104,12 +104,6 @@ public class ProgressManagerImpl extends ProgressManager implements Disposable{
+   public static void canceled() {
+     ourNeedToCheckCancel = true;
+     ProgressIndicatorProvider.ourNeedToCheckCancel = true;
+-    SwingUtilities.invokeLater(new Runnable() {
+-      @Override
+-      public void run() {
+-        ApplicationManager.getApplication().getMessageBus().syncPublisher(CANCEL_CALLED).run();
+-      }
+-    });
+   }
+ 
+   private static class NonCancelableIndicator extends EmptyProgressIndicator implements NonCancelableSection {
+diff --git a/platform/platform-resources/src/componentSets/VCS.xml b/platform/platform-resources/src/componentSets/VCS.xml
+index 6c96ea50490..73936db330f 100644
+--- a/platform/platform-resources/src/componentSets/VCS.xml
++++ b/platform/platform-resources/src/componentSets/VCS.xml
+@@ -22,7 +22,6 @@
+       <implementation-class>com.intellij.openapi.vcs.changes.VcsChangeDetailsManager</implementation-class>
+       <option name="workspace" value="true"/>
+     </component>
+-    <component><implementation-class>com.intellij.openapi.vcs.CancelHelper</implementation-class></component>
+     <component>
+       <implementation-class>com.intellij.openapi.vcs.impl.VcsDirectoryMappingStorage</implementation-class>
+       <skipForDefaultProject/>
+diff --git a/platform/vcs-api/src/com/intellij/openapi/vcs/CancelHelper.java b/platform/vcs-api/src/com/intellij/openapi/vcs/CancelHelper.java
+deleted file mode 100644
+index 386a996fd03..00000000000
+--- a/platform/vcs-api/src/com/intellij/openapi/vcs/CancelHelper.java
++++ /dev/null
+@@ -1,200 +0,0 @@
+-/*
+- * Copyright 2000-2012 JetBrains s.r.o.
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- * http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-package com.intellij.openapi.vcs;
+-
+-import com.intellij.openapi.Disposable;
+-import com.intellij.openapi.progress.ProgressIndicator;
+-import com.intellij.openapi.progress.ProgressManager;
+-import com.intellij.openapi.progress.Task;
+-import com.intellij.openapi.project.Project;
+-import com.intellij.util.Processor;
+-import com.intellij.util.containers.hash.HashSet;
+-import com.intellij.util.messages.MessageBusConnection;
+-import org.jetbrains.annotations.NotNull;
+-import org.jetbrains.annotations.Nullable;
+-
+-import java.util.HashMap;
+-import java.util.Map;
+-import java.util.Set;
+-
+-/**
+- * Created with IntelliJ IDEA.
+- * User: Irina.Chernushina
+- * Date: 8/2/12
+- * Time: 8:08 PM
+- */
+-public class CancelHelper implements Disposable, Processor<Thread> {
+-  private final Map<ProgressIndicator, Thread> myMap;
+-  private final Set<Thread> myInterrupted;
+-  private MessageBusConnection myConnection;
+-  private final Object myLock;
+-
+-  public CancelHelper(final Project project) {
+-    myMap = new HashMap<ProgressIndicator, Thread>();
+-    myLock = new Object();
+-    myInterrupted = new HashSet<Thread>();
+-    myConnection = project.getMessageBus().connect(project);
+-    myConnection.subscribe(ProgressManager.CANCEL_CALLED, new Runnable() {
+-      @Override
+-      public void run() {
+-        synchronized (myLock) {
+-          for (Map.Entry<ProgressIndicator, Thread> entry : myMap.entrySet()) {
+-            if (entry.getKey().isCanceled()) {
+-              myInterrupted.add(entry.getValue());
+-            }
+-          }
+-        }
+-      }
+-    });
+-  }
+-
+-  public static CancelHelper getInstance(final Project project) {
+-    return project.getComponent(CancelHelper.class);
+-  }
+-
+-  /**
+-   * @return false if process was canceled
+-   */
+-  @Override
+-  public boolean process(Thread thread) {
+-    synchronized (myLock) {
+-      return ! myInterrupted.contains(thread);
+-    }
+-  }
+-
+-  @Override
+-  public void dispose() {
+-    myConnection.disconnect();
+-    myConnection = null;
+-  }
+-
+-  public Runnable proxyRunnable(final Runnable runnable) {
+-    return new Runnable() {
+-      @Override
+-      public void run() {
+-        ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
+-        if (indicator == null) {
+-          runnable.run();
+-          return;
+-        }
+-        try {
+-          synchronized (myLock) {
+-            myMap.put(indicator, Thread.currentThread());
+-          }
+-          runnable.run();
+-        } finally {
+-          synchronized (myLock) {
+-            myInterrupted.remove(Thread.currentThread());
+-            myMap.remove(indicator);
+-          }
+-        }
+-      }
+-    };
+-  }
+-
+-  public Task proxyTask(final Task task) {
+-    if (task instanceof Task.Backgroundable) {
+-      return new Task.Backgroundable(task.getProject(), task.getTitle(), task.isCancellable()) {
+-        @Override
+-        public void run(@NotNull ProgressIndicator indicator) {
+-          runTask(indicator, task);
+-        }
+-
+-        public void onCancel() {
+-          task.onCancel();
+-        }
+-
+-        public void onSuccess() {
+-          task.onSuccess();
+-        }
+-
+-        public String getProcessId() {
+-          return task.getProcessId();
+-        }
+-
+-        @Nullable
+-        public NotificationInfo getNotificationInfo() {
+-          return task.getNotificationInfo();
+-        }
+-
+-        @Nullable
+-        public NotificationInfo notifyFinished() {
+-          return task.notifyFinished();
+-        }
+-
+-        public boolean isHeadless() {
+-          return task.isHeadless();
+-        }
+-      };
+-    } else {
+-      return new Task(task.getProject(), task.getTitle(), task.isCancellable()) {
+-        @Override
+-        public boolean isModal() {
+-          return task.isModal();
+-        }
+-
+-        @Override
+-        public void onCancel() {
+-          task.onCancel();
+-        }
+-
+-        @Override
+-        public void onSuccess() {
+-          task.onSuccess();
+-        }
+-
+-        @Override
+-        public String getProcessId() {
+-          return task.getProcessId();
+-        }
+-
+-        @Override
+-        public NotificationInfo getNotificationInfo() {
+-          return task.getNotificationInfo();
+-        }
+-
+-        @Override
+-        public NotificationInfo notifyFinished() {
+-          return task.notifyFinished();
+-        }
+-
+-        @Override
+-        public boolean isHeadless() {
+-          return task.isHeadless();
+-        }
+-
+-        @Override
+-        public void run(@NotNull ProgressIndicator indicator) {
+-          runTask(indicator, task);
+-        }
+-      };
+-    }
+-  }
+-
+-  private void runTask(ProgressIndicator indicator, Task task) {
+-    try {
+-      synchronized (myLock) {
+-        myMap.put(indicator, Thread.currentThread());
+-      }
+-      task.run(indicator);
+-    } finally {
+-      synchronized (myLock) {
+-        myInterrupted.remove(Thread.currentThread());
+-        myMap.remove(indicator);
+-      }
+-    }
+-  }
+-}
+diff --git a/platform/vcs-api/src/com/intellij/openapi/vcs/annotate/ShowAllAffectedGenericAction.java b/platform/vcs-api/src/com/intellij/openapi/vcs/annotate/ShowAllAffectedGenericAction.java
+index 811f724b6c3..eae879c3840 100644
+--- a/platform/vcs-api/src/com/intellij/openapi/vcs/annotate/ShowAllAffectedGenericAction.java
++++ b/platform/vcs-api/src/com/intellij/openapi/vcs/annotate/ShowAllAffectedGenericAction.java
+@@ -137,7 +137,7 @@ public class ShowAllAffectedGenericAction extends AnAction {
+         }
+       }
+     };
+-    ProgressManager.getInstance().run(CancelHelper.getInstance(project).proxyTask(task));
++    ProgressManager.getInstance().run(task);
+   }
+ 
+   public static CommittedChangeList getRemoteList(final AbstractVcs vcs, final VcsRevisionNumber revision, final VirtualFile nonLocal)
+diff --git a/platform/vcs-api/src/com/intellij/util/ui/VcsSynchronousProgressWrapper.java b/platform/vcs-api/src/com/intellij/util/ui/VcsSynchronousProgressWrapper.java
+index 9e82e7c8ded..cc686d40931 100644
+--- a/platform/vcs-api/src/com/intellij/util/ui/VcsSynchronousProgressWrapper.java
++++ b/platform/vcs-api/src/com/intellij/util/ui/VcsSynchronousProgressWrapper.java
+@@ -19,7 +19,6 @@ import com.intellij.openapi.application.ApplicationManager;
+ import com.intellij.openapi.progress.ProgressManager;
+ import com.intellij.openapi.project.Project;
+ import com.intellij.openapi.vcs.AbstractVcsHelper;
+-import com.intellij.openapi.vcs.CancelHelper;
+ import com.intellij.openapi.vcs.VcsException;
+ import com.intellij.util.ThrowableRunnable;
+ 
+@@ -47,7 +46,7 @@ public class VcsSynchronousProgressWrapper {
+     };
+     final boolean notCanceled;
+     if (ApplicationManager.getApplication().isDispatchThread()) {
+-      notCanceled = ProgressManager.getInstance().runProcessWithProgressSynchronously(CancelHelper.getInstance(project).proxyRunnable(process), title, true, project);
++      notCanceled = ProgressManager.getInstance().runProcessWithProgressSynchronously(process, title, true, project);
+     } else {
+       process.run();
+       notCanceled = true;
+diff --git a/platform/vcs-api/src/com/intellij/vcsUtil/VcsUtil.java b/platform/vcs-api/src/com/intellij/vcsUtil/VcsUtil.java
+index 6fd710f5122..7f225e9134e 100644
+--- a/platform/vcs-api/src/com/intellij/vcsUtil/VcsUtil.java
++++ b/platform/vcs-api/src/com/intellij/vcsUtil/VcsUtil.java
+@@ -452,7 +452,7 @@ public class VcsUtil {
+   public static boolean runVcsProcessWithProgress(final VcsRunnable runnable, String progressTitle, boolean canBeCanceled, Project project)
+     throws VcsException {
+     final Ref<VcsException> ex = new Ref<VcsException>();
+-    boolean result = ProgressManager.getInstance().runProcessWithProgressSynchronously(CancelHelper.getInstance(project).proxyRunnable(new Runnable() {
++    boolean result = ProgressManager.getInstance().runProcessWithProgressSynchronously(new Runnable() {
+       public void run() {
+         try {
+           runnable.run();
+@@ -461,7 +461,7 @@ public class VcsUtil {
+           ex.set(e);
+         }
+       }
+-    }), progressTitle, canBeCanceled, project);
++    }, progressTitle, canBeCanceled, project);
+     if (!ex.isNull()) {
+       throw ex.get();
+     }
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/AnnotateToggleAction.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/AnnotateToggleAction.java
+index 6482a3a82f9..a93a90f873e 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/AnnotateToggleAction.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/AnnotateToggleAction.java
+@@ -177,7 +177,7 @@ public class AnnotateToggleAction extends ToggleAction implements DumbAware, Ann
+         }
+       }
+     };
+-    ProgressManager.getInstance().run(CancelHelper.getInstance(vcs.getProject()).proxyTask(annotateTask));
++    ProgressManager.getInstance().run(annotateTask);
+   }
+ 
+   public static void doAnnotate(final Editor editor,
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/DiffActionExecutor.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/DiffActionExecutor.java
+index 1d3c0761421..68720739c06 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/DiffActionExecutor.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/DiffActionExecutor.java
+@@ -167,7 +167,7 @@ public abstract class DiffActionExecutor {
+     };
+ 
+     myHandler.register(VcsBackgroundableActions.keyFrom(mySelectedFile));
+-    ProgressManager.getInstance().run(CancelHelper.getInstance(myProject).proxyTask(task));
++    ProgressManager.getInstance().run(task);
+   }
+ 
+   public static void showDiff(final DiffProvider diffProvider, final VcsRevisionNumber revisionNumber, final VirtualFile selectedFile,
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/ShowBaseRevisionAction.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/ShowBaseRevisionAction.java
+index cde4068afdd..eed1a28ac41 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/ShowBaseRevisionAction.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/ShowBaseRevisionAction.java
+@@ -24,7 +24,6 @@ import com.intellij.openapi.progress.Task;
+ import com.intellij.openapi.ui.popup.JBPopup;
+ import com.intellij.openapi.ui.popup.JBPopupFactory;
+ import com.intellij.openapi.vcs.AbstractVcs;
+-import com.intellij.openapi.vcs.CancelHelper;
+ import com.intellij.openapi.vcs.VcsBundle;
+ import com.intellij.openapi.vcs.changes.BackgroundFromStartOption;
+ import com.intellij.openapi.vcs.diff.DiffMixin;
+@@ -54,7 +53,7 @@ public class ShowBaseRevisionAction extends AbstractVcsAction {
+     final VirtualFile selectedFile = selectedFilePaths[0];
+     if (selectedFile.isDirectory()) return;
+ 
+-    ProgressManager.getInstance().run(CancelHelper.getInstance(vcs.getProject()).proxyTask(new MyTask(selectedFile, vcs, vcsContext)));
++    ProgressManager.getInstance().run(new MyTask(selectedFile, vcs, vcsContext));
+   }
+ 
+   private static class MyTask extends Task.Backgroundable {
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/ShowDiffFromAnnotation.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/ShowDiffFromAnnotation.java
+index 0ddf9693cc0..72acaf90efb 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/ShowDiffFromAnnotation.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/actions/ShowDiffFromAnnotation.java
+@@ -98,7 +98,7 @@ class ShowDiffFromAnnotation extends AnAction implements LineNumberListener {
+       final VcsException[] exc = new VcsException[1];
+       final List<Change> changes = new LinkedList<Change>();
+       final FilePath[] targetPath = new FilePath[1];
+-      ProgressManager.getInstance().run(CancelHelper.getInstance(myVcs.getProject()).proxyTask(new Task.Backgroundable(myVcs.getProject(),
++      ProgressManager.getInstance().run(new Task.Backgroundable(myVcs.getProject(),
+                                                                 "Loading revision " + revisionNumber.asString() + " contents", true,
+                                                                 BackgroundFromStartOption.getInstance()) {
+         @Override
+@@ -134,7 +134,7 @@ class ShowDiffFromAnnotation extends AnAction implements LineNumberListener {
+             ShowDiffAction.showDiffForChange(changes.toArray(new Change[changes.size()]), idx, myVcs.getProject(), context);
+           }
+         }
+-      }));
++      });
+     }
+   }
+ 
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/AbstractMissingFilesAction.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/AbstractMissingFilesAction.java
+index 0e40c0d49cb..3ac9c49cf5c 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/AbstractMissingFilesAction.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/AbstractMissingFilesAction.java
+@@ -28,7 +28,10 @@ import com.intellij.openapi.actionSystem.PlatformDataKeys;
+ import com.intellij.openapi.progress.ProgressManager;
+ import com.intellij.openapi.project.DumbAware;
+ import com.intellij.openapi.project.Project;
+-import com.intellij.openapi.vcs.*;
++import com.intellij.openapi.vcs.AbstractVcs;
++import com.intellij.openapi.vcs.AbstractVcsHelper;
++import com.intellij.openapi.vcs.FilePath;
++import com.intellij.openapi.vcs.VcsException;
+ import com.intellij.openapi.vcs.changes.ChangesUtil;
+ import com.intellij.openapi.vcs.changes.ChangesViewManager;
+ import com.intellij.openapi.vcs.changes.VcsDirtyScopeManager;
+@@ -76,7 +79,7 @@ public abstract class AbstractMissingFilesAction extends AnAction implements Dum
+     if (synchronously()) {
+       action.run();
+     } else {
+-      progressManager.runProcessWithProgressSynchronously(CancelHelper.getInstance(project).proxyRunnable(action), getName(), true, project);
++      progressManager.runProcessWithProgressSynchronously(action, getName(), true, project);
+     }
+   }
+ 
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/ChangeDiffRequestPresentable.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/ChangeDiffRequestPresentable.java
+index d7fca81e454..6831b52c7ba 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/ChangeDiffRequestPresentable.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/ChangeDiffRequestPresentable.java
+@@ -29,7 +29,6 @@ import com.intellij.openapi.progress.ProgressManager;
+ import com.intellij.openapi.project.Project;
+ import com.intellij.openapi.ui.Messages;
+ import com.intellij.openapi.util.io.FileUtil;
+-import com.intellij.openapi.vcs.CancelHelper;
+ import com.intellij.openapi.vcs.FilePath;
+ import com.intellij.openapi.vcs.VcsBundle;
+ import com.intellij.openapi.vcs.VcsException;
+@@ -107,7 +106,7 @@ public class ChangeDiffRequestPresentable implements DiffRequestPresentable {
+     }
+     request.setWindowTitle(title);
+ 
+-    boolean result = ProgressManager.getInstance().runProcessWithProgressSynchronously(CancelHelper.getInstance(myProject).proxyRunnable(new Runnable() {
++    boolean result = ProgressManager.getInstance().runProcessWithProgressSynchronously(new Runnable() {
+       public void run() {
+         final ProgressIndicator pi = ProgressManager.getInstance().getProgressIndicator();
+         if (pi != null) {
+@@ -115,7 +114,7 @@ public class ChangeDiffRequestPresentable implements DiffRequestPresentable {
+         }
+         request.setContents(createContent(bRev), createContent(aRev));
+       }
+-    }), VcsBundle.message("progress.loading.diff.revisions"), true, myProject);
++    }, VcsBundle.message("progress.loading.diff.revisions"), true, myProject);
+     if (! result) return false;
+ 
+     String beforeRevisionTitle = (bRev != null) ? bRev.getRevisionNumber().asString() : "";
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/CreatePatchFromChangesAction.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/CreatePatchFromChangesAction.java
+index f9142777a43..ef663b8f03e 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/CreatePatchFromChangesAction.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/CreatePatchFromChangesAction.java
+@@ -25,7 +25,6 @@ import com.intellij.openapi.project.DumbAware;
+ import com.intellij.openapi.project.Project;
+ import com.intellij.openapi.project.ProjectManager;
+ import com.intellij.openapi.ui.DialogWrapper;
+-import com.intellij.openapi.vcs.CancelHelper;
+ import com.intellij.openapi.vcs.VcsBundle;
+ import com.intellij.openapi.vcs.VcsDataKeys;
+ import com.intellij.openapi.vcs.VcsException;
+@@ -97,7 +96,7 @@ public class CreatePatchFromChangesAction extends AnAction implements DumbAware
+ 
+   private static void preloadContent(final Project project, final List<Change> changes) {
+     // to avoid multiple progress dialogs, preload content under one progress
+-    ProgressManager.getInstance().runProcessWithProgressSynchronously(CancelHelper.getInstance(project).proxyRunnable(new Runnable() {
++    ProgressManager.getInstance().runProcessWithProgressSynchronously(new Runnable() {
+       public void run() {
+         for(Change change: changes) {
+           checkLoadContent(change.getBeforeRevision());
+@@ -116,7 +115,7 @@ public class CreatePatchFromChangesAction extends AnAction implements DumbAware
+           }
+         }
+       }
+-    }), VcsBundle.message("create.patch.loading.content.progress"), true, project);
++    }, VcsBundle.message("create.patch.loading.content.progress"), true, project);
+   }
+ 
+   public void update(final AnActionEvent e) {
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/RevertCommittedStuffAbstractAction.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/RevertCommittedStuffAbstractAction.java
+index 40162e542fb..7ee8cb78bbc 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/RevertCommittedStuffAbstractAction.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/RevertCommittedStuffAbstractAction.java
+@@ -30,7 +30,6 @@ import com.intellij.openapi.progress.Task;
+ import com.intellij.openapi.project.DumbAware;
+ import com.intellij.openapi.project.Project;
+ import com.intellij.openapi.ui.Messages;
+-import com.intellij.openapi.vcs.CancelHelper;
+ import com.intellij.openapi.vcs.VcsBundle;
+ import com.intellij.openapi.vcs.VcsDataKeys;
+ import com.intellij.openapi.vcs.VcsException;
+@@ -78,7 +77,7 @@ abstract class RevertCommittedStuffAbstractAction extends AnAction implements Du
+     if (!chooser.isOK()) return;
+ 
+     final List<FilePatch> patches = new ArrayList<FilePatch>();
+-    ProgressManager.getInstance().run(CancelHelper.getInstance(project).proxyTask(new Task.Backgroundable(project, VcsBundle.message("revert.changes.title"), true,
++    ProgressManager.getInstance().run(new Task.Backgroundable(project, VcsBundle.message("revert.changes.title"), true,
+                                                               BackgroundFromStartOption.getInstance()) {
+       @Override
+       public void run(@NotNull ProgressIndicator indicator) {
+@@ -101,7 +100,7 @@ abstract class RevertCommittedStuffAbstractAction extends AnAction implements Du
+       public void onSuccess() {
+         new PatchApplier<BinaryFilePatch>(project, baseDir, patches, chooser.getSelectedList(), null, null).execute();
+       }
+-    }));
++    });
+   }
+ 
+   public void update(final AnActionEvent e) {
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/RollbackAction.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/RollbackAction.java
+index 16b5105061a..b735d3e780e 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/RollbackAction.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/actions/RollbackAction.java
+@@ -250,6 +250,6 @@ public class RollbackAction extends AnAction implements DumbAware {
+         });
+       }
+     };
+-    progressManager.runProcessWithProgressSynchronously(CancelHelper.getInstance(project).proxyRunnable(action), operationName, true, project);
++    progressManager.runProcessWithProgressSynchronously(action, operationName, true, project);
+   }
+ }
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/committed/CommittedChangesPanel.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/committed/CommittedChangesPanel.java
+index 37f6886ad3b..a7f10368a98 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/committed/CommittedChangesPanel.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/committed/CommittedChangesPanel.java
+@@ -139,7 +139,7 @@ public class CommittedChangesPanel extends JPanel implements TypeSafeDataProvide
+ 
+     myInLoad = true;
+     myBrowser.setLoading(true);
+-    ProgressManager.getInstance().run(CancelHelper.getInstance(myProject).proxyTask(new Task.Backgroundable(myProject, "Loading changes", true, BackgroundFromStartOption.getInstance()) {
++    ProgressManager.getInstance().run(new Task.Backgroundable(myProject, "Loading changes", true, BackgroundFromStartOption.getInstance()) {
+       
+       public void run(@NotNull final ProgressIndicator indicator) {
+         try {
+@@ -182,7 +182,7 @@ public class CommittedChangesPanel extends JPanel implements TypeSafeDataProvide
+           myBrowser.setLoading(false);
+         }
+       }
+-    }));
++    });
+   }
+ 
+   public void clearCaches() {
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/committed/RepositoryLocationCache.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/committed/RepositoryLocationCache.java
+index 44d21c72381..de6a4b02763 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/committed/RepositoryLocationCache.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/committed/RepositoryLocationCache.java
+@@ -19,7 +19,10 @@ import com.intellij.openapi.application.ApplicationManager;
+ import com.intellij.openapi.progress.ProgressManager;
+ import com.intellij.openapi.project.Project;
+ import com.intellij.openapi.util.Pair;
+-import com.intellij.openapi.vcs.*;
++import com.intellij.openapi.vcs.AbstractVcs;
++import com.intellij.openapi.vcs.CommittedChangesProvider;
++import com.intellij.openapi.vcs.FilePath;
++import com.intellij.openapi.vcs.RepositoryLocation;
+ import org.jetbrains.annotations.NotNull;
+ 
+ import java.util.Collections;
+@@ -49,8 +52,7 @@ public class RepositoryLocationCache {
+   private RepositoryLocation getUnderProgress(final AbstractVcs vcs, final FilePath filePath, final boolean silent) {
+     final MyLoader loader = new MyLoader(vcs, filePath);
+     if ((! silent) && ApplicationManager.getApplication().isDispatchThread()) {
+-      ProgressManager.getInstance().runProcessWithProgressSynchronously(CancelHelper.getInstance(myProject).proxyRunnable(loader),
+-        "Discovering location of " + filePath.getPresentableUrl(), true, myProject);
++      ProgressManager.getInstance().runProcessWithProgressSynchronously(loader, "Discovering location of " + filePath.getPresentableUrl(), true, myProject);
+     } else {
+       loader.run();
+     }
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/patch/ImportToShelfExecutor.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/patch/ImportToShelfExecutor.java
+index ea3e26781a0..3afeee40a17 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/patch/ImportToShelfExecutor.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/patch/ImportToShelfExecutor.java
+@@ -24,7 +24,6 @@ import com.intellij.openapi.project.Project;
+ import com.intellij.openapi.ui.MessageType;
+ import com.intellij.openapi.util.io.FileUtil;
+ import com.intellij.openapi.vcs.AbstractVcsHelper;
+-import com.intellij.openapi.vcs.CancelHelper;
+ import com.intellij.openapi.vcs.ObjectsConvertor;
+ import com.intellij.openapi.vcs.VcsException;
+ import com.intellij.openapi.vcs.changes.CommitContext;
+@@ -123,8 +122,7 @@ public class ImportToShelfExecutor implements ApplyPatchExecutor {
+         }
+       }
+     };
+-    ProgressManager.getInstance().runProcessWithProgressSynchronously(CancelHelper.getInstance(myProject).proxyRunnable(vcsCatchingRunnable),
+-                                                                      "Import patch to shelf", true, myProject);
++    ProgressManager.getInstance().runProcessWithProgressSynchronously(vcsCatchingRunnable, "Import patch to shelf", true, myProject);
+     if (! vcsCatchingRunnable.get().isEmpty()) {
+       AbstractVcsHelper.getInstance(myProject).showErrors(vcsCatchingRunnable.get(), IMPORT_TO_SHELF);
+     }
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/shelf/UnshelveChangesAction.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/shelf/UnshelveChangesAction.java
+index 8d6d80bf804..a009d5ad244 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/shelf/UnshelveChangesAction.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/shelf/UnshelveChangesAction.java
+@@ -31,7 +31,6 @@ import com.intellij.openapi.progress.ProgressIndicator;
+ import com.intellij.openapi.progress.ProgressManager;
+ import com.intellij.openapi.progress.Task;
+ import com.intellij.openapi.project.Project;
+-import com.intellij.openapi.vcs.CancelHelper;
+ import com.intellij.openapi.vcs.VcsBundle;
+ import com.intellij.openapi.vcs.changes.BackgroundFromStartOption;
+ import com.intellij.openapi.vcs.changes.ChangeListManager;
+@@ -80,14 +79,14 @@ public class UnshelveChangesAction extends AnAction {
+ 
+     final List<ShelvedBinaryFile> finalBinaryFiles = binaryFiles;
+     final List<ShelvedChange> finalChanges = changes;
+-    ProgressManager.getInstance().run(CancelHelper.getInstance(project).proxyTask(new Task.Backgroundable(project, "Unshelve changes", true, BackgroundFromStartOption.getInstance()) {
++    ProgressManager.getInstance().run(new Task.Backgroundable(project, "Unshelve changes", true, BackgroundFromStartOption.getInstance()) {
+       @Override
+       public void run(@NotNull ProgressIndicator indicator) {
+         for(ShelvedChangeList changeList: changeLists) {
+           ShelveChangesManager.getInstance(project).unshelveChangeList(changeList, finalChanges, finalBinaryFiles, chooser.getSelectedList());
+         }
+       }
+-    }));
++    });
+   }
+ 
+   @Override
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/ui/CommitChangeListDialog.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/ui/CommitChangeListDialog.java
+index 9acbb9afa1c..a4af005dbc8 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/ui/CommitChangeListDialog.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/ui/CommitChangeListDialog.java
+@@ -650,11 +650,11 @@ public class CommitChangeListDialog extends DialogWrapper implements CheckinProj
+         public void run() {
+           try {
+             final boolean completed = ProgressManager.getInstance().runProcessWithProgressSynchronously(
+-              CancelHelper.getInstance(myProject).proxyRunnable(new Runnable() {
++              new Runnable() {
+               public void run() {
+                 session.execute(getIncludedChanges(), getCommitMessage());
+               }
+-            }), commitExecutor.getActionText(), true, getProject());
++            }, commitExecutor.getActionText(), true, getProject());
+ 
+             if (completed) {
+               for (CheckinHandler handler : myHandlers) {
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/ui/CommitHelper.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/ui/CommitHelper.java
+index 192a63e1739..f37a591b5fc 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/ui/CommitHelper.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/ui/CommitHelper.java
+@@ -110,7 +110,7 @@ public class CommitHelper {
+     };
+ 
+     if (myForceSyncCommit) {
+-      ProgressManager.getInstance().runProcessWithProgressSynchronously(CancelHelper.getInstance(myProject).proxyRunnable(action), myActionName, true, myProject);
++      ProgressManager.getInstance().runProcessWithProgressSynchronously(action, myActionName, true, myProject);
+       boolean success = doesntContainErrors(processor.getVcsExceptions());
+       if (success) {
+         reportSuccess(processor);
+@@ -137,7 +137,7 @@ public class CommitHelper {
+             return new NotificationInfo("VCS Commit", "VCS Commit Finished", text, true);
+           }
+         };
+-      ProgressManager.getInstance().run(CancelHelper.getInstance(myProject).proxyTask(task));
++      ProgressManager.getInstance().run(task);
+       return false;
+     }
+   }
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/ui/RollbackWorker.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/ui/RollbackWorker.java
+index 71bfaeaf770..601c486a957 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/ui/RollbackWorker.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/changes/ui/RollbackWorker.java
+@@ -77,7 +77,7 @@ public class RollbackWorker {
+ 
+     if (ApplicationManager.getApplication().isDispatchThread()) {
+       ProgressManager.getInstance()
+-        .run(CancelHelper.getInstance(myProject).proxyTask(new Task.Backgroundable(myProject, myOperationName, true,
++        .run(new Task.Backgroundable(myProject, myOperationName, true,
+                                      new PerformInBackgroundOption() {
+                                        public boolean shouldStartInBackground() {
+                                          return VcsConfiguration.getInstance(myProject).PERFORM_ROLLBACK_IN_BACKGROUND;
+@@ -89,7 +89,7 @@ public class RollbackWorker {
+           public void run(@NotNull ProgressIndicator indicator) {
+             rollbackAction.run();
+           }
+-        }));
++        });
+     }
+     else {
+       rollbackAction.run();
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+index be3d0b83b0d..66e49ab0ced 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+@@ -1150,7 +1150,7 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+       final Ref<FileAnnotation> fileAnnotationRef = new Ref<FileAnnotation>();
+       final Ref<VcsException> exceptionRef = new Ref<VcsException>();
+ 
+-      ProgressManager.getInstance().run(CancelHelper.getInstance(myProject).proxyTask(new Task.Backgroundable(myVcs.getProject(), VcsBundle.message("retrieving.annotations"), true,
++      ProgressManager.getInstance().run(new Task.Backgroundable(myVcs.getProject(), VcsBundle.message("retrieving.annotations"), true,
+           BackgroundFromStartOption.getInstance()) {
+         public void run(@NotNull ProgressIndicator indicator) {
+           try {
+@@ -1177,7 +1177,7 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+ 
+           AbstractVcsHelper.getInstance(myProject).showAnnotation(fileAnnotationRef.get(), revisionVirtualFile, myVcs);
+         }
+-      }));
++      });
+     }
+   }
+ 
+@@ -1762,7 +1762,7 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+       if (myFilePath.isDirectory()) {
+         final List<TreeNodeOnVcsRevision> selection = getSelection();
+         if (selection.size() != 1) return;
+-        ProgressManager.getInstance().run(CancelHelper.getInstance(myProject).proxyTask(new FolderPatchCreationTask(myVcs, selection.get(0))));
++        ProgressManager.getInstance().run(new FolderPatchCreationTask(myVcs, selection.get(0)));
+       } else {
+         myUsualDelegate.actionPerformed(e);
+       }
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/VcsHistoryProviderBackgroundableProxy.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/VcsHistoryProviderBackgroundableProxy.java
+index cb44d04827f..6a913cdb7de 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/VcsHistoryProviderBackgroundableProxy.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/VcsHistoryProviderBackgroundableProxy.java
+@@ -134,7 +134,7 @@ public class VcsHistoryProviderBackgroundableProxy {
+                              final VcsBackgroundableActions resultingActionKey,
+                              final BackgroundableActionEnabledHandler handler,
+                              final VcsAppendableHistorySessionPartner cachedPartner) {
+-    ProgressManager.getInstance().run(CancelHelper.getInstance(myProject).proxyTask(new Task.Backgroundable(myProject, VcsBundle.message("loading.file.history.progress"),
++    ProgressManager.getInstance().run(new Task.Backgroundable(myProject, VcsBundle.message("loading.file.history.progress"),
+                                                               true, BackgroundFromStartOption.getInstance()) {
+       public void run(@NotNull ProgressIndicator indicator) {
+         try {
+@@ -157,7 +157,7 @@ public class VcsHistoryProviderBackgroundableProxy {
+             }, ModalityState.NON_MODAL);
+         }
+       }
+-    }));
++    });
+   }
+ 
+   private static class HistoryPartnerProxy implements VcsAppendableHistorySessionPartner {
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/impl/CachedRevisionsContents.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/impl/CachedRevisionsContents.java
+index aeaf9e19a40..51163126e63 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/impl/CachedRevisionsContents.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/impl/CachedRevisionsContents.java
+@@ -21,7 +21,6 @@ import com.intellij.openapi.progress.ProcessCanceledException;
+ import com.intellij.openapi.progress.ProgressIndicator;
+ import com.intellij.openapi.progress.ProgressManager;
+ import com.intellij.openapi.project.Project;
+-import com.intellij.openapi.vcs.CancelHelper;
+ import com.intellij.openapi.vcs.VcsBundle;
+ import com.intellij.openapi.vcs.VcsException;
+ import com.intellij.openapi.vcs.history.VcsFileRevision;
+@@ -133,8 +132,7 @@ public class CachedRevisionsContents {
+     };
+ 
+     if (ApplicationManager.getApplication().isDispatchThread()) {
+-      boolean loaded = ProgressManager.getInstance().runProcessWithProgressSynchronously(
+-        CancelHelper.getInstance(myProject).proxyRunnable(process), VcsBundle.message("progress.title.loading.contents"), true, myProject);
++      boolean loaded = ProgressManager.getInstance().runProcessWithProgressSynchronously(process, VcsBundle.message("progress.title.loading.contents"), true, myProject);
+       if (! loaded) throw new VcsException("Load of revision contents canceled");
+     } else {
+       process.run();
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/impl/AbstractVcsHelperImpl.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/impl/AbstractVcsHelperImpl.java
+index fb61e0ff6d1..f6747b33d9c 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/impl/AbstractVcsHelperImpl.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/impl/AbstractVcsHelperImpl.java
+@@ -504,7 +504,7 @@ public class AbstractVcsHelperImpl extends AbstractVcsHelper {
+           @Override
+           public void consume(ChangesBrowserDialog changesBrowserDialog) {
+             task[0] = new AsynchronousListsLoader(myProject, provider, location, finalSettings, changesBrowserDialog);
+-            ProgressManager.getInstance().run(CancelHelper.getInstance(myProject).proxyTask(task[0]));
++            ProgressManager.getInstance().run(task[0]);
+           }
+         });
+ 
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/impl/VcsBackgroundableComputable.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/impl/VcsBackgroundableComputable.java
+index d24e0a84e14..2e0a9a97db3 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/impl/VcsBackgroundableComputable.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/impl/VcsBackgroundableComputable.java
+@@ -20,7 +20,6 @@ import com.intellij.openapi.progress.ProgressManager;
+ import com.intellij.openapi.progress.Task;
+ import com.intellij.openapi.project.Project;
+ import com.intellij.openapi.util.ThrowableComputable;
+-import com.intellij.openapi.vcs.CancelHelper;
+ import com.intellij.openapi.vcs.ProjectLevelVcsManager;
+ import com.intellij.openapi.vcs.VcsException;
+ import com.intellij.openapi.vcs.changes.BackgroundFromStartOption;
+@@ -109,7 +108,7 @@ public class VcsBackgroundableComputable<T> extends Task.Backgroundable {
+     if (handler != null) {
+       handler.register(actionParameter);
+     }
+-    ProgressManager.getInstance().run(CancelHelper.getInstance(project).proxyTask(backgroundableComputable));
++    ProgressManager.getInstance().run(backgroundableComputable);
+   }
+ 
+   public void run(@NotNull ProgressIndicator indicator) {
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/update/AbstractCommonUpdateAction.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/update/AbstractCommonUpdateAction.java
+index 1ae6eecf8a0..2cfb117b271 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/update/AbstractCommonUpdateAction.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/update/AbstractCommonUpdateAction.java
+@@ -105,7 +105,7 @@ public abstract class AbstractCommonUpdateAction extends AbstractVcsAction {
+           ApplicationManager.getApplication().saveAll();
+         }
+         Task.Backgroundable task = new Updater(project, roots, vcsToVirtualFiles);
+-        ProgressManager.getInstance().run(CancelHelper.getInstance(project).proxyTask(task));
++        ProgressManager.getInstance().run(task);
+       }
+       catch (ProcessCanceledException e1) {
+         //ignore
+@@ -549,7 +549,7 @@ public abstract class AbstractCommonUpdateAction extends AbstractVcsAction {
+               } else {
+                 // trigger next update; for CVS when updating from several branches simultaneously
+                 reset();
+-                ProgressManager.getInstance().run(CancelHelper.getInstance(myProject).proxyTask(Updater.this));
++                ProgressManager.getInstance().run(Updater.this);
+               }
+             }
+           }
+diff --git a/platform/vcs-impl/src/com/intellij/util/continuation/SameProgressRunner.java b/platform/vcs-impl/src/com/intellij/util/continuation/SameProgressRunner.java
+index bf9bdc6dafe..63235c6149e 100644
+--- a/platform/vcs-impl/src/com/intellij/util/continuation/SameProgressRunner.java
++++ b/platform/vcs-impl/src/com/intellij/util/continuation/SameProgressRunner.java
+@@ -22,7 +22,6 @@ import com.intellij.openapi.progress.EmptyProgressIndicator;
+ import com.intellij.openapi.progress.ProcessCanceledException;
+ import com.intellij.openapi.progress.ProgressManager;
+ import com.intellij.openapi.project.Project;
+-import com.intellij.openapi.vcs.CancelHelper;
+ import com.intellij.util.WaitForProgressToShow;
+ import com.intellij.util.concurrency.Semaphore;
+ 
+@@ -55,12 +54,12 @@ public class SameProgressRunner extends GeneralRunner {
+   public void ping() {
+     clearSuspend();
+     if (Thread.currentThread().equals(myInitThread)) {
+-      CancelHelper.getInstance(myProject).proxyRunnable(new Runnable() {
++      new Runnable() {
+         @Override
+         public void run() {
+           pingInSourceThread();
+         }
+-      }).run();
++      }.run();
+     } else {
+       mySemaphore.up();
+     }
+diff --git a/platform/vcs-impl/src/com/intellij/util/continuation/SeparatePiecesRunner.java b/platform/vcs-impl/src/com/intellij/util/continuation/SeparatePiecesRunner.java
+index 24a20e2ed44..9bff264d55d 100644
+--- a/platform/vcs-impl/src/com/intellij/util/continuation/SeparatePiecesRunner.java
++++ b/platform/vcs-impl/src/com/intellij/util/continuation/SeparatePiecesRunner.java
+@@ -18,12 +18,10 @@ package com.intellij.util.continuation;
+ import com.intellij.openapi.application.ApplicationManager;
+ import com.intellij.openapi.progress.EmptyProgressIndicator;
+ import com.intellij.openapi.progress.ProgressIndicator;
+-import com.intellij.openapi.progress.Task;
+ import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator;
+ import com.intellij.openapi.progress.impl.ProgressManagerImpl;
+ import com.intellij.openapi.project.Project;
+ import com.intellij.openapi.vcs.CalledInAwt;
+-import com.intellij.openapi.vcs.CancelHelper;
+ import com.intellij.openapi.vcs.changes.BackgroundFromStartOption;
+ import org.jetbrains.annotations.NotNull;
+ import org.jetbrains.annotations.Nullable;
+@@ -79,7 +77,7 @@ public class SeparatePiecesRunner extends GeneralRunner {
+           // a hack to set current modality
+           //((BackgroundableProcessIndicator) myIndicator).setModalityProgress(null);
+         }
+-        ProgressManagerImpl.runProcessWithProgressAsynchronously((Task.Backgroundable)CancelHelper.getInstance(myProject).proxyTask(task), myIndicator);
++        ProgressManagerImpl.runProcessWithProgressAsynchronously(task, myIndicator);
+         return;
+       }
+     }
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/SvnVcs.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/SvnVcs.java
+index 58ad6436118..259bc3d31f7 100644
+--- a/plugins/svn4idea/src/org/jetbrains/idea/svn/SvnVcs.java
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/SvnVcs.java
+@@ -160,7 +160,6 @@ public class SvnVcs extends AbstractVcs<CommittedChangeList> {
+ 
+   public static final String SVNKIT_HTTP_SSL_PROTOCOLS = "svnkit.http.sslProtocols";
+   private final SvnExecutableChecker myChecker;
+-  private CancelHelper myProgressProxy;
+ 
+   public static final Processor<Exception> ourBusyExceptionProcessor = new Processor<Exception>() {
+     @Override
+@@ -584,16 +583,10 @@ public class SvnVcs extends AbstractVcs<CommittedChangeList> {
+     mySvnBranchPointsCalculator = null;
+     myWorkingCopiesContent.deactivate();
+     myLoadedBranchesStorage.deactivate();
+-    myProgressProxy.dispose();
+-    myProgressProxy = null;
+     myPool.dispose();
+     myPool = null;
+   }
+ 
+-  public CancelHelper getProgressProxy() {
+-    return myProgressProxy;
+-  }
+-
+   public VcsShowConfirmationOption getAddConfirmation() {
+     return myAddConfirmation;
+   }
+@@ -649,9 +642,7 @@ public class SvnVcs extends AbstractVcs<CommittedChangeList> {
+     } else {
+       keep = Boolean.getBoolean(KEEP_CONNECTIONS_KEY);
+     }
+-    myProgressProxy = new CancelHelper(myProject);
+-    myPool = new SvnIdeaRepositoryPoolManager(keep, myConfiguration.getAuthenticationManager(this), myConfiguration.getOptions(myProject),
+-                                              myProgressProxy);
++    myPool = new SvnIdeaRepositoryPoolManager(keep, myConfiguration.getAuthenticationManager(this), myConfiguration.getOptions(myProject));
+   }
+ 
+   @NotNull
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/ApplicationLevelNumberConnectionsGuard.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/ApplicationLevelNumberConnectionsGuard.java
+index c56bcbfc093..52461226c39 100644
+--- a/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/ApplicationLevelNumberConnectionsGuard.java
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/ApplicationLevelNumberConnectionsGuard.java
+@@ -15,7 +15,6 @@
+  */
+ package org.jetbrains.idea.svn.lowLevel;
+ 
+-import com.intellij.util.Processor;
+ import org.tmatesoft.svn.core.SVNException;
+ 
+ /**
+@@ -25,6 +24,6 @@ import org.tmatesoft.svn.core.SVNException;
+  * Time: 12:11 PM
+  */
+ public interface ApplicationLevelNumberConnectionsGuard {
+-  void waitForTotalNumberOfConnectionsOk(Processor<Thread> cancelChecker) throws SVNException;
+-  boolean shouldKeepConnectionLocally(Processor<Thread> cancelChecker);
++  void waitForTotalNumberOfConnectionsOk() throws SVNException;
++  boolean shouldKeepConnectionLocally();
+ }
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/ApplicationLevelNumberConnectionsGuardImpl.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/ApplicationLevelNumberConnectionsGuardImpl.java
+index a536f45d6f1..f2f4fe081bc 100644
+--- a/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/ApplicationLevelNumberConnectionsGuardImpl.java
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/ApplicationLevelNumberConnectionsGuardImpl.java
+@@ -17,7 +17,8 @@ package org.jetbrains.idea.svn.lowLevel;
+ 
+ import com.intellij.openapi.Disposable;
+ import com.intellij.openapi.application.ApplicationManager;
+-import com.intellij.util.Processor;
++import com.intellij.openapi.progress.ProgressIndicator;
++import com.intellij.openapi.progress.ProgressManager;
+ import com.intellij.util.containers.hash.HashSet;
+ import org.tmatesoft.svn.core.SVNErrorCode;
+ import org.tmatesoft.svn.core.SVNErrorMessage;
+@@ -72,6 +73,8 @@ public class ApplicationLevelNumberConnectionsGuardImpl implements Disposable, A
+   public void setDelay(int delay) {
+     assert ApplicationManager.getApplication().isUnitTestMode();
+     myDelay = delay;
++    myFuture.cancel(true);
++    myFuture = myService.scheduleWithFixedDelay(myRecheck, myDelay, myDelay, TimeUnit.MILLISECONDS);
+   }
+ 
+   public int getCurrentlyActiveConnections() {
+@@ -121,10 +124,10 @@ public class ApplicationLevelNumberConnectionsGuardImpl implements Disposable, A
+   }
+ 
+   @Override
+-  public void waitForTotalNumberOfConnectionsOk(Processor<Thread> cancelChecker) throws SVNException {
++  public void waitForTotalNumberOfConnectionsOk() throws SVNException {
+     synchronized (myLock) {
+       if (myCurrentlyActiveConnections >= CachingSvnRepositoryPool.ourMaxTotal) {
+-        waitForFreeConnections(cancelChecker);
++        waitForFreeConnections();
+         return;
+       }
+       int cntTotal = getTotalRepositories();
+@@ -133,13 +136,13 @@ public class ApplicationLevelNumberConnectionsGuardImpl implements Disposable, A
+           pool.closeInactive();
+         }
+         if (myCurrentlyActiveConnections >= CachingSvnRepositoryPool.ourMaxTotal) {
+-          waitForFreeConnections(cancelChecker);
++          waitForFreeConnections();
+         }
+       }
+     }
+   }
+ 
+-  private void waitForFreeConnections(final Processor<Thread> cancelChecker) throws SVNException {
++  private void waitForFreeConnections() throws SVNException {
+     synchronized (myLock) {
+       while (myCurrentlyActiveConnections >= CachingSvnRepositoryPool.ourMaxTotal && ! myDisposed) {
+         try {
+@@ -148,7 +151,8 @@ public class ApplicationLevelNumberConnectionsGuardImpl implements Disposable, A
+         catch (InterruptedException e) {
+           //
+         }
+-        if (! cancelChecker.process(Thread.currentThread())) {
++        ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
++        if (indicator != null && indicator.isCanceled()) {
+           throw new SVNException(SVNErrorMessage.create(SVNErrorCode.CANCELLED));
+         }
+       }
+@@ -156,7 +160,7 @@ public class ApplicationLevelNumberConnectionsGuardImpl implements Disposable, A
+   }
+ 
+   @Override
+-  public boolean shouldKeepConnectionLocally(Processor<Thread> cancelChecker) {
++  public boolean shouldKeepConnectionLocally() {
+     synchronized (myLock) {
+       if (myCurrentlyActiveConnections > CachingSvnRepositoryPool.ourMaxTotal) return false;
+       int cntTotal = getTotalRepositories();
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/CachingSvnRepositoryPool.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/CachingSvnRepositoryPool.java
+index ab7715db7c7..6376f7a8041 100644
+--- a/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/CachingSvnRepositoryPool.java
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/CachingSvnRepositoryPool.java
+@@ -17,8 +17,9 @@ package org.jetbrains.idea.svn.lowLevel;
+ 
+ import com.intellij.openapi.application.ApplicationManager;
+ import com.intellij.openapi.progress.ProcessCanceledException;
++import com.intellij.openapi.progress.ProgressIndicator;
++import com.intellij.openapi.progress.ProgressManager;
+ import com.intellij.openapi.util.Pair;
+-import com.intellij.util.Processor;
+ import com.intellij.util.ThrowableConsumer;
+ import com.intellij.util.ThrowableConvertor;
+ import com.intellij.util.containers.hash.HashSet;
+@@ -47,22 +48,23 @@ public class CachingSvnRepositoryPool implements SvnRepositoryPool {
+   private int myMaxConcurrent;        // per host
+   private final ThrowableConvertor<SVNURL, SVNRepository, SVNException> myCreator;
+   private final ThrowableConsumer<Pair<SVNURL, SVNRepository>, SVNException> myAdjuster;
+-  private final Processor<Thread> myCancelChecker;
+   private final Map<String, RepoGroup> myGroups;
+   private ApplicationLevelNumberConnectionsGuard myGuard;
+ 
++  private long myConnectionTimeout;
++
+   private boolean myDisposed;
+   private final Object myLock;
+ 
+   public CachingSvnRepositoryPool(ThrowableConvertor<SVNURL, SVNRepository, SVNException> creator,
+                                   final int maxCached, final int maxConcurrent,
+                                   ThrowableConsumer<Pair<SVNURL, SVNRepository>, SVNException> adjuster,
+-                                  final Processor<Thread> cancelChecker, final ApplicationLevelNumberConnectionsGuard guard) {
++                                  final ApplicationLevelNumberConnectionsGuard guard) {
+     myGuard = guard;
+     myLock = new Object();
++    myConnectionTimeout = DEFAULT_IDLE_TIMEOUT;
+     myCreator = creator;
+     myAdjuster = adjuster;
+-    myCancelChecker = cancelChecker;
+     myMaxCached = maxCached > 0 ? maxCached : ourMaxCachedDefault;
+     myMaxConcurrent = maxConcurrent > 0 ? maxConcurrent : ourMaxConcurrentDefault;
+     if (myMaxConcurrent < myMaxCached) {
+@@ -72,9 +74,17 @@ public class CachingSvnRepositoryPool implements SvnRepositoryPool {
+     myDisposed = false;
+   }
+ 
+-  public CachingSvnRepositoryPool(ThrowableConvertor<SVNURL, SVNRepository, SVNException> creator, ThrowableConsumer<Pair<SVNURL, SVNRepository>, SVNException> adjuster,
+-                                  final Processor<Thread> cancelChecker, final ApplicationLevelNumberConnectionsGuard guard) {
+-    this(creator, -1, -1, adjuster, cancelChecker, guard);
++  public CachingSvnRepositoryPool(ThrowableConvertor<SVNURL, SVNRepository, SVNException> creator,
++                                  ThrowableConsumer<Pair<SVNURL, SVNRepository>, SVNException> adjuster,
++                                  final ApplicationLevelNumberConnectionsGuard guard) {
++    this(creator, -1, -1, adjuster, guard);
++  }
++
++
++  public void setConnectionTimeout(long connectionTimeout) {
++    synchronized (myLock) {
++      myConnectionTimeout = connectionTimeout;
++    }
+   }
+ 
+   public void waitingInterrupted() {
+@@ -102,7 +112,7 @@ public class CachingSvnRepositoryPool implements SvnRepositoryPool {
+       final String host = url.getHost();
+       RepoGroup group = myGroups.get(host);
+       if (group == null) {
+-        group = new RepoGroup(myCreator, myMaxCached, myMaxConcurrent, myAdjuster, myGuard, myCancelChecker, myLock);
++        group = new RepoGroup(myCreator, myMaxCached, myMaxConcurrent, myAdjuster, myGuard, myLock, myConnectionTimeout);
+       }
+       myGroups.put(host, group);
+       return group.getRepo(url, mayReuse);
+@@ -159,22 +169,22 @@ public class CachingSvnRepositoryPool implements SvnRepositoryPool {
+     private final int myMaxConcurrent;        // per host
+     private final ThrowableConsumer<Pair<SVNURL, SVNRepository>, SVNException> myAdjuster;
+     private final ApplicationLevelNumberConnectionsGuard myGuard;
+-    private final Processor<Thread> myCancelChecker;
+ 
+     private final TreeMap<Long, SVNRepository> myInactive;
+     private final Set<SVNRepository> myUsed;
+     private boolean myDisposed;
+     private final Object myWait;
++    private long myConnectionTimeout;
+ 
+     private RepoGroup(ThrowableConvertor<SVNURL, SVNRepository, SVNException> creator, int cached, int concurrent,
+                       final ThrowableConsumer<Pair<SVNURL, SVNRepository>, SVNException> adjuster,
+-                      final ApplicationLevelNumberConnectionsGuard guard, final Processor<Thread> cancelChecker, final Object waitObj) {
++                      final ApplicationLevelNumberConnectionsGuard guard, final Object waitObj, final long connectionTimeout) {
+       myCreator = creator;
+       myMaxCached = cached;
+       myMaxConcurrent = concurrent;
+       myAdjuster = adjuster;
+       myGuard = guard;
+-      myCancelChecker = cancelChecker;
++      myConnectionTimeout = connectionTimeout;
+ 
+       myInactive = new TreeMap<Long, SVNRepository>();
+       myUsed = new HashSet<SVNRepository>();
+@@ -212,20 +222,20 @@ public class CachingSvnRepositoryPool implements SvnRepositoryPool {
+       if (! myInactive.isEmpty() && mayReuse) {
+         return fromInactive(url);
+       }
+-      myGuard.waitForTotalNumberOfConnectionsOk(myCancelChecker);
++      myGuard.waitForTotalNumberOfConnectionsOk();
+ 
+       if (myUsed.size() >= myMaxConcurrent) {
+         synchronized (myWait) {
+           if ((myUsed.size() + myInactive.size()) >= myMaxConcurrent) {
+             while ((myUsed.size() + myInactive.size()) >= myMaxConcurrent && ! myDisposed) {
+               try {
+-                myWait.wait(500);
++                myWait.wait(300);
+               }
+               catch (InterruptedException e) {
+                 //
+               }
+-              if (! myCancelChecker.process(Thread.currentThread())) {
+-                myWait.notifyAll();    // unblock others
++              ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
++              if (indicator != null && indicator.isCanceled()) {
+                 throw new SVNException(SVNErrorMessage.create(SVNErrorCode.CANCELLED));
+               }
+             }
+@@ -253,7 +263,7 @@ public class CachingSvnRepositoryPool implements SvnRepositoryPool {
+       final SVNRepository next = entry.getValue();
+       myInactive.remove(entry.getKey());
+       myAdjuster.consume(Pair.create(url, next));
+-      if (! myGuard.shouldKeepConnectionLocally(myCancelChecker)) {
++      if (! myGuard.shouldKeepConnectionLocally()) {
+         myInactive.clear();
+       }
+       return next;
+@@ -262,7 +272,7 @@ public class CachingSvnRepositoryPool implements SvnRepositoryPool {
+     @Override
+     public void returnRepo(SVNRepository repo) {
+       myUsed.remove(repo);
+-      if (myGuard.shouldKeepConnectionLocally(myCancelChecker) && myInactive.size() < myMaxCached) {
++      if (myGuard.shouldKeepConnectionLocally() && myInactive.size() < myMaxCached) {
+         long time = System.currentTimeMillis();
+         if (myInactive.containsKey(time)) {
+           time = myInactive.lastKey() + 1;
+@@ -277,7 +287,7 @@ public class CachingSvnRepositoryPool implements SvnRepositoryPool {
+       final Iterator<Long> iterator = longs.iterator();
+       while (iterator.hasNext()) {
+         final Long next = iterator.next();
+-        if (time - next > DEFAULT_IDLE_TIMEOUT) {
++        if (time - next > myConnectionTimeout) {
+           myInactive.get(next).closeSession();
+           iterator.remove();
+         } else {
+@@ -304,10 +314,6 @@ public class CachingSvnRepositoryPool implements SvnRepositoryPool {
+     }
+   }
+ 
+-  Processor<Thread> getCancelChecker() {
+-    return myCancelChecker;
+-  }
+-
+   public Map<String, RepoGroup> getGroups() {
+     assert ApplicationManager.getApplication().isUnitTestMode();
+     return myGroups;
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/ProxySvnLog.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/ProxySvnLog.java
+index b4b9e4178e7..7d0cce5eaaa 100644
+--- a/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/ProxySvnLog.java
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/ProxySvnLog.java
+@@ -15,7 +15,6 @@
+  */
+ package org.jetbrains.idea.svn.lowLevel;
+ 
+-import com.intellij.util.Processor;
+ import org.tmatesoft.svn.util.ISVNDebugLog;
+ import org.tmatesoft.svn.util.SVNLogType;
+ 
+@@ -31,11 +30,9 @@ import java.util.logging.Level;
+  */
+ public class ProxySvnLog implements ISVNDebugLog {
+   private final ISVNDebugLog myLog;
+-  private final Processor<Thread> myCancelChecker;
+ 
+-  public ProxySvnLog(ISVNDebugLog log, final Processor<Thread> cancelChecker) {
++  public ProxySvnLog(ISVNDebugLog log) {
+     myLog = log;
+-    myCancelChecker = cancelChecker;
+   }
+ 
+   @Override
+@@ -55,12 +52,12 @@ public class ProxySvnLog implements ISVNDebugLog {
+ 
+   @Override
+   public OutputStream createLogStream(SVNLogType logType, OutputStream os) {
+-    return new SVNStoppableOutputStream(myLog.createLogStream(logType, os), myCancelChecker);
++    return new SVNStoppableOutputStream(myLog.createLogStream(logType, os));
+   }
+ 
+   @Override
+   public InputStream createLogStream(SVNLogType logType, InputStream is) {
+-    return new SVNStoppableInputStream(is, myLog.createLogStream(logType, is), myCancelChecker);
++    return new SVNStoppableInputStream(is, myLog.createLogStream(logType, is));
+   }
+ 
+   @Override
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/SVNStoppableInputStream.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/SVNStoppableInputStream.java
+index 79a39be8e63..e941134ccde 100644
+--- a/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/SVNStoppableInputStream.java
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/SVNStoppableInputStream.java
+@@ -16,7 +16,8 @@
+ package org.jetbrains.idea.svn.lowLevel;
+ 
+ import com.intellij.openapi.diagnostic.Logger;
+-import com.intellij.util.Processor;
++import com.intellij.openapi.progress.ProgressIndicator;
++import com.intellij.openapi.progress.ProgressManager;
+ 
+ import java.io.IOException;
+ import java.io.InputStream;
+@@ -36,13 +37,11 @@ public class SVNStoppableInputStream extends InputStream {
+   private final static Logger LOG = Logger.getInstance("#org.jetbrains.idea.svn.lowLevel.SVNStoppableInputStream");
+   private final InputStream myOriginalIs;
+   private final InputStream myIn;
+-  private final Processor<Thread> myCancelChecker;
+   private boolean myAvailableChecked;
+ 
+-  public SVNStoppableInputStream(InputStream original, InputStream in, final Processor<Thread> cancelChecker) {
++  public SVNStoppableInputStream(InputStream original, InputStream in) {
+     myOriginalIs = digOriginal(original);
+     myIn = in;
+-    myCancelChecker = cancelChecker;
+     myAvailableChecked = false;
+   }
+ 
+@@ -186,7 +185,8 @@ public class SVNStoppableInputStream extends InputStream {
+   }
+ 
+   private void check() throws IOException {
+-    if (! myCancelChecker.process(Thread.currentThread())) {
++    ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
++    if (indicator != null && indicator.isCanceled()) {
+       throw new IOException("Read request to canceled by user");
+     }
+   }
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/SVNStoppableOutputStream.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/SVNStoppableOutputStream.java
+index 1a97439a13a..8dd9b0579c4 100644
+--- a/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/SVNStoppableOutputStream.java
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/SVNStoppableOutputStream.java
+@@ -15,7 +15,8 @@
+  */
+ package org.jetbrains.idea.svn.lowLevel;
+ 
+-import com.intellij.util.Processor;
++import com.intellij.openapi.progress.ProgressIndicator;
++import com.intellij.openapi.progress.ProgressManager;
+ 
+ import java.io.IOException;
+ import java.io.OutputStream;
+@@ -28,11 +29,9 @@ import java.io.OutputStream;
+  */
+ public class SVNStoppableOutputStream extends OutputStream {
+   private final OutputStream myLogStream;
+-  private final Processor<Thread> myCancelChecker;
+ 
+-  public SVNStoppableOutputStream(final OutputStream logStream, final Processor<Thread> cancelChecker) {
++  public SVNStoppableOutputStream(final OutputStream logStream) {
+     myLogStream = logStream;
+-    this.myCancelChecker = cancelChecker;
+   }
+ 
+   @Override
+@@ -60,7 +59,8 @@ public class SVNStoppableOutputStream extends OutputStream {
+   }
+ 
+   private void check() throws IOException {
+-    if (! myCancelChecker.process(Thread.currentThread())) {
++    ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
++    if (indicator != null && indicator.isCanceled()) {
+       throw new IOException("Write request to canceled by user");
+     }
+   }
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/SvnIdeaRepositoryPoolManager.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/SvnIdeaRepositoryPoolManager.java
+index 93749fe3a2d..3f7f9b505b7 100644
+--- a/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/SvnIdeaRepositoryPoolManager.java
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/lowLevel/SvnIdeaRepositoryPoolManager.java
+@@ -19,7 +19,6 @@ import com.intellij.openapi.application.ApplicationManager;
+ import com.intellij.openapi.progress.ProgressIndicator;
+ import com.intellij.openapi.progress.ProgressManager;
+ import com.intellij.openapi.util.Pair;
+-import com.intellij.openapi.vcs.CancelHelper;
+ import com.intellij.util.ThrowableConsumer;
+ import com.intellij.util.ThrowableConvertor;
+ import org.tmatesoft.svn.core.ISVNCanceller;
+@@ -48,22 +47,24 @@ public class SvnIdeaRepositoryPoolManager implements ISVNRepositoryPool, ISVNSes
+   private final boolean myKeepConnection;
+   private final ISVNConnectionListener myListener;
+   private ISVNAuthenticationManager myAuthManager;
+-  private final CancelHelper myProgressProxy;
+   private ThrowableConvertor<SVNURL, SVNRepository, SVNException> myCreator;
+ 
+   static {
+     ourGuard = new ApplicationLevelNumberConnectionsGuardImpl();
+   }
+ 
++  public SvnIdeaRepositoryPoolManager(final boolean keepConnection, final ISVNAuthenticationManager authManager,
++                                      final ISVNTunnelProvider tunnelProvider) {
++    this(keepConnection, authManager, tunnelProvider, -1, -1);
++  }
++
+   public SvnIdeaRepositoryPoolManager(final boolean keepConnection,
+                                       final ISVNAuthenticationManager authManager,
+-                                      final ISVNTunnelProvider tunnelProvider,
+-                                      final CancelHelper progressProxy) {
++                                      final ISVNTunnelProvider tunnelProvider, final int maxCached, final int maxConcurrent) {
+     myKeepConnection = keepConnection;
+     myAuthManager = authManager;
+-    myProgressProxy = progressProxy;
+-    myLog = new ProxySvnLog(SVNDebugLog.getDefaultLog(), progressProxy);
+-    myCanceller = createCanceller(progressProxy);
++    myLog = new ProxySvnLog(SVNDebugLog.getDefaultLog());
++    myCanceller = createCanceller();
+ 
+     final ThrowableConvertor<SVNURL, SVNRepository, SVNException> creator = new ThrowableConvertor<SVNURL, SVNRepository, SVNException>() {
+       @Override
+@@ -95,7 +96,7 @@ public class SvnIdeaRepositoryPoolManager implements ISVNRepositoryPool, ISVNSes
+     };
+ 
+     if (keepConnection) {
+-      CachingSvnRepositoryPool pool = new CachingSvnRepositoryPool(creator, -1, -1, adjuster, myProgressProxy, ourGuard);
++      CachingSvnRepositoryPool pool = new CachingSvnRepositoryPool(creator, maxCached, maxConcurrent, adjuster, ourGuard);
+       myPool = pool;
+       myListener = new ISVNConnectionListener() {
+         @Override
+@@ -118,7 +119,7 @@ public class SvnIdeaRepositoryPoolManager implements ISVNRepositoryPool, ISVNSes
+     }
+   }
+ 
+-  public static ISVNCanceller createCanceller(final CancelHelper progressProxy) {
++  public static ISVNCanceller createCanceller() {
+     return new ISVNCanceller() {
+       @Override
+       public void checkCancelled() throws SVNCancelException {
+@@ -127,7 +128,8 @@ public class SvnIdeaRepositoryPoolManager implements ISVNRepositoryPool, ISVNSes
+         if (pi != null) {
+           if (pi.isCanceled()) throw new SVNCancelException();
+         }
+-        if (! progressProxy.process(Thread.currentThread())) {
++        ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
++        if (indicator != null && indicator.isCanceled()) {
+           throw new SVNCancelException();
+         }
+       }
+diff --git a/plugins/svn4idea/testSource/org/jetbrains/idea/svn/MockRepositoryPool.java b/plugins/svn4idea/testSource/org/jetbrains/idea/svn/MockRepositoryPool.java
+deleted file mode 100644
+index 03fb7f871fe..00000000000
+--- a/plugins/svn4idea/testSource/org/jetbrains/idea/svn/MockRepositoryPool.java
++++ /dev/null
+@@ -1,112 +0,0 @@
+-/*
+- * Copyright 2000-2012 JetBrains s.r.o.
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- * http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-package org.jetbrains.idea.svn;
+-
+-import com.intellij.openapi.project.Project;
+-import com.intellij.openapi.vcs.CancelHelper;
+-import com.intellij.util.ThrowableConvertor;
+-import org.jetbrains.idea.svn.lowLevel.ApplicationLevelNumberConnectionsGuardImpl;
+-import org.jetbrains.idea.svn.lowLevel.ProxySvnLog;
+-import org.jetbrains.idea.svn.lowLevel.SvnIdeaRepositoryPoolManager;
+-import org.tmatesoft.svn.core.ISVNCanceller;
+-import org.tmatesoft.svn.core.SVNException;
+-import org.tmatesoft.svn.core.SVNURL;
+-import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
+-import org.tmatesoft.svn.core.io.ISVNConnectionListener;
+-import org.tmatesoft.svn.core.io.ISVNSession;
+-import org.tmatesoft.svn.core.io.SVNRepository;
+-import org.tmatesoft.svn.core.wc.ISVNRepositoryPool;
+-import org.tmatesoft.svn.util.ISVNDebugLog;
+-import org.tmatesoft.svn.util.SVNDebugLog;
+-
+-/**
+- * Created with IntelliJ IDEA.
+- * User: Irina.Chernushina
+- * Date: 8/3/12
+- * Time: 5:23 PM
+- */
+-public class MockRepositoryPool implements ISVNRepositoryPool {
+-  private final ApplicationLevelNumberConnectionsGuardImpl myGuard;
+-  private final Project myProject;
+-  private final CancelHelper myCancelHelper;
+-  private final ProxySvnLog mySvnLog;
+-  private final ISVNCanceller myCanceller;
+-  private final ISVNConnectionListener myListener;
+- // private final CachingSvnRepositoryPool myPool;
+-
+-  public MockRepositoryPool(final Project project) {
+-    myProject = project;
+-    myGuard = new ApplicationLevelNumberConnectionsGuardImpl();
+-    myCancelHelper = CancelHelper.getInstance(project);
+-    mySvnLog = new ProxySvnLog(SVNDebugLog.getDefaultLog(), myCancelHelper);
+-    myCanceller = SvnIdeaRepositoryPoolManager.createCanceller(myCancelHelper);
+-
+-    myListener = new ISVNConnectionListener() {
+-      @Override
+-      public void connectionOpened(SVNRepository repository) {
+-        myGuard.connectionOpened();
+-      }
+-
+-      @Override
+-      public void connectionClosed(SVNRepository repository) {
+-        repository.removeConnectionListener(myListener);
+-        //myPool.returnRepo(repository);
+-        myGuard.connectionClosed();
+-      }
+-    };
+-
+-    final ThrowableConvertor<SVNURL, SVNRepository, SVNException> creator = new ThrowableConvertor<SVNURL, SVNRepository, SVNException>() {
+-      @Override
+-      public SVNRepository convert(SVNURL svnurl) throws SVNException {
+-        MockSvnRepository repository = new MockSvnRepository(svnurl, ISVNSession.DEFAULT);
+-        repository.setDebugLog(mySvnLog);
+-        repository.setCanceller(myCanceller);
+-        repository.addConnectionListener(myListener);
+-        return repository;
+-      }
+-    };
+-
+-   // myPool = new CachingSvnRepositoryPool(creator, -1, -1, adjuster, myProgressProxy, ourGuard);
+-  }
+-
+-  @Override
+-  public void setAuthenticationManager(ISVNAuthenticationManager authManager) {
+-  }
+-
+-  @Override
+-  public void setCanceller(ISVNCanceller canceller) {
+-    // todo
+-  }
+-
+-  @Override
+-  public void setDebugLog(ISVNDebugLog log) {
+-  }
+-
+-  @Override
+-  public SVNRepository createRepository(SVNURL url, boolean mayReuse) throws SVNException {
+-    return null;
+-  }
+-
+-  @Override
+-  public void shutdownConnections(boolean shutdownAll) {
+-    dispose();
+-  }
+-
+-  @Override
+-  public void dispose() {
+-    //To change body of implemented methods use File | Settings | File Templates.
+-  }
+-}
+diff --git a/plugins/svn4idea/testSource/org/jetbrains/idea/svn/SvnCachingRepositoryPoolTest.java b/plugins/svn4idea/testSource/org/jetbrains/idea/svn/SvnCachingRepositoryPoolTest.java
+index 85c8a3c6b8e..b66774074a7 100644
+--- a/plugins/svn4idea/testSource/org/jetbrains/idea/svn/SvnCachingRepositoryPoolTest.java
++++ b/plugins/svn4idea/testSource/org/jetbrains/idea/svn/SvnCachingRepositoryPoolTest.java
+@@ -15,14 +15,16 @@
+  */
+ package org.jetbrains.idea.svn;
+ 
+-import com.intellij.openapi.vcs.CancelHelper;
++import com.intellij.openapi.progress.EmptyProgressIndicator;
++import com.intellij.openapi.progress.ProgressManager;
++import com.intellij.openapi.progress.impl.ProgressManagerImpl;
+ import com.intellij.testFramework.vcs.FileBasedTest;
+ import com.intellij.util.ThrowableConvertor;
++import com.intellij.util.concurrency.Semaphore;
+ import junit.framework.Assert;
+ import org.jetbrains.idea.svn.lowLevel.ApplicationLevelNumberConnectionsGuardImpl;
+ import org.jetbrains.idea.svn.lowLevel.CachingSvnRepositoryPool;
+ import org.jetbrains.idea.svn.lowLevel.SvnIdeaRepositoryPoolManager;
+-import org.junit.Before;
+ import org.junit.Test;
+ import org.tmatesoft.svn.core.SVNException;
+ import org.tmatesoft.svn.core.SVNURL;
+@@ -39,29 +41,22 @@ import java.util.Random;
+  * Time: 5:37 PM
+  */
+ public class SvnCachingRepositoryPoolTest extends FileBasedTest {
+-  private CancelHelper myHelper;
+-
+-  @Override
+-  @Before
+-  public void setUp() throws Exception {
+-    super.setUp();
+-    myHelper = CancelHelper.getInstance(myProject);
+-  }
+ 
+   @Test
+   public void testRepositoriesAreClosed() throws Exception {
+-    final SvnIdeaRepositoryPoolManager poolManager = new SvnIdeaRepositoryPoolManager(true, null, null, myHelper);
+-    testBigFlow(poolManager);
++    final SvnIdeaRepositoryPoolManager poolManager = new SvnIdeaRepositoryPoolManager(true, null, null);
++    testBigFlow(poolManager, true);
+   }
+ 
+   @Test
+   public void testCloseWorker() throws Exception {
+-    final SvnIdeaRepositoryPoolManager poolManager = new SvnIdeaRepositoryPoolManager(true, null, null, myHelper);
++    final SvnIdeaRepositoryPoolManager poolManager = new SvnIdeaRepositoryPoolManager(true, null, null);
+     final ApplicationLevelNumberConnectionsGuardImpl guard = SvnIdeaRepositoryPoolManager.getOurGuard();
+     guard.setDelay(20);
+-    testBigFlow(poolManager);
++    ((CachingSvnRepositoryPool) poolManager.getPool()).setConnectionTimeout(20);
++    testBigFlow(poolManager, false);
+     try {
+-      Thread.sleep(20);
++      Thread.sleep(50);
+     } catch (InterruptedException e) {
+       //
+     }
+@@ -72,11 +67,103 @@ public class SvnCachingRepositoryPoolTest extends FileBasedTest {
+     CachingSvnRepositoryPool.RepoGroup group = groups.values().iterator().next();
+     Assert.assertEquals(0, group.getUsedSize());
+     Assert.assertEquals(0, group.getInactiveSize());  // !!!
++    poolManager.dispose();
++    checkAfterDispose(poolManager);
++  }
++
++  @Test
++  public void testCancel() throws Exception {
++    final SvnIdeaRepositoryPoolManager poolManager = new SvnIdeaRepositoryPoolManager(true, null, null, 1, 1);
++    final SVNURL url = SVNURL.parseURIEncoded("http://a.b.c");
++    poolManager.setCreator(new ThrowableConvertor<SVNURL, SVNRepository, SVNException>() {
++      @Override
++      public SVNRepository convert(SVNURL svnurl) throws SVNException {
++        return new MockSvnRepository(svnurl, ISVNSession.DEFAULT);
++      }
++    });
++    final MockSvnRepository repository1 = (MockSvnRepository)poolManager.createRepository(url, true);
++
++    final Semaphore semaphore = new Semaphore();
++    semaphore.down();
++
++    poolManager.setCreator(new ThrowableConvertor<SVNURL, SVNRepository, SVNException>() {
++      @Override
++      public SVNRepository convert(SVNURL svnurl) throws SVNException {
++        semaphore.waitFor();
++        return new MockSvnRepository(svnurl, ISVNSession.DEFAULT);
++      }
++    });
++    final SVNException[] exc = new SVNException[1];
++    final Runnable target = new Runnable() {
++      @Override
++      public void run() {
++        try {
++          final MockSvnRepository repository = (MockSvnRepository)poolManager.createRepository(url, true);
++          repository.fireConnectionClosed();
++        }
++        catch (SVNException e) {
++          e.printStackTrace();
++          exc[0] = e;
++        }
++      }
++    };
++    final EmptyProgressIndicator indicator = new EmptyProgressIndicator() {
++      @Override
++      public void cancel() {
++        super.cancel();
++        ProgressManagerImpl.canceled();
++      }
++    };
++    Thread thread = new Thread(new Runnable() {
++      @Override
++      public void run() {
++        ((ProgressManagerImpl)ProgressManager.getInstance()).executeProcessUnderProgress(target, indicator);
++      }
++    });
++    thread.start();
++
++    try {
++      Thread.sleep(10);
++    } catch (InterruptedException e) {
++      //
++    }
++    Assert.assertTrue(thread.isAlive());
++    indicator.cancel();
++    final Object obj = new Object();
++    while (! timeout(System.currentTimeMillis()) && thread.isAlive()) {
++      synchronized (obj) {
++        try {
++          obj.wait(300);
++        } catch (InterruptedException e) {
++          //
++        }
++      }
++    }
++    Assert.assertTrue(!thread.isAlive());
++    Assert.assertNotNull(exc[0]);
++    //repository1.fireConnectionClosed(); // also test that used are also closed.. in dispose
+ 
+     poolManager.dispose();
++    checkAfterDispose(poolManager);
++  }
++
++  private void checkAfterDispose(SvnIdeaRepositoryPoolManager poolManager) {
++    final ApplicationLevelNumberConnectionsGuardImpl guard = SvnIdeaRepositoryPoolManager.getOurGuard();
++    Assert.assertEquals(0, guard.getCurrentlyActiveConnections());
++
++    final CachingSvnRepositoryPool pool = (CachingSvnRepositoryPool) poolManager.getPool();
++    Map<String,CachingSvnRepositoryPool.RepoGroup> groups = pool.getGroups();
++    Assert.assertEquals(1, groups.size());
++    CachingSvnRepositoryPool.RepoGroup group = groups.values().iterator().next();
++    Assert.assertEquals(0, group.getUsedSize());
++
++    Assert.assertEquals(0, guard.getInstanceCount());
++
++    Assert.assertEquals(0, group.getUsedSize());
++    Assert.assertEquals(0, group.getInactiveSize());
+   }
+ 
+-  private void testBigFlow(final SvnIdeaRepositoryPoolManager poolManager) throws SVNException {
++  private void testBigFlow(final SvnIdeaRepositoryPoolManager poolManager, boolean disposeAfter) throws SVNException {
+     poolManager.setCreator(new ThrowableConvertor<SVNURL, SVNRepository, SVNException>() {
+       @Override
+       public SVNRepository convert(SVNURL svnurl) throws SVNException {
+@@ -139,12 +226,14 @@ public class SvnCachingRepositoryPoolTest extends FileBasedTest {
+     CachingSvnRepositoryPool.RepoGroup group = groups.values().iterator().next();
+     Assert.assertEquals(0, group.getUsedSize());
+ 
+-    poolManager.dispose();
+-    Assert.assertEquals(0, guard.getCurrentlyActiveConnections());
+-    Assert.assertEquals(0, guard.getInstanceCount());
++    if (disposeAfter) {
++      poolManager.dispose();
++      Assert.assertEquals(0, guard.getCurrentlyActiveConnections());
++      Assert.assertEquals(0, guard.getInstanceCount());
+ 
+-    Assert.assertEquals(0, group.getUsedSize());
+-    Assert.assertEquals(0, group.getInactiveSize());
++      Assert.assertEquals(0, group.getUsedSize());
++      Assert.assertEquals(0, group.getInactiveSize());
++    }
+   }
+ 
+   private boolean timeout(long start) {

@@ -1,0 +1,31 @@
+SELECTED: candidate_13
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit removes the line `boolean isFreshAssignment = currentAssignment.isEmpty();` from
+`AbstractStickyAssignor.generalAssign()` because spotBugs flagged it as a "Dead store to
+isFreshAssignment" — i.e., the variable was assigned but never used.
+
+Tracing the history of `isFreshAssignment`:
+- In earlier candidates (candidate_01, candidate_02, candidate_09, candidate_12), the local variable
+  `isFreshAssignment` was declared in `generalAssign()`/its predecessor and was actively passed into
+  `sortPartitions(currentAssignment, prevAssignment.keySet(), isFreshAssignment, ...)`, where it was used
+  in the condition `if (!isFreshAssignment && areSubscriptionsIdentical(...))`. At this point the variable
+  was live and used, so no dead store existed.
+- candidate_13 performs a large refactor of `AbstractStickyAssignor` (adding `constrainedAssign`,
+  `allSubscriptionsEqual`, etc., and splitting the old `assign` method into `generalAssign` and
+  `constrainedAssign`). As part of this refactor, `sortPartitions` is drastically simplified from taking
+  `(currentAssignment, partitionsWithADifferentPreviousAssignment, isFreshAssignment,
+  partition2AllPotentialConsumers, consumer2AllPotentialPartitions)` down to just
+  `(partition2AllPotentialConsumers)`. The call site was updated accordingly:
+  `sortedPartitions = sortPartitions(partition2AllPotentialConsumers);`
+  However, the line `boolean isFreshAssignment = currentAssignment.isEmpty();` a few lines above was left
+  untouched (shown as unchanged context in the diff), even though its only consumer (the `sortPartitions`
+  call) no longer used it. This is precisely the dead store that the fix commit later removes.
+- candidate_14's diff is byte-for-byte identical to the fix commit (removing exactly that one line),
+  confirming that the bug (dead variable) persisted unchanged from candidate_13 through to the commit
+  right before the fix.
+
+Therefore, candidate_13 is the commit that introduced the bug (the unused `isFreshAssignment` variable)
+by removing its only usage while forgetting to remove its declaration during a large refactor.

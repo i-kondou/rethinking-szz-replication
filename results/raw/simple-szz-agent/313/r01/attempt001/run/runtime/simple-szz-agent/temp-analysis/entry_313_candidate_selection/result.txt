@@ -1,0 +1,55 @@
+SELECTED: candidate_44
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the loop in disableExpiredAlarms()-style code:
+
+    for (Alarm alarm : set) {
+        boolean isExpired = alarm.getNextTimeInMillis() < now;
+        if (isExpired && !alarm.isEnabled()) {
+-           enable(alarm.getId(), false);
++           alarm.setEnabled(false);
++           writeToDb(alarm.getId());
+        }
+    }
+
+and removes the old private changeAlarm(Alarm) method, which internally did:
+
+    set.remove(alarm);
+    set.add(alarm);
+    ...
+    setNextAlert();
+    notifyAlarmListChangedListeners();
+
+The bug being fixed is a ConcurrentModificationException: the loop iterates
+over the `set` field with a Java for-each, and inside the loop it called
+`enable(alarm.getId(), false)` which ultimately called `changeAlarm(alarm)`,
+which mutated the very same `set` collection (`set.remove`/`set.add`) while it
+was being iterated. The fix avoids this by directly calling
+`alarm.setEnabled(false)` and a new `writeToDb(id)` helper that only touches
+the ContentResolver, not the `set` collection, so the set is never mutated
+during iteration.
+
+candidate_44 is the commit that introduces this exact problematic pattern for
+the first time. In this diff, AlarmsManager.java is rewritten to hold an
+in-memory `Set<Alarm> set`, and:
+1. `disableExpiredAlarms()` is introduced with:
+       for (Alarm alarm : set) {
+           if (!alarm.isEnabled() && alarm.getTimeInMillis() != 0 && alarm.getTimeInMillis() < now) {
+               enable(alarm.getId(), false);
+           }
+       }
+2. `changeAlarm(Alarm alarm)` (renamed from `set(Alarm)`) is introduced with:
+       set.remove(alarm);
+       set.add(alarm);
+   and `enable(int id, boolean enable)` calls `changeAlarm(alarm)`.
+
+Before this commit, alarms were queried fresh from a Cursor/ContentResolver
+each time (no persistent in-memory `set` field), so there was no shared
+mutable collection being iterated and modified simultaneously — the bug
+literally could not exist yet. This commit is the first to combine (a) an
+iteration over the `set` field and (b) a call path from inside that loop
+(enable -> changeAlarm) that mutates `set`, which is precisely the defect
+that the fix commit later corrects by decoupling "mark disabled" from the
+set-mutating changeAlarm/writeToDb-with-set-remove-add pattern.

@@ -1,0 +1,22 @@
+{
+  "fix_commit": "7c5e119134c20141b7af1322d08cca0d047d1e34",
+  "bic": "86013dc9f8cf02813418f41c3c49c745f9ee6ea5",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"MINOR: add ImplicitLinkedHashCollection#moveToEnd\") refactored the iterator's remove() method, replacing the previous call to `ImplicitLinkedHashCollection.this.removeElementAtSlot(lastReturnedSlot)` with the buggy sequence `removeFromList(head, elements, nextElement.prev()); size--;`. This new logic bypasses the slot-compaction/denseness-invariant maintenance that `removeElementAtSlot` performs, which is exactly the bug the fix commit corrects by restoring the call to `removeElementAtSlot`.",
+  "metrics": {
+    "case_elapsed_seconds": 9.212345,
+    "api_elapsed_seconds": 9.039673,
+    "tool_elapsed_seconds": 0.074921,
+    "other_elapsed_seconds": 0.097756,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 17887,
+    "completion_tokens": 684,
+    "total_tokens": 18571,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:16:30.466157"
+}

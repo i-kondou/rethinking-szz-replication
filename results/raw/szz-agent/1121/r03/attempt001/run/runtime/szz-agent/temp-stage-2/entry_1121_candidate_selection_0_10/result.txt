@@ -1,0 +1,37 @@
+SELECTED: candidate_01
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit message states "Quantifiers are no Application terms any more," and the fix diff adds a
+`case Z3_QUANTIFIER_AST: return false;` branch to the `isAtom(Long t)` switch statement in
+`Z3UnsafeFormulaManager.java`, plus `Preconditions.checkArgument(... == Z3_APP_AST)` guards in
+`getArity`/`getArg`. Before the fix, the switch only handled `Z3_APP_AST` explicitly and fell through to
+`default: return true` for every other AST kind — including `Z3_QUANTIFIER_AST` — meaning any quantified
+formula (forall/exists) was incorrectly classified as an atomic Application term. This let callers invoke
+`getArity`/`getArg` on quantifiers, which are semantically invalid for that AST kind.
+
+Tracing this exact buggy `isAtom` implementation back through the 11 candidates:
+
+- candidate_01 (the initial, large addition of the whole solver codebase) already contains the complete
+  `Z3UnsafeFormulaManager.isAtom()` method with the switch statement:
+      switch (astKind) {
+      case Z3_APP_AST:
+        ...
+      default:
+        return true;
+      }
+  with no case for `Z3_QUANTIFIER_AST`. In this same commit, `Z3QuantifiedFormulaManager` is also introduced
+  with full `forall`/`exists`/`isQuantifier` support (using `Z3_QUANTIFIER_AST` elsewhere), so the bug was
+  live and reachable from the very first commit, not merely latent/dead code.
+- candidates 02–10 only rename/move files, change license headers, rename the `nonAtomicOpTypes` field
+  (case/type changes), refactor unrelated code (e.g., `replaceQuantifiedBody`), or add the
+  `SolverQuantifierTest` (including, in candidate_10, an explicit `assume()...withFailureMessage("Bug in
+  Z3QuantifiedFormulaManager")` workaround that skips the affected test for Z3 — confirming the bug was
+  already known and present by that point, not introduced there).
+- candidate_11 is actually the fix commit itself (its diff is identical to fix_commit_diff.txt), adding the
+  missing `Z3_QUANTIFIER_AST` case and the `Preconditions` guards, and removing the `assume()` workaround
+  from the test — so it cannot be the bug-introducing commit.
+
+Since the defective `isAtom` switch (missing the quantifier case) is present unchanged from candidate_01
+onward, candidate_01 is the commit that introduced the bug.

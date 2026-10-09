@@ -1,0 +1,508 @@
+{
+  "metadata": {
+    "timestamp": "20260906_003002",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 131.136,
+      "max": 131.136,
+      "mean": 131.136,
+      "median": 131.136,
+      "total": 131.136,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 130.629,
+      "max": 130.629,
+      "mean": 130.629,
+      "median": 130.629,
+      "total": 130.629,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 38,
+      "max": 38,
+      "mean": 38,
+      "median": 38,
+      "total": 38,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 9311,
+      "max": 9311,
+      "mean": 9311,
+      "median": 9311,
+      "total": 9311,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 63674,
+      "max": 63674,
+      "mean": 63674,
+      "median": 63674,
+      "total": 63674,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 802720,
+      "max": 802720,
+      "mean": 802720,
+      "median": 802720,
+      "total": 802720,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.7626390000000001,
+      "max": 0.7626390000000001,
+      "mean": 0.7626390000000001,
+      "median": 0.7626390000000001,
+      "total": 0.7626390000000001,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 19,
+      "max": 19,
+      "mean": 19,
+      "median": 19,
+      "total": 19,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 6,
+      "Glob": 1,
+      "Grep": 11,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 48,
+      "max": 48,
+      "mean": 48,
+      "median": 48,
+      "total": 48,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 6,
+      "max": 6,
+      "mean": 6,
+      "median": 6,
+      "total": 6,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 6,
+      "max": 6,
+      "mean": 6,
+      "median": 6,
+      "total": 6,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "1913",
+      "fix_commit_hash": "5aa5d814676caf9691c19a250043b48c2438171b",
+      "ground_truth_bics": [
+        "70435f456d73b3ee2e555b8b4ec46df0b4411951"
+      ],
+      "predicted_bics": [
+        "eb0a9974753ae101c0ebe9145bc305f4d3d94afd"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "1913",
+      "fix_commit": "5aa5d814676caf9691c19a250043b48c2438171b",
+      "ground_truth_bics": [
+        "70435f456d73b3ee2e555b8b4ec46df0b4411951"
+      ],
+      "total_candidates": 48,
+      "gt_in_candidates": true,
+      "selected_commit": "eb0a9974753ae101c0ebe9145bc305f4d3d94afd",
+      "selected_index": 31,
+      "confidence": "HIGH",
+      "explanation": "The fix commit (fix_commit_diff.txt) is a generics-cleanup/compilation fix that replaces loosely-typed placeholders with the correct concrete type `EquivalentValue` throughout the `soot.jimple.toolkits.infoflow` package. Specifically it changes: - CallLocalityContext.java: `List<Object> nodes` / `ArrayList<Object>` / raw `CallLocalityContext(List<Object> nodes)` -> `List<EquivalentValue>` / `ArrayList<EquivalentValue>` / `CallLocalityContext(List<EquivalentValue> nodes)` - ClassInfoFlowAnalysis.",
+      "is_correct": false,
+      "num_files_touched_by_fix": 6,
+      "num_source_files_touched_by_fix": 6,
+      "files_analyzed": [
+        "src/soot/jimple/toolkits/infoflow/CallLocalityContext.java",
+        "src/soot/jimple/toolkits/infoflow/ClassInfoFlowAnalysis.java",
+        "src/soot/jimple/toolkits/infoflow/ClassLocalObjectsAnalysis.java",
+        "src/soot/jimple/toolkits/infoflow/InfoFlowAnalysis.java",
+        "src/soot/jimple/toolkits/infoflow/SimpleMethodInfoFlowAnalysis.java",
+        "tests/soot/toolkits/graph/TestDominance.java"
+      ],
+      "call_stats": {
+        "duration_s": 131.136,
+        "duration_api_s": 130.629,
+        "num_turns": 20,
+        "input_tokens": 38,
+        "output_tokens": 9311,
+        "cache_creation_input_tokens": 63674,
+        "cache_read_input_tokens": 802720,
+        "total_cost_usd": 0.7626390000000001,
+        "total_tool_calls": 19,
+        "tool_calls_by_name": {
+          "Read": 6,
+          "Glob": 1,
+          "Grep": 11,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1415,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 13763,
+            "cache_read_input_tokens": 9697,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1649,
+            "cache_read_input_tokens": 23460,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "CallLocalityContext|ClassInfoFlowAnalysis|ClassLocalObjectsAnalysis|InfoFlowAnalysis\\.java|SimpleMethodInfoFlowAnalysis",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 673,
+            "cache_read_input_tokens": 25109,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "new file.*CallLocalityContext|^\\+\\+\\+ .*CallLocalityContext",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 936,
+            "cache_read_input_tokens": 25782,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/candidates/candidate_14.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 22599,
+            "cache_read_input_tokens": 26718,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "List(<Object>)? nodes|List(<Object>)?> ?nodes|CallLocalityContext\\(List",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/candidates/candidate_15.diff",
+                  "output_mode": "content"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 918,
+            "cache_read_input_tokens": 49317,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/candidates/candidate_15.diff",
+                  "limit": 40
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1053,
+            "cache_read_input_tokens": 50235,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "nodes;|CallLocalityContext\\(List\"",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/candidates/candidate_16.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 383,
+            "cache_read_input_tokens": 51288,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "List<Object> nodes|List<Object>> nodes|nodes\\)",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/candidates",
+                  "output_mode": "content",
+                  "-n": true,
+                  "glob": "candidate_{17,19,21,25,30,31,33,34,48}.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 622,
+            "cache_read_input_tokens": 51671,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/candidates/candidate_48.diff",
+                  "limit": 60
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 12,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1935,
+            "cache_read_input_tokens": 52293,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "List<Object>",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 13,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 626,
+            "cache_read_input_tokens": 54228,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "List<Object>",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/candidates/candidate_32.diff",
+                  "output_mode": "content",
+                  "-n": true,
+                  "-C": 3
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 14,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 5765,
+            "cache_read_input_tokens": 54854,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "CallLocalityContext",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/candidates/candidate_32.diff",
+                  "-n": true,
+                  "output_mode": "content"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 15,
+            "input_tokens": 2,
+            "output_tokens": 7,
+            "cache_creation_input_tokens": 1909,
+            "cache_read_input_tokens": 60619,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "HashMutableDirectedGraph",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/candidates/candidate_31.diff",
+                  "-n": true,
+                  "output_mode": "content",
+                  "head_limit": 20
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 16,
+            "input_tokens": 2,
+            "output_tokens": 10,
+            "cache_creation_input_tokens": 559,
+            "cache_read_input_tokens": 62528,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "ClassInfoFlowAnalysis|HashMutableDirectedGraph",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/candidates/candidate_32.diff",
+                  "-n": true,
+                  "output_mode": "content",
+                  "head_limit": 30
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 17,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1703,
+            "cache_read_input_tokens": 63087,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "HashMutableDirectedGraph|List<Object>",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/candidates/candidate_33.diff",
+                  "-n": true,
+                  "output_mode": "content",
+                  "head_limit": 10
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 18,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 574,
+            "cache_read_input_tokens": 64790,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1913/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1913_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_32\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit (fix_commit_diff.txt) is a generics-cleanup/compilation fix that replaces\nloosely-typed placeholders with the correct concrete type `EquivalentValue` throughout the\n`soot.jimple.toolkits.infoflow` package. Specifically it changes:\n\n  - CallLocalityContext.java: `List<Object> nodes` / `ArrayList<Object>` / raw\n    `CallLocalityContext(List<Object> nodes)` -> `List<EquivalentValue>` /\n    `ArrayList<EquivalentValue>` / `CallLocalityContext(List<EquivalentValue> nodes)`\n  - ClassInfoFlowAnalysis.java: raw `HashMutableDirectedGraph` fields/return types/locals\n    (e.g. `Map<SootMethod, HashMutableDirectedGraph>`, `HashMutableDirectedGraph\n    dataFlowGraph = ...`) -> `HashMutableDirectedGraph<EquivalentValue>`\n  - InfoFlowAnalysis.java: raw `HashMutableDirectedGraph`/`MutableDirectedGraph`/\n    `DirectedGraph` usages and raw `Object` node iteration -> generic\n    `<EquivalentValue>` typed versions\n  - SimpleMethodInfoFlowAnalysis.java, ClassLocalObjectsAnalysis.java: raw\n    `Iterator`/`List` loops converted to typed for-each loops\n\nTracing the history of these files backward through the candidates, I found that\ncandidate_32 is an enormous whole-codebase \"add generics\" refactor commit. Within it,\n`CallLocalityContext.java` is changed from:\n    `public CallLocalityContext(List nodes)`\nto:\n    `public CallLocalityContext(List<Object> nodes)`\n(and correspondingly `this.nodes = new ArrayList<Object>()`), and\n`ClassInfoFlowAnalysis.java` / `InfoFlowAnalysis.java` are changed from fully raw types\nto raw `HashMutableDirectedGraph` (without any type parameter) rather than the correctly\nparameterized `HashMutableDirectedGraph<EquivalentValue>`.\n\nThis is exactly the \"half-generified\" state that the fix commit corrects: candidate_32\nintroduced generics but used `Object` as a placeholder type argument (and left some\ndeclarations completely raw) instead of the correct `EquivalentValue` type, which is\nwhat caused the \"compilation issues\" referenced in the fix commit message (unsafe/\nunchecked casts, incompatible generic types when interacting with other already-generic\ncode, e.g. `List<EquivalentValue>` expected elsewhere but `List<Object>`/raw types\nsupplied).\n\nI confirmed that the immediately preceding candidate (candidate_31) does not yet\ncontain `HashMutableDirectedGraph` usage in these files, and the immediately following\ncandidate (candidate_33) does not modify these patterns at all -- meaning the\n`List<Object>` / raw `HashMutableDirectedGraph` state introduced in candidate_32\npersisted unchanged (inherited) all the way until the fix commit finally corrected it.\ncandidate_48 in the candidate set is actually identical to the fix commit itself and is\ntherefore excluded as a candidate for having introduced the bug.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 19,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1708,
+            "cache_read_input_tokens": 65364,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "timestamp": "20260906_160636",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2193/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "2193",
+      "fix_commit_hash": "926db5e93e31a740b53bdd16f843c32f0065252d",
+      "bug_commit_hash": [
+        "a606537bf9dcdc884820ae18adb9b5d78d1ef0b8"
+      ],
+      "szz_candidates": [
+        "a606537bf9dcdc884820ae18adb9b5d78d1ef0b8",
+        "44659a1cbb2d20e8049675f7068bf852598284a5",
+        "7558b89140019b221b4732be14efbd6f291decda",
+        "43896eb60473f6abe7bc8b05684cf410ba827e34",
+        "3c49efae3939dfbbc4436d3aa3c73679d342af61"
+      ],
+      "szz_num_candidates": 5,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "a606537bf9dcdc884820ae18adb9b5d78d1ef0b8"
+      ],
+      "llm_selected_commit": "a606537bf9dcdc884820ae18adb9b5d78d1ef0b8",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit modifies src/de/doe300/activerecord/store/impl/SimpleJDBCRecordStore.java by removing try-with-resources blocks that wrapped ResultSet objects in two methods: 1. streamAllWithData() \u2014 changed from try (final ResultSet res = stm.executeQuery()) { return allWithDataStream(columns, res); } to //this result-set can't be try-with-resource because it is required to stay open final ResultSet res = stm.executeQuery(); return allWithDataStream(columns, res);",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/2193",
+      "bug_fixing_commit": "926db5e93e31a740b53bdd16f843c32f0065252d",
+      "bug_inducing_commit": [
+        "a606537bf9dcdc884820ae18adb9b5d78d1ef0b8"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "doe300/jactiverecord"
+    }
+  ]
+}

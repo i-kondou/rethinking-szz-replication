@@ -1,0 +1,34 @@
+SELECTED: candidate_02
+
+CONFIDENCE: MEDIUM
+
+EXPLANATION:
+The fix commit changes StartUpView.java's anonymous IPlayerClientListener implementation from
+`public void onUpdateCheckpointDirection() { ... }` to
+`public void onUpdateCheckpointDirection(Position pos) { ... }` (adding a Position import and
+parameter), which is characteristic of a build error caused by an implementation method that no
+longer matches (@Override) its interface declaration.
+
+Tracing the history of this exact line across the 8 candidates by following the git blob hashes of
+StartUpView.java:
+- candidate_01 creates the original StartUpView.java (no IPlayerClientListener implementation yet).
+- candidate_02 is the commit that introduces the IPlayerClientListener interface itself (with
+  `void onUpdateCheckpointDirection();`, no parameters) and adds the first anonymous implementation
+  of it inside StartUpView.java, including the exact stub
+  `public void onUpdateCheckpointDirection() { // TODO Auto-generated method stub }`.
+- candidates 03, 04, 05, 06, and 07 all modify StartUpView.java and/or related listener files for
+  unrelated reasons (renames, type changes, new features, formatting), but none of them touch this
+  specific method signature — it is carried forward unchanged. candidate_07's version of
+  StartUpView.java ends at the exact blob hash that the fix commit's diff starts from, confirming
+  the no-arg method survived untouched all the way up to the fix.
+- candidate_08 is byte-for-byte identical to fix_commit_diff.txt (same before/after blob hashes,
+  same hunk), so it is effectively the same change as the fix itself (very likely a duplicate/
+  branch artifact of the actual fix commit) rather than a distinct bug-introducing commit — it
+  fixes the mismatch rather than causing it.
+
+Since the buggy line (`onUpdateCheckpointDirection()` with no parameter) was never modified between
+its introduction and the fix, SZZ line-blame attributes it to the commit that first wrote it:
+candidate_02. The underlying interface-signature change that made this override stale is not
+directly visible in any of the 8 diffs (it likely happened to the interface declaration outside the
+blamed line ranges), which is why confidence is MEDIUM rather than HIGH — but candidate_02 is the
+commit that actually authored the specific code that the fix had to correct.

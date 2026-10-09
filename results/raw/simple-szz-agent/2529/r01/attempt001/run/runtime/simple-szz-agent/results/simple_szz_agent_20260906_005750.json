@@ -1,0 +1,358 @@
+{
+  "metadata": {
+    "timestamp": "20260906_005750",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2529/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 70.968,
+      "max": 70.968,
+      "mean": 70.968,
+      "median": 70.968,
+      "total": 70.968,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 70.867,
+      "max": 70.867,
+      "mean": 70.867,
+      "median": 70.867,
+      "total": 70.867,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 5702,
+      "max": 5702,
+      "mean": 5702,
+      "median": 5702,
+      "total": 5702,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 22783,
+      "max": 22783,
+      "mean": 22783,
+      "median": 22783,
+      "total": 22783,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 139399,
+      "max": 139399,
+      "mean": 139399,
+      "median": 139399,
+      "total": 139399,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.2641077,
+      "max": 0.2641077,
+      "mean": 0.2641077,
+      "median": 0.2641077,
+      "total": 0.2641077,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 13,
+      "max": 13,
+      "mean": 13,
+      "median": 13,
+      "total": 13,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 7,
+      "Glob": 1,
+      "Grep": 4,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 25,
+      "max": 25,
+      "mean": 25,
+      "median": 25,
+      "total": 25,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2529",
+      "fix_commit_hash": "fea56932fffe94e2d7dde77d8d27c159acac1795",
+      "ground_truth_bics": [
+        "c48a5bd47fe4f38846fae5dd9b6393e3574fd5e7"
+      ],
+      "predicted_bics": [
+        "c48a5bd47fe4f38846fae5dd9b6393e3574fd5e7"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2529",
+      "fix_commit": "fea56932fffe94e2d7dde77d8d27c159acac1795",
+      "ground_truth_bics": [
+        "c48a5bd47fe4f38846fae5dd9b6393e3574fd5e7"
+      ],
+      "total_candidates": 25,
+      "gt_in_candidates": true,
+      "selected_commit": "c48a5bd47fe4f38846fae5dd9b6393e3574fd5e7",
+      "selected_index": 23,
+      "confidence": "HIGH",
+      "explanation": "The fix commit (StatusUpdaterBolt : fixes bug and simplifies code) addresses a bug where the routing-key field name, when configured with a \"metadata.\" prefix (e.g. \"metadata.hostname\"), was no longer correctly recognized as belonging under \"metadata.\" once periods in the field name were URL-encoded to \"%2E\". The fix introduces a `routingFieldNameInMetadata` boolean that is set *before* the period-to-%2E replacement happens, and uses that flag later instead of re-checking `fieldNameForRoutingKey",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "external/elasticsearch/src/main/java/com/digitalpebble/stormcrawler/elasticsearch/persistence/StatusUpdaterBolt.java"
+      ],
+      "call_stats": {
+        "duration_s": 70.968,
+        "duration_api_s": 70.867,
+        "num_turns": 14,
+        "input_tokens": 20,
+        "output_tokens": 5702,
+        "cache_creation_input_tokens": 22783,
+        "cache_read_input_tokens": 139399,
+        "total_cost_usd": 0.2641077,
+        "total_tool_calls": 13,
+        "tool_calls_by_name": {
+          "Read": 7,
+          "Glob": 1,
+          "Grep": 4,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2529/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2529_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2529/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2529_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2529/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2529_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1776,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 581,
+            "cache_read_input_tokens": 11460,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "fieldNameForRoutingKey|ESStatusRouting|%2E|StatusUpdaterBolt",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 519,
+            "cache_read_input_tokens": 12041,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "fieldNameForRoutingKey|ESStatusRoutingFieldParamName|%2E",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2287,
+            "cache_read_input_tokens": 12560,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2529/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2529_candidate_selection/candidates/candidate_24.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2529/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2529_candidate_selection/candidates/candidate_21.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 5615,
+            "cache_read_input_tokens": 14847,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "StatusUpdaterBolt.java",
+                  "path": "candidates/candidate_22.diff",
+                  "output_mode": "content"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "StatusUpdaterBolt.java",
+                  "path": "candidates/candidate_23.diff",
+                  "output_mode": "content"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1807,
+            "cache_read_input_tokens": 20462,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2529/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2529_candidate_selection/candidates/candidate_22.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2529/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2529_candidate_selection/candidates/candidate_23.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2127,
+            "cache_read_input_tokens": 22269,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2529/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2529_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_24\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit (StatusUpdaterBolt : fixes bug and simplifies code) addresses a\nbug where the routing-key field name, when configured with a \"metadata.\"\nprefix (e.g. \"metadata.hostname\"), was no longer correctly recognized as\nbelonging under \"metadata.\" once periods in the field name were URL-encoded\nto \"%2E\". The fix introduces a `routingFieldNameInMetadata` boolean that is\nset *before* the period-to-%2E replacement happens, and uses that flag later\ninstead of re-checking `fieldNameForRoutingKey.startsWith(\"metadata.\")` /\n`substring(9)` after the encoding was already applied.\n\nTracing the history of StatusUpdaterBolt.java across the candidates (using\nthe git blob hashes in each diff's `index` line) shows the exact sequence\nthat produced this bug:\n\n- candidate_09 first introduces `fieldNameForRoutingKey` and writes it\n  directly into the document, with no \"metadata.\" handling at all.\n- candidate_21 (index c2b4839..cdeb99a) adds the \"metadata.\" support: it\n  checks `fieldNameForRoutingKey.startsWith(\"metadata.\")` and, if true,\n  strips the prefix with `substring(9)` before writing the field into the\n  metadata object (otherwise it writes the field outside metadata). At this\n  point there is no period-encoding logic yet, so the check works correctly.\n- candidate_22 (cdeb99a..a7d1239) and candidate_23 (a7d1239..3dc28c1) touch\n  unrelated parts of the file (SHA-256 id generation), leaving the\n  \"metadata.\" logic untouched.\n- candidate_24 (index 3dc28c1..ed3cf70) is the commit that introduces\n  `// periods are not allowed in ES2 - replace with %2E` and the\n  `fieldNameForRoutingKey = fieldNameForRoutingKey.replaceAll(\"\\\\.\", \"%2E\")`\n  call, applied to the *whole* configured field name \u2014 including the literal\n  period in the \"metadata.\" prefix itself. This is the bug: after this\n  replacement, a configured value like \"metadata.hostname\" becomes\n  \"metadata%2Ehostname\", which no longer satisfies\n  `startsWith(\"metadata.\")`. As a result, the routing key is silently written\n  outside the metadata object (or dropped from the intended location)\n  instead of nested under \"metadata\", breaking the field's intended\n  behavior. This commit produces exactly the pre-fix code state (blob\n  ed3cf70) that the fix commit's diff starts from.\n- candidate_25 (index ed3cf70..2938f64) is in fact the fix commit itself \u2014\n  its diff is byte-for-byte identical to fix_commit_diff.txt (adding the\n  `routingFieldNameInMetadata` flag set prior to the `replaceAll` call, and\n  using that flag instead of re-deriving \"metadata.\" membership from the\n  already-encoded string).\n\nBecause candidate_24 is the commit where the period-encoding logic was\nintroduced without accounting for the \"metadata.\" prefix check that already\nexisted (added in candidate_21), it is the commit that actually introduced\nthe bug that the fix commit resolves.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1785,
+            "cache_read_input_tokens": 24396,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

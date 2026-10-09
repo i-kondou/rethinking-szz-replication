@@ -1,0 +1,12 @@
+SELECTED: candidate_01
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) restores a missing method declaration in CustomPieChart.java's anonymous PieRadarChartTouchListener: it adds back "protected void performHighlight(Highlight h, MotionEvent e) {" around the existing if-block. Without that method signature, the if-statement sits directly in the anonymous class body, which is invalid Java syntax (a compile error) - matching the fix's stated purpose of "fix ci error".
+
+candidate_01.diff is the commit that originally created CustomPieChart.java (new file), and it already contains exactly this defect: the anonymous class body has the "if (h != null && !h.equalTo(mLastHighlighted)) {...}" block with no enclosing method declaration/signature. This is precisely the malformed code the fix commit later repairs, so candidate_01 is the commit that introduced the bug.
+
+candidate_02.diff is identical to the fix_commit_diff.txt itself (it applies the same change of adding the "protected void performHighlight(Highlight h, MotionEvent e) {" declaration), meaning candidate_02 is actually the fixing change, not the bug-introducing one.
+
+Therefore candidate_01, which first introduced the malformed/incomplete method body, is the bug-introducing commit.

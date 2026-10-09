@@ -1,0 +1,55 @@
+SELECTED: candidate_38
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit restores a check in AbstractFile.onModification() so that the path-uniqueness
+validation (validatePath()) is only invoked when the static flag `validatePathUniqueness`
+(populated from the config switch `application.filesystem.unique.paths`) is true:
+
+    boolean valid = true;
+    if (validatePathUniqueness) {
+        valid = validatePath(securityContext, errorBuffer);
+    }
+
+Tracing the history of AbstractFile.java across the candidates:
+
+- candidate_33 introduces the `validatePathUniqueness` field (populated from
+  `Services.APPLICATION_FILESYSTEM_UNIQUE_PATHS`) and, crucially, puts the
+  `if (validatePathUniqueness) { ... }` guard INSIDE the `validatePath()` method itself.
+  At this point both `onCreation()` and `onModification()` call `validatePath()`
+  unconditionally, but since the guard lives inside `validatePath()`, the config switch
+  is still correctly respected for both creation and modification.
+
+- candidate_38 refactors this logic: it removes the `if (validatePathUniqueness)` guard
+  from inside `validatePath()` (which now always performs the uniqueness check when
+  called) and instead moves the flag check out to the call site in `onCreation()`,
+  wrapping a *new* method `validateAndRenameFileOnce()`:
+
+      if (validatePathUniqueness) {
+          valid = validateAndRenameFileOnce(securityContext, errorBuffer);
+      }
+
+  However, `onModification()` was left completely unchanged - it still calls
+  `validatePath(securityContext, errorBuffer)` directly and unconditionally. Since
+  `validatePath()` no longer contains the internal flag check (that check was moved
+  out only for the onCreation path), `onModification()` now ALWAYS performs the
+  path-uniqueness validation regardless of the `application.filesystem.unique.paths`
+  configuration switch. This is exactly the bug described in the fix: "Correctly
+  respects configuration switch `application.filesystem.unique.paths` when renaming
+  files/folders" - renaming (an update/modification operation) ignored the switch
+  after this refactor.
+
+- candidate_40 is textually identical to fix_commit_diff.txt (same blob hashes
+  5bb005d96..ab8131d11), i.e. it IS the fix commit itself, re-adding the guard
+  directly in `onModification()`. It cannot be the bug-introducing commit.
+
+- No candidate between 33 and 38, nor between 38 and 40, touches
+  `validatePathUniqueness`, `validatePath()`, or `onModification()` in AbstractFile.java
+  in a way relevant to this behavior (verified via search across all 40 candidates).
+
+Therefore candidate_38 is the commit that introduced the bug: by moving the
+config-switch check out of validatePath() and into onCreation()'s new
+validateAndRenameFileOnce() wrapper, it silently removed the switch's effect on
+onModification(), causing renames/updates to always be validated for path
+uniqueness even when the switch was disabled.

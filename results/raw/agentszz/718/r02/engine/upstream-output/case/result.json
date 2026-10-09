@@ -1,0 +1,22 @@
+{
+  "fix_commit": "e3a09244c0309b814ff0b6ce85908a0d3ba82840",
+  "bic": "af93ae74310639f406c35f885cc1204917c68dc5",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "The blame trace on the affected lines in the generated table files (e.g., `return of(fullTableName);` calling an inherited/undefined method rather than the qualified static factory method `SweepPriorityRow.of(...)`, and the missing `getRawTableName()` static accessor) all point back to `af93ae743106` \u2014 the \"initial open source code\" commit that added these generated table classes to the repository. Later commits (`3b9411d5d0d0`, `877422f5174b`) only touched unrelated lines (toString formatting). The fix commit e3a09244c0309 explicitly corrects the generated-table-code pattern established since the initial commit, adding qualified static factory calls and the missing `getRawTableName()` method that was never present. Since this is the commit that introduced these generated files and their buggy patterns into the codebase, it is the BIC.",
+  "metrics": {
+    "case_elapsed_seconds": 20.373105,
+    "api_elapsed_seconds": 19.820186,
+    "tool_elapsed_seconds": 0.4423,
+    "other_elapsed_seconds": 0.110625,
+    "api_call_count": 4,
+    "tool_call_count": 5,
+    "prompt_tokens": 40109,
+    "completion_tokens": 1272,
+    "total_tokens": 41381,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:05:13.012306"
+}

@@ -1,0 +1,14 @@
+SELECTED: candidate_16
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (identical in content to candidate_17, which is actually the fix commit itself appearing at the end of the candidate list) makes two changes to SimpleJDBCRecordStore.java:
+
+1. In `streamAllWithData`/`allWithDataStream` and `getValues`/`valuesStream`, it removes a `try (final ResultSet res = ...executeQuery())` wrapper and replaces it with a plain (unclosed) `ResultSet res = ...executeQuery();`, adding the explicit comment "this result-set can't be try-with-resource because it is required to stay open" / "can't use try-with-resource here, because result-set is required to stay open". This is the core bug: these methods return a lazily-evaluated `Stream` that reads from the `ResultSet` on demand (via a custom `Spliterator`). Wrapping the `ResultSet` in try-with-resources causes it to be closed as soon as the method returns — before the returned stream is ever consumed — so any attempt to iterate the stream fails (result set already closed).
+
+2. It also wraps the previously-unclosed `PreparedStatement stmt` in `insertNewRecord` with try-with-resources to fix a genuine resource leak, but this is a secondary/minor cleanup rather than the described "bug" with explanatory comments.
+
+Tracing the ResultSet-closing bug back through the candidates: prior to candidate_16, `streamAllWithData` used a plain `final ResultSet res = stm.executeQuery();` (not try-with-resources) and manually built the `Stream`/`Spliterator` inline. candidate_16 is a large refactor that extracts this inline stream-building logic into new private helper methods `allWithDataStream(columns, res)` and `valuesStream(res)`, and — critically — introduces `try (final ResultSet res = stm.executeQuery()) { return allWithDataStream(columns, res); }` and the analogous pattern in `getValues`. This is exactly the problematic pattern the fix commit reverts (diff shows these try-with-resource blocks being added as "+" lines in candidate_16, matching the "-" lines removed by the fix commit).
+
+Since candidate_16 is the first (and only) candidate to introduce this premature-closing-of-ResultSet pattern, it is the bug-introducing commit.

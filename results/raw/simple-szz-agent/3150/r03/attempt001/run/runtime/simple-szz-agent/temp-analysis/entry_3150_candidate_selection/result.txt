@@ -1,0 +1,18 @@
+SELECTED: candidate_54
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix removes an "if (sourceTrack != null)" guard around track creation in Util.retargetAnimation() / retargetTrack() and replaces it with logic that synthesizes a single-keyframe bind-pose track when sourceTrack is null, instead of silently skipping the bone track altogether. This is the "retargeting logic error": when a source animation has no track for a given bone, the old code simply omitted the target bone's track from the retargeted animation, which is incorrect (it should fall back to the bind pose).
+
+Tracing the history of Util.retargetTrack/retargetAnimation across the candidates:
+
+- candidate_36 introduces the original retargetTrack()/retargetAnimation() methods. Here retargetTrack() looks up sourceTrack internally via MyAnimation.findTrack() and immediately calls sourceTrack.getTimes() with NO null check at all — a latent NullPointerException risk, but no track-skipping behavior yet.
+
+- candidate_54 is the commit that changes this method signature so sourceTrack is now resolved in retargetAnimation() and passed in, and — critically — wraps the call to retargetTrack() in `if (sourceTrack != null) { ... result.addTrack(track); }`, silently skipping the target bone's track whenever no matching source track exists. It also adds `Validate.nonNull(sourceTrack, "source track")` inside retargetTrack(), reinforcing that null tracks are treated as an error/skip case rather than falling back to bind pose. This is exactly the flawed behavior later corrected by the fix.
+
+- candidate_53 makes only a cosmetic change, appending the comment `// handle null sourceTrack` to the existing `if (sourceTrack != null) {` line introduced in candidate_54; the logic itself is unchanged, so it doesn't introduce new bug behavior.
+
+- candidate_55 is identical to the fix commit itself (removes the null check and adds proper bind-pose fallback), so it is the fix, not the introducing commit.
+
+Since candidate_54 is the first commit to introduce the "skip track if sourceTrack is null" logic that the fix commit explicitly reverses, it is the bug-introducing commit.

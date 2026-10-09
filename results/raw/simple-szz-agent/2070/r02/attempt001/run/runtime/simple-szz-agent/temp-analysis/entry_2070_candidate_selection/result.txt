@@ -1,0 +1,24 @@
+SELECTED: candidate_18
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit modifies at.siemens.ct.jmz.diag.FastDiag.java to guard two lines against a NullPointerException:
+
+  String displayConstraintListC = progressCalback == null ? null : progressCalback.displayConstraintList(C);
+  ...
+  String displayConstraintListAC = progressCalback == null ? null : progressCalback.displayConstraintList(AC);
+
+and also fixes a related check `if (displayConstraintListC != null && displayConstraintListD != null)` that previously only checked displayConstraintListD.
+
+These exact lines, without the null-check on progressCalback, were introduced in candidate_18. That commit refactored the fd() method in FastDiag.java: previously the calls to `progressCalback.displayConstraintList(...)` were made only inside blocks already guarded by `progressCalback != null` (e.g. `if (displayfastDiagSteps && progressCalback != null) { ... progressCalback.displayConstraintList(D) ... }`). Candidate_18 pulled the `displayConstraintList(C)` and `displayConstraintList(AC)` calls out of those guarded blocks into unconditional statements:
+
+  String displayConstraintListC = progressCalback.displayConstraintList(C);
+  if (displayfastDiagSteps && progressCalback != null && displayConstraintListC != null) { ... }
+  ...
+  String displayConstraintListAC = progressCalback.displayConstraintList(AC);
+  if (!D.isEmpty()) { ... }
+
+Because these calls now execute before the null check on progressCalback, any caller that passes a null progressCalback (or any code path reaching fd() without a callback) triggers a NullPointerException — exactly the bug described in the fix commit message "fix(diag): avoid NullPointerExceptions". Candidate_18 also introduced the flawed `if (displayConstraintListD != null)` check (missing displayConstraintListC in the condition), which the fix also corrects.
+
+No earlier candidate contains this unconditional-call pattern; all prior versions of fd() invoked progressCalback methods only inside `progressCalback != null` guarded blocks. Candidate_19 already contains the same content as the fix diff itself (it appears to duplicate the fix commit), so it cannot be the bug-introducing commit — candidate_18 is the true origin of the defect.

@@ -1,0 +1,10 @@
+SELECTED: candidate_101
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes `failedRemoveCinderDisks.addAll(cinderDisks);` to `failedRemoveCinderDisks = cinderDisks;` inside the catch block of `removeCinderDisks()` in RemoveVmCommand.java, because `failedRemoveCinderDisks` was initialized to `null` and calling `.addAll()` on it in the exception path caused a NullPointerException (flagged by FindBugs).
+
+candidate_101 is the commit that introduced this exact code. It adds the new `removeCinderDisks()` method, which declares `Collection<CinderDisk> failedRemoveCinderDisks = null;` and, in the `catch (InterruptedException | ExecutionException e)` block, calls `failedRemoveCinderDisks.addAll(cinderDisks);` — the precise buggy line later replaced by the fix. Since the variable is null at that point (only assigned inside the try block via `future.get().getActionReturnValue()`), any exception thrown by `future.get()` results in an NPE when `.addAll()` is invoked on the still-null reference.
+
+candidate_102 is a later, unrelated change to the same file (modifying `processUnremovedDisks` signature) that does not touch the buggy line; its diff context shows the bug already present unchanged. The fix_commit_diff.txt corresponds to a diff of the exact same hunk introduced in candidate_101, confirming candidate_101 as the bug-introducing commit.

@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "timestamp": "20260906_094650",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/139/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "139",
+      "fix_commit_hash": "137ce13f74239ba3dc100269cafe842a1f4ea11d",
+      "bug_commit_hash": [
+        "43e45eb94e1aa0d1c4dbd10e99df8e366f637261"
+      ],
+      "szz_candidates": [
+        "43e45eb94e1aa0d1c4dbd10e99df8e366f637261"
+      ],
+      "szz_num_candidates": 1,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "43e45eb94e1aa0d1c4dbd10e99df8e366f637261"
+      ],
+      "llm_selected_commit": "43e45eb94e1aa0d1c4dbd10e99df8e366f637261",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit changes a single line in core/java/android/text/TextUtils.java's isRTLCharacter() method, narrowing the upper bound of one Unicode range check from 0xFEFF to 0xFEFE: -               (c >= 0xFE70 && c <= 0xFEFF)    ; +               (c >= 0xFE70 && c <= 0xFEFE)    ; This change fixes the mishandling of the special Unicode marker 0xFEFF (byte order mark / zero-width no-break space), which was incorrectly being classified as an RTL character because it fell within the inclusive range",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/139",
+      "bug_fixing_commit": "137ce13f74239ba3dc100269cafe842a1f4ea11d",
+      "bug_inducing_commit": [
+        "43e45eb94e1aa0d1c4dbd10e99df8e366f637261"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "CyanogenMod/android_frameworks_base"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+SELECTED: candidate_03
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes JettyStart.java so that the "eXist Home" log line uses
+System.getProperty("exist.home", "unknown") instead of
+SystemProperties.getInstance().getSystemProperty("exist.home", "unknown"),
+because "exist.home is not in src/org/exist/system.properties" (per the fix
+commit message). SystemProperties.getInstance().getSystemProperty() loads
+values from the bundled resource file src/org/exist/system.properties, which
+never contains an "exist.home" entry (that value is only ever set as a JVM
+system property via -Dexist.home=...). Using the SystemProperties lookup for
+this particular key therefore always falls back to the default "unknown".
+
+candidate_03 is the commit that introduced this exact bug. Before this
+commit, JettyStart.java correctly read the value with:
+    msg = "[eXist Home : " + System.getProperty("exist.home") + "]";
+In candidate_03 (which also introduces the new SystemProperties class and
+refactors many call sites to use it for product-version/product-build/
+svn-revision, which ARE present in system.properties), the exist.home line
+was mistakenly also switched to:
+    msg = "[eXist Home : " + SystemProperties.getInstance().getSystemProperty("exist.home", "unknown") + "]";
+This is precisely the buggy pattern that the fix commit reverts. All later
+candidates (e.g. candidate_10) preserve this same buggy call for exist.home,
+confirming the bug was inherited from candidate_03 rather than introduced
+later.

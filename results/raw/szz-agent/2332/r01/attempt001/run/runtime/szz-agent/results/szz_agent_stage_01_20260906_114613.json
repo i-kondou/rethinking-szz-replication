@@ -1,0 +1,55 @@
+{
+  "metadata": {
+    "timestamp": "20260906_114613",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2332/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "2332",
+      "fix_commit_hash": "052fc158198e97c6e44d9bdff1e5bf5595d61f83",
+      "bug_commit_hash": [
+        "c8156def8cdc0f33f763b3edd9cec79f86c9b390"
+      ],
+      "szz_candidates": [
+        "3f479e07bbb0b6934daae712e961a5bcbe9e90a5",
+        "fd5b5a4b3238b34ecdceb6e24e113dfc80fa93fa",
+        "afd50d05a8ffafb5a5acc0fa24b927f9a0d7bb8d",
+        "c8156def8cdc0f33f763b3edd9cec79f86c9b390",
+        "58b34e99527747bb53bae2d480526eb349914559",
+        "a5190d342469e14504a9805cc978d59f2da55747",
+        "c22ef3815260e716fec382a6a90ebf6a98233b93"
+      ],
+      "szz_num_candidates": 7,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "c8156def8cdc0f33f763b3edd9cec79f86c9b390"
+      ],
+      "llm_selected_commit": "c8156def8cdc0f33f763b3edd9cec79f86c9b390",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit rewrites the synchronization strategy of TS3Query#exit(), replacing a plain `synchronized` modifier with a compareAndSet-based `AtomicBoolean shuttingDown` flag plus an explicit wait()/notifyAll() protocol (\"Only 1 thread shall ever send quit, the rest of the threads wait for the first thread to finish\"). It also converts the `connected` field from a `volatile boolean` to an `AtomicBoolean`, and splits exit()'s body into a private `shutDown()`/`handleDisconnect()` pair to shrink t",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/2332",
+      "bug_fixing_commit": "052fc158198e97c6e44d9bdff1e5bf5595d61f83",
+      "bug_inducing_commit": [
+        "c8156def8cdc0f33f763b3edd9cec79f86c9b390"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "TheHolyWaffle/TeamSpeak-3-Java-API"
+    }
+  ]
+}

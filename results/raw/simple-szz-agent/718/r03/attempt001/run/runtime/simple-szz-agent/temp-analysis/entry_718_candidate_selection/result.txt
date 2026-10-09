@@ -1,0 +1,19 @@
+SELECTED: candidate_13
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit's diff to TableFactoryRenderer.java changes a generated line from:
+    line("return ", Table, ".of(t, name, namespace, Triggers.getAllTriggers(t, sharedTriggers, triggers));");
+to:
+    line("return ", Table, ".of(t, namespace, name, Triggers.getAllTriggers(t, sharedTriggers, triggers));");
+
+This corresponds exactly to the commit message note "fixed generated table factory method argument ordering": the generated static factory method for "generic" tables (those with a getGenericTableName()) is called as `Table.of(t, namespace, name, triggers)`, but the code-generator (TableFactoryRenderer) was emitting a call with `name` and `namespace` swapped, i.e. `Table.of(t, name, namespace, triggers)`.
+
+Searching the candidates for where this exact buggy line was introduced, candidate_13 is the commit that first adds the `namespace` parameter to `TableFactoryRenderer.getTable()` and generates the code:
+    _("return ", Table, ".of(t, name, namespace, Triggers.getAllTriggers(t, sharedTriggers, triggers));");
+(candidate_13.diff, TableFactoryRenderer.java hunk, lines ~98-101).
+
+Before candidate_13 (e.g. candidate_01), the generated call was `Table.of(t, name, Triggers...)` — there was no `namespace` argument at all, so the ordering bug could not yet exist. Candidate_13 is the commit that adds the namespace parameter but puts it in the wrong position relative to `name` in the generated `.of(...)` call, introducing the argument-ordering bug that persists through later candidates (e.g. candidate_16, which only renames the `_` method to `line` without correcting the order) until it is finally fixed in the target fix commit by swapping to `.of(t, namespace, name, ...)`.
+
+Because the actual generated table classes' `of(...)` static factory methods take `(Transaction, Namespace, String name, ...)` (namespace before name), the TableFactoryRenderer-generated caller code introduced in candidate_13 has arguments in the wrong order, causing incorrect namespace/name values to be passed at runtime for generic (dynamically-named) tables — exactly the bug the fix commit corrects.

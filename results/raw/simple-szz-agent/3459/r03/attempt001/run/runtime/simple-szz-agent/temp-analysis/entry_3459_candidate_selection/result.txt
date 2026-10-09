@@ -1,0 +1,12 @@
+SELECTED: candidate_27
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit message states: "Fixes NewAccountFormControllerTest, the call to orgDao.findByCommonName(...) in NewAccountFormController is not mocked up and resulted in NPE." The fix diff adds a Mockito stub `when(mockOrgDao.findByCommonName(eq(orgName))).thenReturn(mockOrg);` in `NewAccountFormControllerTest.java`'s `setUp()` method.
+
+candidate_27 is the commit that introduced the call `Org org = orgDao.findByCommonName(account.getOrg());` inside the account-creation logic of `NewAccountFormController.java` (guarded by `if(account.getOrg().length() > 0)`), followed by `orgDao.addUser(org, account);`. This is precisely the unmocked call referenced in the fix commit message.
+
+Critically, this same candidate also substantially rewrote `NewAccountFormControllerTest.java`'s `setUp()` method into the exact structure that the fix commit later patches: it introduces `mockOrgDao`, `mockAccountDao`, and the `when(mockAccountDao.findByUID(eq("testadmin")))...` / `when(mockOrgDao.getOrgTypeValues())...` stubs seen verbatim in the fix diff's context lines. However, this rewritten `setUp()` does NOT include a stub for `orgDao.findByCommonName(...)`, since at the time this test rewrite was authored the corresponding production code call didn't yet require it in the same way, leaving the test suite broken (NPE) once the new `findByCommonName` call path was exercised.
+
+No other candidate introduces `orgDao.findByCommonName` inside `NewAccountFormController.java` (the only other occurrences of `findByCommonName` in earlier/other candidates are for `GroupDao` in candidate_07 or `OrgsController.java` in candidate_14, which are unrelated files). candidate_27 is therefore the first and only commit that both introduces the unmocked call and matches the exact test scaffolding patched by the fix commit.

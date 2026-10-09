@@ -1,0 +1,43 @@
+SELECTED: candidate_27
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix adds back a single line in CrossflowHandler.startExperiment():
+
+    workflow.getSerializer().setClassloader(classLoader);
+
+right after the workflow instance is created, so that the workflow's XStream-based
+Serializer uses the custom URLClassLoader (which points at the experiment's jar)
+instead of the default class loader. Without this call, deserializing job/message
+objects belonging to classes only present in the dynamically loaded experiment jar
+fails with a ClassNotFoundException-style error.
+
+Tracing the history of this exact call in CrossflowHandler.java across the
+candidates:
+
+- candidate_10 introduces the Serializer class and originally adds the call
+  `workflow.getSerializer().setClassloader(classLoader);` immediately after
+  `workflow.setInstanceId(experimentId);` in startExperiment(). At this point the
+  behavior is correct.
+- candidate_25 keeps this call unchanged (it appears only as unmodified context in
+  a larger refactor that introduces ExperimentRegistry, etc.).
+- candidate_26 rewrites CrossflowHandler.java and switches the workflow
+  construction to use a Workflow constructor overload that takes the ClassLoader
+  directly (`getConstructor(Mode.class, ClassLoader.class).newInstance(mode,
+  classLoader)`), removing the separate `workflow.getSerializer().setClassloader(...)`
+  call because the classloader is now expected to be wired up inside the
+  constructor instead.
+- candidate_27 then reverts the constructor call back to the single-argument form
+  `getConstructor(Mode.class).newInstance(mode)`, dropping the ClassLoader
+  parameter entirely — but it does NOT restore the
+  `workflow.getSerializer().setClassloader(classLoader)` call that candidate_26 had
+  removed in favor of the constructor-based approach. This leaves the code with no
+  mechanism at all for propagating the custom classLoader to the workflow's
+  serializer, which is exactly the bug the fix commit addresses.
+
+The fix commit (and the final candidate_28, which is textually identical to the
+fix) simply re-adds the missing `workflow.getSerializer().setClassloader(classLoader);`
+line at the same location, confirming that candidate_27 is where the regression
+was introduced (a constructor-signature revert that silently dropped the
+classloader propagation logic without restoring the alternate mechanism for it).

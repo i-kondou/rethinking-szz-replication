@@ -1,0 +1,39 @@
+SELECTED: candidate_25
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single line, `filesFromThisSite.clear();`, at the start of
+XMLFileReader.read(), right after `this.updateSite = updateSite;`. The commit
+message says the bug "would prevent any shadowing (update sites overriding
+other update sites' files)".
+
+The `filesFromThisSite` field was introduced in candidate_25. In that commit,
+the field is declared and initialized once as an instance field:
+
+    protected Set<FileObject> filesFromThisSite = new HashSet<FileObject>();
+
+The read() logic in that same commit was reworked so that, instead of
+comparing `updateSite` strings to decide whether an existing FileObject came
+from the same update site as the one currently being parsed, it checks
+`filesFromThisSite.contains(file)`. This set is populated with every
+FileObject added while processing the current call to read(), but it is never
+cleared when read() is called again for a different update site (read() is
+called once per update site while building the merged file list). As a
+result, files added while parsing one update site remain in
+`filesFromThisSite` when a later update site is parsed, so the code
+incorrectly treats files from a previous update site as if they belonged to
+the site currently being read. This causes the shadowing/override logic
+(`filesFromThisSite.contains(file)` branch vs. the `getRank(...)` branch that
+handles the overridden-update-site bookkeping and the "shadows" warning) to
+take the wrong path, effectively preventing update sites from overriding each
+other's files — precisely the symptom described in the fix commit message.
+
+Candidate_26 (a later change) only refactors the warning output (using
+`files.log.warn` instead of appending to `warnings`) and does not touch the
+missing-clear() issue, so it does not fix or reintroduce the bug — it simply
+carries it forward. The very next change to this method is the fix commit
+itself, which adds `filesFromThisSite.clear()`. Since candidate_25 is the
+commit that first introduced the `filesFromThisSite` field and the logic that
+depends on it being properly reset per update site (but omitted that reset),
+it is the bug-introducing commit.

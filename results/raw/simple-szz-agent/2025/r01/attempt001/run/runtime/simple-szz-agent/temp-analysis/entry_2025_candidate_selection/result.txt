@@ -1,0 +1,43 @@
+SELECTED: candidate_59
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the "[eXist Home : ...]" log line in JettyStart.java
+from:
+    logger.info("[eXist Home : " + SystemProperties.getInstance().getSystemProperty("exist.home", "unknown") + "]");
+back to:
+    logger.info("[eXist Home : " + System.getProperty("exist.home", "unknown") + "]");
+
+The fix commit message explains why: "exist.home is not in
+src/org/exist/system.properties." SystemProperties.getInstance() loads its
+values exclusively from a bundled resource file (org/exist/system.properties,
+generated at build time with product-version, product-build, svn-revision /
+git-commit, etc.). exist.home was never one of those generated keys, so any
+call to SystemProperties.getInstance().getSystemProperty("exist.home", ...)
+is guaranteed to fall through to the default value "unknown" — it can never
+report the real eXist home directory. The correct source for exist.home is
+the JVM system property (System.getProperty("exist.home", ...)), which is
+set externally (e.g. via -Dexist.home=... or the launcher script).
+
+candidate_59 is the commit that introduces this exact bug. It adds the new
+SystemProperties class/mechanism (reading src/org/exist/system.properties)
+and, in the same diff, refactors JettyStart.java's home line:
+    -        msg = "[eXist Home : " + System.getProperty("exist.home") + "]";
+    +        msg = "[eXist Home : " + SystemProperties.getInstance().getSystemProperty("exist.home", "unknown") + "]";
+This switches a previously-correct call (System.getProperty, which could
+read the real exist.home JVM property) to the new SystemProperties-backed
+lookup, which never has an "exist.home" entry in the properties resource
+file added by this same commit. From this commit onward, the eXist Home log
+line always prints "unknown", regardless of the actual home directory,
+until the later fix commit reverts the exist.home lookup to use
+System.getProperty directly.
+
+Later candidates (e.g. candidate_66, candidate_69) only reformat or move
+surrounding code/imports/package (whitespace/brace style, package move to
+org.exist.jetty) but retain the same buggy
+SystemProperties.getInstance().getSystemProperty("exist.home", "unknown")
+call introduced in candidate_59 — they inherit the bug rather than
+introduce it. candidate_75 is a near-duplicate of the actual fix diff itself
+(reverting to System.getProperty for exist.home) and is not a
+bug-introducing candidate.

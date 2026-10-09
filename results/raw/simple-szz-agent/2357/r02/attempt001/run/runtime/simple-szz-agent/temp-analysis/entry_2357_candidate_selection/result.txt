@@ -1,0 +1,25 @@
+SELECTED: candidate_66
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit ("fixed findbug") addresses several FindBugs/static-analysis warnings across two files. The most concrete and precisely traceable of these is in GitLabLogoutAction.java's getGitLabText() method, where the fix:
+1. Removes the line `GitLabSecurityRealm glsr = (GitLabSecurityRealm) r;` because the local variable `glsr` is completely unused in that method (the method just returns the literal string "GitLab") — a classic FindBugs "unused local variable" (DLS_DEAD_LOCAL_STORE) warning.
+2. Renames the local variable `j` to `jenkins` in the surrounding code.
+
+candidate_66 is the commit that created GitLabLogoutAction.java from scratch (new file, "diff --git a/... b/src/main/java/org/jenkinsci/plugins/GitLabLogoutAction.java", "new file mode"). In that new file, getGitLabText() is implemented exactly as:
+```
+public String getGitLabText() {
+    Jenkins j = Jenkins.getInstance();
+    assert j != null;
+    SecurityRealm r = j.getSecurityRealm();
+    if (r instanceof GitLabSecurityRealm) {
+        GitLabSecurityRealm glsr = (GitLabSecurityRealm) r;
+        return "GitLab";
+    }
+    ...
+}
+```
+This is the exact buggy pattern later removed by the fix — the `glsr` variable is assigned but never read, since the method simply returns "GitLab" regardless. I confirmed via search that no other candidate between candidate_66 and the fix touches this method or the `glsr` variable, meaning the dead-store bug was introduced in candidate_66 and persisted unchanged until the fix commit.
+
+(The other portions of the fix — converting an if/else chain to a switch statement, and removing a redundant `catch (JsonProcessingException e)` block in GitLabSecurityRealm.java — are pure code-style cleanups inherited from a much older, pre-existing/forked GithubSecurityRealm.java codebase (visible as far back as candidate_16 and earlier), not a newly introduced functional defect, so they are not good single-commit "bug introduction" candidates. candidate_66's unused-variable issue is the clearest, most specific, and most recently introduced code defect that matches the fix.)

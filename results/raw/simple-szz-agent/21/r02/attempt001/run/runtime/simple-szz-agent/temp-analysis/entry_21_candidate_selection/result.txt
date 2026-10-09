@@ -1,0 +1,8 @@
+SELECTED: candidate_99
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a call to `spe.generateNASAThermoData();` right after `spe.setName(spe.getThermoData().getName());` inside the `Species.java` block that renames a species using the name found in the primary thermo library. The fix comment explicitly states the regeneration is needed "because these contain the species name, which we just changed" — i.e. the Chemkin-formatted NASA thermo polynomials were left containing the old species name after a rename.
+
+Searching all 101 candidates for this exact code block (`if ((p_name == null || p_name.length()==0) && p_chemGraph.fromprimarythermolibrary){ ... spe.setName(spe.getThermoData().getName()); ... }`), it only appears starting at candidate_99, which introduces the entire if-block, including the `spe.setName(...)` rename call, but WITHOUT any subsequent call to regenerate the NASA thermo data. This is precisely the missing behavior that the fix commit adds three lines later in the same location. No earlier candidate contains this code at all (it doesn't exist yet), and candidate_101 is the fix itself (matches fix_commit_diff.txt exactly), confirming candidate_99 as the sole commit that introduced the species-renaming logic without the necessary thermo regeneration step, thereby introducing the bug.

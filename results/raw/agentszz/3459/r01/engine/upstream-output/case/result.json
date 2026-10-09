@@ -1,0 +1,22 @@
+{
+  "fix_commit": "9282132c5abd230b0ff94a332e01d5c2ba876986",
+  "bic": "11b15cf907ecab5c950fa02df0c5cec2f233d4d8",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit added the call `orgDao.findByCommonName(account.getOrg()).getName()` in NewAccountFormController.java. Since the NewAccountFormControllerTest did not mock `mockOrgDao.findByCommonName(...)`, this call returned null causing a NullPointerException when `.getName()` was invoked, which is exactly the build/test failure the fix commit resolves by adding the missing mock setup for `orgDao.findByCommonName`.",
+  "metrics": {
+    "case_elapsed_seconds": 13.169947,
+    "api_elapsed_seconds": 12.965468,
+    "tool_elapsed_seconds": 0.094357,
+    "other_elapsed_seconds": 0.110129,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 15252,
+    "completion_tokens": 680,
+    "total_tokens": 15932,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:42:57.192436"
+}

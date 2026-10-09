@@ -1,0 +1,49 @@
+SELECTED: candidate_26
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit re-adds a single line to CrossflowHandler.startExperiment():
+
+    Workflow workflow = (Workflow) classLoader.loadClass(experiment.getClassName())
+            .getConstructor(Mode.class).newInstance(mode);
+-
++			workflow.getSerializer().setClassloader(classLoader);
+    workflow.setInstanceId(experimentId);
+    workflow.createBroker(false);
+
+This line propagates the custom per-experiment URLClassLoader (which loads the
+user-uploaded workflow jar) to the Workflow's Serializer (an XStream-based
+wrapper introduced to replace JMS ObjectMessage serialization). Without a
+correctly-configured classloader on the XStream serializer, messages
+containing user-defined classes cannot be deserialized correctly across the
+BuiltinStream/JobStream queues, since XStream defaults to the thread context
+classloader rather than the per-experiment classloader created for that jar.
+
+Tracing the CrossflowHandler.java history across the candidates:
+- candidate_10 is where `workflow.getSerializer().setClassloader(classLoader);`
+  was FIRST introduced, immediately after the custom URLClassLoader/Workflow
+  instantiation logic was added. It remained present and unchanged through
+  candidates 11-25 (confirmed directly in candidate_25's diff, which shows the
+  line still present in context).
+- candidate_26 performs a refactor of startExperiment(): it changes the
+  Workflow instantiation to look for the jar inside the experiment's own
+  directory and switches to a two-argument constructor
+  `getConstructor(Mode.class, ClassLoader.class).newInstance(mode, classLoader)`,
+  apparently intending for the classloader to be passed into the Workflow
+  constructor instead. In doing so, it DELETES the line
+  `workflow.getSerializer().setClassloader(classLoader);` entirely. This is
+  the first commit where the classloader is no longer set on the serializer.
+- candidate_27 reverts the constructor call back to the original single-arg
+  form `getConstructor(Mode.class).newInstance(mode)` (likely because
+  user-defined Workflow subclasses did not implement/generate the two-arg
+  constructor), but it does NOT restore the `setClassloader` call — leaving a
+  blank line in its place. This is exactly the "before" state shown in the
+  fix commit's diff context.
+- candidate_28 is functionally identical to the fix commit itself: it re-adds
+  `workflow.getSerializer().setClassloader(classLoader);` on that blank line.
+
+Since candidate_26 is the first commit that removes the working
+`setClassloader` call (candidate_27 merely preserves the regression while
+fixing an unrelated compile-signature issue), candidate_26 is the
+bug-introducing commit.

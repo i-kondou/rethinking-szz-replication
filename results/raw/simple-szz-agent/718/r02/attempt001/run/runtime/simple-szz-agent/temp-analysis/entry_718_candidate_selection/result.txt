@@ -1,0 +1,33 @@
+SELECTED: candidate_13
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit's diff (in TableFactoryRenderer.java) changes the generated factory-method call:
+
+    return Table.of(t, name, namespace, Triggers.getAllTriggers(t, sharedTriggers, triggers));
+
+to:
+
+    return Table.of(t, namespace, name, Triggers.getAllTriggers(t, sharedTriggers, triggers));
+
+i.e. it swaps the "name" (table name) and "namespace" arguments, matching them to the actual
+generated static factory method signature `of(Transaction t, Namespace namespace, String tableName, ...)`
+(the "namespace" parameter is declared before the "tableName"/"name" parameter in the generated
+Table classes' `of(...)` and constructor signatures, as seen throughout TableRenderer.java's generated
+code, e.g. `static XTable of(Transaction t, Namespace namespace, String tableName, ...)`).
+
+Searching the candidates for the buggy call pattern `t, name, namespace` shows it appears in three
+candidates: candidate_13, candidate_16, and candidate_23. Since the candidates are ordered
+chronologically, candidate_13 is the earliest occurrence and is where this line was first
+introduced (it is part of a larger commit that added Namespace support to TableFactoryRenderer,
+TableRenderer, and Schema.java, introducing the `defaultNamespace`/`namespace` field and updating
+the `of(...)` factory/constructor signatures to take `Namespace namespace` before the table name).
+In that same commit, the generated call to the per-table `of(...)` factory method was written with
+the arguments in the wrong order (`t, name, namespace` instead of `t, namespace, name`), which is
+exactly the bug later corrected by the fix commit. Candidate_16 and candidate_23 merely
+carry/refactor this pre-existing line (candidate_16 just changes `_(...)` calls to `line(...)` calls
+without altering argument order; candidate_23 is effectively the fix itself, correcting the order).
+
+Therefore candidate_13 is the commit that introduced the argument-ordering bug described in the fix
+commit message ("fixed generated table factory method argument ordering").

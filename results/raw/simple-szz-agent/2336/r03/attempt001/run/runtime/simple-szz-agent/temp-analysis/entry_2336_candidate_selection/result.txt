@@ -1,0 +1,25 @@
+SELECTED: candidate_279
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix (fix_commit_diff.txt) changes the ESC-key handling condition in Minecraft.java from
+`if (!packetHandler.isLoadingLevel){ pause(); } else { Mouse.setGrabbed(false); }`
+to
+`if (!packetHandler.isLoadingLevel || !isOnline()){ pause(); } else { Mouse.setGrabbed(false); }`.
+
+This exact `if (!packetHandler.isLoadingLevel){ ... } else { Mouse.setGrabbed(false); }` construct
+was first introduced by candidate_279. Before that commit, the ESC key handler at that location
+simply called `pause();` unconditionally. candidate_279 replaced it with the conditional logic
+that routes ESC to `Mouse.setGrabbed(false)` instead of `pause()` whenever
+`packetHandler.isLoadingLevel` is true, without considering whether the player was actually
+online/connected to a server. Since `isLoadingLevel` could be true (or not properly reset) in a
+singleplayer context, pressing ESC would never call `pause()`, meaning the pause menu would fail
+to show up in singleplayer — exactly the bug described in the fix commit message ("Fixed a bug
+which was causing the menu to not show up in singleplayer").
+
+The subsequent fix commit (matching candidate_281 in the candidate set, which is essentially
+identical to fix_commit_diff.txt) patches this by adding `|| !isOnline()` to the condition, so
+that in singleplayer (offline) the pause menu always shows regardless of the isLoadingLevel state.
+No candidate between 279 and 281 alters this specific condition, confirming candidate_279 as the
+commit that introduced the bug.

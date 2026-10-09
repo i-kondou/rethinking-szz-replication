@@ -1,0 +1,12 @@
+VERDICT: BUG_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (EA-79438 - IAE: PopupHandler.installPopupHandler, "fix initialisation order issue") moves the statement `myPopupActions = createPopupActions();` to before the `createDualView()` call inside the `FileHistoryPanelImpl` constructor in FileHistoryPanelImpl.java. In the buggy version, `createDualView()` is invoked first, followed later by `myPopupActions = createPopupActions();`, which apparently causes an IllegalArgumentException in PopupHandler.installPopupHandler because myPopupActions is not yet initialized when createDualView() (which presumably installs a popup handler) runs.
+
+Examining files/old/.../FileHistoryPanelImpl.java, the constructor contains the exact same ordering as the buggy version:
+1. `createDualView();` (and the `isStaticEmbedded` check) at approximately line 400-403
+2. `myPopupActions = createPopupActions();` afterward at line 405
+
+This is the identical faulty initialization order that the fix commit corrects. No other relevant differences between old and buggy exist in this region that would affect the presence of the bug (other surrounding code differs slightly, e.g., Alarm thread type, hyperlink listener construction, but these are unrelated to the popup handler initialization order bug). Therefore, the bug is present in the old version.

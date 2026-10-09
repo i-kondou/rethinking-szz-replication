@@ -1,0 +1,13 @@
+SELECTED: candidate_01
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit renames src/test/java/com/github/piotr/rusin/yule/YuleApplicationTests.java to src/test/java/com/github/piotr_rusin/yule/YuleApplicationTests.java, changing the package declaration line from `package com.github.piotr.rusin.yule;` to `package com.github.piotr_rusin.yule;`. This mismatch caused Spring Boot's test context to fail to locate the application configuration, since the main application class lives under the `com.github.piotr_rusin.yule` package while the test class was left in the sibling `com.github.piotr.rusin.yule` package (a dot instead of an underscore, inconsistent with the project's actual groupId `com.github.piotr-rusin.yule`).
+
+Tracing the exact line that the fix changes:
+- candidate_01 is the initial commit that creates both YuleApplication.java and YuleApplicationTests.java under the package `com.github.piotr.rusin.yule`. This is where the line `package com.github.piotr.rusin.yule;` in the test file was first introduced.
+- candidate_02 only adds a license header to the top of the (already existing) test file; the package declaration line itself is untouched context in that diff — it is not modified, so git-blame still attributes it to candidate_01. Notably, by the time of candidate_02, the main source files had already been moved to `com.github.piotr_rusin.yule` (elsewhere, not shown in these three candidates), but the test file's package was never updated to match, meaning the bug (package mismatch) already existed as soon as candidate_01's test file diverged in naming convention from the true intended package name.
+- candidate_03 is identical to the fix commit itself (the rename), so it cannot be the bug-introducing commit.
+
+Since the exact buggy line (`package com.github.piotr.rusin.yule;`) was created in candidate_01 and never modified afterward until the fix, candidate_01 is the commit that introduced the problematic package declaration that later caused the test initialization failure.

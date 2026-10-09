@@ -1,0 +1,17 @@
+SELECTED: candidate_11
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes two lines in `PatriciaTreeMutable.java`'s private static `reclaim(source, actual)` method, replacing references to a local variable `sourceNode` with `source.currentNode`:
+  - `sourceNode.getChildren(actItr.next())` -> `source.currentNode.getChildren(actItr.next())`
+  - `srcItr = sourceNode.keySequence.iterator()` -> `srcItr = source.currentNode.keySequence.iterator()`
+
+Both of these usages occur AFTER `source.moveDown()` is called earlier in the same branch of the loop, which mutates `source.currentNode` to point to a new (child) node. Using a stale cached `sourceNode` reference instead of the live `source.currentNode` means the traversal keeps operating on the old node instead of the node it just moved down into — a classic stale-reference/aliasing bug that would manifest as "weird" incorrect behavior during tree reclaim (matching the fix commit message "fix weird reclaim bug").
+
+Examining candidate_11.diff, it contains a large refactor of the reclaim path in `PatriciaTreeMutable.java` where the local variables `actualNode` and `sourceNode` are introduced at the top of the `reclaim(source, actual)` method:
+  `final NodeBase actualNode = actual.currentNode;`
+  `final NodeBase sourceNode = source.currentNode;`
+and the surrounding code, which previously called `source.currentNode.keySequence.iterator()` / `source.currentNode.getChildren(...)` directly (always reading the live, current node), was changed to use the cached `sourceNode` variable instead. This is exactly the opposite change of the fix, meaning candidate_11 is where the stale-reference bug was introduced.
+
+Candidate_12, the only other candidate mentioning `sourceNode`, is a much later commit whose relevant hunk is already identical to the fix commit's diff (i.e., it already uses `source.currentNode` in these spots), so it cannot be the introducing commit — the bug was already fixed/not present in that version's context, or that specific hunk in candidate_12 is unrelated/already-corrected code. No other candidate (01-10) introduces or touches the `sourceNode` local variable in this method, confirming candidate_11 as the sole point where the buggy caching pattern was introduced into `reclaim(source, actual)`.

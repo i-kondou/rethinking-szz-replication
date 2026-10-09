@@ -1,0 +1,22 @@
+{
+  "fix_commit": "fb5db894da2532b3ff6d7aa464114567437dc5b4",
+  "bic": "88ddbe5ac6ac5aa0f18ade50aa376b25546fb058",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit refactored onFoodLevelChange and dropped the previous `!arena.inArena((Player) event.getEntity())` check that ensured only players actually in the arena were affected by the food-level lock. After this change, when `arena.isRunning()` and `lockFoodLevel` is true, the event is cancelled for the given player regardless of whether they are actually in the arena, affecting everyone on the server. The fix commit directly restores this missing check by adding `arena.inArena(p) &&` to the condition.",
+  "metrics": {
+    "case_elapsed_seconds": 7.877071,
+    "api_elapsed_seconds": 7.717843,
+    "tool_elapsed_seconds": 0.060082,
+    "other_elapsed_seconds": 0.099151,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 13389,
+    "completion_tokens": 589,
+    "total_tokens": 13978,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:28:26.085124"
+}

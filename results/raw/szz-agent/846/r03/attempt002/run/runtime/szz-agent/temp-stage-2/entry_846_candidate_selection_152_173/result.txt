@@ -1,0 +1,48 @@
+SELECTED: candidate_09
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit wraps an existing block of code in DisplayControlImpl.java's
+initSharable-related method with a new `if (myDataChoices != null)` guard,
+protecting against a NullPointerException when `myDataChoices` is null and
+its `.size()` method is called.
+
+The exact block being guarded is:
+
+    if (myDataChoices.size() > 0
+            && myDataChoices.get(0) instanceof DerivedDataChoice) {
+        List cdcs = ((DerivedDataChoice) myDataChoices.get(0)).getChoices();
+        if (cdcs.size() > 0) {
+            DataChoice dc = (DataChoice) cdcs.get(0);
+            DataSelection ds = dc.getDataSelection();
+            if (ds != null) {
+                ...
+                this.usesTimeDriver = ((Boolean) ud1).booleanValue();
+            }
+        }
+    }
+
+This code was introduced verbatim (unformatted, with the same logic) in
+candidate_09, which adds:
+
+    if(myDataChoices.size() > 0 && myDataChoices.get(0) instanceof DerivedDataChoice){
+        List cdcs = ((DerivedDataChoice)myDataChoices.get(0)).getChoices();
+        if(cdcs.size() > 0)  {
+            DataChoice dc = (DataChoice)cdcs.get(0);
+            DataSelection ds = dc.getDataSelection();
+            if(ds != null){
+                ...
+                this.usesTimeDriver = ((Boolean)ud1).booleanValue();
+            }
+        }
+    }
+
+with no null check on `myDataChoices` itself before calling `.size()`.
+Candidate_10 and candidate_11 only reformat this same block (whitespace,
+parentheses, added conditions on `dtimes`) but never add a null check for
+`myDataChoices`, so the NPE risk persists unchanged from candidate_09 all the
+way through to the fix commit. Since `myDataChoices` can be null in this
+code path (e.g., before `setDataChoices` populates it, or after it is reset),
+candidate_09 is the commit that introduced the bug fixed later by adding the
+`myDataChoices != null` guard.

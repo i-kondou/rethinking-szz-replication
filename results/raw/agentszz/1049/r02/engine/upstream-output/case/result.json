@@ -1,0 +1,22 @@
+{
+  "fix_commit": "7c5e119134c20141b7af1322d08cca0d047d1e34",
+  "bic": "86013dc9f8cf02813418f41c3c49c745f9ee6ea5",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit refactored the ImplicitLinkedHashCollection iterator's remove() method, replacing the correct call to `removeElementAtSlot()` (which properly maintains the hash table's denseness invariant by moving other elements as needed) with a call to `removeFromList()` combined with manual `size--`. This broke the invariant when removing elements via the iterator, which is exactly the bug the fix commit (7c5e119134c2) corrects by restoring the call to `removeElementAtSlot()`.",
+  "metrics": {
+    "case_elapsed_seconds": 9.374893,
+    "api_elapsed_seconds": 9.187797,
+    "tool_elapsed_seconds": 0.094358,
+    "other_elapsed_seconds": 0.092744,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 17459,
+    "completion_tokens": 672,
+    "total_tokens": 18131,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:16:19.238410"
+}

@@ -1,0 +1,50 @@
+SELECTED: candidate_125
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes ArenaListener.onFoodLevelChange() so that, inside the
+`if (arena.isRunning())` branch, the event is only cancelled when
+`arena.inArena(p) && lockFoodLevel`, instead of just `lockFoodLevel`. Without
+the `inArena` check, the food-level lock applied to every player on the
+server whenever any arena was running, not just players actually inside the
+arena.
+
+Tracing the history of this method:
+
+- In candidate_04/candidate_05 (initial ArenaListener implementation) and in
+  subsequent revisions up through candidate_97, onFoodLevelChange() used an
+  early-return guard:
+      if (!arena.isRunning()) return;
+      if (!(event.getEntity() instanceof Player) || !arena.inArena((Player) event.getEntity()))
+          return;
+      if (lockFoodLevel) event.setCancelled(true);
+  This version correctly required the player to be `inArena` before cancelling.
+
+- candidate_125 refactors this method (to add "food levels no longer deplete
+  for players in lobby/spectator area", per its changelog entry) into:
+      if (!(event.getEntity() instanceof Player)) return;
+      Player p = (Player) event.getEntity();
+      if (arena.isRunning()) {
+          if (lockFoodLevel) {
+              event.setCancelled(true);
+          }
+      } else {
+          if (arena.inLobby(p) || arena.inSpec(p)) {
+              event.setCancelled(true);
+          }
+      }
+  In this rewrite, the `arena.inArena(p)` check that previously guarded the
+  `isRunning()` branch was dropped entirely — only `lockFoodLevel` is checked.
+  This is precisely the bug the fix commit addresses: the `isRunning()`
+  branch cancels food level changes for ALL players, not just those in the
+  arena, when lockFoodLevel is enabled.
+
+- candidate_128 is actually the fix commit itself (its diff hashes
+  9400d87..59c3b49 are identical to fix_commit_diff.txt), confirming that the
+  buggy code state (`if (arena.isRunning()) { if (lockFoodLevel) {...} }`
+  without the inArena check) persisted unchanged from candidate_125 all the
+  way to the fix, with no other candidate modifying onFoodLevelChange's logic
+  in between.
+
+Therefore candidate_125 is the commit that introduced the bug.

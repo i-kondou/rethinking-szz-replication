@@ -1,0 +1,478 @@
+diff --git a/res/menu/reading_menu.xml b/res/menu/reading_menu.xml
+index 89d14ba..97fa406 100644
+--- a/res/menu/reading_menu.xml
++++ b/res/menu/reading_menu.xml
+@@ -49,6 +49,11 @@
+           android:icon="@drawable/zoom"
+           />
+ 
++    <item android:id="@+id/show_highlights"
++          android:title="@string/highlights"
++
++            />
++
+     
+     <item android:id="@+id/preferences"          
+           android:title="@string/prefs" 
+diff --git a/res/values/strings.xml b/res/values/strings.xml
+index ddebf6a..30baeb8 100644
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -168,11 +168,15 @@
+     <string name="out_of_memory">Sorry, PageTurner could not free enough memory to load this file.</string>
+ 
+     <string name="highlight">Highlight</string>
++    <string name="highlights">Highlights</string>
++
+     <string name="highlight_options">Highlight options</string>
+     <string name="text_note">Text note</string>
+     <string name="clear_note">Clear note</string>
+     <string name="save_note">Save note</string>
+ 
++    <string name="page_number_of">Page %1$d of %2$d</string>
++
+     <string-array name="highlightOptionsLabels">
+         <item>Remove highlight</item>
+         <item>Highlight colour…</item>
+diff --git a/src/net/nightwhistler/pageturner/activity/ReadingFragment.java b/src/net/nightwhistler/pageturner/activity/ReadingFragment.java
+index 4a4bfdd..db95a40 100644
+--- a/src/net/nightwhistler/pageturner/activity/ReadingFragment.java
++++ b/src/net/nightwhistler/pageturner/activity/ReadingFragment.java
+@@ -1227,11 +1227,17 @@ public class ReadingFragment extends RoboSherlockFragment implements
+ 	}
+ 
+ 	@Override
+-	public void highLight(int from, int to) {
++	public void highLight(int from, int to, String selectedText) {
+ 
+         int pageStart = bookView.getStartOfCurrentPage();
+ 
+-        this.highlightManager.registerHighlight(fileName, bookView.getIndex(),
++        String text = selectedText;
++
++        if ( text.length() > 40 ) {
++            text = text.substring(0, 40) + "…";
++        }
++
++        this.highlightManager.registerHighlight(fileName, text, bookView.getIndex(),
+                 pageStart + from, pageStart + to);
+ 
+         bookView.update();
+@@ -2024,6 +2030,7 @@ public class ReadingFragment extends RoboSherlockFragment implements
+ 		tts.setEnabled(ttsAvailable);
+ 
+         MenuItem searchResultsItem = menu.findItem(R.id.show_search_results);
++        MenuItem highLightsItem = menu.findItem(R.id.show_highlights);
+ 		
+ 		getSherlockActivity().getSupportActionBar().show();
+ 
+@@ -2045,6 +2052,7 @@ public class ReadingFragment extends RoboSherlockFragment implements
+ 		}
+ 
+         searchResultsItem.setVisible( searchResults != null && searchResults.size() > 0 );
++        highLightsItem.setVisible( highlightManager.getHighLights( bookView.getFileName() ).size() > 0 );
+ 
+ 		getActivity().getWindow().addFlags(
+ 				WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+@@ -2171,6 +2179,11 @@ public class ReadingFragment extends RoboSherlockFragment implements
+         case R.id.show_search_results:
+             showSearchResultDialog(searchResults);
+             return true;
++
++        case R.id.show_highlights:
++            showHighLightDialog();
++            return true;
++
+ 		case R.id.profile_night:
+ 			config.setColourProfile(ColourProfile.NIGHT);
+ 			this.restartActivity();
+@@ -2228,12 +2241,7 @@ public class ReadingFragment extends RoboSherlockFragment implements
+ 			dialogFactory.buildAboutDialog().show();
+ 			return true;	
+ 
+-        /*
+-		case R.id.enable_text_selection:
+-			this.bookView.setTextSelectionEnabled(true);
+-			Toast.makeText(getActivity(), R.string.select_text_msg, Toast.LENGTH_SHORT).show();
+-			return true;
+-			*/
++
+ 
+ 		default:
+ 			return super.onOptionsItemSelected(item);
+@@ -2563,7 +2571,7 @@ public class ReadingFragment extends RoboSherlockFragment implements
+                     searchProgress.setMessage(update);
+                 }
+ 
+-                searchProgress.setProgress(res.getPercentage());
++                searchProgress.setProgress( bookView.getPercentageFor(res.getIndex(), res.getStart() ));
+             }
+ 
+             @Override
+@@ -2662,6 +2670,21 @@ public class ReadingFragment extends RoboSherlockFragment implements
+ 		dialog.show();
+ 	}
+ 
++    private void showHighLightDialog() {
++        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
++        builder.setTitle(R.string.highlights);
++
++        HighLightAdapter adapter = new HighLightAdapter(getActivity(), bookView,
++                highlightManager.getHighLights( bookView.getFileName() ));
++
++        builder.setAdapter(adapter, adapter);
++
++        AlertDialog dialog = builder.create();
++        dialog.setOwnerActivity(getActivity());
++
++        dialog.show();
++    }
++
+ 	private class ManualProgressSync extends
+ 			AsyncTask<Void, Integer, List<BookProgress>> {
+ 
+diff --git a/src/net/nightwhistler/pageturner/dto/HighLight.java b/src/net/nightwhistler/pageturner/dto/HighLight.java
+index 5fc2c44..e8236d4 100644
+--- a/src/net/nightwhistler/pageturner/dto/HighLight.java
++++ b/src/net/nightwhistler/pageturner/dto/HighLight.java
+@@ -16,23 +16,24 @@ import java.util.List;
+  */
+ public class HighLight {
+ 
+-    private static enum Fields { textNote, index, start, end, color };
++    private static enum Fields { displayText, textNote, index, start, end, color };
+ 
+-    private String fileName;
+     private String textNote;
+ 
++    private String displayText;
++
+     private int index;
+     private int start;
+     private int end;
+ 
+     private int color;
+ 
+-    public HighLight( String fileName, int index, int start, int end, int color ) {
+-        this.fileName = fileName;
++    public HighLight( String displayText, int index, int start, int end, int color ) {
+         this.start = start;
+         this.end =  end;
+         this.index = index;
+         this.color = color;
++        this.displayText = displayText;
+     }
+ 
+     public int getIndex() {
+@@ -63,8 +64,8 @@ public class HighLight {
+         return textNote;
+     }
+ 
+-    public String getFileName() {
+-        return fileName;
++    public String getDisplayText() {
++        return this.displayText;
+     }
+ 
+     public static String toJSON( List<HighLight> highLights ) {
+@@ -78,6 +79,7 @@ public class HighLight {
+                 jsonObject.put( Fields.start.name(), highLight.getStart() );
+                 jsonObject.put( Fields.end.name(), highLight.getEnd() );
+                 jsonObject.put( Fields.color.name(), highLight.getColor() );
++                jsonObject.put( Fields.displayText.name(), highLight.getDisplayText() );
+ 
+                 if ( highLight.getTextNote() != null ) {
+                     jsonObject.put( Fields.textNote.name(), highLight.getTextNote() );
+@@ -103,7 +105,8 @@ public class HighLight {
+ 
+                 JSONObject json = jsonArray.getJSONObject(i);
+ 
+-                HighLight highLight = new HighLight(fileName,
++                HighLight highLight = new HighLight(
++                        json.getString(Fields.displayText.name()),
+                         json.getInt(Fields.index.name()),
+                         json.getInt(Fields.start.name()),
+                         json.getInt(Fields.end.name()),
+diff --git a/src/net/nightwhistler/pageturner/tasks/SearchTextTask.java b/src/net/nightwhistler/pageturner/tasks/SearchTextTask.java
+index 296531f..4897b1a 100644
+--- a/src/net/nightwhistler/pageturner/tasks/SearchTextTask.java
++++ b/src/net/nightwhistler/pageturner/tasks/SearchTextTask.java
+@@ -72,10 +72,8 @@ public class SearchTextTask extends AsyncTask<String, SearchTextTask.SearchResul
+ 			for ( int index=0; index < spine.size(); index++ ) {
+ 				
+ 				spine.navigateByIndex(index);
+-				
+-				int progress = spine.getProgressPercentage(index, 0);
+-								
+-				publishProgress( new SearchResult(null, index, 0, 0, progress) );
++
++				publishProgress( new SearchResult(null, index, 0, 0) );
+ 				
+ 				Spanned spanned = spanner.fromHtml(spine.getCurrentResource().getReader());				
+ 				Matcher matcher = pattern.matcher(spanned);
+@@ -89,8 +87,7 @@ public class SearchTextTask extends AsyncTask<String, SearchTextTask.SearchResul
+ 					}
+ 					
+ 					String text = "…" + spanned.subSequence(from, to).toString().trim() + "…";
+-					SearchResult res = new SearchResult(text, index, matcher.start(), matcher.end(),
+-							spine.getProgressPercentage(index, matcher.start()));
++					SearchResult res = new SearchResult(text, index, matcher.start(), matcher.end());
+ 					
+ 					this.publishProgress( res );
+ 					result.add(res);
+@@ -110,15 +107,13 @@ public class SearchTextTask extends AsyncTask<String, SearchTextTask.SearchResul
+ 		private int index;
+ 		private int start;
+ 		private int end;
++
+ 		
+-		private int percentage;
+-		
+-		public SearchResult(String display, int index, int offset, int end, int percentage ) {
++		public SearchResult(String display, int index, int offset, int end) {
+ 			this.display = display;
+ 			this.index = index;
+ 			this.start = offset;
+ 			this.end = end;
+-			this.percentage = percentage;
+ 		}
+ 		
+ 		public String getDisplay() {
+@@ -137,10 +132,6 @@ public class SearchTextTask extends AsyncTask<String, SearchTextTask.SearchResul
+ 			return end;
+ 		}
+ 		
+-		public int getPercentage() {
+-			return percentage;
+-		}
+-		
+ 	}
+ 	
+ 	private static class DummyHandler extends TagNodeHandler {
+diff --git a/src/net/nightwhistler/pageturner/view/HighLightAdapter.java b/src/net/nightwhistler/pageturner/view/HighLightAdapter.java
+new file mode 100644
+index 0000000..5ed5fd3
+--- /dev/null
++++ b/src/net/nightwhistler/pageturner/view/HighLightAdapter.java
+@@ -0,0 +1,109 @@
++/*
++ * Copyright (C) 2011 Alex Kuiper
++ * 
++ * This file is part of PageTurner
++ *
++ * PageTurner is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation, either version 3 of the License, or
++ * (at your option) any later version.
++ *
++ * PageTurner is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with PageTurner.  If not, see <http://www.gnu.org/licenses/>.*
++ */
++
++package net.nightwhistler.pageturner.view;
++
++import android.content.Context;
++import android.content.DialogInterface;
++import android.graphics.Color;
++import android.os.Build;
++import android.view.LayoutInflater;
++import android.view.View;
++import android.view.ViewGroup;
++import android.widget.ArrayAdapter;
++import android.widget.TextView;
++import net.nightwhistler.pageturner.PlatformUtil;
++import net.nightwhistler.pageturner.R;
++import net.nightwhistler.pageturner.dto.HighLight;
++import net.nightwhistler.pageturner.tasks.SearchTextTask;
++import net.nightwhistler.pageturner.view.bookview.BookView;
++
++import java.util.List;
++
++/**
++ * ListAdapter class for search results.
++ * 
++ * @author Alex Kuiper
++ *
++ */
++public class HighLightAdapter extends ArrayAdapter<HighLight> implements
++	DialogInterface.OnClickListener {
++
++	private List<HighLight> highLights;
++	private BookView bookView;
++
++	public HighLightAdapter(Context context, BookView bookView,
++                            List<HighLight> highLights) {
++		super(context, R.id.deviceName, highLights);
++		this.highLights = highLights;
++		this.bookView = bookView;	
++	}
++
++	@Override
++	public void onClick(DialogInterface dialog, int which) {
++		HighLight highLight = this.highLights.get(which);
++        bookView.navigateTo( highLight.getIndex(), highLight.getStart() );
++	}
++
++	@Override
++	public View getView(int position, View convertView, ViewGroup parent) {
++
++		View rowView;
++
++		if ( convertView == null ) {
++			LayoutInflater inflater = PlatformUtil.getLayoutInflater(getContext());
++
++			rowView = inflater.inflate(R.layout.progress_row, parent, false);
++		} else {
++			rowView = convertView;
++		}
++
++		TextView deviceView = (TextView) rowView.findViewById(R.id.deviceName);
++		TextView percentageView = (TextView) rowView.findViewById(R.id.timeStamp );
++				
++		if ( Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB ) {
++			deviceView.setTextColor( Color.BLACK );
++			percentageView.setTextColor( Color.BLACK );			
++		}
++			
++		HighLight highLight = highLights.get(position);
++
++		deviceView.setText( highLight.getDisplayText() );
++
++        int progressPercentage = bookView.getPercentageFor(highLight.getIndex(), highLight.getStart() );
++        int pageNumber = bookView.getPageNumberFor(highLight.getIndex(), highLight.getStart() );
++        int totalPages = bookView.getTotalNumberOfPages();
++
++        String text = progressPercentage + "%";
++
++        if ( pageNumber != -1 ) {
++            text = String.format( getContext().getString(R.string.page_number_of),
++                    pageNumber, totalPages ) + " (" + progressPercentage + "%)";
++        }
++
++        if ( highLight.getTextNote() != null && highLight.getTextNote().trim().length() > 0 ) {
++            text += ": " + highLight.getTextNote();
++        }
++
++        percentageView.setText( text );
++
++		return rowView;
++
++	}
++}
+diff --git a/src/net/nightwhistler/pageturner/view/HighlightManager.java b/src/net/nightwhistler/pageturner/view/HighlightManager.java
+index 280483c..41d856c 100644
+--- a/src/net/nightwhistler/pageturner/view/HighlightManager.java
++++ b/src/net/nightwhistler/pageturner/view/HighlightManager.java
+@@ -23,18 +23,22 @@ public class HighlightManager {
+     private Configuration config;
+ 
+     private void updateBookFile( String fileName ) {
+-        if ( ! fileName.equals(currentFileName) ) {
++
++        if ( fileName == null ) {
++            this.currentHighlights = new ArrayList<HighLight>();
++        } else if ( ! fileName.equals(currentFileName) ) {
+             saveHighLights();
+             this.currentFileName = fileName;
+             this.currentHighlights = config.getHightLights(fileName);
+         }
++
+     }
+ 
+-    public synchronized  void registerHighlight( String bookFile, int index, int start, int end ) {
++    public synchronized  void registerHighlight( String bookFile, String displayText, int index, int start, int end ) {
+ 
+         updateBookFile(bookFile);
+ 
+-        currentHighlights.add(new HighLight(bookFile, index, start, end, Color.YELLOW));
++        currentHighlights.add(new HighLight(displayText, index, start, end, Color.YELLOW));
+         saveHighLights();
+     }
+ 
+diff --git a/src/net/nightwhistler/pageturner/view/SearchResultAdapter.java b/src/net/nightwhistler/pageturner/view/SearchResultAdapter.java
+index 9a2d8e8..8c099da 100644
+--- a/src/net/nightwhistler/pageturner/view/SearchResultAdapter.java
++++ b/src/net/nightwhistler/pageturner/view/SearchResultAdapter.java
+@@ -83,7 +83,19 @@ public class SearchResultAdapter extends ArrayAdapter<SearchTextTask.SearchResul
+ 		SearchTextTask.SearchResult progress = results.get(position);
+ 
+ 		deviceView.setText( progress.getDisplay() );
+-		percentageView.setText( progress.getPercentage() + "%" );
++
++        int progressPercentage = bookView.getPercentageFor(progress.getIndex(), progress.getStart() );
++        int pageNumber = bookView.getPageNumberFor(progress.getIndex(), progress.getStart() );
++        int totalPages = bookView.getTotalNumberOfPages();
++
++        String text = progressPercentage + "%";
++
++        if ( pageNumber != -1 ) {
++            text = String.format( getContext().getString(R.string.page_number_of),
++                    pageNumber, totalPages ) + " (" + progressPercentage + "%)";
++        }
++
++        percentageView.setText( text );
+ 
+ 		return rowView;
+ 
+diff --git a/src/net/nightwhistler/pageturner/view/bookview/BookView.java b/src/net/nightwhistler/pageturner/view/bookview/BookView.java
+index bcb72cf..b6496b4 100644
+--- a/src/net/nightwhistler/pageturner/view/bookview/BookView.java
++++ b/src/net/nightwhistler/pageturner/view/bookview/BookView.java
+@@ -1033,6 +1033,12 @@ public class BookView extends ScrollView implements LinkTagHandler.LinkCallBack
+ 		}
+ 	}
+ 
++    public int getPercentageFor( int index, int offset ) {
++        return spine.getProgressPercentage(index, offset);
++    }
++
++
++
+ 	private void progressUpdate() {
+ 
+ 		if (this.spine != null && this.strategy.getText() != null
+@@ -1059,7 +1065,13 @@ public class BookView extends ScrollView implements LinkTagHandler.LinkCallBack
+ 			}
+ 		}
+ 	}
+-	
++
++
++    public int getTotalNumberOfPages() {
++        return spine.getTotalNumberOfPages();
++    }
++
++
+ 	public int getPageNumberFor( int index, int position ) {
+ 		
+ 		int pageNum = 0;
+diff --git a/src/net/nightwhistler/pageturner/view/bookview/TextSelectionActions.java b/src/net/nightwhistler/pageturner/view/bookview/TextSelectionActions.java
+index 3a8c3ec..a59991e 100644
+--- a/src/net/nightwhistler/pageturner/view/bookview/TextSelectionActions.java
++++ b/src/net/nightwhistler/pageturner/view/bookview/TextSelectionActions.java
+@@ -58,7 +58,7 @@ public class TextSelectionActions implements ActionMode.Callback {
+                 .setOnMenuItemClickListener(new OnMenuItemClickListener() {
+                     @Override
+                     public boolean onMenuItemClick(android.view.MenuItem item) {
+-                        callBack.highLight(bookView.getSelectionStart(), bookView.getSelectionEnd());
++                        callBack.highLight(bookView.getSelectionStart(), bookView.getSelectionEnd(), bookView.getSelectedText());
+                         mode.finish();
+                         return true;
+                     }
+diff --git a/src/net/nightwhistler/pageturner/view/bookview/TextSelectionCallback.java b/src/net/nightwhistler/pageturner/view/bookview/TextSelectionCallback.java
+index 28d071c..8faf56f 100644
+--- a/src/net/nightwhistler/pageturner/view/bookview/TextSelectionCallback.java
++++ b/src/net/nightwhistler/pageturner/view/bookview/TextSelectionCallback.java
+@@ -33,6 +33,6 @@ public interface TextSelectionCallback {
+ 	
+ 	boolean isDictionaryAvailable();
+ 	
+-	void highLight( int from, int to);
++	void highLight( int from, int to, String selectedText );
+ 	
+ }

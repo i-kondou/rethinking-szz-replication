@@ -1,0 +1,15 @@
+SELECTED: candidate_25
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single line, `filesFromThisSite.clear();`, at the start of `XMLFileReader.read()`, right after `this.updateSite = updateSite;`. The commit message states this fixes a bug that "would prevent any shadowing (update sites overriding other update sites' files)".
+
+Candidate_25 is where the `filesFromThisSite` field and all of the logic depending on it were introduced. In that commit:
+- A new field `protected Set<FileObject> filesFromThisSite = new HashSet<FileObject>();` is added to `XMLFileReader`.
+- The old shadowing check `if ((updateSite != null && updateSite.equals(file.updateSite)) || (updateSite == null && file.updateSite == null))` — which compared the *current* update site being parsed against the file's recorded update site — is replaced by `if (filesFromThisSite.contains(file))`.
+- Every place that previously called `files.add(...)` now also calls `filesFromThisSite.add(...)`.
+
+The problem: `filesFromThisSite` is initialized once as an instance field and is never cleared when `read()` is invoked again for a different update site (the `XMLFileReader` instance is reused across multiple `read()` calls, once per update site, as seen in `FilesCollection`/`XMLFileDownloader` usage). This means that once a file is added to `filesFromThisSite` while parsing one site's XML, it remains "seen as from this site" forever, even when a later site's XML is parsed. As a result, when a second update site provides a file with the same name, `filesFromThisSite.contains(file)` incorrectly returns true (treating it as belonging to the same site being parsed), so the code takes the "same site, just update" branch instead of the shadowing/override branch — meaning one update site's files can never properly shadow/override another's, exactly matching the described bug ("would prevent any shadowing").
+
+The fix simply clears `filesFromThisSite` at the top of `read()`, so the set only reflects files seen for the update site currently being parsed, restoring correct shadowing behavior. Since this field and logic did not exist before candidate_25, and the bug is intrinsic to how the field is (mis)managed, candidate_25 is the commit that introduced the bug.

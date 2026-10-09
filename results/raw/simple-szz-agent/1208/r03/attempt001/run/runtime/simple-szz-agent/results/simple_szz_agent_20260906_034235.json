@@ -1,0 +1,460 @@
+{
+  "metadata": {
+    "timestamp": "20260906_034235",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 84.462,
+      "max": 84.462,
+      "mean": 84.462,
+      "median": 84.462,
+      "total": 84.462,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 84.337,
+      "max": 84.337,
+      "mean": 84.337,
+      "median": 84.337,
+      "total": 84.337,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 24,
+      "max": 24,
+      "mean": 24,
+      "median": 24,
+      "total": 24,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 9610,
+      "max": 9610,
+      "mean": 9610,
+      "median": 9610,
+      "total": 9610,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 49457,
+      "max": 49457,
+      "mean": 49457,
+      "median": 49457,
+      "total": 49457,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 231117,
+      "max": 231117,
+      "mean": 231117,
+      "median": 231117,
+      "total": 231117,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.5102871,
+      "max": 0.5102871,
+      "mean": 0.5102871,
+      "median": 0.5102871,
+      "total": 0.5102871,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 23,
+      "max": 23,
+      "mean": 23,
+      "median": 23,
+      "total": 23,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 4,
+      "Grep": 18,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 49,
+      "max": 49,
+      "mean": 49,
+      "median": 49,
+      "total": 49,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "1208",
+      "fix_commit_hash": "04a68cf8a934f27cd6c59fee3267ff17751bd9db",
+      "ground_truth_bics": [
+        "acef72c39cbf097729924faebb8b92c825642e33"
+      ],
+      "predicted_bics": [
+        "4516bc398890e38238d02b4a1f5fe1440f107ea9"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "1208",
+      "fix_commit": "04a68cf8a934f27cd6c59fee3267ff17751bd9db",
+      "ground_truth_bics": [
+        "acef72c39cbf097729924faebb8b92c825642e33"
+      ],
+      "total_candidates": 49,
+      "gt_in_candidates": true,
+      "selected_commit": "4516bc398890e38238d02b4a1f5fe1440f107ea9",
+      "selected_index": 39,
+      "confidence": "HIGH",
+      "explanation": "The fix commit resolves a bug where the saved SpimDataFilteringAndGrouping object was discarded (set to null) before it could be used by the asynchronous global optimization triggered from StitchingExplorerPanel. The fix wraps the line `savedFilteringAndGrouping = null;` (in StitchingExplorerPanel.java, right after `globalOptPopup.doClick();`) inside an `else` branch, so it only nulls the field when global optimization was NOT triggered; when it was triggered, the responsibility for clearing the",
+      "is_correct": false,
+      "num_files_touched_by_fix": 2,
+      "num_source_files_touched_by_fix": 2,
+      "files_analyzed": [
+        "src/main/java/gui/StitchingExplorerPanel.java",
+        "src/main/java/gui/popup/OptimizeGloballyPopupExpertBatch.java"
+      ],
+      "call_stats": {
+        "duration_s": 84.462,
+        "duration_api_s": 84.337,
+        "num_turns": 24,
+        "input_tokens": 20,
+        "output_tokens": 9610,
+        "cache_creation_input_tokens": 49457,
+        "cache_read_input_tokens": 231117,
+        "total_cost_usd": 0.5102871,
+        "total_tool_calls": 23,
+        "tool_calls_by_name": {
+          "Read": 4,
+          "Grep": 18,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1425,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1705,
+            "cache_read_input_tokens": 9707,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "savedFilteringAndGrouping|globalOptPopup|SpimDataFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 774,
+            "cache_read_input_tokens": 11412,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "savedFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_10.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "savedFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_14.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "savedFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_19.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "savedFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_20.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "savedFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_24.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "savedFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_27.diff",
+                  "output_mode": "content",
+                  "-C": 15
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1884,
+            "cache_read_input_tokens": 12186,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "savedFilteringAndGrouping|globalOptPopup|SpimDataFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_10.diff",
+                  "output_mode": "content",
+                  "-C": 20
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "savedFilteringAndGrouping|globalOptPopup|SpimDataFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_14.diff",
+                  "output_mode": "content",
+                  "-C": 20
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "savedFilteringAndGrouping|globalOptPopup|SpimDataFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_19.diff",
+                  "output_mode": "content",
+                  "-C": 20
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "savedFilteringAndGrouping|globalOptPopup|SpimDataFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_20.diff",
+                  "output_mode": "content",
+                  "-C": 20
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "savedFilteringAndGrouping|globalOptPopup|SpimDataFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_24.diff",
+                  "output_mode": "content",
+                  "-C": 20
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "savedFilteringAndGrouping|globalOptPopup|SpimDataFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_27.diff",
+                  "output_mode": "content",
+                  "-C": 20
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 23594,
+            "cache_read_input_tokens": 14070,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "SavedFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 650,
+            "cache_read_input_tokens": 37664,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "SavedFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_40.diff",
+                  "output_mode": "content",
+                  "-C": 10
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "SavedFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_41.diff",
+                  "output_mode": "content",
+                  "-C": 10
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "SavedFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_45.diff",
+                  "output_mode": "content",
+                  "-C": 10
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "SavedFilteringAndGrouping",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_49.diff",
+                  "output_mode": "content",
+                  "-C": 10
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 6867,
+            "cache_read_input_tokens": 38314,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/candidates/candidate_40.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 5722,
+            "cache_read_input_tokens": 45181,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1208/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1208_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_40\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit resolves a bug where the saved SpimDataFilteringAndGrouping object was discarded (set to null) before it could be used by the asynchronous global optimization triggered from StitchingExplorerPanel. The fix wraps the line `savedFilteringAndGrouping = null;` (in StitchingExplorerPanel.java, right after `globalOptPopup.doClick();`) inside an `else` branch, so it only nulls the field when global optimization was NOT triggered; when it was triggered, the responsibility for clearing the field is moved to OptimizeGloballyPopupExpertBatch (setSavedFilteringAndGrouping(null) after the async work completes).\n\nCandidate_40 is the commit that originally introduced this exact code. It adds:\n1. The `savedFilteringAndGrouping` field to StitchingExplorerPanel.\n2. The logic that, when leaving link/preview mode with `doGlobalOpt == true`, calls `globalOptPopup.doClick()` to kick off OptimizeGloballyPopupExpertBatch (which runs its work, including the actual global optimization, in a background pattern), and then unconditionally executes `savedFilteringAndGrouping = null;` immediately afterward.\n3. The corresponding getter/setter and the consumption of `getSavedFilteringAndGrouping()` in OptimizeGloballyPopupExpertBatch.\n\nBecause `doClick()` triggers processing that (as of a later commit, candidate_49) runs asynchronously in its own thread, the immediate unconditional nulling of `savedFilteringAndGrouping` in StitchingExplorerPanel races with and can precede the async consumption of that same field inside OptimizeGloballyPopupExpertBatch, causing the saved filtering/grouping data to be lost before use. This is exactly the bug the fix commit addresses, and the removed code in the fix diff (`savedFilteringAndGrouping = null;` executed unconditionally right after the doClick() call) matches verbatim what candidate_40 introduced. Later candidates (41, 45) touch adjacent code (generic types, unrelated popups) but do not alter this discard logic, so the bug traces back to its first introduction in candidate_40. Candidate_49 is the fix commit itself and therefore cannot be the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1952,
+            "cache_read_input_tokens": 50903,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

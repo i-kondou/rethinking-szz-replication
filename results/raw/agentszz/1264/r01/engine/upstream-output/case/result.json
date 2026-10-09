@@ -1,0 +1,22 @@
+{
+  "fix_commit": "f8ac9708ff8656cdc2518896271ea0b978c34d67",
+  "bic": "199ca4e59019df4572190f32b03ca709274ced7c",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"migrating to SConcept in typesystem rules (isApplicable): runtime\") changed the `getParents` method in RuleSet.java from using `getConceptDescriptor(nextConceptFQName).getParentsNames()` (direct parents only) to `SConceptOperations.getAllSuperConcepts(nextConcept, false)` (all ancestor concepts, not just direct ones). Since `SingleTermRules.computeRules` already performs a BFS/queue-based traversal calling `getParents` recursively to walk up the concept hierarchy, using `getAllSuperConcepts` instead of `getDirectSuperConcepts` caused incorrect/excessive concept matching in the type system rule engine, leading to the described type error for code like `a+='d'`. The fix simply restores the correct direct-parents-only semantics by switching to `getDirectSuperConcepts`.",
+  "metrics": {
+    "case_elapsed_seconds": 29.386655,
+    "api_elapsed_seconds": 26.227239,
+    "tool_elapsed_seconds": 3.037496,
+    "other_elapsed_seconds": 0.121923,
+    "api_call_count": 7,
+    "tool_call_count": 6,
+    "prompt_tokens": 57447,
+    "completion_tokens": 2124,
+    "total_tokens": 59571,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:24:48.123496"
+}

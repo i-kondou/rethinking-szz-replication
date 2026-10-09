@@ -1,0 +1,30 @@
+SELECTED: candidate_20
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes this line in LocalInspectionsPass.java:
+
+    tooltip = XmlStringUtil.wrapInHtml(message.startsWith("<html>") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link ;
+
+to:
+
+    tooltip = XmlStringUtil.wrapInHtml((message.startsWith("<html>") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link);
+
+The bug is a misplaced closing parenthesis: `link` was being concatenated to the tooltip string *outside* the `wrapInHtml(...)` call instead of *inside* it. This means the link (e.g. a "More info" / navigation link appended to warning tooltips) ended up appended after the closing `</html>` tag produced by `wrapInHtml`, which caused the tooltip/warning to not render (or not display) correctly in the editor — consistent with the bug report "Not all warnings are displayed in the editor."
+
+Tracing the history of this exact line through the candidates:
+- Earlier candidates (up through candidate_19) contain a correct, functionally equivalent if/else version:
+      if (message.startsWith("<html>")) {
+        tooltip = XmlStringUtil.wrapInHtml(XmlStringUtil.stripHtml(message) + link);
+      }
+      else {
+        tooltip = XmlStringUtil.wrapInHtml(XmlStringUtil.escapeString(message) + link);
+      }
+  In both branches, `link` is correctly appended *inside* `wrapInHtml(...)`.
+- candidate_20 refactors this if/else block into a single ternary-expression statement, but introduces a parenthesization error in the process, moving `+ link` outside the `wrapInHtml(...)` call:
+      tooltip = XmlStringUtil.wrapInHtml(message.startsWith("<html>") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link ;
+  This is exactly the buggy code that the fix commit corrects.
+- candidate_21 is identical to the fix_commit_diff.txt itself (same before/after state), i.e., it is a duplicate/decoy of the actual fix, not a bug-introducing change.
+
+Therefore candidate_20 is the commit that introduced the bug via this refactoring-induced parenthesization mistake.

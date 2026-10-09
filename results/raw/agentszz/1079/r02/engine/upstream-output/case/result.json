@@ -1,0 +1,22 @@
+{
+  "fix_commit": "b1fbad54f2acadd010d3960fb1bb475c59ca2a38",
+  "bic": "0dff56fdb2525803c950b97fd6d2469357075703",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit refactored the reclaim() method in PatriciaTreeMutable.java to cache `source.currentNode` and `actual.currentNode` into local variables `sourceNode`/`actualNode` at the top of the loop. However, within the loop body, `source.moveDown()` mutates `source.currentNode`, making the cached `sourceNode` stale. The subsequent code incorrectly continued to reference the stale `sourceNode` variable (instead of re-fetching `source.currentNode`) when computing children and re-initializing `srcItr`, causing the \"weird reclaim bug\" fixed by b1fbad54f2ac, which reverts those specific usages back to `source.currentNode`.",
+  "metrics": {
+    "case_elapsed_seconds": 15.249406,
+    "api_elapsed_seconds": 15.083323,
+    "tool_elapsed_seconds": 0.063188,
+    "other_elapsed_seconds": 0.102897,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 16787,
+    "completion_tokens": 742,
+    "total_tokens": 17529,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:19:05.654115"
+}

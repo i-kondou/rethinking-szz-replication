@@ -1,0 +1,53 @@
+SELECTED: candidate_24
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit restores a line in the ConsoleProgressDialog constructor:
+
+    // save console process so that we can compute interaction mode below
+    consoleProcess_ = consoleProcess;
+
+    if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)
+
+placed immediately before the first call to getInteractionMode(), because
+getInteractionMode() reads the consoleProcess_ field. If consoleProcess_
+hasn't been assigned yet, getInteractionMode() falls back to
+ConsoleProcessInfo.INTERACTION_NEVER, causing the dialog to be built as a
+non-interactive progress dialog even when it should be interactive.
+
+Before candidate_24, the constructor set `consoleProcess_ = consoleProcess;`
+right after the argument-validation check and before the
+`getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER` check, which
+was correct.
+
+candidate_24 refactors the constructor to extract process-handler wiring
+into a new `attachToProcess(ConsoleProcess consoleProcess)` method, called
+at the very end of the constructor. As part of this refactor it removed the
+`consoleProcess_ = consoleProcess;` assignment from its original location
+(right before the interaction-mode check) and moved it into
+`attachToProcess()`:
+
+    public void attachToProcess(final ConsoleProcess consoleProcess)
+    {
+       consoleProcess_ = consoleProcess;
+       stopButton().setText("Stop");
+       ...
+    }
+
+Since `attachToProcess(consoleProcess)` is only invoked at the end of the
+constructor, but `getInteractionMode()` is called twice earlier in the same
+constructor (once to decide whether to build a ShellInteractionManager, and
+once to check for INTERACTION_ALWAYS to resize the dialog for shell mode),
+both of those calls now execute while consoleProcess_ is still null/unset,
+always evaluating interaction mode as INTERACTION_NEVER. This is exactly the
+bug described in the fix commit message ("this change fixes an issue;
+because getInteractionMode() uses the saved console process, it needs to be
+set before we check the interaction mode").
+
+Subsequent candidates (25, 26) further reshuffled where the
+INTERACTION_ALWAYS-specific UI customization code lives (moving it into
+attachToProcess as well), but they did not restore the early assignment of
+consoleProcess_ before the constructor's own getInteractionMode() checks,
+so the bug persisted until the actual fix commit re-added the assignment at
+the correct location.

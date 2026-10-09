@@ -1,0 +1,1477 @@
+diff --git a/AudioRacer-Core/src/at/fhv/audioracer/core/model/Car.java b/AudioRacer-Core/src/at/fhv/audioracer/core/model/Car.java
+index 7ae2457..52e3143 100644
+--- a/AudioRacer-Core/src/at/fhv/audioracer/core/model/Car.java
++++ b/AudioRacer-Core/src/at/fhv/audioracer/core/model/Car.java
+@@ -7,10 +7,11 @@ import at.fhv.audioracer.core.util.ListenerList;
+ import at.fhv.audioracer.core.util.Position;
+ 
+ public class Car {
+-	
++
+ 	public static int CAR_CLIENT_NOT_ASSIGNED_ID = -1;
+-	
+-	private static class CarListenerList extends ListenerList<ICarListener> implements ICarListener {
++
++	private static class CarListenerList extends ListenerList<ICarListener>
++			implements ICarListener {
+ 		@Override
+ 		public void onCarPositionChanged(Car car) {
+ 			for (ICarListener listener : listeners()) {
+@@ -18,85 +19,93 @@ public class Car {
+ 			}
+ 		}
+ 	}
+-	
+-	private final int _carId;
+-	
++
++	private final byte _carId;
++
+ 	private int _carClientId = CAR_CLIENT_NOT_ASSIGNED_ID;
+-	
++
+ 	private Position _position;
+ 	/**
+ 	 * Absolute direction in degrees (0-360°).
+ 	 */
+ 	private Direction _direction;
+-	
++
+ 	private Player _player;
+-	
++
+ 	private final BufferedImage _image;
+-	
++
+ 	private CarListenerList _listenerList;
+-	
++
+ 	/**
+-	 * @deprecated - there is a reason for why <code>BufferedImage</code> is final! Don't use this constructor anymore. Remove this constructor if you've
+-	 *             changed your code (who ever is using it. I don't know).
++	 * @deprecated - there is a reason for why <code>BufferedImage</code> is
++	 *             final! Don't use this constructor anymore. Remove this
++	 *             constructor if you've changed your code (who ever is using
++	 *             it. I don't know).
+ 	 * @param cardId
+ 	 */
+ 	@Deprecated
+-	public Car(int cardId) {
++	public Car(byte cardId) {
+ 		_carId = cardId;
+-		_image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB); // this is not useful at all.
++		_image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB); // this is
++																		// not
++																		// useful
++																		// at
++																		// all.
+ 	}
+-	
+-	public Car(int carId, Position position, Direction direction, BufferedImage image) {
++
++	public Car(byte carId, Position position, Direction direction,
++			BufferedImage image) {
+ 		if (image == null) {
+-			throw new IllegalArgumentException("An image ('BufferedImage') is required");
++			throw new IllegalArgumentException(
++					"An image ('BufferedImage') is required");
+ 		}
+ 		_carId = carId;
+ 		_position = position;
+ 		_direction = direction;
+-		
++
+ 		_image = image;
+-		
++
+ 		_listenerList = new CarListenerList();
+ 	}
+-	
+-	public int getCarId() {
++
++	public byte getCarId() {
+ 		return _carId;
+ 	}
+-	
++
+ 	public Position getPosition() {
+ 		return _position;
+ 	}
+-	
++
+ 	public Direction getDirection() {
+ 		return _direction;
+ 	}
+-	
++
+ 	public Player getPlayer() {
+ 		return _player;
+ 	}
+-	
++
+ 	public void setPlayer(Player player) {
+ 		_player = player;
+ 	}
+-	
++
+ 	public void updatePosition(Position position, Direction direction) {
+ 		_position = position;
+ 		_direction = direction;
+ 		_listenerList.onCarPositionChanged(this);
+ 	}
+-	
++
+ 	public BufferedImage getImage() {
+ 		return _image;
+ 	}
+-	
++
+ 	public ListenerList<ICarListener> getCarListenerList() {
+ 		return _listenerList;
+ 	}
+-	
++
+ 	public int getCarClientId() {
+ 		return _carClientId;
+ 	}
+-	
++
+ 	public void setCarClientId(int carClientId) {
+ 		_carClientId = carClientId;
+ 	}
+diff --git a/AudioRacer-Core/src/at/fhv/audioracer/core/model/Map.java b/AudioRacer-Core/src/at/fhv/audioracer/core/model/Map.java
+index 1d97a54..db5649a 100644
+--- a/AudioRacer-Core/src/at/fhv/audioracer/core/model/Map.java
++++ b/AudioRacer-Core/src/at/fhv/audioracer/core/model/Map.java
+@@ -7,22 +7,23 @@ import java.util.HashMap;
+ import at.fhv.audioracer.core.util.ListenerList;
+ 
+ public class Map {
+-	
+-	private static class MapListenerList extends ListenerList<IMapListener> implements IMapListener {
++
++	private static class MapListenerList extends ListenerList<IMapListener>
++			implements IMapListener {
+ 		@Override
+ 		public void onMapSizeChanged() {
+ 			for (IMapListener listener : listeners()) {
+ 				listener.onMapSizeChanged();
+ 			}
+ 		}
+-		
++
+ 		@Override
+ 		public void onCarAdded(Car addedCar) {
+ 			for (IMapListener listener : listeners()) {
+ 				listener.onCarAdded(addedCar);
+ 			}
+ 		}
+-		
++
+ 		@Override
+ 		public void onCarRemoved(Car removedCar) {
+ 			for (IMapListener listener : listeners()) {
+@@ -31,58 +32,58 @@ public class Map {
+ 			}
+ 		}
+ 	}
+-	
++
+ 	private int _sizeX;
+ 	private int _sizeY;
+-	
+-	private java.util.Map<Integer, Car> _cars;
+-	
++
++	private java.util.Map<Byte, Car> _cars;
++
+ 	private MapListenerList _listenerList;
+-	
++
+ 	public Map(int sizeX, int sizeY) {
+ 		_sizeX = sizeX;
+ 		_sizeY = sizeY;
+-		
+-		_cars = new HashMap<Integer, Car>();
+-		
++
++		_cars = new HashMap<Byte, Car>();
++
+ 		_listenerList = new MapListenerList();
+ 	}
+-	
++
+ 	public int getSizeX() {
+ 		return _sizeX;
+ 	}
+-	
++
+ 	public void setSizeX(int sizeX) {
+ 		if (_sizeX != sizeX) {
+ 			_sizeX = sizeX;
+ 			_listenerList.onMapSizeChanged();
+ 		}
+ 	}
+-	
++
+ 	public int getSizeY() {
+ 		return _sizeY;
+ 	}
+-	
++
+ 	public void setSizeY(int sizeY) {
+ 		if (_sizeY != sizeY) {
+ 			_sizeY = sizeY;
+ 			_listenerList.onMapSizeChanged();
+ 		}
+ 	}
+-	
++
+ 	public void addCar(Car car) {
+ 		if (car == null) {
+ 			throw new IllegalArgumentException("Car must not be null.");
+ 		}
+-		
++
+ 		if (_cars.containsKey(car.getCarId())) {
+ 			removeCar(car.getCarId());
+ 		}
+-		
++
+ 		_cars.put(car.getCarId(), car);
+ 		_listenerList.onCarAdded(car);
+ 	}
+-	
++
+ 	public Car removeCar(int cameraId) {
+ 		Car car = _cars.remove(cameraId);
+ 		if (car != null) {
+@@ -90,11 +91,11 @@ public class Map {
+ 		}
+ 		return car;
+ 	}
+-	
++
+ 	public Collection<Car> getCars() {
+ 		return Collections.unmodifiableCollection(_cars.values());
+ 	}
+-	
++
+ 	public ListenerList<IMapListener> getMapListenerList() {
+ 		return _listenerList;
+ 	}
+diff --git a/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerClient.java b/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerClient.java
+index b748aba..d3bc27b 100644
+--- a/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerClient.java
++++ b/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerClient.java
+@@ -85,12 +85,12 @@ public class PlayerClient extends Listener implements IPlayerClient {
+ 	/**
+ 	 * currently known cars. <Integer, CarId>
+ 	 */
+-	private HashMap<Integer, Integer> _cars;
++	private HashMap<Byte, Byte> _cars;
+ 	
+ 	/*
+ 	 * ids of free cars
+ 	 */
+-	private int[] _freeCarIds;
++	private byte[] _freeCarIds;
+ 	
+ 	/*
+ 	 * player of this client
+@@ -151,7 +151,7 @@ public class PlayerClient extends Listener implements IPlayerClient {
+ 	public PlayerClient() {
+ 		super();
+ 		_players = new HashMap<Integer, Player>();
+-		_cars = new HashMap<Integer, Integer>();
++		_cars = new HashMap<Byte, Byte>();
+ 		_player = new Player();
+ 		_listenerList = new PlayerClientListenerList();
+ 		_connected = false;
+@@ -205,7 +205,7 @@ public class PlayerClient extends Listener implements IPlayerClient {
+ 	}
+ 	
+ 	@Override
+-	public void updateFreeCars(int[] carIds) {
++	public void updateFreeCars(byte[] carIds) {
+ 		
+ 		// check list for unknown free cars and add them
+ 		for (int i = 0; i < carIds.length; i++) {
+@@ -242,11 +242,11 @@ public class PlayerClient extends Listener implements IPlayerClient {
+ 		return _players;
+ 	}
+ 	
+-	public HashMap<Integer, Integer> getCars() {
++	public HashMap<Byte, Byte> getCars() {
+ 		return _cars;
+ 	}
+ 	
+-	public int[] getFreeCarIds() {
++	public byte[] getFreeCarIds() {
+ 		return _freeCarIds;
+ 	}
+ 	
+diff --git a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerClient.java b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerClient.java
+index aa7916d..3a6282b 100644
+--- a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerClient.java
++++ b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerClient.java
+@@ -3,7 +3,7 @@ package at.fhv.audioracer.communication.player;
+ public interface IPlayerClient extends IClient {
+ 	public void updateCheckpointDirection(float directionX, float directionY);
+ 	
+-	public void updateFreeCars(int[] carIds);
++	public void updateFreeCars(byte[] carIds);
+ 	
+ 	public void gameOver();
+ 	
+diff --git a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/FreeCarsMessage.java b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/FreeCarsMessage.java
+index c446f1b..73e66e8 100644
+--- a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/FreeCarsMessage.java
++++ b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/FreeCarsMessage.java
+@@ -2,7 +2,7 @@ package at.fhv.audioracer.communication.player.message;
+ 
+ public class FreeCarsMessage extends PlayerMessage {
+ 	
+-	public int[] freeCars;
++	public byte[] freeCars;
+ 	
+ 	public FreeCarsMessage() {
+ 		super(PlayerMessage.MessageId.UPDATE_FREE_CARS);
+diff --git a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java
+index 9007a33..7026249 100644
+--- a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java
++++ b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java
+@@ -32,7 +32,7 @@ public class StartUpView extends JFrame {
+ 	
+ 	private PlayerClient _playerClient;
+ 	
+-	private JList<Integer> _listFreeCars;
++	private JList<Byte> _listFreeCars;
+ 	private JList<Player> _listConnectedPlayers;
+ 	
+ 	private JLabel _lblConnected;
+@@ -72,7 +72,7 @@ public class StartUpView extends JFrame {
+ 			@Override
+ 			public void valueChanged(ListSelectionEvent e) {
+ 				
+-				Integer selected = _listFreeCars.getSelectedValue();
++				Byte selected = _listFreeCars.getSelectedValue();
+ 				if (selected != null) {
+ 					if (_playerClient.getPlayerServer().selectCar(selected)) {
+ 						ControlView cv = new ControlView(_playerClient);
+@@ -92,7 +92,7 @@ public class StartUpView extends JFrame {
+ 			
+ 			@Override
+ 			public void onUpdateFreeCars() {
+-				Integer[] temp = new Integer[_playerClient.getFreeCarIds().length];
++				Byte[] temp = new Byte[_playerClient.getFreeCarIds().length];
+ 				for (int i = 0; i < temp.length; i++) {
+ 					temp[i] = _playerClient.getFreeCarIds()[i];
+ 				}
+diff --git a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/SimulatedPlayerClient.java b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/SimulatedPlayerClient.java
+index 5800679..ecbb92c 100644
+--- a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/SimulatedPlayerClient.java
++++ b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/SimulatedPlayerClient.java
+@@ -33,12 +33,12 @@ public class SimulatedPlayerClient extends Connection implements IPlayerClient {
+ 	/**
+ 	 * holds free cars
+ 	 */
+-	protected HashMap<Integer, Car> _freeCars;
++	protected HashMap<Byte, Car> _freeCars;
+ 	
+ 	/**
+ 	 * holds every known car
+ 	 */
+-	protected HashMap<Integer, Car> _cars;
++	protected HashMap<Byte, Car> _cars;
+ 	
+ 	/**
+ 	 * holds connected players
+@@ -72,8 +72,8 @@ public class SimulatedPlayerClient extends Connection implements IPlayerClient {
+ 	
+ 	public SimulatedPlayerClient() {
+ 		
+-		_cars = new HashMap<Integer, Car>();
+-		_freeCars = new HashMap<Integer, Car>();
++		_cars = new HashMap<Byte, Car>();
++		_freeCars = new HashMap<Byte, Car>();
+ 		_player = new Player();
+ 		_nextCheckpoint = new Checkpoint();
+ 		_listener = new LinkedList<>();
+@@ -114,9 +114,9 @@ public class SimulatedPlayerClient extends Connection implements IPlayerClient {
+ 	}
+ 	
+ 	@Override
+-	public void updateFreeCars(int[] carIds) {
++	public void updateFreeCars(byte[] carIds) {
+ 		
+-		for (int currId : carIds) {
++		for (byte currId : carIds) {
+ 			if (_cars.containsKey(currId)) {
+ 				_freeCars.put(currId, _cars.get(currId));
+ 			} else {
+diff --git a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/pivot/CarSelectForm.java b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/pivot/CarSelectForm.java
+index 704cd73..7b6cd2b 100644
+--- a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/pivot/CarSelectForm.java
++++ b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/pivot/CarSelectForm.java
+@@ -26,14 +26,14 @@ public class CarSelectForm extends Form implements Bindable {
+ 	@BXML
+ 	private PushButton _pushButtonSelectCar;
+ 	
+-	private List<Integer> _freeCars;
++	private List<Byte> _freeCars;
+ 	
+ 	private PlayerClient _playerClient;
+ 	private IPlayerClientListener _playerClientListener;
+ 	
+ 	public CarSelectForm() {
+ 		_playerClient = PlayerSimulatorWindow.getInstance().getPlayerClient();
+-		_freeCars = new LinkedList<Integer>();
++		_freeCars = new LinkedList<Byte>();
+ 	}
+ 	
+ 	@Override
+@@ -44,7 +44,7 @@ public class CarSelectForm extends Form implements Bindable {
+ 				ApplicationContext.queueCallback(new Runnable() {
+ 					public void run() {
+ 						_freeCars.clear();
+-						for (Integer carId : _playerClient.getFreeCarIds()) {
++						for (byte carId : _playerClient.getFreeCarIds()) {
+ 							_freeCars.add(carId);
+ 						}
+ 					}
+@@ -52,7 +52,7 @@ public class CarSelectForm extends Form implements Bindable {
+ 			}
+ 		};
+ 		_playerClient.getListenerList().add(_playerClientListener);
+-		for (Integer carId : _playerClient.getFreeCarIds()) {
++		for (byte carId : _playerClient.getFreeCarIds()) {
+ 			_freeCars.add(carId);
+ 		}
+ 		_listView.setListData(_freeCars);
+diff --git a/AudioRacer-Serial/.classpath b/AudioRacer-Serial/.classpath
+new file mode 100644
+index 0000000..b1d6f73
+--- /dev/null
++++ b/AudioRacer-Serial/.classpath
+@@ -0,0 +1,10 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<classpath>
++	<classpathentry kind="src" path="src"/>
++	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
++	<classpathentry combineaccessrules="false" kind="src" path="/AudioRacer-WorldCommunication"/>
++	<classpathentry combineaccessrules="false" kind="src" path="/AudioRacer-Server"/>
++	<classpathentry kind="lib" path="/AudioRacer/libs/jssc.jar" sourcepath="/AudioRacer/libs/jssc-2.6.0-src.jar"/>
++	<classpathentry combineaccessrules="false" kind="src" path="/AudioRacer-Core"/>
++	<classpathentry kind="output" path="bin"/>
++</classpath>
+diff --git a/AudioRacer-Serial/.project b/AudioRacer-Serial/.project
+new file mode 100644
+index 0000000..5f57db0
+--- /dev/null
++++ b/AudioRacer-Serial/.project
+@@ -0,0 +1,17 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<projectDescription>
++	<name>AudioRacer-Serial</name>
++	<comment></comment>
++	<projects>
++	</projects>
++	<buildSpec>
++		<buildCommand>
++			<name>org.eclipse.jdt.core.javabuilder</name>
++			<arguments>
++			</arguments>
++		</buildCommand>
++	</buildSpec>
++	<natures>
++		<nature>org.eclipse.jdt.core.javanature</nature>
++	</natures>
++</projectDescription>
+diff --git a/AudioRacer-Serial/.settings/org.eclipse.core.resources.prefs b/AudioRacer-Serial/.settings/org.eclipse.core.resources.prefs
+new file mode 100644
+index 0000000..99f26c0
+--- /dev/null
++++ b/AudioRacer-Serial/.settings/org.eclipse.core.resources.prefs
+@@ -0,0 +1,2 @@
++eclipse.preferences.version=1
++encoding/<project>=UTF-8
+diff --git a/AudioRacer-Serial/.settings/org.eclipse.core.runtime.prefs b/AudioRacer-Serial/.settings/org.eclipse.core.runtime.prefs
+new file mode 100644
+index 0000000..deae05a
+--- /dev/null
++++ b/AudioRacer-Serial/.settings/org.eclipse.core.runtime.prefs
+@@ -0,0 +1,2 @@
++eclipse.preferences.version=1
++line.separator=\r\n
+diff --git a/AudioRacer-Serial/.settings/org.eclipse.jdt.core.prefs b/AudioRacer-Serial/.settings/org.eclipse.jdt.core.prefs
+new file mode 100644
+index 0000000..2c11f25
+--- /dev/null
++++ b/AudioRacer-Serial/.settings/org.eclipse.jdt.core.prefs
+@@ -0,0 +1,291 @@
++eclipse.preferences.version=1
++org.eclipse.jdt.core.codeComplete.argumentPrefixes=
++org.eclipse.jdt.core.codeComplete.argumentSuffixes=
++org.eclipse.jdt.core.codeComplete.fieldPrefixes=_
++org.eclipse.jdt.core.codeComplete.fieldSuffixes=
++org.eclipse.jdt.core.codeComplete.localPrefixes=
++org.eclipse.jdt.core.codeComplete.localSuffixes=
++org.eclipse.jdt.core.codeComplete.staticFieldPrefixes=
++org.eclipse.jdt.core.codeComplete.staticFieldSuffixes=
++org.eclipse.jdt.core.codeComplete.staticFinalFieldPrefixes=
++org.eclipse.jdt.core.codeComplete.staticFinalFieldSuffixes=
++org.eclipse.jdt.core.formatter.align_type_members_on_columns=false
++org.eclipse.jdt.core.formatter.alignment_for_arguments_in_allocation_expression=16
++org.eclipse.jdt.core.formatter.alignment_for_arguments_in_annotation=16
++org.eclipse.jdt.core.formatter.alignment_for_arguments_in_enum_constant=16
++org.eclipse.jdt.core.formatter.alignment_for_arguments_in_explicit_constructor_call=16
++org.eclipse.jdt.core.formatter.alignment_for_arguments_in_method_invocation=16
++org.eclipse.jdt.core.formatter.alignment_for_arguments_in_qualified_allocation_expression=16
++org.eclipse.jdt.core.formatter.alignment_for_assignment=0
++org.eclipse.jdt.core.formatter.alignment_for_binary_expression=16
++org.eclipse.jdt.core.formatter.alignment_for_compact_if=16
++org.eclipse.jdt.core.formatter.alignment_for_conditional_expression=80
++org.eclipse.jdt.core.formatter.alignment_for_enum_constants=0
++org.eclipse.jdt.core.formatter.alignment_for_expressions_in_array_initializer=16
++org.eclipse.jdt.core.formatter.alignment_for_method_declaration=0
++org.eclipse.jdt.core.formatter.alignment_for_multiple_fields=16
++org.eclipse.jdt.core.formatter.alignment_for_parameters_in_constructor_declaration=16
++org.eclipse.jdt.core.formatter.alignment_for_parameters_in_method_declaration=16
++org.eclipse.jdt.core.formatter.alignment_for_resources_in_try=80
++org.eclipse.jdt.core.formatter.alignment_for_selector_in_method_invocation=16
++org.eclipse.jdt.core.formatter.alignment_for_superclass_in_type_declaration=16
++org.eclipse.jdt.core.formatter.alignment_for_superinterfaces_in_enum_declaration=16
++org.eclipse.jdt.core.formatter.alignment_for_superinterfaces_in_type_declaration=16
++org.eclipse.jdt.core.formatter.alignment_for_throws_clause_in_constructor_declaration=16
++org.eclipse.jdt.core.formatter.alignment_for_throws_clause_in_method_declaration=16
++org.eclipse.jdt.core.formatter.alignment_for_union_type_in_multicatch=16
++org.eclipse.jdt.core.formatter.blank_lines_after_imports=1
++org.eclipse.jdt.core.formatter.blank_lines_after_package=1
++org.eclipse.jdt.core.formatter.blank_lines_before_field=0
++org.eclipse.jdt.core.formatter.blank_lines_before_first_class_body_declaration=0
++org.eclipse.jdt.core.formatter.blank_lines_before_imports=1
++org.eclipse.jdt.core.formatter.blank_lines_before_member_type=1
++org.eclipse.jdt.core.formatter.blank_lines_before_method=1
++org.eclipse.jdt.core.formatter.blank_lines_before_new_chunk=1
++org.eclipse.jdt.core.formatter.blank_lines_before_package=0
++org.eclipse.jdt.core.formatter.blank_lines_between_import_groups=1
++org.eclipse.jdt.core.formatter.blank_lines_between_type_declarations=1
++org.eclipse.jdt.core.formatter.brace_position_for_annotation_type_declaration=end_of_line
++org.eclipse.jdt.core.formatter.brace_position_for_anonymous_type_declaration=end_of_line
++org.eclipse.jdt.core.formatter.brace_position_for_array_initializer=end_of_line
++org.eclipse.jdt.core.formatter.brace_position_for_block=end_of_line
++org.eclipse.jdt.core.formatter.brace_position_for_block_in_case=end_of_line
++org.eclipse.jdt.core.formatter.brace_position_for_constructor_declaration=end_of_line
++org.eclipse.jdt.core.formatter.brace_position_for_enum_constant=end_of_line
++org.eclipse.jdt.core.formatter.brace_position_for_enum_declaration=end_of_line
++org.eclipse.jdt.core.formatter.brace_position_for_method_declaration=end_of_line
++org.eclipse.jdt.core.formatter.brace_position_for_switch=end_of_line
++org.eclipse.jdt.core.formatter.brace_position_for_type_declaration=end_of_line
++org.eclipse.jdt.core.formatter.comment.clear_blank_lines_in_block_comment=false
++org.eclipse.jdt.core.formatter.comment.clear_blank_lines_in_javadoc_comment=false
++org.eclipse.jdt.core.formatter.comment.format_block_comments=true
++org.eclipse.jdt.core.formatter.comment.format_header=false
++org.eclipse.jdt.core.formatter.comment.format_html=true
++org.eclipse.jdt.core.formatter.comment.format_javadoc_comments=true
++org.eclipse.jdt.core.formatter.comment.format_line_comments=true
++org.eclipse.jdt.core.formatter.comment.format_source_code=true
++org.eclipse.jdt.core.formatter.comment.indent_parameter_description=true
++org.eclipse.jdt.core.formatter.comment.indent_root_tags=true
++org.eclipse.jdt.core.formatter.comment.insert_new_line_before_root_tags=insert
++org.eclipse.jdt.core.formatter.comment.insert_new_line_for_parameter=insert
++org.eclipse.jdt.core.formatter.comment.line_length=160
++org.eclipse.jdt.core.formatter.comment.new_lines_at_block_boundaries=true
++org.eclipse.jdt.core.formatter.comment.new_lines_at_javadoc_boundaries=true
++org.eclipse.jdt.core.formatter.comment.preserve_white_space_between_code_and_line_comments=false
++org.eclipse.jdt.core.formatter.compact_else_if=true
++org.eclipse.jdt.core.formatter.continuation_indentation=2
++org.eclipse.jdt.core.formatter.continuation_indentation_for_array_initializer=2
++org.eclipse.jdt.core.formatter.disabling_tag=@formatter\:off
++org.eclipse.jdt.core.formatter.enabling_tag=@formatter\:on
++org.eclipse.jdt.core.formatter.format_guardian_clause_on_one_line=false
++org.eclipse.jdt.core.formatter.format_line_comment_starting_on_first_column=true
++org.eclipse.jdt.core.formatter.indent_body_declarations_compare_to_annotation_declaration_header=true
++org.eclipse.jdt.core.formatter.indent_body_declarations_compare_to_enum_constant_header=true
++org.eclipse.jdt.core.formatter.indent_body_declarations_compare_to_enum_declaration_header=true
++org.eclipse.jdt.core.formatter.indent_body_declarations_compare_to_type_header=true
++org.eclipse.jdt.core.formatter.indent_breaks_compare_to_cases=true
++org.eclipse.jdt.core.formatter.indent_empty_lines=true
++org.eclipse.jdt.core.formatter.indent_statements_compare_to_block=true
++org.eclipse.jdt.core.formatter.indent_statements_compare_to_body=true
++org.eclipse.jdt.core.formatter.indent_switchstatements_compare_to_cases=true
++org.eclipse.jdt.core.formatter.indent_switchstatements_compare_to_switch=true
++org.eclipse.jdt.core.formatter.indentation.size=4
++org.eclipse.jdt.core.formatter.insert_new_line_after_annotation_on_field=insert
++org.eclipse.jdt.core.formatter.insert_new_line_after_annotation_on_local_variable=insert
++org.eclipse.jdt.core.formatter.insert_new_line_after_annotation_on_method=insert
++org.eclipse.jdt.core.formatter.insert_new_line_after_annotation_on_package=insert
++org.eclipse.jdt.core.formatter.insert_new_line_after_annotation_on_parameter=do not insert
++org.eclipse.jdt.core.formatter.insert_new_line_after_annotation_on_type=insert
++org.eclipse.jdt.core.formatter.insert_new_line_after_label=do not insert
++org.eclipse.jdt.core.formatter.insert_new_line_after_opening_brace_in_array_initializer=do not insert
++org.eclipse.jdt.core.formatter.insert_new_line_at_end_of_file_if_missing=do not insert
++org.eclipse.jdt.core.formatter.insert_new_line_before_catch_in_try_statement=do not insert
++org.eclipse.jdt.core.formatter.insert_new_line_before_closing_brace_in_array_initializer=do not insert
++org.eclipse.jdt.core.formatter.insert_new_line_before_else_in_if_statement=do not insert
++org.eclipse.jdt.core.formatter.insert_new_line_before_finally_in_try_statement=do not insert
++org.eclipse.jdt.core.formatter.insert_new_line_before_while_in_do_statement=do not insert
++org.eclipse.jdt.core.formatter.insert_new_line_in_empty_annotation_declaration=insert
++org.eclipse.jdt.core.formatter.insert_new_line_in_empty_anonymous_type_declaration=insert
++org.eclipse.jdt.core.formatter.insert_new_line_in_empty_block=insert
++org.eclipse.jdt.core.formatter.insert_new_line_in_empty_enum_constant=insert
++org.eclipse.jdt.core.formatter.insert_new_line_in_empty_enum_declaration=insert
++org.eclipse.jdt.core.formatter.insert_new_line_in_empty_method_body=insert
++org.eclipse.jdt.core.formatter.insert_new_line_in_empty_type_declaration=insert
++org.eclipse.jdt.core.formatter.insert_space_after_and_in_type_parameter=insert
++org.eclipse.jdt.core.formatter.insert_space_after_assignment_operator=insert
++org.eclipse.jdt.core.formatter.insert_space_after_at_in_annotation=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_at_in_annotation_type_declaration=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_binary_operator=insert
++org.eclipse.jdt.core.formatter.insert_space_after_closing_angle_bracket_in_type_arguments=insert
++org.eclipse.jdt.core.formatter.insert_space_after_closing_angle_bracket_in_type_parameters=insert
++org.eclipse.jdt.core.formatter.insert_space_after_closing_brace_in_block=insert
++org.eclipse.jdt.core.formatter.insert_space_after_closing_paren_in_cast=insert
++org.eclipse.jdt.core.formatter.insert_space_after_colon_in_assert=insert
++org.eclipse.jdt.core.formatter.insert_space_after_colon_in_case=insert
++org.eclipse.jdt.core.formatter.insert_space_after_colon_in_conditional=insert
++org.eclipse.jdt.core.formatter.insert_space_after_colon_in_for=insert
++org.eclipse.jdt.core.formatter.insert_space_after_colon_in_labeled_statement=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_allocation_expression=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_annotation=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_array_initializer=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_constructor_declaration_parameters=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_constructor_declaration_throws=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_enum_constant_arguments=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_enum_declarations=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_explicitconstructorcall_arguments=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_for_increments=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_for_inits=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_method_declaration_parameters=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_method_declaration_throws=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_method_invocation_arguments=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_multiple_field_declarations=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_multiple_local_declarations=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_parameterized_type_reference=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_superinterfaces=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_type_arguments=insert
++org.eclipse.jdt.core.formatter.insert_space_after_comma_in_type_parameters=insert
++org.eclipse.jdt.core.formatter.insert_space_after_ellipsis=insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_angle_bracket_in_parameterized_type_reference=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_angle_bracket_in_type_arguments=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_angle_bracket_in_type_parameters=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_brace_in_array_initializer=insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_bracket_in_array_allocation_expression=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_bracket_in_array_reference=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_annotation=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_cast=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_catch=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_constructor_declaration=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_enum_constant=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_for=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_if=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_method_declaration=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_method_invocation=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_parenthesized_expression=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_switch=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_synchronized=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_try=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_while=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_postfix_operator=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_prefix_operator=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_question_in_conditional=insert
++org.eclipse.jdt.core.formatter.insert_space_after_question_in_wildcard=do not insert
++org.eclipse.jdt.core.formatter.insert_space_after_semicolon_in_for=insert
++org.eclipse.jdt.core.formatter.insert_space_after_semicolon_in_try_resources=insert
++org.eclipse.jdt.core.formatter.insert_space_after_unary_operator=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_and_in_type_parameter=insert
++org.eclipse.jdt.core.formatter.insert_space_before_assignment_operator=insert
++org.eclipse.jdt.core.formatter.insert_space_before_at_in_annotation_type_declaration=insert
++org.eclipse.jdt.core.formatter.insert_space_before_binary_operator=insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_angle_bracket_in_parameterized_type_reference=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_angle_bracket_in_type_arguments=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_angle_bracket_in_type_parameters=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_brace_in_array_initializer=insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_bracket_in_array_allocation_expression=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_bracket_in_array_reference=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_paren_in_annotation=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_paren_in_cast=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_paren_in_catch=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_paren_in_constructor_declaration=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_paren_in_enum_constant=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_paren_in_for=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_paren_in_if=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_paren_in_method_declaration=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_paren_in_method_invocation=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_paren_in_parenthesized_expression=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_paren_in_switch=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_paren_in_synchronized=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_paren_in_try=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_closing_paren_in_while=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_colon_in_assert=insert
++org.eclipse.jdt.core.formatter.insert_space_before_colon_in_case=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_colon_in_conditional=insert
++org.eclipse.jdt.core.formatter.insert_space_before_colon_in_default=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_colon_in_for=insert
++org.eclipse.jdt.core.formatter.insert_space_before_colon_in_labeled_statement=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_allocation_expression=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_annotation=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_array_initializer=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_constructor_declaration_parameters=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_constructor_declaration_throws=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_enum_constant_arguments=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_enum_declarations=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_explicitconstructorcall_arguments=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_for_increments=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_for_inits=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_method_declaration_parameters=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_method_declaration_throws=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_method_invocation_arguments=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_multiple_field_declarations=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_multiple_local_declarations=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_parameterized_type_reference=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_superinterfaces=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_type_arguments=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_comma_in_type_parameters=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_ellipsis=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_angle_bracket_in_parameterized_type_reference=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_angle_bracket_in_type_arguments=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_angle_bracket_in_type_parameters=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_annotation_type_declaration=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_anonymous_type_declaration=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_array_initializer=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_block=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_constructor_declaration=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_enum_constant=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_enum_declaration=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_method_declaration=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_switch=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_type_declaration=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_bracket_in_array_allocation_expression=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_bracket_in_array_reference=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_bracket_in_array_type_reference=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_paren_in_annotation=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_paren_in_annotation_type_member_declaration=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_paren_in_catch=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_paren_in_constructor_declaration=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_paren_in_enum_constant=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_paren_in_for=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_paren_in_if=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_paren_in_method_declaration=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_paren_in_method_invocation=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_paren_in_parenthesized_expression=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_paren_in_switch=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_paren_in_synchronized=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_paren_in_try=insert
++org.eclipse.jdt.core.formatter.insert_space_before_opening_paren_in_while=insert
++org.eclipse.jdt.core.formatter.insert_space_before_parenthesized_expression_in_return=insert
++org.eclipse.jdt.core.formatter.insert_space_before_parenthesized_expression_in_throw=insert
++org.eclipse.jdt.core.formatter.insert_space_before_postfix_operator=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_prefix_operator=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_question_in_conditional=insert
++org.eclipse.jdt.core.formatter.insert_space_before_question_in_wildcard=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_semicolon=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_semicolon_in_for=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_semicolon_in_try_resources=do not insert
++org.eclipse.jdt.core.formatter.insert_space_before_unary_operator=do not insert
++org.eclipse.jdt.core.formatter.insert_space_between_brackets_in_array_type_reference=do not insert
++org.eclipse.jdt.core.formatter.insert_space_between_empty_braces_in_array_initializer=do not insert
++org.eclipse.jdt.core.formatter.insert_space_between_empty_brackets_in_array_allocation_expression=do not insert
++org.eclipse.jdt.core.formatter.insert_space_between_empty_parens_in_annotation_type_member_declaration=do not insert
++org.eclipse.jdt.core.formatter.insert_space_between_empty_parens_in_constructor_declaration=do not insert
++org.eclipse.jdt.core.formatter.insert_space_between_empty_parens_in_enum_constant=do not insert
++org.eclipse.jdt.core.formatter.insert_space_between_empty_parens_in_method_declaration=do not insert
++org.eclipse.jdt.core.formatter.insert_space_between_empty_parens_in_method_invocation=do not insert
++org.eclipse.jdt.core.formatter.join_lines_in_comments=true
++org.eclipse.jdt.core.formatter.join_wrapped_lines=true
++org.eclipse.jdt.core.formatter.keep_else_statement_on_same_line=false
++org.eclipse.jdt.core.formatter.keep_empty_array_initializer_on_one_line=false
++org.eclipse.jdt.core.formatter.keep_imple_if_on_one_line=false
++org.eclipse.jdt.core.formatter.keep_then_statement_on_same_line=false
++org.eclipse.jdt.core.formatter.lineSplit=100
++org.eclipse.jdt.core.formatter.never_indent_block_comments_on_first_column=false
++org.eclipse.jdt.core.formatter.never_indent_line_comments_on_first_column=false
++org.eclipse.jdt.core.formatter.number_of_blank_lines_at_beginning_of_method_body=0
++org.eclipse.jdt.core.formatter.number_of_empty_lines_to_preserve=1
++org.eclipse.jdt.core.formatter.put_empty_statement_on_new_line=true
++org.eclipse.jdt.core.formatter.tabulation.char=tab
++org.eclipse.jdt.core.formatter.tabulation.size=4
++org.eclipse.jdt.core.formatter.use_on_off_tags=true
++org.eclipse.jdt.core.formatter.use_tabs_only_for_leading_indentations=false
++org.eclipse.jdt.core.formatter.wrap_before_binary_operator=true
++org.eclipse.jdt.core.formatter.wrap_before_or_operator_multicatch=true
++org.eclipse.jdt.core.formatter.wrap_outer_expressions_when_nested=true
+diff --git a/AudioRacer-Serial/.settings/org.eclipse.jdt.ui.prefs b/AudioRacer-Serial/.settings/org.eclipse.jdt.ui.prefs
+new file mode 100644
+index 0000000..23f7d38
+--- /dev/null
++++ b/AudioRacer-Serial/.settings/org.eclipse.jdt.ui.prefs
+@@ -0,0 +1,113 @@
++cleanup.add_default_serial_version_id=false
++cleanup.add_generated_serial_version_id=true
++cleanup.add_missing_annotations=true
++cleanup.add_missing_deprecated_annotations=true
++cleanup.add_missing_methods=false
++cleanup.add_missing_nls_tags=false
++cleanup.add_missing_override_annotations=true
++cleanup.add_missing_override_annotations_interface_methods=true
++cleanup.add_serial_version_id=true
++cleanup.always_use_blocks=true
++cleanup.always_use_parentheses_in_expressions=true
++cleanup.always_use_this_for_non_static_field_access=false
++cleanup.always_use_this_for_non_static_method_access=false
++cleanup.convert_to_enhanced_for_loop=false
++cleanup.correct_indentation=true
++cleanup.format_source_code=true
++cleanup.format_source_code_changes_only=false
++cleanup.make_local_variable_final=true
++cleanup.make_parameters_final=false
++cleanup.make_private_fields_final=true
++cleanup.make_type_abstract_if_missing_method=false
++cleanup.make_variable_declarations_final=false
++cleanup.never_use_blocks=false
++cleanup.never_use_parentheses_in_expressions=false
++cleanup.organize_imports=true
++cleanup.qualify_static_field_accesses_with_declaring_class=false
++cleanup.qualify_static_member_accesses_through_instances_with_declaring_class=true
++cleanup.qualify_static_member_accesses_through_subtypes_with_declaring_class=true
++cleanup.qualify_static_member_accesses_with_declaring_class=true
++cleanup.qualify_static_method_accesses_with_declaring_class=false
++cleanup.remove_private_constructors=true
++cleanup.remove_trailing_whitespaces=true
++cleanup.remove_trailing_whitespaces_all=false
++cleanup.remove_trailing_whitespaces_ignore_empty=true
++cleanup.remove_unnecessary_casts=true
++cleanup.remove_unnecessary_nls_tags=true
++cleanup.remove_unused_imports=true
++cleanup.remove_unused_local_variables=false
++cleanup.remove_unused_private_fields=true
++cleanup.remove_unused_private_members=false
++cleanup.remove_unused_private_methods=true
++cleanup.remove_unused_private_types=true
++cleanup.sort_members=false
++cleanup.sort_members_all=false
++cleanup.use_blocks=true
++cleanup.use_blocks_only_for_return_and_throw=false
++cleanup.use_parentheses_in_expressions=false
++cleanup.use_this_for_non_static_field_access=false
++cleanup.use_this_for_non_static_field_access_only_if_necessary=true
++cleanup.use_this_for_non_static_method_access=false
++cleanup.use_this_for_non_static_method_access_only_if_necessary=true
++cleanup_profile=_my cleanup
++cleanup_settings_version=2
++eclipse.preferences.version=1
++editor_save_participant_org.eclipse.jdt.ui.postsavelistener.cleanup=true
++formatter_profile=_my
++formatter_settings_version=12
++org.eclipse.jdt.ui.exception.name=e
++org.eclipse.jdt.ui.gettersetter.use.is=true
++org.eclipse.jdt.ui.keywordthis=false
++org.eclipse.jdt.ui.overrideannotation=true
++sp_cleanup.add_default_serial_version_id=true
++sp_cleanup.add_generated_serial_version_id=false
++sp_cleanup.add_missing_annotations=true
++sp_cleanup.add_missing_deprecated_annotations=true
++sp_cleanup.add_missing_methods=false
++sp_cleanup.add_missing_nls_tags=false
++sp_cleanup.add_missing_override_annotations=true
++sp_cleanup.add_missing_override_annotations_interface_methods=true
++sp_cleanup.add_serial_version_id=false
++sp_cleanup.always_use_blocks=true
++sp_cleanup.always_use_parentheses_in_expressions=false
++sp_cleanup.always_use_this_for_non_static_field_access=false
++sp_cleanup.always_use_this_for_non_static_method_access=false
++sp_cleanup.convert_to_enhanced_for_loop=false
++sp_cleanup.correct_indentation=false
++sp_cleanup.format_source_code=true
++sp_cleanup.format_source_code_changes_only=false
++sp_cleanup.make_local_variable_final=false
++sp_cleanup.make_parameters_final=false
++sp_cleanup.make_private_fields_final=true
++sp_cleanup.make_type_abstract_if_missing_method=false
++sp_cleanup.make_variable_declarations_final=true
++sp_cleanup.never_use_blocks=false
++sp_cleanup.never_use_parentheses_in_expressions=true
++sp_cleanup.on_save_use_additional_actions=false
++sp_cleanup.organize_imports=true
++sp_cleanup.qualify_static_field_accesses_with_declaring_class=false
++sp_cleanup.qualify_static_member_accesses_through_instances_with_declaring_class=true
++sp_cleanup.qualify_static_member_accesses_through_subtypes_with_declaring_class=true
++sp_cleanup.qualify_static_member_accesses_with_declaring_class=false
++sp_cleanup.qualify_static_method_accesses_with_declaring_class=false
++sp_cleanup.remove_private_constructors=true
++sp_cleanup.remove_trailing_whitespaces=false
++sp_cleanup.remove_trailing_whitespaces_all=true
++sp_cleanup.remove_trailing_whitespaces_ignore_empty=false
++sp_cleanup.remove_unnecessary_casts=true
++sp_cleanup.remove_unnecessary_nls_tags=false
++sp_cleanup.remove_unused_imports=false
++sp_cleanup.remove_unused_local_variables=false
++sp_cleanup.remove_unused_private_fields=true
++sp_cleanup.remove_unused_private_members=false
++sp_cleanup.remove_unused_private_methods=true
++sp_cleanup.remove_unused_private_types=true
++sp_cleanup.sort_members=false
++sp_cleanup.sort_members_all=false
++sp_cleanup.use_blocks=false
++sp_cleanup.use_blocks_only_for_return_and_throw=false
++sp_cleanup.use_parentheses_in_expressions=false
++sp_cleanup.use_this_for_non_static_field_access=false
++sp_cleanup.use_this_for_non_static_field_access_only_if_necessary=true
++sp_cleanup.use_this_for_non_static_method_access=false
++sp_cleanup.use_this_for_non_static_method_access_only_if_necessary=true
+diff --git a/AudioRacer-Serial/src/at/fhv/audioracer/serial/CarClient.java b/AudioRacer-Serial/src/at/fhv/audioracer/serial/CarClient.java
+new file mode 100644
+index 0000000..a7a1e69
+--- /dev/null
++++ b/AudioRacer-Serial/src/at/fhv/audioracer/serial/CarClient.java
+@@ -0,0 +1,76 @@
++package at.fhv.audioracer.serial;
++
++import at.fhv.audioracer.communication.world.ICarClient;
++import at.fhv.audioracer.core.util.ListenerList;
++
++public class CarClient implements ICarClient {
++	private static final int MAX_CONTROL_VALUE = 250;
++	
++	private class CarClientListenerList extends ListenerList<ICarClientListener> implements
++			ICarClientListener {
++		
++		@Override
++		public void onVelocityChanged(CarClient carClient) {
++			for (ICarClientListener listener : listeners()) {
++				listener.onVelocityChanged(carClient);
++			}
++		}
++		
++	}
++	
++	class Velocity {
++		byte speed;
++		byte direction;
++	}
++	
++	private final Object _lock;
++	
++	private final byte _id;
++	
++	private volatile Velocity _velocity;
++	
++	private CarClientListenerList _listenerList;
++	
++	public CarClient(byte id) {
++		_lock = new Object();
++		
++		_id = id;
++		
++		_velocity = null;
++		
++		_listenerList = new CarClientListenerList();
++	}
++	
++	@Override
++	public byte getCarClientId() {
++		return _id;
++	}
++	
++	public Velocity getVelocity() {
++		Velocity velocity;
++		synchronized (_lock) {
++			velocity = _velocity;
++			_velocity = null;
++		}
++		return velocity;
++	}
++	
++	public ListenerList<ICarClientListener> getListenerList() {
++		return _listenerList;
++	}
++	
++	@Override
++	public void updateVelocity(float speed, float direction) {
++		int realSpeed = (int) (((speed * -1) * (MAX_CONTROL_VALUE / 2.0)) + (MAX_CONTROL_VALUE / 2.0));
++		int realDirection = (int) (((direction * -1) * (MAX_CONTROL_VALUE / 2.0)) + (MAX_CONTROL_VALUE / 2.0));
++		
++		Velocity velocity = new Velocity();
++		velocity.speed = (byte) realSpeed;
++		velocity.direction = (byte) realDirection;
++		
++		synchronized (_lock) {
++			_velocity = velocity;
++		}
++		_listenerList.onVelocityChanged(this);
++	}
++}
+\ No newline at end of file
+diff --git a/AudioRacer-Serial/src/at/fhv/audioracer/serial/ICarClientListener.java b/AudioRacer-Serial/src/at/fhv/audioracer/serial/ICarClientListener.java
+new file mode 100644
+index 0000000..32da32c
+--- /dev/null
++++ b/AudioRacer-Serial/src/at/fhv/audioracer/serial/ICarClientListener.java
+@@ -0,0 +1,7 @@
++package at.fhv.audioracer.serial;
++
++import at.fhv.audioracer.core.util.IListener;
++
++public interface ICarClientListener extends IListener {
++	public abstract void onVelocityChanged(CarClient carClient);
++}
+diff --git a/AudioRacer-Serial/src/at/fhv/audioracer/serial/Main.java b/AudioRacer-Serial/src/at/fhv/audioracer/serial/Main.java
+new file mode 100644
+index 0000000..d654d4e
+--- /dev/null
++++ b/AudioRacer-Serial/src/at/fhv/audioracer/serial/Main.java
+@@ -0,0 +1,15 @@
++package at.fhv.audioracer.serial;
++
++import jssc.SerialPortException;
++
++public class Main {
++	
++	public static void main(String[] args) {
++		try {
++			new SerialInterface("COM1");
++		} catch (SerialPortException e) {
++			// TODO Auto-generated catch block
++			e.printStackTrace();
++		}
++	}
++}
+\ No newline at end of file
+diff --git a/AudioRacer-Serial/src/at/fhv/audioracer/serial/SerialInterface.java b/AudioRacer-Serial/src/at/fhv/audioracer/serial/SerialInterface.java
+new file mode 100644
+index 0000000..1d2466e
+--- /dev/null
++++ b/AudioRacer-Serial/src/at/fhv/audioracer/serial/SerialInterface.java
+@@ -0,0 +1,193 @@
++package at.fhv.audioracer.serial;
++
++import java.util.HashMap;
++import java.util.Map;
++import java.util.concurrent.BlockingQueue;
++import java.util.concurrent.LinkedBlockingDeque;
++import java.util.concurrent.locks.Lock;
++import java.util.concurrent.locks.ReentrantLock;
++
++import jssc.SerialPort;
++import jssc.SerialPortEvent;
++import jssc.SerialPortEventListener;
++import jssc.SerialPortException;
++import jssc.SerialPortList;
++import at.fhv.audioracer.serial.CarClient.Velocity;
++import at.fhv.audioracer.server.CarClientManager;
++
++public class SerialInterface implements SerialPortEventListener, ICarClientListener {
++	private static final byte CAR_CONNECTED = 0x1;
++	private static final byte CAR_DISCONNECTED = 0x2;
++	private static final byte CAR_UPDATE_VELOCITY = 0x3;
++	
++	private final Lock _lock;
++	
++	private final SerialPort _serialPort;
++	
++	private boolean _running;
++	
++	// used to determine if a log message is sent
++	private boolean _logging = false;
++	private boolean _carriageReturnReceived = false;
++	
++	private Map<Byte, CarClient> _carClients;
++	private BlockingQueue<CarClient> _writingQueue;
++	
++	public SerialInterface(String port) throws SerialPortException {
++		_lock = new ReentrantLock();
++		
++		_serialPort = new SerialPort(port);
++		_serialPort.openPort();
++		
++		_serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_RTSCTS_OUT);
++		_serialPort.setRTS(true);
++		_serialPort.addEventListener(this, (SerialPort.MASK_CTS | SerialPort.MASK_RXCHAR));
++		_serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8,
++				SerialPort.STOPBITS_1, SerialPort.PARITY_NONE, true, false);
++		
++		_carClients = new HashMap<Byte, CarClient>();
++		
++		_writingQueue = new LinkedBlockingDeque<CarClient>();
++		startWriting();
++	}
++	
++	public static String[] getPortNames() {
++		return SerialPortList.getPortNames();
++	}
++	
++	@Override
++	public void serialEvent(SerialPortEvent serialPortEvent) {
++		try {
++			if (serialPortEvent.isRXCHAR()) {
++				byte[] buff = _serialPort.readBytes(1);
++				if (_logging) {
++					if (buff[0] == '\n') {
++						_carriageReturnReceived = false;
++						_logging = false;
++						System.out.println();
++					} else {
++						if (_carriageReturnReceived) {
++							_carriageReturnReceived = false;
++							System.out.print('\r');
++						}
++						if (buff[0] == '\r') {
++							_carriageReturnReceived = true;
++						} else {
++							System.out.print((char) buff[0]);
++						}
++					}
++				} else {
++					switch (buff[0]) {
++						case 'D':
++						case 'W':
++						case 'E':
++							// Logging
++							System.out.print((char) buff[0]);
++							_logging = true;
++							break;
++						case CAR_CONNECTED:
++							carConnected();
++							break;
++						case CAR_DISCONNECTED:
++							carDisconnected();
++							break;
++					}
++				}
++			} else if (serialPortEvent.isCTS()) {
++				startWriting();
++			}
++		} catch (SerialPortException e) {
++			// TODO Auto-generated catch block
++			e.printStackTrace();
++		}
++	}
++	
++	private void carConnected() throws SerialPortException {
++		byte id = _serialPort.readBytes(1)[0];
++		
++		CarClient carClient = _carClients.get(id);
++		if (carClient == null) {
++			carClient = new CarClient(id);
++			carClient.getListenerList().add(this);
++		}
++		
++		CarClientManager.getInstance().connect(carClient);
++	}
++	
++	private void carDisconnected() throws SerialPortException {
++		byte id = _serialPort.readBytes(1)[0];
++		
++		CarClient carClient = _carClients.get(id);
++		if (carClient != null) {
++			CarClientManager.getInstance().disconnect(carClient);
++		}
++	}
++	
++	@Override
++	public void onVelocityChanged(CarClient carClient) {
++		_writingQueue.add(carClient);
++		startWriting();
++	}
++	
++	/**
++	 * Checks if the writing thread is already running. If the thread is not running, it will be started.
++	 */
++	private void startWriting() {
++		_lock.lock();
++		try {
++			if (!_running && _serialPort.isCTS()) {
++				_running = true;
++				Thread thread = new Thread(new Runnable() {
++					@Override
++					public void run() {
++						SerialInterface.this.run();
++					}
++				}, "SerialInterface");
++				thread.setDaemon(true);
++				thread.start();
++			}
++		} catch (SerialPortException e) {
++			// TODO Auto-generated catch block
++			e.printStackTrace();
++		} finally {
++			_lock.unlock();
++		}
++	}
++	
++	private void run() {
++		// Ensure, that _running has always the correct value!
++		// This means, before the thread could end, the lock must be acquired.
++		// Also _running must be set before the thread starts.
++		_lock.lock();
++		boolean locked = true;
++		try {
++			while (_serialPort.isCTS()) {
++				// only send when hardware is ready
++				
++				_lock.unlock();
++				locked = false;
++				
++				CarClient carClient = _writingQueue.take();
++				Velocity velocity = carClient.getVelocity();
++				if (velocity != null) {
++					byte[] buff = new byte[] { CAR_UPDATE_VELOCITY, carClient.getCarClientId(),
++							velocity.speed, velocity.direction };
++					_serialPort.writeBytes(buff);
++				}
++				
++				_lock.lock();
++				locked = true;
++			}
++		} catch (SerialPortException | InterruptedException e) {
++			// TODO Auto-generated catch block
++			e.printStackTrace();
++		} finally {
++			if (!locked) {
++				_lock.lock();
++			}
++			
++			_running = false;
++			_lock.unlock();
++		}
++	}
++}
+diff --git a/AudioRacer-Server/src/at/fhv/audioracer/server/CarClientManager.java b/AudioRacer-Server/src/at/fhv/audioracer/server/CarClientManager.java
+index 25169ed..fd326a3 100644
+--- a/AudioRacer-Server/src/at/fhv/audioracer/server/CarClientManager.java
++++ b/AudioRacer-Server/src/at/fhv/audioracer/server/CarClientManager.java
+@@ -10,25 +10,25 @@ import org.slf4j.LoggerFactory;
+ import at.fhv.audioracer.communication.world.ICarClient;
+ import at.fhv.audioracer.communication.world.ICarClientManager;
+ import at.fhv.audioracer.core.util.ListenerList;
+-import at.fhv.audioracer.server.model.ICarClientListener;
++import at.fhv.audioracer.server.model.ICarManagerListener;
+ 
+ public class CarClientManager implements ICarClientManager {
+ 	
+ 	private static Logger _logger = LoggerFactory.getLogger(CarClientManager.class);
+ 	
+-	private static class CarClientListenerList extends ListenerList<ICarClientListener> implements
+-			ICarClientListener {
++	private static class CarClientListenerList extends ListenerList<ICarManagerListener> implements
++			ICarManagerListener {
+ 		
+ 		@Override
+ 		public void onCarClientConnect(ICarClient carClient) {
+-			for (ICarClientListener listener : listeners()) {
++			for (ICarManagerListener listener : listeners()) {
+ 				listener.onCarClientConnect(carClient);
+ 			}
+ 		}
+ 		
+ 		@Override
+ 		public void onCarClientDisconnect(ICarClient carClient) {
+-			for (ICarClientListener listener : listeners()) {
++			for (ICarManagerListener listener : listeners()) {
+ 				listener.onCarClientDisconnect(carClient);
+ 			}
+ 		}
+@@ -36,8 +36,8 @@ public class CarClientManager implements ICarClientManager {
+ 	}
+ 	
+ 	private CarClientListenerList _listenerList = new CarClientListenerList();
+-	private Map<Integer, ICarClient> _carClientList = Collections
+-			.synchronizedMap(new HashMap<Integer, ICarClient>());
++	private Map<Byte, ICarClient> _carClientList = Collections
++			.synchronizedMap(new HashMap<Byte, ICarClient>());
+ 	private static CarClientManager _instance;
+ 	
+ 	private CarClientManager() {
+@@ -73,7 +73,7 @@ public class CarClientManager implements ICarClientManager {
+ 		_logger.warn("Invalid command!");
+ 	}
+ 	
+-	public ListenerList<ICarClientListener> getCarClientListenerList() {
++	public ListenerList<ICarManagerListener> getCarClientListenerList() {
+ 		return _listenerList;
+ 	}
+ }
+diff --git a/AudioRacer-Server/src/at/fhv/audioracer/server/WorldZigbeeMediator.java b/AudioRacer-Server/src/at/fhv/audioracer/server/WorldZigbeeMediator.java
+index 8533e18..2bd4030 100644
+--- a/AudioRacer-Server/src/at/fhv/audioracer/server/WorldZigbeeMediator.java
++++ b/AudioRacer-Server/src/at/fhv/audioracer/server/WorldZigbeeMediator.java
+@@ -11,10 +11,10 @@ import at.fhv.audioracer.communication.world.ICarClient;
+ import at.fhv.audioracer.core.model.Car;
+ import at.fhv.audioracer.core.model.ICarListener;
+ import at.fhv.audioracer.core.util.ListenerList;
+-import at.fhv.audioracer.server.model.ICarClientListener;
++import at.fhv.audioracer.server.model.ICarManagerListener;
+ import at.fhv.audioracer.server.model.IWorldZigbeeConnectionCountChanged;
+ 
+-public class WorldZigbeeMediator implements Runnable, ICarListener, ICarClientListener {
++public class WorldZigbeeMediator implements Runnable, ICarListener, ICarManagerListener {
+ 	
+ 	private static class WorldZigbeeConnectionCountListenerList extends
+ 			ListenerList<IWorldZigbeeConnectionCountChanged> implements
+@@ -33,7 +33,7 @@ public class WorldZigbeeMediator implements Runnable, ICarListener, ICarClientLi
+ 	private BlockingQueue<ICarClient> _awaitingConnectionQueue = new LinkedBlockingQueue<ICarClient>();
+ 	private ICarClient _currentCarClientToConnect = null;
+ 	private Boolean _assignNextCarClient = true;
+-	private HashMap<Integer, Integer> _updateCarInvocationCount = new HashMap<Integer, Integer>();
++	private HashMap<Byte, Integer> _updateCarInvocationCount = new HashMap<Byte, Integer>();
+ 	private final int _upateCarInvocationCountThreshold = 1000;
+ 	private int _connectionCount = 0;
+ 	private float _configurationSpeed = 1.f;
+@@ -72,7 +72,7 @@ public class WorldZigbeeMediator implements Runnable, ICarListener, ICarClientLi
+ 	@Override
+ 	public void onCarPositionChanged(Car car) {
+ 		int count = 0;
+-		int carId = car.getCarId();
++		byte carId = car.getCarId();
+ 		if (_updateCarInvocationCount.containsKey(carId) == false) {
+ 			count = 1;
+ 			_updateCarInvocationCount.put(carId, count);
+diff --git a/AudioRacer-Server/src/at/fhv/audioracer/server/game/GameModerator.java b/AudioRacer-Server/src/at/fhv/audioracer/server/game/GameModerator.java
+index 0a16d5c..13b36b5 100644
+--- a/AudioRacer-Server/src/at/fhv/audioracer/server/game/GameModerator.java
++++ b/AudioRacer-Server/src/at/fhv/audioracer/server/game/GameModerator.java
+@@ -26,10 +26,10 @@ import at.fhv.audioracer.server.CarClientManager;
+ import at.fhv.audioracer.server.PlayerConnection;
+ import at.fhv.audioracer.server.PlayerServer;
+ import at.fhv.audioracer.server.WorldZigbeeMediator;
+-import at.fhv.audioracer.server.model.ICarClientListener;
++import at.fhv.audioracer.server.model.ICarManagerListener;
+ import at.fhv.audioracer.server.model.IWorldZigbeeConnectionCountChanged;
+ 
+-public class GameModerator implements ICarClientListener, IWorldZigbeeConnectionCountChanged {
++public class GameModerator implements ICarManagerListener, IWorldZigbeeConnectionCountChanged {
+ 	
+ 	private static Logger _logger = LoggerFactory.getLogger(GameModerator.class);
+ 	private PlayerServer _playerServer;
+@@ -38,7 +38,7 @@ public class GameModerator implements ICarClientListener, IWorldZigbeeConnection
+ 	private HashMap<Integer, Player> _playerList = new HashMap<Integer, Player>();
+ 	private int _plrId = 0;
+ 	
+-	private Map<Integer, Car> _carList = Collections.synchronizedMap(new HashMap<Integer, Car>());
++	private Map<Byte, Car> _carList = Collections.synchronizedMap(new HashMap<Byte, Car>());
+ 	private Thread _worldZigbeeThread = null;
+ 	private WorldZigbeeMediator _worldZigbeeRunnable = new WorldZigbeeMediator();
+ 	
+@@ -217,9 +217,9 @@ public class GameModerator implements ICarClientListener, IWorldZigbeeConnection
+ 	 * Send currently free cars to all Players.
+ 	 */
+ 	private void _broadcastFreeCars() {
+-		Iterator<Entry<Integer, Car>> it = _carList.entrySet().iterator();
+-		ArrayList<Integer> freeCars = new ArrayList<Integer>();
+-		Entry<Integer, Car> entry = null;
++		Iterator<Entry<Byte, Car>> it = _carList.entrySet().iterator();
++		ArrayList<Byte> freeCars = new ArrayList<Byte>();
++		Entry<Byte, Car> entry = null;
+ 		Car car = null;
+ 		try {
+ 			while (it.hasNext()) {
+@@ -237,9 +237,9 @@ public class GameModerator implements ICarClientListener, IWorldZigbeeConnection
+ 		}
+ 		
+ 		FreeCarsMessage freeCarsMessage = new FreeCarsMessage();
+-		int free[] = new int[freeCars.size()];
++		byte free[] = new byte[freeCars.size()];
+ 		for (int i = 0; i < free.length; i++) {
+-			free[i] = freeCars.get(i).intValue();
++			free[i] = freeCars.get(i).byteValue();
+ 		}
+ 		freeCarsMessage.freeCars = free;
+ 		_playerServer.sendToAllTCP(freeCarsMessage);
+@@ -252,8 +252,8 @@ public class GameModerator implements ICarClientListener, IWorldZigbeeConnection
+ 			// check all cars available have a player connected (=selectCar)
+ 			// and this players are all in ready state (=setPlayerReady)
+ 			// at this state we have at least one Car in _carList
+-			Iterator<Entry<Integer, Car>> it = _carList.entrySet().iterator();
+-			Entry<Integer, Car> entry = null;
++			Iterator<Entry<Byte, Car>> it = _carList.entrySet().iterator();
++			Entry<Byte, Car> entry = null;
+ 			Car car = null;
+ 			try {
+ 				while (it.hasNext()) {
+diff --git a/AudioRacer-Server/src/at/fhv/audioracer/server/model/ICarClientListener.java b/AudioRacer-Server/src/at/fhv/audioracer/server/model/ICarManagerListener.java
+similarity index 82%
+rename from AudioRacer-Server/src/at/fhv/audioracer/server/model/ICarClientListener.java
+rename to AudioRacer-Server/src/at/fhv/audioracer/server/model/ICarManagerListener.java
+index cbe8c0c..4e5f948 100644
+--- a/AudioRacer-Server/src/at/fhv/audioracer/server/model/ICarClientListener.java
++++ b/AudioRacer-Server/src/at/fhv/audioracer/server/model/ICarManagerListener.java
+@@ -3,7 +3,7 @@ package at.fhv.audioracer.server.model;
+ import at.fhv.audioracer.communication.world.ICarClient;
+ import at.fhv.audioracer.core.util.IListener;
+ 
+-public interface ICarClientListener extends IListener {
++public interface ICarManagerListener extends IListener {
+ 	
+ 	public void onCarClientConnect(ICarClient carClient);
+ 	
+diff --git a/AudioRacer-WorldCommunication/src/at/fhv/audioracer/communication/world/ICarClient.java b/AudioRacer-WorldCommunication/src/at/fhv/audioracer/communication/world/ICarClient.java
+index c1c40f1..674528a 100644
+--- a/AudioRacer-WorldCommunication/src/at/fhv/audioracer/communication/world/ICarClient.java
++++ b/AudioRacer-WorldCommunication/src/at/fhv/audioracer/communication/world/ICarClient.java
+@@ -2,7 +2,7 @@ package at.fhv.audioracer.communication.world;
+ 
+ public interface ICarClient {
+ 	
+-	public int getCarClientId();
++	public byte getCarClientId();
+ 	
+ 	public void updateVelocity(float speed, float direction);
+ }
+diff --git a/AudioRacer-WorldCommunication/src/at/fhv/audioracer/communication/world/message/CarDetectedMessage.java b/AudioRacer-WorldCommunication/src/at/fhv/audioracer/communication/world/message/CarDetectedMessage.java
+index b21124d..e11eb60 100644
+--- a/AudioRacer-WorldCommunication/src/at/fhv/audioracer/communication/world/message/CarDetectedMessage.java
++++ b/AudioRacer-WorldCommunication/src/at/fhv/audioracer/communication/world/message/CarDetectedMessage.java
+@@ -2,7 +2,7 @@ package at.fhv.audioracer.communication.world.message;
+ 
+ public class CarDetectedMessage extends CameraMessage {
+ 	
+-	public int carId;
++	public byte carId;
+ 	public byte[] image;
+ 	
+ 	public CarDetectedMessage() {
+diff --git a/AudioRacer-WorldSimulator/src/at/fhv/audioracer/simulator/world/SimulationController.java b/AudioRacer-WorldSimulator/src/at/fhv/audioracer/simulator/world/SimulationController.java
+index ebd8e75..e3cfed2 100644
+--- a/AudioRacer-WorldSimulator/src/at/fhv/audioracer/simulator/world/SimulationController.java
++++ b/AudioRacer-WorldSimulator/src/at/fhv/audioracer/simulator/world/SimulationController.java
+@@ -49,7 +49,7 @@ public class SimulationController {
+ 	
+ 	private MapComponent _map;
+ 	
+-	private int _carId;
++	private byte _carId;
+ 	
+ 	private List<ICarClient> _carClients;
+ 	
+diff --git a/AudioRacer-WorldSimulator/src/at/fhv/audioracer/simulator/world/impl/CarClient.java b/AudioRacer-WorldSimulator/src/at/fhv/audioracer/simulator/world/impl/CarClient.java
+index 7e6bbf8..63f47c2 100644
+--- a/AudioRacer-WorldSimulator/src/at/fhv/audioracer/simulator/world/impl/CarClient.java
++++ b/AudioRacer-WorldSimulator/src/at/fhv/audioracer/simulator/world/impl/CarClient.java
+@@ -59,7 +59,8 @@ public class CarClient implements ICarClient {
+ 		return new Direction(newDirection);
+ 	}
+ 	
+-	private Position calcNewPosition(float speed, Position currentPosition, Direction currentDirection) {
++	private Position calcNewPosition(float speed, Position currentPosition,
++			Direction currentDirection) {
+ 		// @formatter:off
+ 		/*
+ 		             /|
+@@ -98,7 +99,7 @@ public class CarClient implements ICarClient {
+ 	}
+ 	
+ 	@Override
+-	public int getCarClientId() {
++	public byte getCarClientId() {
+ 		return _car.getCarId();
+ 	}
+ 	
+diff --git a/libs/jssc-2.6.0-src.jar b/libs/jssc-2.6.0-src.jar
+new file mode 100644
+index 0000000..ca48c67
+Binary files /dev/null and b/libs/jssc-2.6.0-src.jar differ
+diff --git a/libs/jssc.jar b/libs/jssc.jar
+new file mode 100644
+index 0000000..eb74f15
+Binary files /dev/null and b/libs/jssc.jar differ

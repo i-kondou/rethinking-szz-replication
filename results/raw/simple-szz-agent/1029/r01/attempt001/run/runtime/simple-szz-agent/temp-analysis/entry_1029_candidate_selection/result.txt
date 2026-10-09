@@ -1,0 +1,42 @@
+SELECTED: candidate_40
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit message explicitly describes two bugs in the FTS3 "words" table
+ID-offsetting scheme used to distinguish sms rows from mms/part rows:
+
+1. In MmsProvider.java, the mms/part row ID was computed as `(2 << 32) + rowId`.
+   Because both operands of `<<` are `int` in Java, the shift amount is taken
+   modulo 32, so `2 << 32` evaluates to `2 << 0 == 2`, not the intended large
+   offset. This collides mms word IDs with sms word IDs.
+2. In MmsSmsDatabaseHelper.java, the `populateWordsTable` method (used to
+   backfill the words table on database upgrade) inserted mms/part rows using
+   the raw `id` from the Part table with no offset applied at all, so the
+   offsetting scheme was not applied there either.
+
+The fix (fix_commit_diff.txt) changes the offset computation to
+`(1L << 33) + rowId` (using a long literal to avoid the int-shift bug) and adds
+the missing `(1L << 33) + id` offset in `populateWordsTable`. It also removes
+the now-unnecessary `SOURCE_ROW_ID`/`TABLE_ID` columns and switches all
+triggers/queries to use the FTS3 rowid directly instead of those columns.
+
+candidate_40 is the commit that originally introduced this entire "words"
+table feature:
+- It adds `cv.put(Telephony.MmsSms.WordsTable.ID, (2 << 32) + rowId);` in
+  MmsProvider.java — the exact buggy int-shift expression named in the fix
+  commit message.
+- It adds the `populateWordsTable` method in MmsSmsDatabaseHelper.java, whose
+  mms/part branch inserts `cv.put(Telephony.MmsSms.WordsTable.ID, id);` with no
+  offset — the second bug described in the fix commit message ("The
+  populateWordsTable method ... didn't add the offset at all").
+- It also introduces `createWordsTables`, the `SOURCE_ROW_ID`/`TABLE_ID`
+  columns, and the `source_id`/`table_to_use`-based triggers/queries, all of
+  which are precisely what the fix commit removes/reworks.
+
+No candidate prior to candidate_40 contains any reference to the words table,
+`WordsTable.ID`, `populateWordsTable`, `source_id`, or `table_to_use` (a
+targeted search across all 136 candidates found matches only in candidate_40
+and later commits that touch/inherit this same code). This makes candidate_40
+the first commit to introduce the problematic offsetting code, and therefore
+the bug-introducing commit.

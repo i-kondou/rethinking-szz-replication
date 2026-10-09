@@ -1,0 +1,15 @@
+SELECTED: candidate_04
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the `SecurityConfig` class annotation from `@EnableWebSecurity` back to `@Configuration` (blob transition a581a92 -> 62e20fc), resolving a "MIME error" caused by Spring Security's full web-security auto-configuration (`@EnableWebSecurity`) taking over and interfering with how static resources (CSS/JS/HTML) were served/typed.
+
+Tracing the git blob hashes of `SecurityConfig.java` across the candidates shows the annotation flip-flopped over time:
+- candidate_01: introduces `SecurityConfig.java` with `@EnableWebSecurity` (new file, blob 5419508).
+- candidate_02: changes `@EnableWebSecurity` -> `@Configuration` (blob a03d2b1), part of a broader refactor.
+- candidate_03: unrelated change (comments out an `@Override`), blob ba84d4a.
+- candidate_04: changes `@Configuration` -> `@EnableWebSecurity` (blob ba84d4a -> a581a92) — this reintroduces the exact problematic annotation.
+- candidate_05: changes `@EnableWebSecurity` -> `@Configuration` (blob a581a92 -> 62e20fc) — this diff is byte-for-byte identical (same blob hashes) to the provided fix_commit_diff.txt, indicating candidate_05 is effectively the fix itself, not a bug-introducing change.
+
+Since the fix commit's diff starts from blob `a581a92`, and candidate_04 is the commit that produced blob `a581a92` by switching the annotation to `@EnableWebSecurity`, candidate_04 is the immediate, direct cause of the buggy state that the fix commit corrects. It is the last commit to touch that line before the bug was fixed, making it the bug-introducing commit under blame-based (SZZ) analysis.

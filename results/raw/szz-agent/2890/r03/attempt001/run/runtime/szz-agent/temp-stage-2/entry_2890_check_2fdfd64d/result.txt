@@ -1,0 +1,38 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The bug fixed by the target commit is in `ArenaListener.onFoodLevelChange`: in the buggy version, when the arena is running, the code cancels the food-level-change event for *any* player as long as `lockFoodLevel` is true, without verifying that the specific player triggering the event is actually inside the arena:
+
+    if (arena.isRunning()) {
+        if (lockFoodLevel) {
+            event.setCancelled(true);
+        }
+    }
+
+The fix adds an `arena.inArena(p)` check:
+
+    if (arena.isRunning()) {
+        if (arena.inArena(p) && lockFoodLevel) {
+            event.setCancelled(true);
+        }
+    }
+
+Examining `files/old/.../ArenaListener.java`, the `onFoodLevelChange` method at that point in history reads:
+
+    public void onFoodLevelChange(FoodLevelChangeEvent event) {
+        if (!arena.isRunning())
+            return;
+
+        if (!(event.getEntity() instanceof Player) || !arena.inArena((Player) event.getEntity()))
+            return;
+
+        // If the food level is locked, cancel all changes.
+        if (lockFoodLevel)
+            event.setCancelled(true);
+    }
+
+This old implementation already includes an explicit `!arena.inArena((Player) event.getEntity())` early-return guard before ever checking `lockFoodLevel`. This is functionally equivalent to (in fact stricter than) the fixed version's `arena.inArena(p) && lockFoodLevel` check — it guarantees the event is only cancelled for players who are actually in the arena.
+
+The bug was therefore introduced later, when the method was refactored (adding the "always locked in lobby/spec" branch and restructuring the running-check), and that refactor accidentally dropped the `inArena` guard for the "arena is running" branch. The fix commit restores that missing guard. Since the `old/` version predates this refactor and still contains the correct `inArena` check, the bug is not present in the old version.

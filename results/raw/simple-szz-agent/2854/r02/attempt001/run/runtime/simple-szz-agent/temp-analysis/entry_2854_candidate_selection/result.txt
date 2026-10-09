@@ -1,0 +1,16 @@
+SELECTED: candidate_26
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit re-adds a single missing line in CrossflowHandler.startExperiment():
+    workflow.getSerializer().setClassloader(classLoader);
+placed right after the Workflow instance is constructed and before workflow.setInstanceId(experimentId) is called. Without this call, the workflow's serializer never gets the correct (dynamically created URLClassLoader for the experiment's jar) classloader set, which would cause classloading/deserialization failures for classes defined in the experiment's jar.
+
+Tracing the history of this exact code region across the candidates:
+- candidate_10 is where the setClassloader(ClassLoader) method is first introduced on the serializer, and the corresponding call `workflow.getSerializer().setClassloader(classLoader);` is added right after workflow instantiation in CrossflowHandler — matching the fix's target line exactly.
+- candidate_25 still contains this line unchanged (as a context line), confirming it was present and correct up through that point.
+- candidate_26 performs a large rewrite/refactor of CrossflowHandler.java (essentially a full-file diff). In this rewrite, the Workflow constructor call is changed to take the ClassLoader directly as a constructor argument (`getConstructor(Mode.class, ClassLoader.class).newInstance(mode, classLoader)`), and the explicit `workflow.getSerializer().setClassloader(classLoader);` call that previously followed instantiation is dropped entirely — the code now goes straight from constructing the workflow to `workflow.setInstanceId(experimentId);`. This is the point where the bug was introduced: passing the classloader into the constructor apparently did not correctly propagate it to the serializer, so the essential setClassloader call was silently lost during the refactor.
+- candidate_28 (the most recent candidate) appears to reintroduce this exact same line/hunk, essentially duplicating what the actual fix commit does — meaning by that point in history the missing call was already being restored, consistent with candidate_26 being the true regression point rather than the fix itself.
+
+Since candidate_26 is the commit that removed the previously-correct `workflow.getSerializer().setClassloader(classLoader);` call during its refactor of the instantiation logic, and the fix commit's sole change is to restore precisely that call at precisely that location, candidate_26 is identified as the bug-introducing commit.

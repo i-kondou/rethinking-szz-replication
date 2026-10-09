@@ -1,0 +1,305 @@
+{
+  "metadata": {
+    "timestamp": "20260906_034617",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1284/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 40.064,
+      "max": 40.064,
+      "mean": 40.064,
+      "median": 40.064,
+      "total": 40.064,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 39.999,
+      "max": 39.999,
+      "mean": 39.999,
+      "median": 39.999,
+      "total": 39.999,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 16,
+      "max": 16,
+      "mean": 16,
+      "median": 16,
+      "total": 16,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 3169,
+      "max": 3169,
+      "mean": 3169,
+      "median": 3169,
+      "total": 3169,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 16839,
+      "max": 16839,
+      "mean": 16839,
+      "median": 16839,
+      "total": 16839,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 91736,
+      "max": 91736,
+      "mean": 91736,
+      "median": 91736,
+      "total": 91736,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.1761378,
+      "max": 0.1761378,
+      "mean": 0.1761378,
+      "median": 0.1761378,
+      "total": 0.1761378,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 8,
+      "max": 8,
+      "mean": 8,
+      "median": 8,
+      "total": 8,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 4,
+      "Glob": 1,
+      "Grep": 1,
+      "Write": 2
+    },
+    "num_candidates": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "1284",
+      "fix_commit_hash": "757580a52ff4357da96d21b9ed5d0382191b2f0c",
+      "ground_truth_bics": [
+        "dcec42bbee3b983c4bbcd2a258f84f69be20b124"
+      ],
+      "predicted_bics": [
+        "dcec42bbee3b983c4bbcd2a258f84f69be20b124"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "1284",
+      "fix_commit": "757580a52ff4357da96d21b9ed5d0382191b2f0c",
+      "ground_truth_bics": [
+        "dcec42bbee3b983c4bbcd2a258f84f69be20b124"
+      ],
+      "total_candidates": 9,
+      "gt_in_candidates": true,
+      "selected_commit": "dcec42bbee3b983c4bbcd2a258f84f69be20b124",
+      "selected_index": 7,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes a single line in TetrisPanel.java: - private static final int HIGH_SCORES_FILENAME = \"TetrisHighScores.txt\"; + private static final String HIGH_SCORES_FILENAME = \"TetrisHighScores.txt\"; This was a build error: a String literal was being assigned to a field declared with type `int`, which will not compile in Java. Searching the candidates for the origin of this field shows it does not exist before candidate_08. In candidate_08, TetrisPanel.java is refactored to extract seve",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/main/java/com/tswift242/tetris/TetrisPanel.java"
+      ],
+      "call_stats": {
+        "duration_s": 40.064,
+        "duration_api_s": 39.999,
+        "num_turns": 9,
+        "input_tokens": 16,
+        "output_tokens": 3169,
+        "cache_creation_input_tokens": 16839,
+        "cache_read_input_tokens": 91736,
+        "total_cost_usd": 0.1761378,
+        "total_tool_calls": 8,
+        "tool_calls_by_name": {
+          "Read": 4,
+          "Glob": 1,
+          "Grep": 1,
+          "Write": 2
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1284/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1284_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1284/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1284_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1284/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1284_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 921,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 303,
+            "cache_read_input_tokens": 10605,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "HIGH_SCORES_FILENAME",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 441,
+            "cache_read_input_tokens": 10908,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1284/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1284_candidate_selection/candidates/candidate_08.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 7,
+            "cache_creation_input_tokens": 6900,
+            "cache_read_input_tokens": 11349,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1284/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1284_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_08\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes a single line in TetrisPanel.java:\n  - private static final int HIGH_SCORES_FILENAME = \"TetrisHighScores.txt\";\n  + private static final String HIGH_SCORES_FILENAME = \"TetrisHighScores.txt\";\n\nThis was a build error: a String literal was being assigned to a field declared with type `int`, which will not compile in Java.\n\nSearching the candidates for the origin of this field shows it does not exist before candidate_08. In candidate_08, TetrisPanel.java is refactored to extract several hardcoded literals (window size, grid size, colors, filenames, etc.) into named static final constants, replacing the previous hardcoded string literal \"TetrisHighScores.txt\" used directly in `new File(...)` and `new FileWriter(...)` calls. During this refactor, the new constant was introduced as:\n  private static final int HIGH_SCORES_FILENAME = \"TetrisHighScores.txt\";\n\nThis is the exact same line (down to whitespace) that the fix commit corrects, confirming candidate_08 is where the bug was introduced. Candidate_09 is the fix commit itself, correcting the type from `int` to `String`. No other candidate touches this declaration, so candidate_08 is unambiguously the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1012,
+            "cache_read_input_tokens": 18249,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1284/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1284_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_08\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes a single line in TetrisPanel.java:\n  - private static final int HIGH_SCORES_FILENAME = \"TetrisHighScores.txt\";\n  + private static final String HIGH_SCORES_FILENAME = \"TetrisHighScores.txt\";\n\nThis was a build error: a String literal was being assigned to a field declared with type `int`, which will not compile in Java.\n\nSearching the candidates for the origin of this field shows it does not exist before candidate_08. In candidate_08, TetrisPanel.java is refactored to extract several hardcoded literals (window size, grid size, colors, filenames, etc.) into named static final constants, replacing the previous hardcoded string literal \"TetrisHighScores.txt\" used directly in `new File(...)` and `new FileWriter(...)` calls. During this refactor, the new constant was introduced as:\n  private static final int HIGH_SCORES_FILENAME = \"TetrisHighScores.txt\";\n\nThis is the exact same line (down to whitespace) that the fix commit corrects, confirming candidate_08 is where the bug was introduced. Candidate_09 is the fix commit itself, correcting the type from `int` to `String`. No other candidate touches this declaration, so candidate_08 is unambiguously the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 976,
+            "cache_read_input_tokens": 19261,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

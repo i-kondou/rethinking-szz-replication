@@ -1,0 +1,22 @@
+{
+  "fix_commit": "153acab91e5c096399e0302dbc7ea91293281536",
+  "bic": "e56a814d47dbf8762a33f29f7e029b8d8e50097c",
+  "confidence": "high",
+  "type": "omission",
+  "reasoning": "This commit created DownloadManagerInterface and registered a BroadcastReceiver (context.registerReceiver(downloadCompletionReceiver, filter)) via its getInstance/init logic, but never provided any corresponding unregister/destroy logic, nor did MainActivity override onDestroy to clean it up. This omission is exactly what the fix commit addresses by adding destroy() and calling it from onDestroy(). Subsequent commits only moved/relocated the file without changing this behavior.",
+  "metrics": {
+    "case_elapsed_seconds": 21.714304,
+    "api_elapsed_seconds": 21.501177,
+    "tool_elapsed_seconds": 0.098786,
+    "other_elapsed_seconds": 0.114344,
+    "api_call_count": 5,
+    "tool_call_count": 4,
+    "prompt_tokens": 25857,
+    "completion_tokens": 1007,
+    "total_tokens": 26864,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:37:25.385869"
+}

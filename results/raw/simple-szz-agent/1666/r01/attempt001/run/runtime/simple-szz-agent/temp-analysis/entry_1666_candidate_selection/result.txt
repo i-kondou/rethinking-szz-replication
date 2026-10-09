@@ -1,0 +1,37 @@
+SELECTED: candidate_51
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single `break;` statement immediately after the log line
+"Cover downloaded for ... size=..." inside the loop that iterates over
+`coverUrls` in `CoverManager.getCoverBytes(...)`. Before the fix, once a cover
+was successfully downloaded/read, the loop had no way to stop and would
+continue trying the remaining URLs in `coverUrls`, potentially overwriting the
+already-successfully-fetched `coverBytes` (e.g. a valid local/cached cover)
+with `null` from a subsequent failed web/cache attempt — this is the "local
+cover art" bug described in the fix commit message.
+
+Tracing the history of this exact code block:
+- In earlier candidates (e.g. candidate_04, candidate_12, candidate_36), the
+  loop body ended with `return coverBytes;` right after the "Cover downloaded
+  for ..." log statement. This `return` served as the loop's exit condition:
+  as soon as a cover was found, the method returned immediately, so the loop
+  could never continue to overwrite a good result.
+- candidate_51 performs a broad refactor across `CoverManager.java` and
+  `AbstractWebCover.java` converting multiple methods from an "early return"
+  style to a "single exit point" style (e.g. `cleanGetRequest`, `download`,
+  `executeGetRequest`, `isWifiConnected`). As part of this refactor, the diff
+  at the hunk `@@ -709,7 +707,6 @@` removes the line `return coverBytes;`
+  from inside the cover-download loop, but does NOT replace it with a
+  `break;` (unlike the other refactored methods, which correctly restructured
+  their control flow). This leaves the loop with no mechanism to stop once a
+  cover is successfully fetched, introducing the bug.
+- The fix commit's diff is a minimal one-line patch that re-adds exactly the
+  missing `break;` at that same location, confirming candidate_51's removal
+  of `return coverBytes;` (without a corresponding `break`) as the root
+  cause.
+
+No candidate between candidate_51 and the fix (candidate_52, which is
+essentially the fix itself) touches this code path, so candidate_51 is the
+first and only commit that introduces the missing-break bug.

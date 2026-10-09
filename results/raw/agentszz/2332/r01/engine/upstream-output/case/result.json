@@ -1,0 +1,22 @@
+{
+  "fix_commit": "052fc158198e97c6e44d9bdff1e5bf5595d61f83",
+  "bic": "c8156def8cdc0f33f763b3edd9cec79f86c9b390",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"Fix race condition on TS3Query#io\") added `synchronized` to `connect()`, `exit()`, and `doCommandAsync()`, all locking on the same TS3Query instance monitor. This created a new deadlock/race hazard: `exit()` could be invoked concurrently from multiple threads (e.g., directly and via `fireDisconnect()`'s async task calling `exit()` again), with one thread blocked inside `exit()` waiting for `api.quit()` to complete (which itself requires `doCommandAsync` to acquire the same lock from the I/O thread). The fix commit directly overhauls this exact synchronization design\u2014replacing the plain `synchronized` guard on `exit()` with atomic flags and proper wait/notify signaling\u2014confirming that the locking scheme from c8156def8cdc was the root cause of the synchronization bug being fixed.",
+  "metrics": {
+    "case_elapsed_seconds": 188.988012,
+    "api_elapsed_seconds": 188.476171,
+    "tool_elapsed_seconds": 0.376801,
+    "other_elapsed_seconds": 0.135044,
+    "api_call_count": 11,
+    "tool_call_count": 14,
+    "prompt_tokens": 114147,
+    "completion_tokens": 15838,
+    "total_tokens": 129985,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:02:02.968870"
+}

@@ -1,0 +1,33 @@
+SELECTED: candidate_09
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds an onDestroy() override in MainActivity that calls
+DownloadManagerInterface.getInstance().destroy(this), and adds a destroy(Context)
+method to DownloadManagerInterface that unregisters downloadCompletionReceiver and
+clears the singleton instance. This shows the bug was a leaked BroadcastReceiver:
+DownloadManagerInterface registers a receiver but nothing ever unregisters it.
+
+Before candidate_09, MainActivity itself held the downloadCompletionReceiver field
+and correctly unregistered it in its own onDestroy():
+    protected void onDestroy() {
+        getApplicationContext().unregisterReceiver(downloadCompletionReceiver);
+        super.onDestroy();
+    }
+
+candidate_09 refactors this logic into a new singleton class,
+DownloadManagerInterface, which has an init()/registerReceiver() method that
+registers downloadCompletionReceiver, but provides no corresponding
+destroy()/unregisterReceiver() method. It also removes MainActivity's onDestroy()
+override entirely (since the receiver field moved out of MainActivity), so the
+previously-working unregister call is deleted without being replaced by an
+equivalent teardown call on the new singleton. From this commit onward
+(through candidate_10 through candidate_17), the receiver registered inside
+DownloadManagerInterface is never unregistered anywhere in the codebase, which is
+exactly the bug the fix commit resolves by adding the missing destroy()/onDestroy()
+wiring.
+
+Because candidate_09 is the commit that both introduces the registerReceiver()-only
+DownloadManagerInterface and removes the prior working unregister logic, it is the
+commit that introduced the bug.

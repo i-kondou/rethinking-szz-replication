@@ -1,0 +1,13 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The bug: in the buggy version of JettyStart.java, the "[eXist Home : ...]" log line retrieves the eXist home directory via `SystemProperties.getInstance().getSystemProperty("exist.home", "unknown")`. The `SystemProperties` class loads its values from the bundled `src/org/exist/system.properties` resource file, which only contains build-time properties (product-version, product-build, git-commit, etc.) and does NOT contain an `exist.home` entry. As a result, this call always falls back to the default "unknown", so the log message never reports the actual eXist home directory. The fix (per fix_commit_diff.txt) corrects this by instead reading the JVM system property directly via `System.getProperty("exist.home", "unknown")`, and also moves the log line earlier (right after the "Running as user" line).
+
+In files/old/src/org/exist/JettyStart.java, the corresponding "[eXist Home : ...]" line (line 104) is:
+    msg = "[eXist Home : " + System.getProperty("exist.home") + "]";
+
+This already uses `System.getProperty("exist.home")` directly — the same correct approach used in the fixed version — rather than going through `SystemProperties.getInstance().getSystemProperty(...)`. The `SystemProperties` class/mechanism (loading from system.properties resource) is not used at all for the exist.home value in this old version; it's only used for `product-version`, `product-build`, and `svn-revision` via a separately loaded `sysProperties` Properties object, but exist.home is fetched independently and correctly.
+
+Therefore, the specific defect (using the build-properties-backed SystemProperties lookup for exist.home, which always returns "unknown") was not present in this old version. It must have been introduced later, likely during a refactor that consolidated all the "[eXist ...]" log lines to use `SystemProperties.getInstance().getSystemProperty(...)` uniformly (as seen in files/buggy/), inadvertently including exist.home which isn't actually stored in that properties file.

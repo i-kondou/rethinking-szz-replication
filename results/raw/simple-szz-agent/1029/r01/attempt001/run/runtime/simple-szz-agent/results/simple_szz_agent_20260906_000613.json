@@ -1,0 +1,293 @@
+{
+  "metadata": {
+    "timestamp": "20260906_000613",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1029/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 35.701,
+      "max": 35.701,
+      "mean": 35.701,
+      "median": 35.701,
+      "total": 35.701,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 35.628,
+      "max": 35.628,
+      "mean": 35.628,
+      "median": 35.628,
+      "total": 35.628,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 8,
+      "max": 8,
+      "mean": 8,
+      "median": 8,
+      "total": 8,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 3182,
+      "max": 3182,
+      "mean": 3182,
+      "median": 3182,
+      "total": 3182,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 20146,
+      "max": 20146,
+      "mean": 20146,
+      "median": 20146,
+      "total": 20146,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 93641,
+      "max": 93641,
+      "mean": 93641,
+      "median": 93641,
+      "total": 93641,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.19674029999999998,
+      "max": 0.19674029999999998,
+      "mean": 0.19674029999999998,
+      "median": 0.19674029999999998,
+      "total": 0.19674029999999998,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 7,
+      "max": 7,
+      "mean": 7,
+      "median": 7,
+      "total": 7,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 4,
+      "Grep": 2,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 136,
+      "max": 136,
+      "mean": 136,
+      "median": 136,
+      "total": 136,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 4,
+      "max": 4,
+      "mean": 4,
+      "median": 4,
+      "total": 4,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 4,
+      "max": 4,
+      "mean": 4,
+      "median": 4,
+      "total": 4,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "1029",
+      "fix_commit_hash": "3ee6d03d40bf4ac6b8230d6c735f50527e1e93cc",
+      "ground_truth_bics": [
+        "8e5ee782690175e9cfb9a37f600f207b952ba8a6"
+      ],
+      "predicted_bics": [
+        "8e5ee782690175e9cfb9a37f600f207b952ba8a6"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "1029",
+      "fix_commit": "3ee6d03d40bf4ac6b8230d6c735f50527e1e93cc",
+      "ground_truth_bics": [
+        "8e5ee782690175e9cfb9a37f600f207b952ba8a6"
+      ],
+      "total_candidates": 136,
+      "gt_in_candidates": true,
+      "selected_commit": "8e5ee782690175e9cfb9a37f600f207b952ba8a6",
+      "selected_index": 39,
+      "confidence": "HIGH",
+      "explanation": "The fix commit message explicitly describes two bugs in the FTS3 \"words\" table ID-offsetting scheme used to distinguish sms rows from mms/part rows: 1. In MmsProvider.java, the mms/part row ID was computed as `(2 << 32) + rowId`. Because both operands of `<<` are `int` in Java, the shift amount is taken modulo 32, so `2 << 32` evaluates to `2 << 0 == 2`, not the intended large offset. This collides mms word IDs with sms word IDs. 2. In MmsSmsDatabaseHelper.java, the `populateWordsTable` method (",
+      "is_correct": true,
+      "num_files_touched_by_fix": 4,
+      "num_source_files_touched_by_fix": 4,
+      "files_analyzed": [
+        "src/com/android/providers/telephony/MmsProvider.java",
+        "src/com/android/providers/telephony/MmsSmsDatabaseHelper.java",
+        "src/com/android/providers/telephony/MmsSmsProvider.java",
+        "src/com/android/providers/telephony/SmsProvider.java"
+      ],
+      "call_stats": {
+        "duration_s": 35.701,
+        "duration_api_s": 35.628,
+        "num_turns": 8,
+        "input_tokens": 14,
+        "output_tokens": 3182,
+        "cache_creation_input_tokens": 20146,
+        "cache_read_input_tokens": 93641,
+        "total_cost_usd": 0.19674029999999998,
+        "total_tool_calls": 7,
+        "tool_calls_by_name": {
+          "Read": 4,
+          "Grep": 2,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1029/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1029_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1029/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1029_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1029/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1029_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 6287,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "2 << 32|2&lt;&lt;32|WordsTable.ID|populateWordsTable|createWordsTables|source_id|table_to_use",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1029/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1029_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "cache_creation_input_tokens": 651,
+            "cache_read_input_tokens": 15971,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "2 << 32|WordsTable.ID|populateWordsTable|createWordsTables|source_id|table_to_use",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1029/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1029_candidate_selection/candidates/candidate_40.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1029,
+            "cache_read_input_tokens": 16622,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1029/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1029_candidate_selection/candidates/candidate_40.diff",
+                  "limit": 200
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 4382,
+            "cache_read_input_tokens": 17651,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1029/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1029_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_40\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit message explicitly describes two bugs in the FTS3 \"words\" table\nID-offsetting scheme used to distinguish sms rows from mms/part rows:\n\n1. In MmsProvider.java, the mms/part row ID was computed as `(2 << 32) + rowId`.\n   Because both operands of `<<` are `int` in Java, the shift amount is taken\n   modulo 32, so `2 << 32` evaluates to `2 << 0 == 2`, not the intended large\n   offset. This collides mms word IDs with sms word IDs.\n2. In MmsSmsDatabaseHelper.java, the `populateWordsTable` method (used to\n   backfill the words table on database upgrade) inserted mms/part rows using\n   the raw `id` from the Part table with no offset applied at all, so the\n   offsetting scheme was not applied there either.\n\nThe fix (fix_commit_diff.txt) changes the offset computation to\n`(1L << 33) + rowId` (using a long literal to avoid the int-shift bug) and adds\nthe missing `(1L << 33) + id` offset in `populateWordsTable`. It also removes\nthe now-unnecessary `SOURCE_ROW_ID`/`TABLE_ID` columns and switches all\ntriggers/queries to use the FTS3 rowid directly instead of those columns.\n\ncandidate_40 is the commit that originally introduced this entire \"words\"\ntable feature:\n- It adds `cv.put(Telephony.MmsSms.WordsTable.ID, (2 << 32) + rowId);` in\n  MmsProvider.java \u2014 the exact buggy int-shift expression named in the fix\n  commit message.\n- It adds the `populateWordsTable` method in MmsSmsDatabaseHelper.java, whose\n  mms/part branch inserts `cv.put(Telephony.MmsSms.WordsTable.ID, id);` with no\n  offset \u2014 the second bug described in the fix commit message (\"The\n  populateWordsTable method ... didn't add the offset at all\").\n- It also introduces `createWordsTables`, the `SOURCE_ROW_ID`/`TABLE_ID`\n  columns, and the `source_id`/`table_to_use`-based triggers/queries, all of\n  which are precisely what the fix commit removes/reworks.\n\nNo candidate prior to candidate_40 contains any reference to the words table,\n`WordsTable.ID`, `populateWordsTable`, `source_id`, or `table_to_use` (a\ntargeted search across all 136 candidates found matches only in candidate_40\nand later commits that touch/inherit this same code). This makes candidate_40\nthe first commit to introduce the problematic offsetting code, and therefore\nthe bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1511,
+            "cache_read_input_tokens": 22033,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

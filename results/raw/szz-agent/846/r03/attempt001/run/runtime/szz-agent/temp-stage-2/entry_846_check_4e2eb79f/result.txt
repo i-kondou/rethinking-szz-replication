@@ -1,0 +1,24 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix adds a null check (`if (myDataChoices != null)`) around a block of code in
+`DisplayControlImpl.java` that inspects `myDataChoices` for a `DerivedDataChoice` at
+index 0 in order to set `this.usesTimeDriver`. Without this null check, the buggy
+version would throw a NullPointerException if `myDataChoices` was null at that point
+in the `init()` method.
+
+Examining `files/old/src/ucar/unidata/idv/control/DisplayControlImpl.java`, the
+corresponding section of the `init()` method (immediately after the
+`if (!init(myDataChoices)) {...}` block) does not contain this time-driver /
+DerivedDataChoice logic at all. In the old version, execution goes directly from
+the `init(myDataChoices)` check to the "Check if we have been removed" block and
+window creation, with no code that calls `myDataChoices.size()` or inspects
+`DerivedDataChoice` choices for time driver properties.
+
+Since the entire code block that was patched (and that contains the unguarded
+`myDataChoices.size()` call) does not exist yet in the old version, the specific
+bug being fixed (NPE from missing null check on `myDataChoices`) cannot be present
+in this version — the feature that introduced the bug was added later in the
+project's history.

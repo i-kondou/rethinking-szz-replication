@@ -1,0 +1,43 @@
+SELECTED: candidate_01
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit modifies Z3UnsafeFormulaManager.java's isAtom() method to add a
+"case Z3_QUANTIFIER_AST: return false;" branch, and adds
+Preconditions.checkArgument(get_ast_kind(...) == Z3_APP_AST) guards to
+getArity() and getArg(). Before the fix, any AST node whose kind was not
+Z3_APP_AST fell through to "default: return true" in isAtom(), and getArity()/
+getArg() unconditionally called the Z3 "app" API functions on whatever term
+was passed in. This meant a quantifier AST node (Z3_QUANTIFIER_AST) was
+treated as an atomic/leaf term instead of being correctly recognized as a
+quantifier, and could be passed into getArity()/getArg() as if it were an
+application term - i.e. quantifiers were incorrectly usable as "Application
+terms", which is exactly the bug described in the fix commit message
+("Quantifiers are no Application terms any more").
+
+candidate_01 is the commit that introduces this exact code for the first
+time: it adds the new file z3/Z3UnsafeFormulaManager.java containing the
+isAtom() switch (case Z3_APP_AST / default: return true, with no
+Z3_QUANTIFIER_AST case) and the unguarded getArity()/getArg() methods, in the
+very same commit that introduces quantifier support (Z3QuantifiedFormulaManager,
+AbstractQuantifiedFormulaManager, isQuantifier/isForall/forall/exists APIs,
+Z3_QUANTIFIER_AST usage, etc.). Before this commit, quantifiers did not exist
+in the codebase at all, so the interaction between quantifier ASTs and
+isAtom/getArity/getArg could not have been buggy.
+
+All subsequent candidates (02-10) only rename, reformat, or move this exact
+code (e.g. renaming nonAtomicOpTypes -> NON_ATOMIC_OP_TYPES in candidate_08,
+reindenting the switch in candidate_03, changing collection types in
+candidate_07) without touching the actual switch logic or adding the missing
+Z3_QUANTIFIER_AST case. candidate_10 even adds new tests
+(testIntrospectionForall/testIntrospectionExists) that explicitly skip
+execution on Z3 with the comment "Bug in Z3QuantifiedFormulaManager",
+confirming the bug was already present and known before the fix, inherited
+unchanged from candidate_01. candidate_11 is actually the fix commit itself
+(identical to fix_commit_diff.txt) and was excluded as it removes the bug
+rather than introducing it.
+
+Therefore candidate_01 is the commit that first introduced the
+problematic isAtom()/getArity()/getArg() code that failed to distinguish
+quantifier AST nodes from application AST nodes.

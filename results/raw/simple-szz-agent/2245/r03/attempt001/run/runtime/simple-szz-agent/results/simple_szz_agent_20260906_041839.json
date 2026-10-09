@@ -1,0 +1,352 @@
+{
+  "metadata": {
+    "timestamp": "20260906_041839",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2245/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 55.747,
+      "max": 55.747,
+      "mean": 55.747,
+      "median": 55.747,
+      "total": 55.747,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 55.306,
+      "max": 55.306,
+      "mean": 55.306,
+      "median": 55.306,
+      "total": 55.306,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 11,
+      "max": 11,
+      "mean": 11,
+      "median": 11,
+      "total": 11,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 3944,
+      "max": 3944,
+      "mean": 3944,
+      "median": 3944,
+      "total": 3944,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 45921,
+      "max": 45921,
+      "mean": 45921,
+      "median": 45921,
+      "total": 45921,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 295287,
+      "max": 295287,
+      "mean": 295287,
+      "median": 295287,
+      "total": 295287,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.42333210000000004,
+      "max": 0.42333210000000004,
+      "mean": 0.42333210000000004,
+      "median": 0.42333210000000004,
+      "total": 0.42333210000000004,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 6,
+      "Glob": 1,
+      "Grep": 2,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 43,
+      "max": 43,
+      "mean": 43,
+      "median": 43,
+      "total": 43,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 11,
+      "max": 11,
+      "mean": 11,
+      "median": 11,
+      "total": 11,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 11,
+      "max": 11,
+      "mean": 11,
+      "median": 11,
+      "total": 11,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2245",
+      "fix_commit_hash": "dac87260f2e8d05c86672d49af0083a5ba959f23",
+      "ground_truth_bics": [
+        "4b47461f03a607b9ef517beb2a1666ffae43a2a7"
+      ],
+      "predicted_bics": [
+        "4b47461f03a607b9ef517beb2a1666ffae43a2a7"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2245",
+      "fix_commit": "dac87260f2e8d05c86672d49af0083a5ba959f23",
+      "ground_truth_bics": [
+        "4b47461f03a607b9ef517beb2a1666ffae43a2a7"
+      ],
+      "total_candidates": 43,
+      "gt_in_candidates": true,
+      "selected_commit": "4b47461f03a607b9ef517beb2a1666ffae43a2a7",
+      "selected_index": 37,
+      "confidence": "HIGH",
+      "explanation": "The fix commit message states: \"The Transactions were being looked up without the readLock and some of the controls for Read and Write lock were broken.\" The fix diff shows that in JournalImpl.java, calls like `getTransactionInfo(txID)` (and `transactions.remove(txID)`) plus the subsequent `tx.checkErrorCondition()` are moved from BEFORE `appendExecutor.execute(...)` (i.e. outside of the `journalLock.readLock()` critical section) to INSIDE the submitted Runnable, right after `journalLock.readLoc",
+      "is_correct": true,
+      "num_files_touched_by_fix": 11,
+      "num_source_files_touched_by_fix": 11,
+      "files_analyzed": [
+        "artemis-commons/src/main/java/org/apache/activemq/artemis/utils/SimpleFuture.java",
+        "artemis-commons/src/main/java/org/apache/activemq/artemis/utils/SimpleFutureImpl.java",
+        "artemis-commons/src/test/java/org/apache/activemq/artemis/utils/SimpleFutureTest.java",
+        "artemis-journal/src/main/java/org/apache/activemq/artemis/core/journal/impl/JournalBase.java",
+        "artemis-journal/src/main/java/org/apache/activemq/artemis/core/journal/impl/JournalCompactor.java",
+        "artemis-journal/src/main/java/org/apache/activemq/artemis/core/journal/impl/JournalImpl.java",
+        "artemis-journal/src/main/java/org/apache/activemq/artemis/core/journal/impl/JournalTransaction.java",
+        "tests/integration-tests/src/test/java/org/apache/activemq/artemis/tests/integration/journal/NIOJournalCompactTest.java",
+        "tests/unit-tests/src/test/java/org/apache/activemq/artemis/tests/unit/core/journal/impl/AlignedJournalImplTest.java",
+        "tests/unit-tests/src/test/java/org/apache/activemq/artemis/tests/unit/core/journal/impl/JournalAsyncTest.java",
+        "tests/unit-tests/src/test/java/org/apache/activemq/artemis/tests/unit/core/journal/impl/JournalImplTestBase.java"
+      ],
+      "call_stats": {
+        "duration_s": 55.747,
+        "duration_api_s": 55.306,
+        "num_turns": 11,
+        "input_tokens": 20,
+        "output_tokens": 3944,
+        "cache_creation_input_tokens": 45921,
+        "cache_read_input_tokens": 295287,
+        "total_cost_usd": 0.42333210000000004,
+        "total_tool_calls": 10,
+        "tool_calls_by_name": {
+          "Read": 6,
+          "Glob": 1,
+          "Grep": 2,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2245/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2245_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2245/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2245_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2245/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2245_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 23810,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 895,
+            "cache_read_input_tokens": 33494,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "JournalImpl.java",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 668,
+            "cache_read_input_tokens": 34389,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getTransactionInfo",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1769,
+            "cache_read_input_tokens": 35057,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2245/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2245_candidate_selection/candidates/candidate_38.diff",
+                  "offset": 480,
+                  "limit": 280
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4949,
+            "cache_read_input_tokens": 36826,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2245/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2245_candidate_selection/candidates/candidate_38.diff",
+                  "offset": 760,
+                  "limit": 150
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 2838,
+            "cache_read_input_tokens": 41775,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2245/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2245_candidate_selection/candidates/candidate_38.diff",
+                  "offset": 1,
+                  "limit": 100
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 3156,
+            "cache_read_input_tokens": 44613,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2245/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2245_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_38\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit message states: \"The Transactions were being looked up without the readLock and some of the controls for Read and Write lock were broken.\" The fix diff shows that in JournalImpl.java, calls like `getTransactionInfo(txID)` (and `transactions.remove(txID)`) plus the subsequent `tx.checkErrorCondition()` are moved from BEFORE `appendExecutor.execute(...)` (i.e. outside of the `journalLock.readLock()` critical section) to INSIDE the submitted Runnable, right after `journalLock.readLock().lock()` is acquired. This is exactly the \"missing readLock during transaction lookup\" bug being fixed.\n\nCandidate_38 is the commit that introduced this exact problematic pattern. It is a large refactor of JournalImpl that switches from `synchronized(lockAppend)` blocks guarded entirely inside `journalLock.readLock()...finally{unlock}` to an asynchronous model using `appendExecutor.submit(...)`. In this refactor, for every transactional append method (`appendAddRecordTransactional`, `appendUpdateRecordTransactional`, `appendDeleteRecordTransactional`, `appendPrepareRecord`, `appendCommitRecord`, `appendRollbackRecord`), the transaction lookup (`getTransactionInfo(txID)` or `transactions.remove(txID)`) and the `tx.checkErrorCondition()` check were pulled OUT of the Runnable and executed on the calling thread BEFORE `journalLock.readLock()` is acquired inside the Runnable. For example:\n\n```java\n// before appendExecutor.submit \u2014 NO readLock held here\nfinal JournalTransaction tx = getTransactionInfo(txID);\ntx.checkErrorCondition();\n\nappendExecutor.submit(new Runnable() {\n   public void run() {\n      journalLock.readLock().lock();   // lock acquired only here, after tx was already looked up\n      try {\n         ...\n      } finally {\n         journalLock.readLock().unlock();\n      }\n   }\n});\n```\n\nThis unprotected transaction lookup/removal race is precisely what the fix commit corrects, by moving `getTransactionInfo`/`transactions.remove` and the error-condition checks back inside the Runnable after the readLock is acquired (and in some cases guarding compaction-related access with the write/read lock as well). Since candidate_38 is the commit that first introduced this asynchronous execution model with the transaction lookup outside the lock, it is the bug-introducing commit. Later candidates continue to build on top of this same broken pattern (e.g. candidate_39, candidate_43) without correcting the core issue, which is only resolved in the fix commit itself.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1550,
+            "cache_read_input_tokens": 47769,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

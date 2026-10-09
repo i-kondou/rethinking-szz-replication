@@ -1,0 +1,22 @@
+{
+  "fix_commit": "fea56932fffe94e2d7dde77d8d27c159acac1795",
+  "bic": "42809e676825643189e9c16dfc8f5e7e17261077",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit introduced the logic that checks `fieldNameForRoutingKey.startsWith(\"metadata.\")` and uses `substring(9)` at the point of writing to the document, after the field name had already been transformed (periods replaced with %2E) earlier in the initialize() method. This means the check `startsWith(\"metadata.\")` would fail for any routing field configured with a \"metadata.\" prefix once periods were escaped, causing the field to be incorrectly excluded from indexing under metadata. The fix commit directly addresses this by introducing `routingFieldNameInMetadata` boolean, computed before the period-to-%2E substitution, replacing the flawed runtime string check that this commit introduced.",
+  "metrics": {
+    "case_elapsed_seconds": 10.696198,
+    "api_elapsed_seconds": 10.498257,
+    "tool_elapsed_seconds": 0.070899,
+    "other_elapsed_seconds": 0.127047,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 18902,
+    "completion_tokens": 799,
+    "total_tokens": 19701,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:16:05.434805"
+}

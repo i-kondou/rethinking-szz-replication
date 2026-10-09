@@ -1,0 +1,25 @@
+SELECTED: candidate_327
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes:
+  tooltip = XmlStringUtil.wrapInHtml(message.startsWith("<html>") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link ;
+to:
+  tooltip = XmlStringUtil.wrapInHtml((message.startsWith("<html>") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link);
+
+The bug was a misplaced closing parenthesis: `+ link` was appended OUTSIDE the `wrapInHtml(...)` call instead of inside it. Since `wrapInHtml` wraps its argument in `<html>...</html>` tags, appending `+ link` after the closing `</html>` tag causes the link markup to be rendered outside the HTML wrapper, which is why not all warnings/links displayed correctly in the editor tooltip (IDEA-140967).
+
+candidate_327's diff shows the exact introduction of this bug. It refactored a correct if/else block:
+  if (message.startsWith("<html>")) {
+    tooltip = XmlStringUtil.wrapInHtml(XmlStringUtil.stripHtml(message) + link);
+  }
+  else {
+    tooltip = XmlStringUtil.wrapInHtml(XmlStringUtil.escapeString(message) + link);
+  }
+into the single-line ternary form:
+  tooltip = XmlStringUtil.wrapInHtml(message.startsWith("<html>") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link ;
+
+During this refactor, the `+ link` term was moved outside the `wrapInHtml(...)` parentheses instead of being kept inside as part of the ternary's operand, introducing the exact bug that the fix commit later corrects. This candidate's code exactly matches the "before" state shown in fix_commit_diff.txt.
+
+Note: candidate_328 contains a diff identical to the fix_commit_diff.txt itself (the actual bug fix), confirming it is not the introducing commit but rather the fix commit included in the candidate range. candidates_290/291 show the codebase still had the correct if/else form (pre-bug), further confirming the bug was first introduced later, in candidate_327.

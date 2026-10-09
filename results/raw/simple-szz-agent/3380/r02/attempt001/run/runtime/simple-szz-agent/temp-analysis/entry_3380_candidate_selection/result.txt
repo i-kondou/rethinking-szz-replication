@@ -1,0 +1,16 @@
+SELECTED: candidate_03
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit removes the properties `OUTPUT_ENCODING` ("html.outputEncoding") and `SOURCE_ENCODING` ("html.sourceEncoding") from IReportProperties.java, along with their getters/setters (getOutputEncoding/setOutputEncoding, getSourceEncoding/setSourceEncoding) in ReportProperties.java, and restores/adds the properly-named `OUT_ENCODING` ("out.encoding") and new `IN_ENCODING` ("in.encoding") properties with getOutEncoding()/getInEncoding(). It also updates all call sites in the html/txt/xml report generators back to use getOutEncoding()/getInEncoding() instead of getOutputEncoding()/getSourceEncoding().
+
+Candidate_01 (the initial project import) only contains the original, correct scheme: IReportProperties.OUT_ENCODING = "out.encoding" and ReportProperties.getOutEncoding()/setOutEncoding(), used consistently by all report generators, with plain FileReader (no explicit source encoding) for reading source files. There is no OUTPUT_ENCODING/SOURCE_ENCODING at this point.
+
+Candidate_03 is the commit that introduces the bug: it adds `OUTPUT_ENCODING = "html.outputEncoding"` and `SOURCE_ENCODING = "html.sourceEncoding"` to IReportProperties.java (explicitly commented "// addition parameters by terry"), removes the previously working getOutEncoding()/setOutEncoding() methods entirely, adds getOutputEncoding()/setOutputEncoding() and getSourceEncoding()/setSourceEncoding(), and changes the property-parsing code to read from the new (non-standard) "html.outputEncoding" key instead of the documented "out.encoding" key. It also rewires all call sites (html/txt/xml ReportGenerator.java) to call getOutputEncoding() instead of getOutEncoding(), and changes source file reading to use getSourceEncoding(). This silently changes/breaks the user-facing property name for controlling output encoding (from "out.encoding" to "html.outputEncoding"), which is exactly the regression that the fix commit reverts.
+
+Candidate_04 is an unrelated, small change (renaming NESTED_ITEMS_PARENT_DIRNAME from "_files" to "files") and does not touch the encoding properties at all, so it did not introduce or worsen the bug.
+
+Candidate_05's diff is textually identical to the fix commit's diff (same blob hash transition 907d9c1 -> 87e6bf4 for IReportProperties.java), meaning it represents the same fix already being applied earlier in this candidate ordering (likely a duplicate/cherry-pick recorded in history) — it is a fix, not the bug introduction.
+
+Since candidate_03 is the first and only candidate that introduces the problematic OUTPUT_ENCODING/SOURCE_ENCODING property scheme that the fix commit removes, it is the bug-introducing commit.

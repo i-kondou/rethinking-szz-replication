@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "timestamp": "20260906_104016",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1049/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "1049",
+      "fix_commit_hash": "7c5e119134c20141b7af1322d08cca0d047d1e34",
+      "bug_commit_hash": [
+        "86013dc9f8cf02813418f41c3c49c745f9ee6ea5"
+      ],
+      "szz_candidates": [
+        "86013dc9f8cf02813418f41c3c49c745f9ee6ea5",
+        "1d55127d976c1c3db119fc13ce88128f13522713"
+      ],
+      "szz_num_candidates": 2,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "86013dc9f8cf02813418f41c3c49c745f9ee6ea5"
+      ],
+      "llm_selected_commit": "86013dc9f8cf02813418f41c3c49c745f9ee6ea5",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit changes ImplicitLinkedHashCollectionIterator.remove() from calling `removeFromList(head, elements, nextElement.prev()); size--;` to calling `ImplicitLinkedHashCollection.this.removeElementAtSlot(nextElement.prev());`. The commit message explicitly states the bug: removeFromList only unlinks the element from the linked list but does not preserve the hash table's denseness invariant, whereas removeElementAtSlot correctly moves other elements to fill the gap. Only removeElementAtSlot",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/1049",
+      "bug_fixing_commit": "7c5e119134c20141b7af1322d08cca0d047d1e34",
+      "bug_inducing_commit": [
+        "86013dc9f8cf02813418f41c3c49c745f9ee6ea5"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "apache/kafka"
+    }
+  ]
+}

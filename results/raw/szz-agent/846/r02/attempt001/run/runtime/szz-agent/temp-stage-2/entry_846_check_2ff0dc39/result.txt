@@ -1,0 +1,10 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a null check (`if (myDataChoices != null) { ... }`) around a block in `DisplayControlImpl.java`'s `init(...)` method that inspects `myDataChoices` to determine `usesTimeDriver` from a `DerivedDataChoice`'s first sub-choice's `DataSelection`. Without this null check, calling `myDataChoices.size()` when `myDataChoices` is null would cause a `NullPointerException`.
+
+In `files/old/src/ucar/unidata/idv/control/DisplayControlImpl.java`, the `init(String, List, List, ControlContext, Hashtable, DataSelection)` method exists (around line 972), including the call `if (!init(myDataChoices)) { ... }` (line 1035-1041). However, immediately after that block, the code proceeds directly to the "Check if we have been removed" section (line 1045) with no intervening block that reads `myDataChoices.size()`, checks for `DerivedDataChoice`, or sets `this.usesTimeDriver`. This entire code section (the one modified in the fix) does not exist yet in the old version — it corresponds to a feature (time driver support) that was added later in the project's history, at some point between the old version and the buggy version.
+
+Since the specific buggy code (the unguarded `myDataChoices.size()` call) is not present in `files/old/`, the bug cannot exist in this version. This matches the scenario described in the instructions: "If the relevant code section doesn't exist in `old/`, the bug cannot be present."

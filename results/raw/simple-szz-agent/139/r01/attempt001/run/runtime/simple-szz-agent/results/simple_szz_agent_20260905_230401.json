@@ -1,0 +1,339 @@
+{
+  "metadata": {
+    "timestamp": "20260905_230401",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/139/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 40.254,
+      "max": 40.254,
+      "mean": 40.254,
+      "median": 40.254,
+      "total": 40.254,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 40.107,
+      "max": 40.107,
+      "mean": 40.107,
+      "median": 40.107,
+      "total": 40.107,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 11,
+      "max": 11,
+      "mean": 11,
+      "median": 11,
+      "total": 11,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 3836,
+      "max": 3836,
+      "mean": 3836,
+      "median": 3836,
+      "total": 3836,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 12605,
+      "max": 12605,
+      "mean": 12605,
+      "median": 12605,
+      "total": 12605,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 107024,
+      "max": 107024,
+      "mean": 107024,
+      "median": 107024,
+      "total": 107024,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.16533720000000002,
+      "max": 0.16533720000000002,
+      "mean": 0.16533720000000002,
+      "median": 0.16533720000000002,
+      "total": 0.16533720000000002,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Glob": 1,
+      "Grep": 2,
+      "Write": 2
+    },
+    "num_candidates": {
+      "min": 13,
+      "max": 13,
+      "mean": 13,
+      "median": 13,
+      "total": 13,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "139",
+      "fix_commit_hash": "137ce13f74239ba3dc100269cafe842a1f4ea11d",
+      "ground_truth_bics": [
+        "43e45eb94e1aa0d1c4dbd10e99df8e366f637261"
+      ],
+      "predicted_bics": [
+        "43e45eb94e1aa0d1c4dbd10e99df8e366f637261"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "139",
+      "fix_commit": "137ce13f74239ba3dc100269cafe842a1f4ea11d",
+      "ground_truth_bics": [
+        "43e45eb94e1aa0d1c4dbd10e99df8e366f637261"
+      ],
+      "total_candidates": 13,
+      "gt_in_candidates": true,
+      "selected_commit": "43e45eb94e1aa0d1c4dbd10e99df8e366f637261",
+      "selected_index": 11,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes the upper bound of an RTL character range check in core/java/android/text/TextUtils.java from `c <= 0xFEFF` to `c <= 0xFEFE`, so that the special Unicode marker U+FEFF (zero-width no-break space / BOM) is no longer misclassified as an RTL character. Candidate_12 is the commit that originally introduces this exact code. It adds the new `isRTLCharacter(char c)` method to TextUtils.java, containing the line:",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "core/java/android/text/TextUtils.java"
+      ],
+      "call_stats": {
+        "duration_s": 40.254,
+        "duration_api_s": 40.107,
+        "num_turns": 11,
+        "input_tokens": 20,
+        "output_tokens": 3836,
+        "cache_creation_input_tokens": 12605,
+        "cache_read_input_tokens": 107024,
+        "total_cost_usd": 0.16533720000000002,
+        "total_tool_calls": 10,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Glob": 1,
+          "Grep": 2,
+          "Write": 2
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/139/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_139_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/139/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_139_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/139/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_139_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 852,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 16,
+            "cache_creation_input_tokens": 296,
+            "cache_read_input_tokens": 10535,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "0xFE70|0xFEFF|isRTLCharacter|TextUtils.java",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 352,
+            "cache_read_input_tokens": 10831,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "0xFE70",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 397,
+            "cache_read_input_tokens": 11183,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/139/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_139_candidate_selection/candidates/candidate_13.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 842,
+            "cache_read_input_tokens": 11580,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/139/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_139_candidate_selection/candidates/candidate_12.diff",
+                  "offset": 230,
+                  "limit": 80
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1621,
+            "cache_read_input_tokens": 12422,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/139/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_139_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_12\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes the upper bound of an RTL character range check in\ncore/java/android/text/TextUtils.java from `c <= 0xFEFF` to `c <= 0xFEFE`,\nso that the special Unicode marker U+FEFF (zero-width no-break space / BOM)\nis no longer misclassified as an RTL character.\n\nCandidate_12 is the commit that originally introduces this exact code. It\nadds the new `isRTLCharacter(char c)` method to TextUtils.java, containing\nthe line:\n\n    (c >= 0xFE70 && c <= 0xFEFF)    ;\n\nThis is precisely the buggy range (inclusive of 0xFEFF) that the fix commit\nlater corrects. Since this method did not exist before candidate_12 (it is\nadded as new code, along with the helper methods hasRTLCharacters), this\ncommit is the first point at which the bug could have been introduced.\nNo earlier candidate contains this code or the isRTLCharacter method at all,\nconfirming candidate_12 as the bug-introducing commit.\n\ncandidate_13 contains a diff textually identical to the fix commit diff\nitself (changing 0xFEFF to 0xFEFE), and therefore represents the fix, not\nthe bug's introduction.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1026,
+            "cache_read_input_tokens": 14043,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/139/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_139_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_12\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes the upper bound of an RTL character range check in\ncore/java/android/text/TextUtils.java from `c <= 0xFEFF` to `c <= 0xFEFE`,\nso that the special Unicode marker U+FEFF (zero-width no-break space / BOM)\nis no longer misclassified as an RTL character.\n\nCandidate_12 is the commit that originally introduces this exact code. It\nadds the new `isRTLCharacter(char c)` method to TextUtils.java, containing\nthe line:\n\n    (c >= 0xFE70 && c <= 0xFEFF)    ;\n\nThis is precisely the buggy range (inclusive of 0xFEFF) that the fix commit\nlater corrects. Since this method did not exist before candidate_12 (it is\nadded as new code, along with the helper methods hasRTLCharacters), this\ncommit is the first point at which the bug could have been introduced.\nNo earlier candidate contains this code or the isRTLCharacter method at all,\nconfirming candidate_12 as the bug-introducing commit.\n\ncandidate_13 contains a diff textually identical to the fix commit diff\nitself (changing 0xFEFF to 0xFEFE), and therefore represents the fix, not\nthe bug's introduction.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 934,
+            "cache_read_input_tokens": 15069,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

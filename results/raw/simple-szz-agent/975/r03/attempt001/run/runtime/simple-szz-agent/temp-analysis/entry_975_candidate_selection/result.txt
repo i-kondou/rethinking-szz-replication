@@ -1,0 +1,29 @@
+SELECTED: candidate_08
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single line to CourseEvent.java:
+
+    public Session getSession() {
++       if (getRelatedCourses() == null) return null;
+        for (RelatedCourseInfo rc: getRelatedCourses())
+            return rc.getCourse().getInstructionalOffering().getSession();
+        return null;
+    }
+
+This guards against a NullPointerException when getRelatedCourses() returns null, which happens when a CourseEvent is not yet fully created (matching the fix commit message: "fixed a Null exception when creating a course-related event ... CourseRelatedEvent.getSession() throws a null because the event is not fully created yet").
+
+Searching all 10 candidates for the introduction of this getSession() method in JavaSource/org/unitime/timetable/model/CourseEvent.java:
+
+- candidate_07 and earlier: no getSession() method exists yet in CourseEvent.java.
+- candidate_08: introduces the method for the first time, as a new addition:
+      +	public Session getSession() {
+      +		for (RelatedCourseInfo rc: getRelatedCourses())
+      +			return rc.getCourse().getInstructionalOffering().getSession();
+      +		return null;
+      +	}
+  with no null check on getRelatedCourses() — exactly the buggy code the fix later patches.
+- candidate_09: contains an essentially identical diff hunk (same blob transition 4595f6250..37ae9e2e4) for the same file, appearing to be a duplicate/near-duplicate of candidate_08's change.
+
+Since candidates are ordered chronologically from oldest to newest, and the buggy code is absent before candidate_08 and present starting there, candidate_08 is the commit that first introduced the unguarded getRelatedCourses() iteration, i.e., the bug fixed later by the null check.

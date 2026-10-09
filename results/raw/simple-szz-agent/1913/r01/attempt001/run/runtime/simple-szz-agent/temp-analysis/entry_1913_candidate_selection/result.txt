@@ -1,0 +1,47 @@
+SELECTED: candidate_32
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) is a generics-cleanup/compilation fix that replaces
+loosely-typed placeholders with the correct concrete type `EquivalentValue` throughout the
+`soot.jimple.toolkits.infoflow` package. Specifically it changes:
+
+  - CallLocalityContext.java: `List<Object> nodes` / `ArrayList<Object>` / raw
+    `CallLocalityContext(List<Object> nodes)` -> `List<EquivalentValue>` /
+    `ArrayList<EquivalentValue>` / `CallLocalityContext(List<EquivalentValue> nodes)`
+  - ClassInfoFlowAnalysis.java: raw `HashMutableDirectedGraph` fields/return types/locals
+    (e.g. `Map<SootMethod, HashMutableDirectedGraph>`, `HashMutableDirectedGraph
+    dataFlowGraph = ...`) -> `HashMutableDirectedGraph<EquivalentValue>`
+  - InfoFlowAnalysis.java: raw `HashMutableDirectedGraph`/`MutableDirectedGraph`/
+    `DirectedGraph` usages and raw `Object` node iteration -> generic
+    `<EquivalentValue>` typed versions
+  - SimpleMethodInfoFlowAnalysis.java, ClassLocalObjectsAnalysis.java: raw
+    `Iterator`/`List` loops converted to typed for-each loops
+
+Tracing the history of these files backward through the candidates, I found that
+candidate_32 is an enormous whole-codebase "add generics" refactor commit. Within it,
+`CallLocalityContext.java` is changed from:
+    `public CallLocalityContext(List nodes)`
+to:
+    `public CallLocalityContext(List<Object> nodes)`
+(and correspondingly `this.nodes = new ArrayList<Object>()`), and
+`ClassInfoFlowAnalysis.java` / `InfoFlowAnalysis.java` are changed from fully raw types
+to raw `HashMutableDirectedGraph` (without any type parameter) rather than the correctly
+parameterized `HashMutableDirectedGraph<EquivalentValue>`.
+
+This is exactly the "half-generified" state that the fix commit corrects: candidate_32
+introduced generics but used `Object` as a placeholder type argument (and left some
+declarations completely raw) instead of the correct `EquivalentValue` type, which is
+what caused the "compilation issues" referenced in the fix commit message (unsafe/
+unchecked casts, incompatible generic types when interacting with other already-generic
+code, e.g. `List<EquivalentValue>` expected elsewhere but `List<Object>`/raw types
+supplied).
+
+I confirmed that the immediately preceding candidate (candidate_31) does not yet
+contain `HashMutableDirectedGraph` usage in these files, and the immediately following
+candidate (candidate_33) does not modify these patterns at all -- meaning the
+`List<Object>` / raw `HashMutableDirectedGraph` state introduced in candidate_32
+persisted unchanged (inherited) all the way until the fix commit finally corrected it.
+candidate_48 in the candidate set is actually identical to the fix commit itself and is
+therefore excluded as a candidate for having introduced the bug.

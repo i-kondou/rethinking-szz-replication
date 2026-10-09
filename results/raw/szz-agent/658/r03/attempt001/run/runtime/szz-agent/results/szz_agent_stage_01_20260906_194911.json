@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "timestamp": "20260906_194911",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/658/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "658",
+      "fix_commit_hash": "6e9ec7a38c9ffc87ce881fbe679f5a7e65b7eb2c",
+      "bug_commit_hash": [
+        "fee02a3d16aa835c2f1e606897e4bd08e51ba7d5"
+      ],
+      "szz_candidates": [
+        "fee02a3d16aa835c2f1e606897e4bd08e51ba7d5"
+      ],
+      "szz_num_candidates": 1,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "fee02a3d16aa835c2f1e606897e4bd08e51ba7d5"
+      ],
+      "llm_selected_commit": "fee02a3d16aa835c2f1e606897e4bd08e51ba7d5",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit modifies GHOrganization.getMembers()'s PagedIterator by adding a body to the previously empty wrapUp(GHUser[] users) method: it now calls GHUser.wrap(users, root), which populates each returned GHUser with a reference to root so that lazy-loading getters (e.g., getCreatedAt()) work instead of throwing NullPointerException. Candidate_01 is the commit that introduced this exact wrapUp method with an empty body: protected void wrapUp(GHUser[] page) { } This candidate rewrote getMembe",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/658",
+      "bug_fixing_commit": "6e9ec7a38c9ffc87ce881fbe679f5a7e65b7eb2c",
+      "bug_inducing_commit": [
+        "fee02a3d16aa835c2f1e606897e4bd08e51ba7d5"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "vr100/github-api"
+    }
+  ]
+}

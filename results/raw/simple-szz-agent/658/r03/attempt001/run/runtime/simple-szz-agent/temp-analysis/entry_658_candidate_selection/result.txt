@@ -1,0 +1,15 @@
+SELECTED: candidate_34
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes GHOrganization's PagedIterator anonymous class so that its `wrapUp(GHUser[] users)` method calls `GHUser.wrap(users, root)` instead of doing nothing. Without this call, GHUser objects returned by `getMembers()` are never populated ("wrapped") with a reference to `root`, so subsequent calls to methods like `user.getCreatedAt()` throw a NullPointerException because the user object can't lazily populate itself.
+
+Tracing the history of `GHOrganization.getMembers()`:
+
+- candidate_34 is the commit that rewrites `getMembers()` from an `AbstractList<GHUser>` implementation (which fully populated each user via `root.getUser(shallow[index].getLogin())`) to a `PagedIterable<GHUser>`/`PagedIterator<GHUser>` implementation with an overridden `wrapUp(GHUser[] page)` method that has an **empty body**. This is the exact point where the "wrap" step that previously happened implicitly (via `root.getUser`) was dropped and replaced with a no-op `wrapUp`.
+- candidate_35 adds a `filter` parameter (`getMembersWithFilter`) but keeps the empty `wrapUp` body unchanged.
+- candidate_36 further refactors to support `getPublicMembers()`/suffix parameterization, again preserving the empty `wrapUp` body unchanged.
+- candidate_37 is the actual fix commit, which finally implements `wrapUp` by calling `GHUser.wrap(users, root)`.
+
+Since the empty `wrapUp` method was introduced in candidate_34 and simply carried forward unmodified through candidates 35 and 36, candidate_34 is the commit that introduced the bug.

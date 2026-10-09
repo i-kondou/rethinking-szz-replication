@@ -1,0 +1,14 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The bug fixed in the target commit was that the "eXist Home" log line incorrectly retrieved the `exist.home` value via `SystemProperties.getInstance().getSystemProperty("exist.home", "unknown")`. `SystemProperties` reads values from the bundled `src/org/exist/system.properties` resource file (which only contains build-time properties like product-version, product-build, git-commit), not from JVM system properties. Since `exist.home` is never written into that properties file, this lookup always returned "unknown". The fix replaced this with `System.getProperty("exist.home", "unknown")`, which correctly reads the JVM system property that is actually set for `exist.home`.
+
+Examining `files/old/src/org/exist/jetty/JettyStart.java` (line 138):
+```java
+msg = "[eXist Home : " + System.getProperty("exist.home") + "]";
+```
+This old version already uses `System.getProperty("exist.home")` directly — the same correct approach used in the fixed version — rather than pulling the value from the loaded `sysProperties`/`SystemProperties` object. All the other log lines in this old version that legitimately come from the properties file (product-version, product-build, svn-revision) correctly use `sysProperties.get(...)`, while `exist.home` correctly uses `System.getProperty(...)`.
+
+This shows the incorrect pattern (using SystemProperties/sysProperties for `exist.home`) was introduced later, likely during a refactor that consolidated all the "eXist Version/Build/Home/Git commit" log statements to uniformly call `SystemProperties.getInstance().getSystemProperty(...)`, mistakenly including `exist.home` in that consolidation even though it doesn't belong there. Since the old version does not contain this erroneous consolidation, the bug is not present in `files/old/`.

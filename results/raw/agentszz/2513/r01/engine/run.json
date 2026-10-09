@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "kind": "claude-szz-agentic-baseline-subject-run",
+  "created_at": "2026-09-07T12:09:21.645635+00:00",
+  "state": "completed",
+  "scientific_result": true,
+  "test_stub": false,
+  "baseline": "agentszz",
+  "sample_id": "2513",
+  "repository": "INRIA/spoon",
+  "synthetic_fix_hash": "c07165245a6c08faab57bbd08f770b4517bcb817",
+  "model": "claude-sonnet-5",
+  "base_url": "https://api.anthropic.com/v1/",
+  "per_run_cap_usd": "5",
+  "model_started": true,
+  "reported_cost_usd": "0.182642",
+  "duration_seconds": 50.291079582995735,
+  "predicted_bics": [
+    "adb2fd7420b3bf01e696be87f4791759bfb6de53"
+  ],
+  "reasoning": "This commit (\"feature: allow spoon to do static imports for methods and fields (#1040)\") introduced the buggy logic in MinimalImportScanner.java that the fix directly modifies: the `Set<String> qualifiedNameTokens` collection populated by walking up packages with `packParent.getParent() != null` (without checking for the top-level package boundary), and the subsequent loop checking every token in the set against field/method/local variable names instead of only the last (most specific) token. This flawed package-walking and token-matching logic is exactly what causes the reported bug where a private static field with a name matching a package/class segment incorrectly triggers/misses static import decisions. The fix commit changes the Set to a LinkedList, adds a top-level-package termination check, and changes the check to only use the last token — directly undoing the faulty logic introduced in adb2fd7420b3.",
+  "confidence": "high",
+  "upstream_metrics": {
+    "case_elapsed_seconds": 50.072985,
+    "api_elapsed_seconds": 49.666359,
+    "tool_elapsed_seconds": 0.293886,
+    "other_elapsed_seconds": 0.112744,
+    "api_call_count": 7,
+    "tool_call_count": 6,
+    "prompt_tokens": 76286,
+    "completion_tokens": 3007,
+    "total_tokens": 79293,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "provider_calls": [
+    {
+      "input_tokens": 6467,
+      "output_tokens": 211,
+      "cost_usd_equivalent": "0.015044",
+      "elapsed_seconds": 4.568207332980819
+    },
+    {
+      "input_tokens": 8229,
+      "output_tokens": 226,
+      "cost_usd_equivalent": "0.018718",
+      "elapsed_seconds": 3.919407291978132
+    },
+    {
+      "input_tokens": 9634,
+      "output_tokens": 347,
+      "cost_usd_equivalent": "0.022738",
+      "elapsed_seconds": 5.584761624981184
+    },
+    {
+      "input_tokens": 11013,
+      "output_tokens": 1254,
+      "cost_usd_equivalent": "0.034566",
+      "elapsed_seconds": 17.411075000010896
+    },
+    {
+      "input_tokens": 11302,
+      "output_tokens": 340,
+      "cost_usd_equivalent": "0.026004",
+      "elapsed_seconds": 6.26236254198011
+    },
+    {
+      "input_tokens": 13615,
+      "output_tokens": 154,
+      "cost_usd_equivalent": "0.02877",
+      "elapsed_seconds": 3.796874708030373
+    },
+    {
+      "input_tokens": 16026,
+      "output_tokens": 475,
+      "cost_usd_equivalent": "0.036802",
+      "elapsed_seconds": 8.114626624970697
+    }
+  ],
+  "source_provenance": {
+    "manifest_path": "/Users/user-01/research/workspaces/claude-szz/implementation/config/agentic-baseline-sources.json",
+    "manifest_sha256": "8fc7276c1bd2772698abeeaabfc6cc1a6bb24aac89db5601f27da49933147fb0",
+    "agentszz_source_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentszz-figshare-v2/replication_package/agentszz",
+    "agentszz_source_tree_sha256": "3436d1b781b11c9b2bf962105355f5f4ded84ede0ec599bda848e0cff9c72777",
+    "agentic_szz_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz",
+    "agentic_szz_commit": "0012a507b9087f15cdad340888a837f5618a3c29",
+    "agentic_szz_git_tree": "738bf1e17594df62dd198f7ffc220d728223b454",
+    "agentszz_python": {
+      "version": "3.11.11",
+      "modules": {
+        "openai": "2.16.0",
+        "git": "3.1.46"
+      },
+      "executable": "/Users/user-01/research/workspaces/claude-szz/baselines/venv/bin/python"
+    },
+    "agentic_szz_python": {
+      "version": "3.12.8",
+      "modules": {
+        "graphiti_core": "unknown",
+        "pydantic_ai": "2.31.1",
+        "neo4j": "6.2.0",
+        "git": "3.1.59",
+        "openai": "3.3.0"
+      },
+      "executable": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz-venv/bin/python"
+    },
+    "agentic_szz_requirements_path": "/Users/user-01/research/workspaces/claude-szz/implementation/config/llm-baselines/requirements-agentic-szz-python312.txt",
+    "agentic_szz_requirements_sha256": "e426ee65f956a8582aa195ac819d2c862d68abd66d20107d71558701ca313f22",
+    "neo4j": {
+      "reference": "neo4j:5.26.8-community",
+      "id": "sha256:c0f0ce3396c902c9ab6520d0c9d1c644a3aa83eed00036e609e5db10a84b2d92",
+      "repo_digests": [
+        "neo4j@sha256:5216b8f7bcca893448d5b4a809d91761609fc8aea900691d59531ada76c28c62"
+      ],
+      "architecture": "arm64",
+      "os": "linux"
+    }
+  },
+  "prompt_metadata_path": "/Users/user-01/research/workspaces/claude-szz/implementation/data/derived/subject-prompts-bfc-message-neutralized-final-v1/2513.json",
+  "prompt_metadata_sha256": "51083e08775da2b337cc676f98d51143b3f3adad1392c3ac45697cdf59439d1c",
+  "repository_before": {
+    "head": "c07165245a6c08faab57bbd08f770b4517bcb817",
+    "head_matches_synthetic_fix": true,
+    "source_fix_absent": true,
+    "clean": true,
+    "no_remotes": true,
+    "no_object_alternates": true
+  },
+  "repository_after": {
+    "head": "c07165245a6c08faab57bbd08f770b4517bcb817",
+    "head_matches_synthetic_fix": true,
+    "source_fix_absent": true,
+    "clean": true,
+    "no_remotes": true,
+    "no_object_alternates": true
+  },
+  "postflight_clean": true,
+  "error": null,
+  "limitations": [
+    "Sonnet 5 through Anthropic is a matched-backbone adaptation, not the original-model replication.",
+    "Both upstream methods emit a single primary BIC; multi-BIC recall is structurally capped.",
+    "Reported cost is reconstructed from token usage and the frozen Anthropic price snapshot, not provider billing records.",
+    "AgenticSZZ checks its conservative total-token limit between requests, so one in-flight request can cross the nominal trigger."
+  ]
+}

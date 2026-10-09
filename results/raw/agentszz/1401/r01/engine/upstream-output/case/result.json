@@ -1,0 +1,22 @@
+{
+  "fix_commit": "0d211148fb659fd22181ac82d103eae4b0e1897f",
+  "bic": "ac494c6c2710a207f51a219e3b09360a9c94203c",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "Before this commit, the tooltip code correctly wrapped \"stripHtml/escapeString(message) + link\" inside XmlStringUtil.wrapInHtml() in both the if and else branches. This commit (\"more diagnostics for EA-68014\") refactored the if/else into a single ternary expression but introduced a precedence bug \u2014 it moved `+ link` outside the wrapInHtml(...) call, i.e. `wrapInHtml(cond ? a : b) + link` instead of `wrapInHtml((cond ? a : b) + link)`. This caused the link to be appended outside the HTML wrapper, leading to malformed tooltip HTML which caused some warnings not to display properly in the editor. The fix commit simply restores the correct parenthesization.",
+  "metrics": {
+    "case_elapsed_seconds": 38.347067,
+    "api_elapsed_seconds": 35.797702,
+    "tool_elapsed_seconds": 2.402382,
+    "other_elapsed_seconds": 0.146985,
+    "api_call_count": 7,
+    "tool_call_count": 6,
+    "prompt_tokens": 56426,
+    "completion_tokens": 1773,
+    "total_tokens": 58199,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:27:56.164400"
+}

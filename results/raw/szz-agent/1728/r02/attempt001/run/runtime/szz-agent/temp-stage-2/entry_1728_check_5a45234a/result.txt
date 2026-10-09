@@ -1,0 +1,18 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The bug fixed by this commit is a BroadcastReceiver leak: `DownloadManagerInterface.init(context)` registers `downloadCompletionReceiver` via `context.registerReceiver(...)` (in `registerReceiver()`), but `MainActivity` never called an unregister counterpart in `onDestroy()`. The fix adds `MainActivity.onDestroy()`, which calls the newly-added `DownloadManagerInterface.destroy(context)` method that unregisters the receiver and clears the singleton instance.
+
+Examining `files/old/MainActivity.java`, the code predates the `DownloadManagerInterface` abstraction entirely — there is no `DownloadManagerInterface` class involved. Instead, `MainActivity` itself directly owns a `downloadCompletionReceiver` field, registers it in `onCreate()` via `getApplicationContext().registerReceiver(downloadCompletionReceiver, DOWNLOAD_COMPLETED_BROADCASTS)`, and correctly unregisters it in an existing `onDestroy()` override:
+
+```java
+@Override
+protected void onDestroy() {
+    getApplicationContext().unregisterReceiver(downloadCompletionReceiver);
+    super.onDestroy();
+}
+```
+
+This means the receiver-leak bug does not exist in the old version — the register/unregister lifecycle is already correctly paired. The bug was introduced later when the receiver management logic was refactored/moved into the separate `DownloadManagerInterface` class without carrying over the corresponding unregister call in `MainActivity.onDestroy()`. Since the relevant buggy code pattern (register without unregister) is absent in `old/`, and the old code demonstrates the correct behavior, the bug is not present in this version.

@@ -1,0 +1,973 @@
+diff --git a/src/main/java/net/nightwhistler/pageturner/Configuration.java b/src/main/java/net/nightwhistler/pageturner/Configuration.java
+index 4c30693..cbe2073 100644
+--- a/src/main/java/net/nightwhistler/pageturner/Configuration.java
++++ b/src/main/java/net/nightwhistler/pageturner/Configuration.java
+@@ -19,11 +19,15 @@
+ 
+ package net.nightwhistler.pageturner;
+ 
+-import java.io.File;
++import java.util.ArrayList;
++import java.util.List;
+ 
+-import roboguice.inject.ContextSingleton;
++import org.json.JSONArray;
++import org.json.JSONException;
++import org.json.JSONObject;
+ 
+ import net.nightwhistler.htmlspanner.FontFamily;
++import roboguice.inject.ContextSingleton;
+ import android.content.Context;
+ import android.content.SharedPreferences;
+ import android.graphics.Color;
+@@ -32,40 +36,51 @@ import android.os.Build;
+ import android.os.Environment;
+ import android.preference.PreferenceManager;
+ 
+-import com.actionbarsherlock.app.SherlockPreferenceActivity;
+ import com.google.inject.Inject;
+ 
+ /**
+- * Application configuration class which provides a friendly
+- * API to the various settings available.
++ * Application configuration class which provides a friendly API to the various
++ * settings available.
+  * 
+  * @author Alex Kuiper
+- *
++ * 
+  */
+ @ContextSingleton
+-public class Configuration {	
+-	
++public class Configuration {
++
+ 	private SharedPreferences settings;
+ 	private Context context;
+-	
++
+ 	private FontFamily cachedFamily;
+ 
+-	public static enum ScrollStyle { ROLLING_BLIND, PAGE_TIMER }
+-	
+-	public static enum AnimationStyle { CURL, SLIDE, NONE }
+-	
+-	public static enum OrientationLock { PORTRAIT, LANDSCAPE, REVERSE_PORTRAIT, REVERSE_LANDSCAPE, NO_LOCK }
+-	
+-	public static enum ColourProfile { DAY, NIGHT }
+-	
+-	public static enum LibraryView { BOOKCASE, LIST }
+-	
+-	public static enum CoverLabelOption { ALWAYS, NEVER, WITHOUT_COVER }
+-	
++	public static enum ScrollStyle {
++		ROLLING_BLIND, PAGE_TIMER
++	}
++
++	public static enum AnimationStyle {
++		CURL, SLIDE, NONE
++	}
++
++	public static enum OrientationLock {
++		PORTRAIT, LANDSCAPE, REVERSE_PORTRAIT, REVERSE_LANDSCAPE, NO_LOCK
++	}
++
++	public static enum ColourProfile {
++		DAY, NIGHT
++	}
++
++	public static enum LibraryView {
++		BOOKCASE, LIST
++	}
++
++	public static enum CoverLabelOption {
++		ALWAYS, NEVER, WITHOUT_COVER
++	}
++
+ 	public static enum LibrarySelection {
+-		 BY_LAST_READ, LAST_ADDED, UNREAD, BY_TITLE, BY_AUTHOR;
+-	}	
+-	
++		BY_LAST_READ, LAST_ADDED, UNREAD, BY_TITLE, BY_AUTHOR;
++	}
++
+ 	public static final String KEY_POS = "offset:";
+ 	public static final String KEY_IDX = "index:";
+ 	public static final String KEY_NAV_TAP_V = "nav_tap_v";
+@@ -73,7 +88,7 @@ public class Configuration {
+ 	public static final String KEY_NAV_SWIPE_H = "nav_swipe_h";
+ 	public static final String KEY_NAV_SWIPE_V = "nav_swipe_v";
+ 	public static final String KEY_NAV_VOL = "nav_vol";
+-	
++
+ 	public static final String KEY_EMAIL = "email";
+ 	public static final String KEY_FULL_SCREEN = "full_screen";
+ 	public static final String KEY_COPY_TO_LIB = "copy_to_library";
+@@ -83,134 +98,172 @@ public class Configuration {
+ 	public static final String KEY_LAST_FILE = "last_file";
+ 	public static final String KEY_DEVICE_NAME = "device_name";
+ 	public static final String KEY_TEXT_SIZE = "itext_size";
+-	
++
+ 	public static final String KEY_MARGIN_H = "margin_h";
+ 	public static final String KEY_MARGIN_V = "margin_v";
+-	
++
+ 	public static final String KEY_LINE_SPACING = "line_spacing";
+-	
++
+ 	public static final String KEY_NIGHT_MODE = "night_mode";
+ 	public static final String KEY_SCREEN_ORIENTATION = "screen_orientation";
+ 	public static final String KEY_FONT_FACE = "font_face";
+-	
++
+ 	public static final String PREFIX_DAY = "day";
+ 	public static final String PREFIX_NIGHT = "night";
+-	
++
+ 	public static final String KEY_BRIGHTNESS = "bright";
+ 	public static final String KEY_BACKGROUND = "bg";
+ 	public static final String KEY_LINK = "link";
+ 	public static final String KEY_TEXT = "text";
+-	
++
+ 	public static final String KEY_BRIGHTNESS_CTRL = "set_brightness";
+ 	public static final String KEY_SCROLL_STYLE = "scroll_style";
+ 	public static final String KEY_SCROLL_SPEED = "scroll_speed";
+-	
++
+ 	public static final String KEY_H_ANIMATION = "h_animation";
+ 	public static final String KEY_V_ANIMATION = "v_animation";
+-	
++
+ 	public static final String KEY_LIB_VIEW = "library_view";
+ 	public static final String KEY_LIB_SEL = "library_selection";
+-	
+-	public static final String ACCESS_KEY = "access_key";	
++
++	public static final String ACCESS_KEY = "access_key";
+ 	public static final String CALIBRE_SERVER = "calibre_server";
+ 	public static final String CALIBRE_USER = "calibre_user";
+ 	public static final String CALIBRE_PASSWORD = "calibre_password";
+-	
++
+ 	public static final String KEY_COVER_LABELS = "cover_labels";
+-	
++
+ 	public static final String KEY_KEEP_SCREEN_ON = "keep_screen_on";
+-	
++
++	public static final String KEY_OFFSETS = "offsets";
++
+ 	@Inject
+ 	public Configuration(Context context) {
+ 		this.settings = PreferenceManager.getDefaultSharedPreferences(context);
+-		this.context = context;			
++		this.context = context;
+ 	}
+-	
++
+ 	public boolean isVerticalTappingEnabled() {
+ 		return settings.getBoolean(KEY_NAV_TAP_V, true);
+ 	}
+-	
++
+ 	public boolean isHorizontalTappingEnabled() {
+ 		return settings.getBoolean(KEY_NAV_TAP_H, true);
+ 	}
+-	
++
+ 	public boolean isHorizontalSwipeEnabled() {
+ 		return settings.getBoolean(KEY_NAV_SWIPE_H, true);
+ 	}
+-	
++
+ 	public boolean isVerticalSwipeEnabled() {
+ 		return settings.getBoolean(KEY_NAV_SWIPE_V, true)
+-			&& ! isScrollingEnabled();
++				&& !isScrollingEnabled();
+ 	}
+-	
++
+ 	public int getLastPosition(String fileName) {
+-		
+-		String bookHash = Integer.toHexString( fileName.hashCode() );
+-		
++
++		String bookHash = Integer.toHexString(fileName.hashCode());
++
+ 		int pos = settings.getInt(KEY_POS + bookHash, -1);
+-		
+-		if ( pos != -1 ) {
++
++		if (pos != -1) {
+ 			return pos;
+ 		}
+-		
+-		//Fall-back for older settings.
+-		return settings.getInt(KEY_POS + fileName, -1 );
++
++		// Fall-back for older settings.
++		return settings.getInt(KEY_POS + fileName, -1);
++	}
++
++	public void setPageOffsets(String fileName, List<List<Integer>> offsets) {
++		String bookHash = Integer.toHexString(fileName.hashCode());
++
++		JSONArray array = new JSONArray(offsets);
++		updateValue(KEY_OFFSETS + bookHash, array.toString());
++	}
++
++	public List<List<Integer>> getPageOffsets(String fileName) {
++		String bookHash = Integer.toHexString(fileName.hashCode());
++		String data = settings.getString(KEY_OFFSETS + bookHash, "[]");
++
++		List<List<Integer>> result = new ArrayList<List<Integer>>();
++
++		try {
++			JSONArray jsonArray = new JSONArray(data);
++
++			for (int i = 0; i < jsonArray.length(); i++) {
++				List<Integer> sublist = new ArrayList<Integer>();
++
++				JSONArray subArray = new JSONArray(jsonArray.getString(i));
++
++				for (int j = 0; j < subArray.length(); j++) {
++					int val = subArray.getInt(j);
++					sublist.add(val);
++				}
++
++				result.add(sublist);
++			}
++
++			return result;
++
++		} catch (JSONException j) {
++			return null;
++		}
+ 	}
+-	
++
+ 	public void setLastPosition(String fileName, int position) {
+-		String bookHash = Integer.toHexString( fileName.hashCode() );
++		String bookHash = Integer.toHexString(fileName.hashCode());
+ 		updateValue(KEY_POS + bookHash, position);
+ 	}
+-	
++
+ 	public int getLastIndex(String fileName) {
+-		String bookHash = Integer.toHexString( fileName.hashCode() );
+-		
++		String bookHash = Integer.toHexString(fileName.hashCode());
++
+ 		int pos = settings.getInt(KEY_IDX + bookHash, -1);
+-		
+-		if ( pos != -1 ) {
++
++		if (pos != -1) {
+ 			return pos;
+ 		}
+-		
+-		//Fall-back for older settings.
+-		return settings.getInt(KEY_IDX + fileName, -1 );		
++
++		// Fall-back for older settings.
++		return settings.getInt(KEY_IDX + fileName, -1);
+ 	}
+-	
++
+ 	public void setLastIndex(String fileName, int index) {
+-		String bookHash = Integer.toHexString( fileName.hashCode() );
++		String bookHash = Integer.toHexString(fileName.hashCode());
+ 		updateValue(KEY_IDX + bookHash, index);
+ 	}
+ 
+ 	public boolean isVolumeKeyNavEnabled() {
+ 		return settings.getBoolean(KEY_NAV_VOL, false);
+ 	}
+-	
++
+ 	public String getSynchronizationEmail() {
+ 		return settings.getString(KEY_EMAIL, "").trim();
+ 	}
+-	
++
+ 	public String getSynchronizationAccessKey() {
+ 		return settings.getString(ACCESS_KEY, "").trim();
+ 	}
+-	
++
+ 	public boolean isSyncEnabled() {
+ 		String email = getSynchronizationEmail();
+ 		String accessKey = getSynchronizationAccessKey();
+-		
++
+ 		return email.length() > 0 && accessKey.length() > 0;
+ 	}
+-	
++
+ 	public boolean isFullScreenEnabled() {
+ 		return settings.getBoolean(KEY_FULL_SCREEN, false);
+ 	}
+-	
++
+ 	public boolean isCopyToLibrayEnabled() {
+ 		return settings.getBoolean(KEY_COPY_TO_LIB, true);
+ 	}
+-	
++
+ 	public boolean isStripWhiteSpaceEnabled() {
+ 		return settings.getBoolean(KEY_STRIP_WHITESPACE, false);
+ 	}
+-	
++
+ 	public boolean isScrollingEnabled() {
+ 		return settings.getBoolean(KEY_SCROLLING, false);
+ 	}
+@@ -218,141 +271,148 @@ public class Configuration {
+ 	public String getLastOpenedFile() {
+ 		return settings.getString(KEY_LAST_FILE, "");
+ 	}
+-	
++
+ 	public void setLastOpenedFile(String fileName) {
+ 		updateValue(KEY_LAST_FILE, fileName);
+ 	}
+-	
++
+ 	public String getDeviceName() {
+ 		return settings.getString(KEY_DEVICE_NAME, Build.MODEL);
+ 	}
+-	
++
+ 	public int getTextSize() {
+-		return settings.getInt(KEY_TEXT_SIZE, 16);  
++		return settings.getInt(KEY_TEXT_SIZE, 16);
+ 	}
+-	
+-	public void setTextSize(int textSize) {		
+-        updateValue(KEY_TEXT_SIZE, textSize);    
++
++	public void setTextSize(int textSize) {
++		updateValue(KEY_TEXT_SIZE, textSize);
+ 	}
+-	
++
+ 	public int getHorizontalMargin() {
+ 		return settings.getInt(KEY_MARGIN_H, 15);
+ 	}
+-	
++
+ 	public int getVerticalMargin() {
+ 		return settings.getInt(KEY_MARGIN_V, 15);
+-	}	
+-	
++	}
++
+ 	public int getLineSpacing() {
+ 		return settings.getInt(KEY_LINE_SPACING, 0);
+ 	}
+-	
++
+ 	public boolean isKeepScreenOn() {
+ 		return settings.getBoolean(KEY_KEEP_SCREEN_ON, false);
+-	}	
+-	
++	}
++
+ 	public int getTheme() {
+-		if ( getColourProfile() == ColourProfile.NIGHT ) {
++		if (getColourProfile() == ColourProfile.NIGHT) {
+ 			return R.style.Theme_Sherlock;
+ 		} else {
+ 			return R.style.Theme_Sherlock_Light_DarkActionBar;
+ 		}
+-		
++
+ 	}
+-	
++
+ 	public void setColourProfile(ColourProfile profile) {
+-		if ( profile == ColourProfile.DAY ) {
++		if (profile == ColourProfile.DAY) {
+ 			updateValue(KEY_NIGHT_MODE, false);
+ 		} else {
+ 			updateValue(KEY_NIGHT_MODE, true);
+ 		}
+ 	}
+-	
++
+ 	public CoverLabelOption getCoverLabelOption() {
+-		return CoverLabelOption.valueOf(
+-				settings.getString(KEY_COVER_LABELS, 
+-						CoverLabelOption.ALWAYS.name().toLowerCase()) );
++		return CoverLabelOption.valueOf(settings.getString(KEY_COVER_LABELS,
++				CoverLabelOption.ALWAYS.name().toLowerCase()));
+ 	}
+-	
++
+ 	public ColourProfile getColourProfile() {
+-		if ( settings.getBoolean(KEY_NIGHT_MODE, false) ) {
++		if (settings.getBoolean(KEY_NIGHT_MODE, false)) {
+ 			return ColourProfile.NIGHT;
+ 		} else {
+ 			return ColourProfile.DAY;
+ 		}
+ 	}
+-	
++
+ 	public OrientationLock getScreenOrientation() {
+-		String orientation = settings.getString(KEY_SCREEN_ORIENTATION, OrientationLock.NO_LOCK.name().toLowerCase());
++		String orientation = settings.getString(KEY_SCREEN_ORIENTATION,
++				OrientationLock.NO_LOCK.name().toLowerCase());
+ 		return OrientationLock.valueOf(orientation.toUpperCase());
+-	}	
+-	
+-	private void updateValue( String key, Object value ) {
+-		
++	}
++
++	private void updateValue(String key, Object value) {
++
+ 		SharedPreferences.Editor editor = settings.edit();
+-        
+-		if ( value instanceof String ) {
+-			editor.putString(key, (String) value );
+-		} else if ( value instanceof Integer ) {
+-			editor.putInt(key, (Integer) value );
+-		} else if ( value instanceof Boolean ) {
+-			editor.putBoolean(key, (Boolean) value );
++
++		if (value instanceof String) {
++			editor.putString(key, (String) value);
++		} else if (value instanceof Integer) {
++			editor.putInt(key, (Integer) value);
++		} else if (value instanceof Boolean) {
++			editor.putBoolean(key, (Boolean) value);
+ 		} else {
+-			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getSimpleName() );
+-		}		
+-		
+-        editor.commit();    
+-	}	
+-	
+-	private FontFamily loadFamilyFromAssets(String key, String baseName ) {
+-		Typeface basic = Typeface.createFromAsset(context.getAssets(), baseName + ".otf");
+-		Typeface boldFace = Typeface.createFromAsset(context.getAssets(), baseName + "-Bold.otf");
+-		Typeface italicFace = Typeface.createFromAsset(context.getAssets(), baseName + "-Italic.otf");
+-		Typeface biFace = Typeface.createFromAsset(context.getAssets(), baseName + "-BoldItalic.otf");
+-		
++			throw new IllegalArgumentException("Unsupported type: "
++					+ value.getClass().getSimpleName());
++		}
++
++		editor.commit();
++	}
++
++	private FontFamily loadFamilyFromAssets(String key, String baseName) {
++		Typeface basic = Typeface.createFromAsset(context.getAssets(), baseName
++				+ ".otf");
++		Typeface boldFace = Typeface.createFromAsset(context.getAssets(),
++				baseName + "-Bold.otf");
++		Typeface italicFace = Typeface.createFromAsset(context.getAssets(),
++				baseName + "-Italic.otf");
++		Typeface biFace = Typeface.createFromAsset(context.getAssets(),
++				baseName + "-BoldItalic.otf");
++
+ 		FontFamily fam = new FontFamily(key, basic);
+ 		fam.setBoldTypeface(boldFace);
+ 		fam.setItalicTypeface(italicFace);
+ 		fam.setBoldItalicTypeface(biFace);
+-		
++
+ 		return fam;
+ 	}
+-	
++
+ 	public FontFamily getFontFamily() {
+-		
+-		String fontFace = settings.getString(KEY_FONT_FACE, "gen_book_bas");   
+-		
+-		if ( cachedFamily != null && fontFace.equals( cachedFamily.getName() )) {
++
++		String fontFace = settings.getString(KEY_FONT_FACE, "gen_book_bas");
++
++		if (cachedFamily != null && fontFace.equals(cachedFamily.getName())) {
+ 			return cachedFamily;
+ 		}
+-    	
+-    	if ( "gen_book_bas".equals(fontFace) ) {
+-    		return this.cachedFamily = loadFamilyFromAssets(fontFace, "GentiumBookBasic");    		
+-    	}
+-    	if ("gen_bas".equals(fontFace)) {
+-    		return this.cachedFamily = loadFamilyFromAssets(fontFace, "GentiumBasic");    		
+-    	} 
+-    	
+-    	Typeface face = Typeface.SANS_SERIF;
+-    	
+-    	if ("sans".equals(fontFace) ) {
+-    		face = Typeface.SANS_SERIF;
+-    	} else if ("serif".equals(fontFace)) {
+-    		face = Typeface.SERIF;
+-    	} else if ("mono".equals(fontFace)) {
+-    		face = Typeface.MONOSPACE;
+-    	}  
+-    	
+-    	return this.cachedFamily = new FontFamily(fontFace, face);
+-	}
+-	
++
++		if ("gen_book_bas".equals(fontFace)) {
++			return this.cachedFamily = loadFamilyFromAssets(fontFace,
++					"GentiumBookBasic");
++		}
++		if ("gen_bas".equals(fontFace)) {
++			return this.cachedFamily = loadFamilyFromAssets(fontFace,
++					"GentiumBasic");
++		}
++
++		Typeface face = Typeface.SANS_SERIF;
++
++		if ("sans".equals(fontFace)) {
++			face = Typeface.SANS_SERIF;
++		} else if ("serif".equals(fontFace)) {
++			face = Typeface.SERIF;
++		} else if ("mono".equals(fontFace)) {
++			face = Typeface.MONOSPACE;
++		}
++
++		return this.cachedFamily = new FontFamily(fontFace, face);
++	}
++
+ 	public int getBrightNess() {
+-		//Brightness 0 means black screen :)
+-		return Math.max(1, getProfileSetting(KEY_BRIGHTNESS, 50, 50));		
++		// Brightness 0 means black screen :)
++		return Math.max(1, getProfileSetting(KEY_BRIGHTNESS, 50, 50));
+ 	}
+-	
++
+ 	public void setBrightness(int brightness) {
+-		if (getColourProfile() == ColourProfile.DAY ) {
++		if (getColourProfile() == ColourProfile.DAY) {
+ 			updateValue("day_bright", brightness);
+ 		} else {
+ 			updateValue("night_bright", brightness);
+@@ -360,7 +420,7 @@ public class Configuration {
+ 	}
+ 
+ 	public int getBackgroundColor() {
+-		return getProfileSetting(KEY_BACKGROUND, Color.WHITE, Color.BLACK);		
++		return getProfileSetting(KEY_BACKGROUND, Color.WHITE, Color.BLACK);
+ 	}
+ 
+ 	public int getTextColor() {
+@@ -370,46 +430,51 @@ public class Configuration {
+ 	public int getLinkColor() {
+ 		return getProfileSetting(KEY_LINK, Color.BLUE, Color.rgb(255, 165, 0));
+ 	}
+-	
+-	private int getProfileSetting(String setting, int dayDefault, int nightDefault) {
+-		
+-		if ( getColourProfile() == ColourProfile.NIGHT ) {			
+-			return settings.getInt( PREFIX_NIGHT + "_" + setting, nightDefault );
++
++	private int getProfileSetting(String setting, int dayDefault,
++			int nightDefault) {
++
++		if (getColourProfile() == ColourProfile.NIGHT) {
++			return settings.getInt(PREFIX_NIGHT + "_" + setting, nightDefault);
+ 		} else {
+-			return settings.getInt(PREFIX_DAY + "_" + setting, dayDefault );
++			return settings.getInt(PREFIX_DAY + "_" + setting, dayDefault);
+ 		}
+-		
++
+ 	}
+- 
++
+ 	public boolean isBrightnessControlEnabled() {
+ 		return settings.getBoolean(KEY_BRIGHTNESS_CTRL, false);
+ 	}
+ 
+ 	public ScrollStyle getAutoScrollStyle() {
+-		String style = settings.getString(KEY_SCROLL_STYLE, ScrollStyle.ROLLING_BLIND.name().toLowerCase());
+-		if ( "rolling_blind".equals(style) ) {
++		String style = settings.getString(KEY_SCROLL_STYLE,
++				ScrollStyle.ROLLING_BLIND.name().toLowerCase());
++		if ("rolling_blind".equals(style)) {
+ 			return ScrollStyle.ROLLING_BLIND;
+ 		} else {
+ 			return ScrollStyle.PAGE_TIMER;
+-		}		
++		}
+ 	}
+-	
++
+ 	public int getScrollSpeed() {
+ 		return settings.getInt(KEY_SCROLL_SPEED, 20);
+ 	}
+-	
++
+ 	public AnimationStyle getHorizontalAnim() {
+-		String animH = settings.getString(KEY_H_ANIMATION, AnimationStyle.CURL.name().toLowerCase());
+-    	return AnimationStyle.valueOf(animH.toUpperCase());
++		String animH = settings.getString(KEY_H_ANIMATION, AnimationStyle.CURL
++				.name().toLowerCase());
++		return AnimationStyle.valueOf(animH.toUpperCase());
+ 	}
+-	
++
+ 	public AnimationStyle getVerticalAnim() {
+-		String animV = settings.getString(KEY_V_ANIMATION, AnimationStyle.SLIDE.name().toLowerCase());
++		String animV = settings.getString(KEY_V_ANIMATION, AnimationStyle.SLIDE
++				.name().toLowerCase());
+ 		return AnimationStyle.valueOf(animV.toUpperCase());
+ 	}
+ 
+ 	public LibraryView getLibraryView() {
+-		String libView = settings.getString(KEY_LIB_VIEW, LibraryView.BOOKCASE.name().toLowerCase());
++		String libView = settings.getString(KEY_LIB_VIEW, LibraryView.BOOKCASE
++				.name().toLowerCase());
+ 		return LibraryView.valueOf(libView.toUpperCase());
+ 	}
+ 
+@@ -417,28 +482,29 @@ public class Configuration {
+ 		String libView = viewStyle.name().toLowerCase();
+ 		updateValue(KEY_LIB_VIEW, libView);
+ 	}
+-	
++
+ 	public LibrarySelection getLastLibraryQuery() {
+-		String query = settings.getString(KEY_LIB_SEL, LibrarySelection.LAST_ADDED.name().toLowerCase() );
++		String query = settings.getString(KEY_LIB_SEL,
++				LibrarySelection.LAST_ADDED.name().toLowerCase());
+ 		return LibrarySelection.valueOf(query.toUpperCase());
+ 	}
+-	
++
+ 	public void setLastLibraryQuery(LibrarySelection sel) {
+-		updateValue(KEY_LIB_SEL, sel.name().toLowerCase() );
++		updateValue(KEY_LIB_SEL, sel.name().toLowerCase());
+ 	}
+-	
++
+ 	public String getCalibreServer() {
+ 		return settings.getString(CALIBRE_SERVER, "");
+ 	}
+-	
++
+ 	public String getCalibreUser() {
+ 		return settings.getString(CALIBRE_USER, "");
+ 	}
+-	
++
+ 	public String getCalibrePassword() {
+ 		return settings.getString(CALIBRE_PASSWORD, "");
+ 	}
+-	
++
+ 	public String getStorageBase() {
+ 		return Environment.getExternalStorageDirectory().getAbsolutePath();
+ 	}
+@@ -446,13 +512,13 @@ public class Configuration {
+ 	public String getPageTurnerFolder() {
+ 		return getStorageBase() + "/PageTurner";
+ 	}
+-	
++
+ 	public String getDownloadsFolder() {
+ 		return getPageTurnerFolder() + "/Downloads";
+ 	}
+-	
++
+ 	public String getLibraryFolder() {
+ 		return getPageTurnerFolder() + "/Books";
+ 	}
+-	
++
+ }
+diff --git a/src/main/java/net/nightwhistler/pageturner/activity/ReadingActivity.java b/src/main/java/net/nightwhistler/pageturner/activity/ReadingActivity.java
+index e85a8a6..e2da758 100644
+--- a/src/main/java/net/nightwhistler/pageturner/activity/ReadingActivity.java
++++ b/src/main/java/net/nightwhistler/pageturner/activity/ReadingActivity.java
+@@ -258,6 +258,7 @@ public class ReadingActivity extends RoboSherlockActivity implements BookViewLis
+ 
+ 		this.viewSwitcher.setOnTouchListener(gestureListener);
+ 		this.bookView.setOnTouchListener(gestureListener);
++		this.bookView.setConfiguration(config);
+ 
+ 		this.bookView.addListener(this);
+ 		this.bookView.setSpanner(RoboGuice.getInjector(this).getInstance(
+@@ -356,7 +357,7 @@ public class ReadingActivity extends RoboSherlockActivity implements BookViewLis
+ 	}
+ 
+ 	@Override
+-	public void progressUpdate(int progressPercentage) {
++	public void progressUpdate(int progressPercentage, int pageNumber, int totalPages) {
+ 
+ 		// Work-around for calculation errors and weird values.
+ 		if (progressPercentage < 0 || progressPercentage > 100) {
+@@ -364,7 +365,7 @@ public class ReadingActivity extends RoboSherlockActivity implements BookViewLis
+ 		}
+ 
+ 		this.progressPercentage = progressPercentage;
+-		percentageField.setText("" + progressPercentage + "%  ");
++		percentageField.setText("" + progressPercentage + "%  " + pageNumber + " / " + totalPages);
+ 
+ 		this.progressBar.setProgress(progressPercentage);
+ 		this.progressBar.setMax(100);
+@@ -1413,7 +1414,7 @@ public class ReadingActivity extends RoboSherlockActivity implements BookViewLis
+ 	@Override
+ 	protected void onSaveInstanceState(final Bundle outState) {
+ 		if (this.bookView != null) {
+-
++		
+ 			outState.putInt(POS_KEY, this.bookView.getPosition());
+ 			outState.putInt(IDX_KEY, this.bookView.getIndex());
+ 
+diff --git a/src/main/java/net/nightwhistler/pageturner/epub/PageTurnerSpine.java b/src/main/java/net/nightwhistler/pageturner/epub/PageTurnerSpine.java
+index efce620..883eef1 100644
+--- a/src/main/java/net/nightwhistler/pageturner/epub/PageTurnerSpine.java
++++ b/src/main/java/net/nightwhistler/pageturner/epub/PageTurnerSpine.java
+@@ -41,6 +41,8 @@ public class PageTurnerSpine {
+ 
+ 	private List<SpineEntry> entries;
+ 	
++	private List<List<Integer>> pageOffsets;
++	
+ 	private int position;
+ 	
+ 	public static final String COVER_HREF = "PageTurnerCover";
+@@ -82,6 +84,41 @@ public class PageTurnerSpine {
+ 	    }
+ 	}
+ 	
++	public void setPageOffsets(List<List<Integer>> pageOffsets) {
++		this.pageOffsets = pageOffsets;
++	}
++	
++	public int getTotalNumberOfPages() {
++		int total = 0;
++		for ( List<Integer> pagesPerSection: pageOffsets ) {
++			total += pagesPerSection.size();
++		}
++		
++		return total;
++	}
++	
++	public int getPageNumberFor( int index, int position ) {
++		
++		int pageNum = 0;
++		
++		if ( index >= pageOffsets.size() ) {
++			return -1;
++		}
++		
++		for ( int i=0; i < index; i++ ) {
++			pageNum += pageOffsets.get(i).size();			
++		}
++		
++		List<Integer> offsets = pageOffsets.get(index);
++		
++		for ( int i=0; i < offsets.size() && offsets.get(i) < position; i++ ) {
++			pageNum++;
++		}
++		
++		return pageNum;
++	}
++	
++	
+ 	/**
+ 	 * Adds a new resource.
+ 	 * @param resource
+@@ -166,11 +203,15 @@ public class PageTurnerSpine {
+ 	 * @return
+ 	 */
+ 	public Resource getCurrentResource() {
++		return getResourceForIndex(position);
++	}
++	
++	public Resource getResourceForIndex( int index ) {
+ 		if ( entries.isEmpty() ) {
+ 			return null;
+ 		}
+ 		
+-		return entries.get(position).resource;
++		return entries.get(index).resource;
+ 	}
+ 	
+ 	/**
+diff --git a/src/main/java/net/nightwhistler/pageturner/view/BookView.java b/src/main/java/net/nightwhistler/pageturner/view/BookView.java
+index 52d3c86..29fb7d1 100644
+--- a/src/main/java/net/nightwhistler/pageturner/view/BookView.java
++++ b/src/main/java/net/nightwhistler/pageturner/view/BookView.java
+@@ -36,6 +36,7 @@ import net.nightwhistler.htmlspanner.HtmlSpanner;
+ import net.nightwhistler.htmlspanner.TagNodeHandler;
+ import net.nightwhistler.htmlspanner.handlers.TableHandler;
+ import net.nightwhistler.htmlspanner.spans.CenterSpan;
++import net.nightwhistler.pageturner.Configuration;
+ import net.nightwhistler.pageturner.epub.PageTurnerSpine;
+ import net.nightwhistler.pageturner.epub.ResourceLoader;
+ import net.nightwhistler.pageturner.epub.ResourceLoader.ResourceCallback;
+@@ -62,6 +63,7 @@ import android.graphics.Color;
+ import android.graphics.drawable.Drawable;
+ import android.os.AsyncTask;
+ import android.os.Build;
++import android.os.Bundle;
+ import android.text.Layout;
+ import android.text.Spannable;
+ import android.text.SpannableString;
+@@ -79,9 +81,6 @@ import android.view.View;
+ import android.widget.ScrollView;
+ import android.widget.TextView;
+ 
+-
+-
+-
+ public class BookView extends ScrollView {
+     	
+ 	private int storedIndex;
+@@ -111,6 +110,8 @@ public class BookView extends ScrollView {
+ 	private int verticalMargin = 0;
+ 	private int lineSpacing = 0;	
+ 	
++	private Configuration configuration;
++	
+ 	private static final Logger LOG = LoggerFactory.getLogger(BookView.class);
+ 
+ 	
+@@ -175,6 +176,10 @@ public class BookView extends ScrollView {
+         spanner.registerHandler("table", tableHandler);
+ 	}
+ 	
++	public void setConfiguration(Configuration configuration) {
++		this.configuration = configuration;
++	}
++	
+ 	
+ 	/**
+ 	 * Returns if we're at the start of the book, i.e. displaying the title page.
+@@ -961,12 +966,16 @@ public class BookView extends ScrollView {
+ 		
+ 			if ( progress != -1 ) {
+ 				for ( BookViewListener listener: this.listeners ) {
+-					listener.progressUpdate(progress);
++					listener.progressUpdate(progress, spine.getPageNumberFor(getIndex(), getPosition() ), spine.getTotalNumberOfPages() );
+ 				}		
+ 			}
+ 		}
+ 	}
+ 	
++	public void saveInstanceState(Bundle outState) {
++		
++	}
++	
+ 	public void setEnableScrolling(boolean enableScrolling) {
+ 		
+ 		if ( this.strategy == null || this.strategy.isScrolling() != enableScrolling ) {
+@@ -1006,7 +1015,30 @@ public class BookView extends ScrollView {
+ 		
+ 		this.book = book;
+ 		this.spine = new PageTurnerSpine(book);	   
+-	    this.spine.navigateByIndex( this.storedIndex );	    
++		
++	    this.spine.navigateByIndex( this.storedIndex );	
++	    
++	    List<List<Integer>> offsets = this.configuration.getPageOffsets(this.fileName);
++	    
++	    if ( offsets == null || offsets.isEmpty() ) {
++	    	try {
++		    	offsets = new ArrayList<List<Integer>>();	    
++
++		    	for ( int i=0; i < spine.size(); i++ ) {	    	
++		    		CharSequence text = spanner.fromHtml( spine.getResourceForIndex(i).getReader() );
++		    		offsets.add( FixedPagesStrategy.getPageOffsets(this, text) );
++		    	}
++		    	
++		    	configuration.setPageOffsets(fileName, offsets);
++		    	
++		    } catch (IOException io) {
++		    	LOG.error("Could not read pagenumers", io );
++		    }
++	
++	    }
++	    
++    	spine.setPageOffsets(offsets);
++	    	    
+ 	}
+ 	
+ 	private void initBook() throws IOException {	
+@@ -1034,6 +1066,8 @@ public class BookView extends ScrollView {
+         
+        	Book newBook = epubReader.readEpubLazy(fileName, "UTF-8", Arrays.asList(lazyTypes));
+         setBook( newBook );
++        
++        
+ 	}	
+ 	
+ 	private class LoadTextTask extends AsyncTask<String, Integer, Spanned> {
+diff --git a/src/main/java/net/nightwhistler/pageturner/view/BookViewListener.java b/src/main/java/net/nightwhistler/pageturner/view/BookViewListener.java
+index d73eb14..8f90689 100644
+--- a/src/main/java/net/nightwhistler/pageturner/view/BookViewListener.java
++++ b/src/main/java/net/nightwhistler/pageturner/view/BookViewListener.java
+@@ -61,7 +61,7 @@ public interface BookViewListener {
+ 	void parseEntryComplete( int entry, String name );
+ 	
+ 	/** Indicates how far we've progressed in the book **/
+-	void progressUpdate( int progressPercentage );
++	void progressUpdate( int progressPercentage, int pageNumber, int totalPages );
+ 	
+ 	/**
+ 	 * Generated when the user long-presses on a word in the text
+diff --git a/src/main/java/net/nightwhistler/pageturner/view/FixedPagesStrategy.java b/src/main/java/net/nightwhistler/pageturner/view/FixedPagesStrategy.java
+index 602da6a..1c9b6d8 100644
+--- a/src/main/java/net/nightwhistler/pageturner/view/FixedPagesStrategy.java
++++ b/src/main/java/net/nightwhistler/pageturner/view/FixedPagesStrategy.java
+@@ -44,14 +44,14 @@ public class FixedPagesStrategy implements PageChangeStrategy {
+ 		this.pageOffsets = new ArrayList<Integer>();
+ 	}
+ 	
+-	private void loadPages() {
++	public static List<Integer> getPageOffsets( BookView bookView, CharSequence text ) {
+ 		
+-		this.pageOffsets = new ArrayList<Integer>();
++		List<Integer> pageOffsets = new ArrayList<Integer>();
+ 		
+-		TextPaint textPaint = childView.getPaint();
+-		int boundedWidth = childView.getWidth();
++		TextPaint textPaint = bookView.getInnerView().getPaint();
++		int boundedWidth = bookView.getInnerView().getWidth();
+ 
+-		StaticLayout layout = new StaticLayout(this.text, textPaint, boundedWidth , Alignment.ALIGN_NORMAL, 1.0f, bookView.getLineSpacing(), false);
++		StaticLayout layout = new StaticLayout(text, textPaint, boundedWidth , Alignment.ALIGN_NORMAL, 1.0f, bookView.getLineSpacing(), false);
+ 		layout.draw(new Canvas());
+ 		
+ 		int pageHeight = bookView.getHeight() - ( 2* bookView.getVerticalMargin() );
+@@ -69,13 +69,14 @@ public class FixedPagesStrategy implements PageChangeStrategy {
+ 			int pageOffset = layout.getLineStart(topLine);
+ 			
+ 			//Make sure we don't enter the same offset twice
+-			if (pageOffsets.isEmpty() ||  pageOffset != this.pageOffsets.get(this.pageOffsets.size() -1)) {			
+-				this.pageOffsets.add(pageOffset);
++			if (pageOffsets.isEmpty() ||  pageOffset != pageOffsets.get(pageOffsets.size() -1)) {			
++				pageOffsets.add(pageOffset);
+ 			}
+ 			
+ 			currentPageNum++;
+-		}		
++		}	
+ 		
++		return pageOffsets;		
+ 	}
+ 	
+ 	
+@@ -199,7 +200,7 @@ public class FixedPagesStrategy implements PageChangeStrategy {
+ 	public void loadText(Spanned text) {
+ 		this.text = text;
+ 		this.pageNum = 0;
+-		loadPages();
++		this.pageOffsets = getPageOffsets(bookView, text);
+ 		updatePosition();
+ 	}
+ }

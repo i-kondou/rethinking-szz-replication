@@ -1,0 +1,15 @@
+SELECTED: candidate_03
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit removes the properties `OUTPUT_ENCODING` ("html.outputEncoding") and `SOURCE_ENCODING` ("html.sourceEncoding") — explicitly labeled in the code as "addition parameters by terry" — and restores the original `OUT_ENCODING`/`IN_ENCODING` scheme (adding a new `IN_ENCODING` property alongside the pre-existing `OUT_ENCODING`). It reverts all call sites (html/txt/xml ReportGenerator classes) from `getOutputEncoding()`/`getSourceEncoding()` back to `getOutEncoding()`/`getInEncoding()`.
+
+Searching the candidates for these exact symbols shows:
+- candidate_01: contains only `OUT_ENCODING` (the original, correct scheme) — bug not yet present.
+- candidate_02: no encoding-related changes.
+- candidate_03: introduces `OUTPUT_ENCODING`/`SOURCE_ENCODING` for the first time, with the literal comment "addition parameters by terry", adds `setOutputEncoding`/`setSourceEncoding` to `ParsedProperties`, and switches `ReportProperties.parse()` to read from these new properties instead of `OUT_ENCODING`. It also changes source-file reading in the HTML report generator from `FileReader` (platform default encoding) to an explicit `InputStreamReader` using the new `getSourceEncoding()`, and switches multiple `getOutEncoding()` call sites to `getOutputEncoding()`.
+- candidate_04: unrelated change (renames a directory constant from "_files" to "files").
+- candidate_05: reverts back to `OUT_ENCODING`/`IN_ENCODING` (content matching the eventual fix), meaning the buggy scheme introduced in candidate_03 was still present up through candidate_04.
+
+Because candidate_03 is the first commit to introduce the `OUTPUT_ENCODING`/`SOURCE_ENCODING` properties (the exact code structure and naming that the fix commit removes), it is the bug-introducing commit. The unrelated candidate_04 confirms the bug persisted until directly addressed.

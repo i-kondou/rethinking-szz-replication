@@ -1,0 +1,20 @@
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+index ecb621f08d0..9955dc7cf30 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+@@ -398,13 +398,13 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+     listener.installOn(myDualView.getTreeView());
+     setEmptyText(CommonBundle.getLoadingTreeNodeText());
+ 
++    myPopupActions = createPopupActions();
++
+     createDualView();
+     if (isStaticEmbedded) {
+       setIsStaticAndEmbedded(isStaticEmbedded);
+     }
+ 
+-    myPopupActions = createPopupActions();
+-
+     myHistoryPanelRefresh = new AsynchConsumer<VcsHistorySession>() {
+       public void finished() {
+         if (treeHistoryProvider != null) {

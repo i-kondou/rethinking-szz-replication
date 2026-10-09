@@ -1,0 +1,37 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The bug (EA-79438: IAE in PopupHandler.installPopupHandler) is caused by an
+initialization-order issue in FileHistoryPanelImpl's constructor: in the
+buggy version, `createDualView()` is called before `myPopupActions =
+createPopupActions();`. Inside `createDualView()`, the buggy code calls the
+static method `PopupHandler.installPopupHandler(view, myPopupActions,
+ActionPlaces.UPDATE_POPUP, ActionManager.getInstance())`. Because this is a
+direct static method call, `myPopupActions` is evaluated eagerly as an
+argument at the time `createDualView()` runs — and since `myPopupActions` has
+not yet been assigned, it is passed as `null`, causing an
+IllegalArgumentException. The fix simply reorders the two statements so
+`myPopupActions` is assigned before `createDualView()` runs.
+
+In files/old/, the constructor has the same statement ordering (createDualView()
+is called before myPopupActions is assigned), but createDualView() itself is
+implemented completely differently: instead of calling the static
+`PopupHandler.installPopupHandler(...)` method, it registers an anonymous
+inner `PopupHandler` subclass via `addMouseListener`, whose `invokePopup(...)`
+method references `myPopupActions` only inside its body. This reference is
+not evaluated at construction time — it is only evaluated later, when the
+user actually triggers a right-click popup event, by which point
+`myPopupActions` has long since been assigned (the assignment happens later
+in the same constructor, well before the UI is shown to the user). Therefore,
+even though the same field-ordering pattern exists in old/, the lazy
+evaluation used in that version's popup-handling code means the null
+dereference / IAE never occurs.
+
+The bug was introduced later, when the code was refactored to use the static
+`PopupHandler.installPopupHandler(...)` utility method (visible in
+files/buggy/) without accounting for the fact that this changed the
+evaluation of `myPopupActions` from lazy to eager. Since files/old/ predates
+that refactor and uses the lazy-evaluation pattern, it does not contain this
+bug.

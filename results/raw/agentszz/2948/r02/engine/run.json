@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "kind": "claude-szz-agentic-baseline-subject-run",
+  "created_at": "2026-09-07T12:34:09.246901+00:00",
+  "state": "completed",
+  "scientific_result": true,
+  "test_stub": false,
+  "baseline": "agentszz",
+  "sample_id": "2948",
+  "repository": "openmicroscopy/bioformats",
+  "synthetic_fix_hash": "0b59466d102d0a56a80e8059846bc4fdd8ffdb9c",
+  "model": "claude-sonnet-5",
+  "base_url": "https://api.anthropic.com/v1/",
+  "per_run_cap_usd": "5",
+  "model_started": true,
+  "reported_cost_usd": "0.303598",
+  "duration_seconds": 70.19124954199651,
+  "predicted_bics": [
+    "b48fd4a88c599647535f6943a8a62b3d77c1d6e5"
+  ],
+  "reasoning": "The fix adds a check `sb.length() == 0 ||` before `sb.charAt(sb.length() - 1)` to prevent StringIndexOutOfBoundsException. This charAt-based check was introduced by commit b48fd4a88c59 (\"Fix Findbugs SBSC_USE_STRINGBUFFER_CONCATENATION for formats-gpl\"), which refactored `String key` with `.endsWith(\":\")` (safe on empty strings, since endsWith just returns false) into a `StringBuffer sb` with `sb.charAt(sb.length() - 1)` (unsafe/throws when sb is empty). This refactor, though intended as a non-semantic Findbugs cleanup, actually introduced a semantic regression: an empty StringBuffer now causes an index-out-of-bounds exception where the prior code handled it gracefully. This is precisely the bug that the fix commit corrects.",
+  "confidence": "high",
+  "upstream_metrics": {
+    "case_elapsed_seconds": 69.946331,
+    "api_elapsed_seconds": 67.022405,
+    "tool_elapsed_seconds": 2.800047,
+    "other_elapsed_seconds": 0.123883,
+    "api_call_count": 14,
+    "tool_call_count": 13,
+    "prompt_tokens": 131324,
+    "completion_tokens": 4095,
+    "total_tokens": 135419,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "provider_calls": [
+    {
+      "input_tokens": 3850,
+      "output_tokens": 205,
+      "cost_usd_equivalent": "0.00975",
+      "elapsed_seconds": 4.254687374981586
+    },
+    {
+      "input_tokens": 4585,
+      "output_tokens": 108,
+      "cost_usd_equivalent": "0.01025",
+      "elapsed_seconds": 2.5117279579862952
+    },
+    {
+      "input_tokens": 5573,
+      "output_tokens": 319,
+      "cost_usd_equivalent": "0.014336",
+      "elapsed_seconds": 5.005274583003484
+    },
+    {
+      "input_tokens": 7137,
+      "output_tokens": 298,
+      "cost_usd_equivalent": "0.017254",
+      "elapsed_seconds": 4.707604916009586
+    },
+    {
+      "input_tokens": 8690,
+      "output_tokens": 217,
+      "cost_usd_equivalent": "0.01955",
+      "elapsed_seconds": 3.705365834000986
+    },
+    {
+      "input_tokens": 8902,
+      "output_tokens": 157,
+      "cost_usd_equivalent": "0.019374",
+      "elapsed_seconds": 2.9110097920056432
+    },
+    {
+      "input_tokens": 9074,
+      "output_tokens": 158,
+      "cost_usd_equivalent": "0.019728",
+      "elapsed_seconds": 2.898767999955453
+    },
+    {
+      "input_tokens": 9395,
+      "output_tokens": 200,
+      "cost_usd_equivalent": "0.02079",
+      "elapsed_seconds": 3.7195251250523143
+    },
+    {
+      "input_tokens": 9691,
+      "output_tokens": 119,
+      "cost_usd_equivalent": "0.020572",
+      "elapsed_seconds": 2.942055082996376
+    },
+    {
+      "input_tokens": 9858,
+      "output_tokens": 147,
+      "cost_usd_equivalent": "0.021186",
+      "elapsed_seconds": 2.8977912080008537
+    },
+    {
+      "input_tokens": 11464,
+      "output_tokens": 220,
+      "cost_usd_equivalent": "0.025128",
+      "elapsed_seconds": 4.722464208025485
+    },
+    {
+      "input_tokens": 12970,
+      "output_tokens": 245,
+      "cost_usd_equivalent": "0.02839",
+      "elapsed_seconds": 5.1035187499946915
+    },
+    {
+      "input_tokens": 13792,
+      "output_tokens": 804,
+      "cost_usd_equivalent": "0.035624",
+      "elapsed_seconds": 10.111915124987718
+    },
+    {
+      "input_tokens": 16343,
+      "output_tokens": 898,
+      "cost_usd_equivalent": "0.041666",
+      "elapsed_seconds": 11.513820292020682
+    }
+  ],
+  "source_provenance": {
+    "manifest_path": "/Users/user-01/research/workspaces/claude-szz/implementation/config/agentic-baseline-sources.json",
+    "manifest_sha256": "8fc7276c1bd2772698abeeaabfc6cc1a6bb24aac89db5601f27da49933147fb0",
+    "agentszz_source_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentszz-figshare-v2/replication_package/agentszz",
+    "agentszz_source_tree_sha256": "3436d1b781b11c9b2bf962105355f5f4ded84ede0ec599bda848e0cff9c72777",
+    "agentic_szz_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz",
+    "agentic_szz_commit": "0012a507b9087f15cdad340888a837f5618a3c29",
+    "agentic_szz_git_tree": "738bf1e17594df62dd198f7ffc220d728223b454",
+    "agentszz_python": {
+      "version": "3.11.11",
+      "modules": {
+        "openai": "2.16.0",
+        "git": "3.1.46"
+      },
+      "executable": "/Users/user-01/research/workspaces/claude-szz/baselines/venv/bin/python"
+    },
+    "agentic_szz_python": {
+      "version": "3.12.8",
+      "modules": {
+        "graphiti_core": "unknown",
+        "pydantic_ai": "2.31.1",
+        "neo4j": "6.2.0",
+        "git": "3.1.59",
+        "openai": "3.3.0"
+      },
+      "executable": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz-venv/bin/python"
+    },
+    "agentic_szz_requirements_path": "/Users/user-01/research/workspaces/claude-szz/implementation/config/llm-baselines/requirements-agentic-szz-python312.txt",
+    "agentic_szz_requirements_sha256": "e426ee65f956a8582aa195ac819d2c862d68abd66d20107d71558701ca313f22",
+    "neo4j": {
+      "reference": "neo4j:5.26.8-community",
+      "id": "sha256:c0f0ce3396c902c9ab6520d0c9d1c644a3aa83eed00036e609e5db10a84b2d92",
+      "repo_digests": [
+        "neo4j@sha256:5216b8f7bcca893448d5b4a809d91761609fc8aea900691d59531ada76c28c62"
+      ],
+      "architecture": "arm64",
+      "os": "linux"
+    }
+  },
+  "prompt_metadata_path": "/Users/user-01/research/workspaces/claude-szz/implementation/data/derived/subject-prompts-bfc-message-neutralized-final-v1/2948.json",
+  "prompt_metadata_sha256": "5029fd5029f03c4417f4cacfc8f12d82977f2afb977054438ce4de5620c6d19c",
+  "repository_before": {
+    "head": "0b59466d102d0a56a80e8059846bc4fdd8ffdb9c",
+    "head_matches_synthetic_fix": true,
+    "source_fix_absent": true,
+    "clean": true,
+    "no_remotes": true,
+    "no_object_alternates": true
+  },
+  "repository_after": {
+    "head": "0b59466d102d0a56a80e8059846bc4fdd8ffdb9c",
+    "head_matches_synthetic_fix": true,
+    "source_fix_absent": true,
+    "clean": true,
+    "no_remotes": true,
+    "no_object_alternates": true
+  },
+  "postflight_clean": true,
+  "error": null,
+  "limitations": [
+    "Sonnet 5 through Anthropic is a matched-backbone adaptation, not the original-model replication.",
+    "Both upstream methods emit a single primary BIC; multi-BIC recall is structurally capped.",
+    "Reported cost is reconstructed from token usage and the frozen Anthropic price snapshot, not provider billing records.",
+    "AgenticSZZ checks its conservative total-token limit between requests, so one in-flight request can cross the nominal trigger."
+  ]
+}

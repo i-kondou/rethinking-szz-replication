@@ -1,0 +1,43 @@
+SELECTED: candidate_59
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a `MainActivity.onDestroy()` override that calls
+`DownloadManagerInterface.getInstance().destroy(this)`, and adds a new
+`destroy(Context)` method to `DownloadManagerInterface` that unregisters
+`downloadCompletionReceiver` and clears the singleton instance. This shows the
+bug was: `DownloadManagerInterface` registers a `BroadcastReceiver` via
+`context.registerReceiver(downloadCompletionReceiver, filter)` but that
+receiver was never unregistered anywhere, causing a receiver/resource leak.
+
+`candidate_59` is where this problem was introduced. Before this commit,
+`MainActivity` had its own broadcast-receiver handling for download
+completion, complete with correct lifecycle management:
+`registerReceiver()` in `onCreate()` and a matching
+`unregisterReceiver()` call inside an `onDestroy()` override.
+
+`candidate_59` deletes that entire correct pattern (removing
+`MainActivity.onDestroy()`, the `downloadCompletionReceiver` field, and the
+receiver register/unregister calls) and replaces it with a brand-new
+`DownloadManagerInterface` class (initially at
+`.../data/DownloadManagerInterface.java`, later moved to
+`.../data/downloadmanager/DownloadManagerInterface.java` in candidate_63,
+matching the fix's file path). This new class registers the same kind of
+broadcast receiver in its `registerReceiver()` method (called from
+`init()`, invoked from `SebApp.onCreate()`), but no corresponding
+"unregister"/"destroy" method or call was added anywhere in this commit or
+any subsequent candidate until the fix commit itself. In other words,
+candidate_59 both removed the previously-correct disposal logic and
+introduced the new receiver registration that lacks disposal - exactly the
+defect the fix (candidate_67 equivalent code) later corrects by adding
+`destroy(Context)` and wiring it into `MainActivity.onDestroy()`.
+
+Later candidates (e.g. candidate_60, which moves the `init()` call from
+`SebApp` into `MainActivity.onCreate()`, and candidate_63, which renames/
+relocates the class) modify how and where the interface is initialized, but
+none of them add the missing disposal logic - the receiver leak persists
+unchanged from candidate_59 through to the fix. Note: candidate_67 in this
+candidate set is textually identical to the provided fix_commit_diff.txt,
+indicating it is the fix commit itself rather than a distinct
+bug-introducing candidate, so it was excluded from consideration.

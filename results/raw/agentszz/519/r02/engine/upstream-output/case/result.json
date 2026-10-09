@@ -1,0 +1,22 @@
+{
+  "fix_commit": "bbcc596ff1f3b1e7d3351947c9a9e441ab825be7",
+  "bic": "c0f5be7d77bb51a61cf5745f43be907a197aae98",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit introduced the `application.filesystem.unique.paths` configurable switch (`validatePathUniqueness`) and correctly guarded `onCreation` with the check, but left `onModification` calling `validatePath()` unconditionally without checking `validatePathUniqueness`. This is exactly the bug the fix addresses \u2014 renaming files/folders didn't respect the config switch because `onModification` always ran path validation regardless of the flag's value.",
+  "metrics": {
+    "case_elapsed_seconds": 12.755364,
+    "api_elapsed_seconds": 12.529519,
+    "tool_elapsed_seconds": 0.120257,
+    "other_elapsed_seconds": 0.105596,
+    "api_call_count": 4,
+    "tool_call_count": 3,
+    "prompt_tokens": 23383,
+    "completion_tokens": 859,
+    "total_tokens": 24242,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T19:59:32.493544"
+}

@@ -1,0 +1,15 @@
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+index a11fed48415..0d486101cae 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+@@ -946,9 +946,7 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+ 
+     @Override
+     public boolean isEnabled() {
+-      if (!super.isEnabled()) return false;
+-      if (!myHistorySession.isContentAvailable(getFirstSelectedRevision())) return false;
+-      return true;
++      return super.isEnabled() && myHistorySession.isContentAvailable(getFirstSelectedRevision()) && !myFilePath.isDirectory();
+     }
+ 
+     protected void executeAction(AnActionEvent e) {

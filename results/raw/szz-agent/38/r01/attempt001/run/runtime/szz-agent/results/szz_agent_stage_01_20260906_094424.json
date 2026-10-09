@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "timestamp": "20260906_094424",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "38",
+      "fix_commit_hash": "45bddf5b5c2d9df754f984fb1cf9bf6b6e254441",
+      "bug_commit_hash": [
+        "d6e4936fa54dc3577296dbadaeb556178dcad2c3"
+      ],
+      "szz_candidates": [
+        "d6e4936fa54dc3577296dbadaeb556178dcad2c3",
+        "9ff4d7b2bc0830e96c7d844f2ffc7d5da798b646",
+        "2bbb9b96085a2758ddef96e9cc8bc24b2a3d3eda",
+        "af546ae10190ac076cd7b091cd064fb8a5c03519",
+        "1ef6f883e34a08dc916ad7dfabd7f892964aff54",
+        "9a6aa07089f195a95f15703e712ee95e077a7a09",
+        "abfa7d743cf159a25f54ddcdc84d375c7a9df21e",
+        "b4ea59bf7cfec8f505622dd80903d2f8a4461570"
+      ],
+      "szz_num_candidates": 8,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "d6e4936fa54dc3577296dbadaeb556178dcad2c3"
+      ],
+      "llm_selected_commit": "d6e4936fa54dc3577296dbadaeb556178dcad2c3",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit (\"fix ridiculous database migration bug\") modifies the fall-through switch statement in KeychainDatabase.onUpgrade(). Specifically it removes an empty `case 7: // consolidate` label and merges its following code (the CREATE_API_APPS_ALLOWED_KEYS creation, previously under `case 8:`) directly into `case 7:`. As a consequence, every subsequent case label in the switch is shifted down by one (old case 9 -> 8, 10 -> 9, 11 -> 10, 12 -> 11, 13 -> 12, 14 -> 13, 15 -> 14). This shows the ",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/38",
+      "bug_fixing_commit": "45bddf5b5c2d9df754f984fb1cf9bf6b6e254441",
+      "bug_inducing_commit": [
+        "d6e4936fa54dc3577296dbadaeb556178dcad2c3"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "open-keychain/open-keychain"
+    }
+  ]
+}

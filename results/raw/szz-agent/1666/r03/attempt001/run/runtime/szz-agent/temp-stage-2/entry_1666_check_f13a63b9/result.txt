@@ -1,0 +1,22 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a `break;` statement inside `getCoverBytes()` in CoverManager.java, right after logging a successful cover download, so the loop over `coverUrls` stops as soon as a cover is successfully retrieved. Without this `break` (the buggy version), the loop continues to the next URL even after a successful download; if a later URL in the array fails, `coverBytes` gets overwritten back to `null`, causing a previously-successful local/downloaded cover to be lost.
+
+In `files/old/`, the `getCoverBytes()` method (around line 531) has a different but functionally equivalent structure: instead of setting `coverBytes` and falling through the loop, it directly does `return coverBytes;` as soon as a non-null result is obtained:
+
+```java
+if (coverBytes != null) {
+    if (DEBUG)
+        d(...);
+    return coverBytes;
+}
+```
+
+This `return` immediately exits the method upon success, which prevents the loop from ever reaching a later URL and overwriting the result — the exact same protection that the fix commit re-introduces via `break`. This means the early-exit behavior already existed in the old version.
+
+The bug was evidently introduced later, in an intermediate commit that refactored `getCoverBytes()` to accumulate `coverBytes` and `return` it only once at the end of the method (as seen in `files/buggy/`), which dropped the early-exit safeguard that existed in `files/old/`. The fix commit restores that safeguard using `break` because the method's structure (single return at the end) no longer allows a direct early `return`.
+
+Since the relevant early-exit logic was present (via `return`) in the old version, the bug does not exist there — it was introduced by a later refactor and only then fixed by adding `break`.

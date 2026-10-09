@@ -1,0 +1,42 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The bug fixed in this commit is an operator-precedence issue in
+LocalInspectionsPass.createHighlightInfo(): in the buggy version, the tooltip
+is built as:
+
+    tooltip = XmlStringUtil.wrapInHtml(...) + link;
+
+This appends `link` *after* the closing `</html>` tag produced by
+wrapInHtml(), so the "more info" link ends up outside the HTML wrapper and is
+not rendered/displayed correctly. The fix moves `link` inside the
+wrapInHtml(...) call so it becomes part of the wrapped HTML body:
+
+    tooltip = XmlStringUtil.wrapInHtml((...) + link);
+
+Examining files/old/.../LocalInspectionsPass.java, the corresponding method
+uses an entirely different, pre-refactor implementation of the tooltip
+construction. It does not call XmlStringUtil.wrapInHtml at all. Instead it
+uses explicit branching:
+
+    if (message.startsWith("<html>")) {
+      tooltip = message.contains("</body>")
+                ? message.replace("</body>", link + "</body>")
+                : message.replace("</html>", link + "</html>");
+    } else {
+      tooltip = "<html><body>" + XmlStringUtil.escapeString(message) + link + "</body></html>";
+    }
+
+In every branch here, `link` is inserted before the closing `</body>` or
+`</html>` tag, meaning it is correctly placed inside the HTML wrapper in the
+old version. This is exactly the correct behavior the fix commit later
+restores after the wrapInHtml refactor broke it.
+
+Since the buggy code pattern (wrapInHtml(...) + link, with link appended
+outside the HTML tags) does not exist in files/old/ — the old code already
+places the link correctly inside the HTML structure using a different
+mechanism — the specific bug fixed by this commit is not present in the old
+version. The bug was introduced later when the tooltip-building code was
+refactored to use XmlStringUtil.wrapInHtml().

@@ -1,0 +1,37 @@
+SELECTED: candidate_161
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a `if (myDataChoices != null) { ... }` guard around a block in
+DisplayControlImpl.java that checks `myDataChoices.size() > 0 && myDataChoices.get(0)
+instanceof DerivedDataChoice` and, if so, digs into the first DerivedDataChoice's
+sub-choices to determine whether `usesTimeDriver` should be set. Without the null
+check, this code throws a NullPointerException whenever `myDataChoices` is null at
+this point.
+
+Searching all 174 candidates for this exact code pattern
+(`myDataChoices.get(0) instanceof DerivedDataChoice`) turns up only four commits:
+candidate_161, candidate_162, candidate_167, and candidate_174.
+
+- candidate_161 is where this entire block is first introduced (all lines are
+  additions, inserted right after an early `return;` in the method) — and critically,
+  it is added with NO null check on `myDataChoices`:
+  `if(myDataChoices.size() > 0 && myDataChoices.get(0) instanceof DerivedDataChoice){ ... }`
+  This is exactly the unguarded pattern that later causes the NPE.
+
+- candidate_162 only reformats this block (whitespace/brace style changes) and
+  slightly tweaks the inner `dtimes`/`ud1` condition — it still has no null check on
+  `myDataChoices`, so the bug is inherited, not introduced, here.
+
+- candidate_167 is a large, unrelated bulk change (import cleanup, unrelated feature
+  additions elsewhere in the file) that happens to touch nearby lines but does not
+  change this null-check condition.
+
+- candidate_174 is essentially identical to the fix commit's diff itself (adding the
+  `if (myDataChoices != null)` wrapper), so it is not a bug-introducing candidate at
+  all — it looks like the actual fix (or a duplicate of it) rather than a cause.
+
+Since candidate_161 is the first commit to add this code path, and it does so without
+any null-guard on `myDataChoices`, it is the commit that introduced the
+NullPointerException later corrected by the fix.

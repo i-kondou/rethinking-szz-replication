@@ -1,0 +1,19 @@
+SELECTED: candidate_05
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix corrects two bugs in DokanyDriver.java:
+1. The shutdown() method incorrectly used `isMounted.set(NativeMethods.DokanRemoveMountPoint(deviceOptions.MountPoint))`, which sets `isMounted` to the return value of the unmount call. Since `DokanRemoveMountPoint` returns `true` on a *successful* unmount, this line actually set `isMounted` to `true` right after a successful unmount (and to `false` on failure) — the exact opposite of correct behavior ("Wrongly set isMounted variable during shutdown"). The fix replaces this with an explicit local `unmounted` boolean and only calls `isMounted.set(false)` when unmounting succeeds.
+2. Because `isMounted` was wrongly left `true` after a successful unmount, subsequent shutdown attempts would still think the filesystem was mounted, matching the "Not able to unmount filesystem" symptom.
+
+Tracing the candidates:
+- candidate_01 (initial DokanyDriver.java): no `isMounted` field exists at all; shutdown is a static `stop()` method with no mount-state tracking.
+- candidate_02, candidate_03, candidate_04: only touch javadoc, exception handling, and shutdown-hook ordering; the `shutdown()`/mount-status logic is unrelated to `isMounted`.
+- candidate_05: introduces the `AtomicBoolean isMounted` field and, critically, introduces the exact buggy line:
+  `isMounted.set(NativeMethods.DokanRemoveMountPoint(deviceOptions.MountPoint));`
+  followed by `if (isMounted.get()) { LOG.error("Unable to unmount..."); }` — this is precisely the faulty logic that the fix commit rewrites.
+- candidate_06: only adds a `//TODO` comment on that same line, not a logic change.
+- candidate_07: is identical to the fix commit itself (same diff/hashes), i.e., it IS the fix, not a bug-introducing candidate.
+
+Since candidate_05 is the first commit where this specific incorrect assignment (`isMounted.set(...)` using the unmount success value directly instead of tracking the negation) was introduced, it is the bug-introducing commit.

@@ -1,0 +1,22 @@
+{
+  "fix_commit": "7546a2336ef8e493f7074f1e6ff887a8174eb1ed",
+  "bic": "fab0f61a025f824f76980d54c3aa2cfa435a8c79",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"Bulkloader and Hadoop IO format config key changes\") introduced the ConfigElement.getPath overload (with includeRoot parameter) and changed the config namespace/prefix scheme used by MapReduceIndexJobs, MapReduceIndexManagement, CassandraHadoopScanRunner, and HBaseHadoopScanRunner. It updated only some of the getPath() call sites to use the new overload while leaving others using the old default (excluding root), causing mismatched config key prefixes and breaking the scanjob helper classes. The fix commit 7546a2336 corrects exactly these remaining call sites to consistently use getPath(..., true), directly undoing the inconsistency introduced by fab0f61a.",
+  "metrics": {
+    "case_elapsed_seconds": 14.788879,
+    "api_elapsed_seconds": 14.550611,
+    "tool_elapsed_seconds": 0.131483,
+    "other_elapsed_seconds": 0.10679,
+    "api_call_count": 3,
+    "tool_call_count": 3,
+    "prompt_tokens": 24947,
+    "completion_tokens": 874,
+    "total_tokens": 25821,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:08:25.798866"
+}

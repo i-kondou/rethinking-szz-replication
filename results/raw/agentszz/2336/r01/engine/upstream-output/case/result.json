@@ -1,0 +1,22 @@
+{
+  "fix_commit": "c34d7adf53e71e8998596689581a1611d0d0353f",
+  "bic": "d37442cdb1189c7202c177901832e34f582e2feb",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"Fixes #319\") replaced the unconditional `pause()` call with a conditional check `if (!packetHandler.isLoadingLevel) { pause(); } else { Mouse.setGrabbed(false); }`. This introduced the buggy logic that failed to account for singleplayer/offline mode, causing the menu to fail to appear when pressing escape in singleplayer. The fix commit directly patches this exact line by adding `|| !isOnline()` to the condition, restoring correct behavior for singleplayer while preserving the intended multiplayer loading-screen fix.",
+  "metrics": {
+    "case_elapsed_seconds": 12.850987,
+    "api_elapsed_seconds": 12.63257,
+    "tool_elapsed_seconds": 0.113982,
+    "other_elapsed_seconds": 0.104438,
+    "api_call_count": 4,
+    "tool_call_count": 3,
+    "prompt_tokens": 19127,
+    "completion_tokens": 835,
+    "total_tokens": 19962,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:05:56.178974"
+}

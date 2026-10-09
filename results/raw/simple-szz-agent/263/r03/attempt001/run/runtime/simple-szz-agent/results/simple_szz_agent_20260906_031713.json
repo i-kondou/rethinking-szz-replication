@@ -1,0 +1,283 @@
+{
+  "metadata": {
+    "timestamp": "20260906_031713",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/263/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 38.324,
+      "max": 38.324,
+      "mean": 38.324,
+      "median": 38.324,
+      "total": 38.324,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 38.27,
+      "max": 38.27,
+      "mean": 38.27,
+      "median": 38.27,
+      "total": 38.27,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 3504,
+      "max": 3504,
+      "mean": 3504,
+      "median": 3504,
+      "total": 3504,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 14482,
+      "max": 14482,
+      "mean": 14482,
+      "median": 14482,
+      "total": 14482,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 58748,
+      "max": 58748,
+      "mean": 58748,
+      "median": 58748,
+      "total": 58748,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.15711239999999999,
+      "max": 0.15711239999999999,
+      "mean": 0.15711239999999999,
+      "median": 0.15711239999999999,
+      "total": 0.15711239999999999,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 8,
+      "max": 8,
+      "mean": 8,
+      "median": 8,
+      "total": 8,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 6,
+      "Grep": 1,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 27,
+      "max": 27,
+      "mean": 27,
+      "median": 27,
+      "total": 27,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "263",
+      "fix_commit_hash": "5c128a48829bd2caff4a061c5f4637d39c85ab6d",
+      "ground_truth_bics": [
+        "34d01ebe9f45172bcd16822a2124ae79a2dc22ec"
+      ],
+      "predicted_bics": [
+        "34d01ebe9f45172bcd16822a2124ae79a2dc22ec"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "263",
+      "fix_commit": "5c128a48829bd2caff4a061c5f4637d39c85ab6d",
+      "ground_truth_bics": [
+        "34d01ebe9f45172bcd16822a2124ae79a2dc22ec"
+      ],
+      "total_candidates": 27,
+      "gt_in_candidates": true,
+      "selected_commit": "34d01ebe9f45172bcd16822a2124ae79a2dc22ec",
+      "selected_index": 24,
+      "confidence": "HIGH",
+      "explanation": "The fix commit adds a single line, `filesFromThisSite.clear();`, at the start of XMLFileReader.read(), right after `this.updateSite = updateSite;`. The commit message says the bug \"would prevent any shadowing (update sites overriding other update sites' files)\". The `filesFromThisSite` field was introduced in candidate_25. In that commit, the field is declared and initialized once as an instance field: protected Set<FileObject> filesFromThisSite = new HashSet<FileObject>();",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "core/updater/core/src/main/java/imagej/updater/core/XMLFileReader.java"
+      ],
+      "call_stats": {
+        "duration_s": 38.324,
+        "duration_api_s": 38.27,
+        "num_turns": 9,
+        "input_tokens": 12,
+        "output_tokens": 3504,
+        "cache_creation_input_tokens": 14482,
+        "cache_read_input_tokens": 58748,
+        "total_cost_usd": 0.15711239999999999,
+        "total_tool_calls": 8,
+        "tool_calls_by_name": {
+          "Read": 6,
+          "Grep": 1,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/263/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_263_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/263/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_263_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/263/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_263_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 865,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "filesFromThisSite",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/263/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_263_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 21,
+            "cache_creation_input_tokens": 395,
+            "cache_read_input_tokens": 10548,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/263/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_263_candidate_selection/candidates/candidate_25.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/263/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_263_candidate_selection/candidates/candidate_26.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/263/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_263_candidate_selection/candidates/candidate_27.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4953,
+            "cache_read_input_tokens": 10943,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/263/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_263_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_25\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit adds a single line, `filesFromThisSite.clear();`, at the start of\nXMLFileReader.read(), right after `this.updateSite = updateSite;`. The commit\nmessage says the bug \"would prevent any shadowing (update sites overriding\nother update sites' files)\".\n\nThe `filesFromThisSite` field was introduced in candidate_25. In that commit,\nthe field is declared and initialized once as an instance field:\n\n    protected Set<FileObject> filesFromThisSite = new HashSet<FileObject>();\n\nThe read() logic in that same commit was reworked so that, instead of\ncomparing `updateSite` strings to decide whether an existing FileObject came\nfrom the same update site as the one currently being parsed, it checks\n`filesFromThisSite.contains(file)`. This set is populated with every\nFileObject added while processing the current call to read(), but it is never\ncleared when read() is called again for a different update site (read() is\ncalled once per update site while building the merged file list). As a\nresult, files added while parsing one update site remain in\n`filesFromThisSite` when a later update site is parsed, so the code\nincorrectly treats files from a previous update site as if they belonged to\nthe site currently being read. This causes the shadowing/override logic\n(`filesFromThisSite.contains(file)` branch vs. the `getRank(...)` branch that\nhandles the overridden-update-site bookkeping and the \"shadows\" warning) to\ntake the wrong path, effectively preventing update sites from overriding each\nother's files \u2014 precisely the symptom described in the fix commit message.\n\nCandidate_26 (a later change) only refactors the warning output (using\n`files.log.warn` instead of appending to `warnings`) and does not touch the\nmissing-clear() issue, so it does not fix or reintroduce the bug \u2014 it simply\ncarries it forward. The very next change to this method is the fix commit\nitself, which adds `filesFromThisSite.clear()`. Since candidate_25 is the\ncommit that first introduced the `filesFromThisSite` field and the logic that\ndepends on it being properly reset per update site (but omitted that reset),\nit is the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1984,
+            "cache_read_input_tokens": 15896,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

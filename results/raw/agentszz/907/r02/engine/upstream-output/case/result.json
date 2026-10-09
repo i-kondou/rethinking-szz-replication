@@ -1,0 +1,22 @@
+{
+  "fix_commit": "120201466dc5554166a2b5a894f50eb508a2d904",
+  "bic": "02a5f3fff3110cdf2fc8e1770e2cc238efa36dff",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit removed the skip parameter from getStackForCallerOf() and changed the loop to start at index 0 instead of skipping known stack frames, assuming \"we just start at the immediate parent frame\" is always correct. This assumption breaks when postProcess() is overridden (as noted in the fix commit's comment), causing the synthetic stack trace to incorrectly capture extra frames like ChildContext::postProcess instead of the actual caller. The fix commit reintroduces a skip parameter (skip=1) to restore correct behavior, directly undoing the flawed simplification made in this commit.",
+  "metrics": {
+    "case_elapsed_seconds": 10.297865,
+    "api_elapsed_seconds": 10.148287,
+    "tool_elapsed_seconds": 0.049774,
+    "other_elapsed_seconds": 0.099811,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 17125,
+    "completion_tokens": 652,
+    "total_tokens": 17777,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:11:32.593526"
+}

@@ -1,0 +1,51 @@
+SELECTED: candidate_27
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single line to CrossflowHandler.java's startExperiment method:
+`workflow.getSerializer().setClassloader(classLoader);` right after the Workflow
+instance is constructed via `classLoader.loadClass(experiment.getClassName()).getConstructor(Mode.class).newInstance(mode)`.
+This means that, without this line, the XStream-based Serializer used by the
+Workflow never has its classloader set to the dynamically created URLClassLoader
+that loads the experiment's jar, which would cause deserialization failures
+(e.g. ClassNotFoundException) for job/message classes defined in that jar.
+
+Tracing the history of this exact code region across the candidates by matching
+git blob hashes in the diff headers:
+
+- candidate_25: contains the working line
+  `workflow.getSerializer().setClassloader(classLoader);` immediately after
+  `workflow.setInstanceId(experimentId);`, so the classloader is correctly
+  propagated to the serializer (blob 6918d765 -> 670cdf2d).
+
+- candidate_26: performs a large rewrite of CrossflowHandler.java
+  (blob 670cdf2d -> 37491fe2). In this rewrite, the explicit
+  `workflow.getSerializer().setClassloader(classLoader);` call is REMOVED and
+  replaced with a different mechanism: the Workflow is now instantiated via a
+  constructor overload that takes the ClassLoader directly:
+  `.getConstructor(Mode.class, ClassLoader.class).newInstance(mode, classLoader)`.
+  This preserves correct behavior (assuming that constructor internally wires
+  up the classloader), just via a different code path.
+
+- candidate_27 (blob 37491fe2 -> 61f1c837): reverts the constructor call back
+  to the single-argument form:
+  `.getConstructor(Mode.class).newInstance(mode)`
+  This removes the ClassLoader-passing constructor call introduced in
+  candidate_26, but does NOT restore the explicit
+  `workflow.getSerializer().setClassloader(classLoader);` call that existed
+  before candidate_26. As a result, after candidate_27, there is no code path
+  left that sets the serializer's classloader at all -- the bug is introduced
+  here.
+
+- fix commit (blob 61f1c837 -> 0647c89a): the "before" blob hash (61f1c837)
+  is exactly the "after" blob hash produced by candidate_27, confirming the
+  fix is applied directly on top of candidate_27's resulting file state. The
+  fix re-adds the missing `workflow.getSerializer().setClassloader(classLoader);`
+  call in the exact same location, restoring the classloader propagation that
+  candidate_27 silently dropped.
+
+This precise blob-hash match plus the fact that candidate_27 removes
+functionality without a replacement (unlike candidate_26, which replaced one
+valid mechanism with another) makes candidate_27 the clear bug-introducing
+commit.

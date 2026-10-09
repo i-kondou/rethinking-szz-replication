@@ -1,0 +1,23 @@
+SELECTED: candidate_15
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes FileHandler.java's visitFile method from:
+  String tempPath = fileName.toString();
+to:
+  String tempPath = location.relativize(path).toString();
+in order to keep the relative path (directory structure) instead of just the bare filename when populating the spec/config dropdown.
+
+Tracing the history of this exact line across the candidates shows the following evolution of `tempPath`:
+- candidate_04 (introduction of fileMatcher/visitFile): `String tempPath = path.toString().replaceAll(location + "/", "");` — full relative path preserved.
+- candidate_07: adds `.toLowerCase()`.
+- candidate_10: wraps with `StringHandler.toCamelCase(...)`.
+- candidate_11: reverts the toCamelCase wrapping.
+- candidate_12: re-adds toCamelCase.
+- candidate_13: reverts toCamelCase again.
+- candidate_14: switches `location + "/"` to `location + File.separator`.
+- candidate_15: rewrites the method signature to take a `Path location` instead of `String location`, changes the match target from `path` to `fileName = path.getFileName()`, and critically replaces the line with `String tempPath = fileName.toString();` — this discards the relative path entirely and keeps only the bare filename, matching the buggy code shown as removed (`-`) in fix_commit_diff.txt exactly.
+- candidate_16 is the fix commit itself, which restores relative-path behavior via `location.relativize(path).toString()`.
+
+Since candidate_15's `String tempPath = fileName.toString();` is byte-for-byte identical to the pre-fix buggy line, and it is the commit that first introduced this exact code (by switching from matching against the full relative path to matching/extracting only the filename), candidate_15 is the bug-introducing commit.

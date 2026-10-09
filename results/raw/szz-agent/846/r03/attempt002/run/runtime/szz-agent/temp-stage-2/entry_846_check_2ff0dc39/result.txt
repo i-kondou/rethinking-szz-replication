@@ -1,0 +1,10 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix adds a null check `if (myDataChoices != null)` wrapping a block in DisplayControlImpl.java's `init()` method that checks `myDataChoices.size() > 0`, inspects a DerivedDataChoice's sub-choices, and sets `this.usesTimeDriver` based on a DataSelection property. Without this null guard, calling `myDataChoices.size()` when `myDataChoices` is null would throw a NullPointerException — that is the bug being fixed.
+
+Examining files/old/src/ucar/unidata/idv/control/DisplayControlImpl.java, the corresponding `init(String, List, List, ControlContext, Hashtable, DataSelection)` method (around line 972) was located and read in full. In the old version, after the `if (!init(myDataChoices)) { ... return; }` block, execution proceeds directly to the `//Check if we have been removed` / `hasBeenRemoved` check and then to `getIdv().getInteractiveMode()` — there is no code checking `myDataChoices.size() > 0`, no `DerivedDataChoice` handling, and no `usesTimeDriver`/`PROP_USESTIMEDRIVER` logic anywhere in this method. This entire block (the one that was later wrapped in the null check in the fix) does not exist in the old version at all.
+
+Since the buggy code segment was introduced after this historical snapshot (it doesn't exist yet in files/old/), the specific NPE bug fixed by the commit cannot be present in the old version. This matches the "relevant code section doesn't exist in old/" scenario described in the instructions.

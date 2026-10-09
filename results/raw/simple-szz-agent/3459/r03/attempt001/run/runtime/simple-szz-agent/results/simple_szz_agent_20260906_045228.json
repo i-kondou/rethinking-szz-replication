@@ -1,0 +1,377 @@
+{
+  "metadata": {
+    "timestamp": "20260906_045228",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3459/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 65.805,
+      "max": 65.805,
+      "mean": 65.805,
+      "median": 65.805,
+      "total": 65.805,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 65.66,
+      "max": 65.66,
+      "mean": 65.66,
+      "median": 65.66,
+      "total": 65.66,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 13,
+      "max": 13,
+      "mean": 13,
+      "median": 13,
+      "total": 13,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 24,
+      "max": 24,
+      "mean": 24,
+      "median": 24,
+      "total": 24,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 5073,
+      "max": 5073,
+      "mean": 5073,
+      "median": 5073,
+      "total": 5073,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 24065,
+      "max": 24065,
+      "mean": 24065,
+      "median": 24065,
+      "total": 24065,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 167997,
+      "max": 167997,
+      "mean": 167997,
+      "median": 167997,
+      "total": 167997,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.27095610000000003,
+      "max": 0.27095610000000003,
+      "mean": 0.27095610000000003,
+      "median": 0.27095610000000003,
+      "total": 0.27095610000000003,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Grep": 6,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 42,
+      "max": 42,
+      "mean": 42,
+      "median": 42,
+      "total": 42,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "3459",
+      "fix_commit_hash": "9282132c5abd230b0ff94a332e01d5c2ba876986",
+      "ground_truth_bics": [
+        "11b15cf907ecab5c950fa02df0c5cec2f233d4d8"
+      ],
+      "predicted_bics": [
+        "bccbe8b1b9b00ef3e5c6b0802ed2a1ef4d6edeee"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "3459",
+      "fix_commit": "9282132c5abd230b0ff94a332e01d5c2ba876986",
+      "ground_truth_bics": [
+        "11b15cf907ecab5c950fa02df0c5cec2f233d4d8"
+      ],
+      "total_candidates": 42,
+      "gt_in_candidates": false,
+      "selected_commit": "bccbe8b1b9b00ef3e5c6b0802ed2a1ef4d6edeee",
+      "selected_index": 26,
+      "confidence": "HIGH",
+      "explanation": "The fix commit message states: \"Fixes NewAccountFormControllerTest, the call to orgDao.findByCommonName(...) in NewAccountFormController is not mocked up and resulted in NPE.\" The fix diff adds a Mockito stub `when(mockOrgDao.findByCommonName(eq(orgName))).thenReturn(mockOrg);` in `NewAccountFormControllerTest.java`'s `setUp()` method. candidate_27 is the commit that introduced the call `Org org = orgDao.findByCommonName(account.getOrg());` inside the account-creation logic of `NewAccountFormCon",
+      "is_correct": false,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "console/src/test/java/org/georchestra/console/ws/newaccount/NewAccountFormControllerTest.java"
+      ],
+      "call_stats": {
+        "duration_s": 65.805,
+        "duration_api_s": 65.66,
+        "num_turns": 13,
+        "input_tokens": 24,
+        "output_tokens": 5073,
+        "cache_creation_input_tokens": 24065,
+        "cache_read_input_tokens": 167997,
+        "total_cost_usd": 0.27095610000000003,
+        "total_tool_calls": 12,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Grep": 6,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3459/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3459_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3459/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3459_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3459/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3459_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1688,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "findByCommonName",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3459/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3459_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 7,
+            "cache_creation_input_tokens": 669,
+            "cache_read_input_tokens": 11372,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "findByCommonName",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3459/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3459_candidate_selection/candidates/candidate_07.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1221,
+            "cache_read_input_tokens": 12041,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "orgDao.findByCommonName|OrgDao.*findByCommonName",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3459/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3459_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 498,
+            "cache_read_input_tokens": 13262,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "orgDao\\.findByCommonName|NewAccountFormController\"",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3459/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3459_candidate_selection/candidates/candidate_14.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 521,
+            "cache_read_input_tokens": 13760,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "NewAccountFormController\\.java",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3459/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3459_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 704,
+            "cache_read_input_tokens": 14281,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "^diff --git|orgDao\\.findByCommonName",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3459/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3459_candidate_selection/candidates/candidate_27.diff",
+                  "output_mode": "content"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4759,
+            "cache_read_input_tokens": 14985,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3459/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3459_candidate_selection/candidates/candidate_27.diff",
+                  "offset": 3095,
+                  "limit": 40
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1365,
+            "cache_read_input_tokens": 19744,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3459/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3459_candidate_selection/candidates/candidate_27.diff",
+                  "offset": 4863,
+                  "limit": 200
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 4970,
+            "cache_read_input_tokens": 21109,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/3459/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_3459_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_27\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit message states: \"Fixes NewAccountFormControllerTest, the call to orgDao.findByCommonName(...) in NewAccountFormController is not mocked up and resulted in NPE.\" The fix diff adds a Mockito stub `when(mockOrgDao.findByCommonName(eq(orgName))).thenReturn(mockOrg);` in `NewAccountFormControllerTest.java`'s `setUp()` method.\n\ncandidate_27 is the commit that introduced the call `Org org = orgDao.findByCommonName(account.getOrg());` inside the account-creation logic of `NewAccountFormController.java` (guarded by `if(account.getOrg().length() > 0)`), followed by `orgDao.addUser(org, account);`. This is precisely the unmocked call referenced in the fix commit message.\n\nCritically, this same candidate also substantially rewrote `NewAccountFormControllerTest.java`'s `setUp()` method into the exact structure that the fix commit later patches: it introduces `mockOrgDao`, `mockAccountDao`, and the `when(mockAccountDao.findByUID(eq(\"testadmin\")))...` / `when(mockOrgDao.getOrgTypeValues())...` stubs seen verbatim in the fix diff's context lines. However, this rewritten `setUp()` does NOT include a stub for `orgDao.findByCommonName(...)`, since at the time this test rewrite was authored the corresponding production code call didn't yet require it in the same way, leaving the test suite broken (NPE) once the new `findByCommonName` call path was exercised.\n\nNo other candidate introduces `orgDao.findByCommonName` inside `NewAccountFormController.java` (the only other occurrences of `findByCommonName` in earlier/other candidates are for `GroupDao` in candidate_07 or `OrgsController.java` in candidate_14, which are unrelated files). candidate_27 is therefore the first and only commit that both introduces the unmocked call and matches the exact test scaffolding patched by the fix commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 12,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1384,
+            "cache_read_input_tokens": 26079,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,362 @@
+diff --git a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/PlayerNetwork.java b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/PlayerNetwork.java
+index d1d7f13..35d8c34 100644
+--- a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/PlayerNetwork.java
++++ b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/PlayerNetwork.java
+@@ -1,12 +1,13 @@
+ package at.fhv.audioracer.communication.player;
+ 
+-import at.fhv.audioracer.communication.player.message.SetPlayerNameRequestMessage;
+-import at.fhv.audioracer.communication.player.message.SetPlayerNameResponseMessage;
+ import at.fhv.audioracer.communication.player.message.FreeCarsMessage;
+ import at.fhv.audioracer.communication.player.message.PlayerConnectedMessage;
+ import at.fhv.audioracer.communication.player.message.PlayerMessage;
+ import at.fhv.audioracer.communication.player.message.SelectCarRequestMessage;
+ import at.fhv.audioracer.communication.player.message.SelectCarResponseMessage;
++import at.fhv.audioracer.communication.player.message.SetPlayerNameRequestMessage;
++import at.fhv.audioracer.communication.player.message.SetPlayerNameResponseMessage;
++import at.fhv.audioracer.communication.player.message.StartGameMessage;
+ import at.fhv.audioracer.communication.player.message.UpdateVelocityMessage;
+ 
+ import com.esotericsoftware.kryo.Kryo;
+@@ -33,6 +34,8 @@ public class PlayerNetwork {
+ 		kryo.register(SelectCarResponseMessage.class);
+ 		kryo.register(UpdateVelocityMessage.class);
+ 		kryo.register(PlayerConnectedMessage.class);
++		kryo.register(StartGameMessage.class);
++		kryo.register(PlayerMessage.class);
+ 		
+ 		kryo.register(int[].class);
+ 	}
+diff --git a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/PlayerMessage.java b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/PlayerMessage.java
+index b742841..bf31b7d 100644
+--- a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/PlayerMessage.java
++++ b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/PlayerMessage.java
+@@ -6,6 +6,9 @@ public class PlayerMessage {
+ 		SET_PLAYER_NAME_REQUEST, SET_PLAYER_NAME_RESPONSE, DISCONNECT, UPDATE_VELOCITY, SELECT_CAR_REQUEST, SELECT_CAR_RESPONSE, GET_CAR_IMG_REQUEST, GET_CAR_IMG_RESPONSE, SET_READY, UPDATE_FREE_CARS, PLAYER_CONNECTED, PLAYER_DISCONNECTED, GAME_START;
+ 	}
+ 	
++	public PlayerMessage() {
++	}
++	
+ 	public PlayerMessage(MessageId id) {
+ 		messageId = id;
+ 	}
+diff --git a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java
+index 41e8b5a..7d3aa23 100644
+--- a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java
++++ b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java
+@@ -73,11 +73,12 @@ public class StartUpView extends JFrame {
+ 			public void valueChanged(ListSelectionEvent e) {
+ 				
+ 				Integer selected = _listFreeCars.getSelectedValue();
+-				if (_playerClient.getPlayerServer().selectCar(selected)) {
+-					ControlView cv = new ControlView(_playerClient);
+-					cv.setVisible(true);
++				if (selected != null) {
++					if (_playerClient.getPlayerServer().selectCar(selected)) {
++						ControlView cv = new ControlView(_playerClient);
++						cv.setVisible(true);
++					}
+ 				}
+-				
+ 			}
+ 		});
+ 		
+@@ -114,7 +115,8 @@ public class StartUpView extends JFrame {
+ 			@Override
+ 			public void onPlayerConnected(int playerId) {
+ 				Player[] players = new Player[_playerClient.getPlayers().size()];
+-				_listConnectedPlayers.setListData(_playerClient.getPlayers().values().toArray(players));
++				_listConnectedPlayers.setListData(_playerClient.getPlayers().values()
++						.toArray(players));
+ 				
+ 			}
+ 			
+@@ -125,7 +127,8 @@ public class StartUpView extends JFrame {
+ 					@Override
+ 					public void run() {
+ 						
+-						_playerClient.getPlayerServer().updateVelocity(_playerClient.getSpeed(), _playerClient.getDirection());
++						_playerClient.getPlayerServer().updateVelocity(_playerClient.getSpeed(),
++								_playerClient.getDirection());
+ 						try {
+ 							Thread.sleep(40);
+ 						} catch (InterruptedException e) {
+@@ -138,15 +141,6 @@ public class StartUpView extends JFrame {
+ 			}
+ 		});
+ 		
+-		_listFreeCars.addListSelectionListener(new ListSelectionListener() {
+-			
+-			@Override
+-			public void valueChanged(ListSelectionEvent arg0) {
+-				_playerClient.getPlayerServer().selectCar(_listFreeCars.getSelectedValue());
+-				
+-			}
+-		});
+-		
+ 		_btnReady = new JButton("Ready");
+ 		_btnReady.setBounds(100, 228, 89, 23);
+ 		contentPane.add(_btnReady);
+diff --git a/AudioRacer-Server/src/at/fhv/audioracer/server/CameraServerListener.java b/AudioRacer-Server/src/at/fhv/audioracer/server/CameraServerListener.java
+index 54a19d9..1fc1c18 100644
+--- a/AudioRacer-Server/src/at/fhv/audioracer/server/CameraServerListener.java
++++ b/AudioRacer-Server/src/at/fhv/audioracer/server/CameraServerListener.java
+@@ -17,6 +17,7 @@ import at.fhv.audioracer.core.model.Car;
+ import at.fhv.audioracer.server.game.GameModerator;
+ 
+ import com.esotericsoftware.kryonet.Connection;
++import com.esotericsoftware.kryonet.FrameworkMessage;
+ import com.esotericsoftware.kryonet.Listener;
+ import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
+ 
+@@ -36,7 +37,8 @@ public class CameraServerListener extends Listener {
+ 			switch (message.messageId) {
+ 				case UPDATE_CAR:
+ 					UpdateCarMessage updateCarMsg = (UpdateCarMessage) message;
+-					_moderator.updateCar(updateCarMsg.carId, updateCarMsg.posX, updateCarMsg.posY, updateCarMsg.direction);
++					_moderator.updateCar(updateCarMsg.carId, updateCarMsg.posX, updateCarMsg.posY,
++							updateCarMsg.direction);
+ 					break;
+ 				case CAR_DETECTED:
+ 					CarDetectedMessage carDetectedMsg = (CarDetectedMessage) message;
+@@ -45,7 +47,8 @@ public class CameraServerListener extends Listener {
+ 					BufferedImage carImage = null;
+ 					if (carDetectedMsg.image != null && carDetectedMsg.image.length > 0) {
+ 						try {
+-							InputStream in = new ByteInputStream(carDetectedMsg.image, carDetectedMsg.image.length);
++							InputStream in = new ByteInputStream(carDetectedMsg.image,
++									carDetectedMsg.image.length);
+ 							carImage = ImageIO.read(in);
+ 							in.close();
+ 						} catch (IOException e) {
+@@ -76,6 +79,8 @@ public class CameraServerListener extends Listener {
+ 					_logger.warn("Camera message with id: {} not known!", message.messageId);
+ 					break;
+ 			}
++		} else if (object instanceof FrameworkMessage.KeepAlive) {
++			// _logger.debug("Received Camera keepAlive ...");
+ 		}
+ 	}
+ 	
+diff --git a/AudioRacer-Server/src/at/fhv/audioracer/server/CarClientManager.java b/AudioRacer-Server/src/at/fhv/audioracer/server/CarClientManager.java
+index 0e8dfe6..25169ed 100644
+--- a/AudioRacer-Server/src/at/fhv/audioracer/server/CarClientManager.java
++++ b/AudioRacer-Server/src/at/fhv/audioracer/server/CarClientManager.java
+@@ -64,6 +64,10 @@ public class CarClientManager implements ICarClientManager {
+ 		_carClientList.remove(carClient.getCarClientId());
+ 	}
+ 	
++	public ICarClient get(int carClientId) {
++		return _carClientList.get(carClientId);
++	}
++	
+ 	@Override
+ 	public void invalidCommand() {
+ 		_logger.warn("Invalid command!");
+diff --git a/AudioRacer-Server/src/at/fhv/audioracer/server/PlayerServerListener.java b/AudioRacer-Server/src/at/fhv/audioracer/server/PlayerServerListener.java
+index 4672f8d..c9171c7 100644
+--- a/AudioRacer-Server/src/at/fhv/audioracer/server/PlayerServerListener.java
++++ b/AudioRacer-Server/src/at/fhv/audioracer/server/PlayerServerListener.java
+@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
+ import at.fhv.audioracer.communication.player.message.PlayerMessage;
+ import at.fhv.audioracer.communication.player.message.SelectCarRequestMessage;
+ import at.fhv.audioracer.communication.player.message.SetPlayerNameRequestMessage;
++import at.fhv.audioracer.communication.player.message.UpdateVelocityMessage;
+ import at.fhv.audioracer.server.game.GameModerator;
+ 
+ import com.esotericsoftware.kryonet.Connection;
+@@ -25,6 +26,11 @@ public class PlayerServerListener extends Listener {
+ 			PlayerMessage message = (PlayerMessage) object;
+ 			PlayerConnection playerConnection = (PlayerConnection) connection;
+ 			switch (message.messageId) {
++				case UPDATE_VELOCITY:
++					UpdateVelocityMessage updateVelocityMsg = (UpdateVelocityMessage) message;
++					_gameModerator.updateVelocity(playerConnection, updateVelocityMsg.speed,
++							updateVelocityMsg.direction);
++					break;
+ 				case SET_PLAYER_NAME_REQUEST:
+ 					SetPlayerNameRequestMessage setNameReqMsg = (SetPlayerNameRequestMessage) message;
+ 					_gameModerator.setPlayerName(playerConnection, setNameReqMsg.playerName);
+@@ -32,10 +38,13 @@ public class PlayerServerListener extends Listener {
+ 				case SELECT_CAR_REQUEST:
+ 					SelectCarRequestMessage selectCarReqMsg = (SelectCarRequestMessage) message;
+ 					_gameModerator.selectCar(playerConnection, selectCarReqMsg.carId);
++					break;
+ 				case SET_READY:
+ 					_gameModerator.setPlayerReady(playerConnection);
++					break;
+ 				case DISCONNECT:
+ 					_gameModerator.disconnectPlayer(playerConnection);
++					break;
+ 				default:
+ 					_logger.warn("Message with id: {} not known!", message.messageId);
+ 			}
+diff --git a/AudioRacer-Server/src/at/fhv/audioracer/server/WorldZigbeeMediator.java b/AudioRacer-Server/src/at/fhv/audioracer/server/WorldZigbeeMediator.java
+index b771cd0..11084f5 100644
+--- a/AudioRacer-Server/src/at/fhv/audioracer/server/WorldZigbeeMediator.java
++++ b/AudioRacer-Server/src/at/fhv/audioracer/server/WorldZigbeeMediator.java
+@@ -32,10 +32,11 @@ public class WorldZigbeeMediator implements Runnable, ICarListener, ICarClientLi
+ 	private static Logger _logger = LoggerFactory.getLogger(WorldZigbeeMediator.class);
+ 	private BlockingQueue<ICarClient> _awaitingConnectionQueue = new LinkedBlockingQueue<ICarClient>();
+ 	private ICarClient _currentCarClientToConnect = null;
++	private Boolean _assignNextCarClient = true;
+ 	private HashMap<Integer, Integer> _updateCarInvocationCount = new HashMap<Integer, Integer>();
+-	private final int _upateCarInvocationCountThreshold = 300;
++	private final int _upateCarInvocationCountThreshold = 200;
+ 	private int _connectionCount = 0;
+-	private float _configurationSpeed = 0.1f;
++	private float _configurationSpeed = 1.f;
+ 	private float _configurationDirection = 0.0f;
+ 	private WorldZigbeeConnectionCountListenerList _listenerList = new WorldZigbeeConnectionCountListenerList();
+ 	
+@@ -44,12 +45,17 @@ public class WorldZigbeeMediator implements Runnable, ICarListener, ICarClientLi
+ 		_logger.info("Mediator thread start.");
+ 		
+ 		try {
++			float speed = _configurationSpeed;
+ 			while (true) {
+-				_currentCarClientToConnect = _awaitingConnectionQueue.take();
+-				float speed = _configurationSpeed;
+-				while (_currentCarClientToConnect != null) {
+-					speed *= -1.0f;
++				speed *= -1.f;
++				if (_assignNextCarClient) {
++					_assignNextCarClient = false;
++					_currentCarClientToConnect = _awaitingConnectionQueue.take();
++				} else {
++					Thread.sleep(50);
++					// _logger.debug("try to assign CarClient ... send update velocity.");
+ 					_currentCarClientToConnect.updateVelocity(speed, _configurationDirection);
++					
+ 				}
+ 			}
+ 		} catch (InterruptedException e) {
+@@ -75,17 +81,19 @@ public class WorldZigbeeMediator implements Runnable, ICarListener, ICarClientLi
+ 			count++;
+ 			_updateCarInvocationCount.put(car.getCarId(), count);
+ 		}
++		// _logger.debug("try to assign CarClient with id: {} current updatePos count: {}", carId,
++		// count);
+ 		
+ 		if (count > _upateCarInvocationCountThreshold) {
+ 			int id = _currentCarClientToConnect.getCarClientId();
+ 			_logger.info(
+-					"zigbee connection with carClientId: {} connected with car with id: {} ... {} connections left",
++					"zigbee connection with carClientId: {} connected with car with id: {} ... {} connections left -----------------------",
+ 					new Object[] { id, car.getCarId(), _awaitingConnectionQueue.size() });
+ 			car.setCarClientId(id);
+ 			int oldConnectionCount = _connectionCount;
+ 			_connectionCount++;
+ 			_listenerList.onWorldZigbeeConnectionCountChanged(oldConnectionCount, _connectionCount);
+-			_currentCarClientToConnect = null; // clear for next
++			_assignNextCarClient = true;
+ 			_updateCarInvocationCount.clear();
+ 		}
+ 	}
+diff --git a/AudioRacer-Server/src/at/fhv/audioracer/server/game/GameModerator.java b/AudioRacer-Server/src/at/fhv/audioracer/server/game/GameModerator.java
+index 3461a2e..842353d 100644
+--- a/AudioRacer-Server/src/at/fhv/audioracer/server/game/GameModerator.java
++++ b/AudioRacer-Server/src/at/fhv/audioracer/server/game/GameModerator.java
+@@ -1,9 +1,11 @@
+ package at.fhv.audioracer.server.game;
+ 
+ import java.util.ArrayList;
++import java.util.Collections;
+ import java.util.ConcurrentModificationException;
+ import java.util.HashMap;
+ import java.util.Iterator;
++import java.util.Map;
+ import java.util.Map.Entry;
+ 
+ import org.slf4j.Logger;
+@@ -18,6 +20,8 @@ import at.fhv.audioracer.communication.player.message.StartGameMessage;
+ import at.fhv.audioracer.communication.world.ICarClient;
+ import at.fhv.audioracer.core.model.Car;
+ import at.fhv.audioracer.core.model.Player;
++import at.fhv.audioracer.core.util.Direction;
++import at.fhv.audioracer.core.util.Position;
+ import at.fhv.audioracer.server.CarClientManager;
+ import at.fhv.audioracer.server.PlayerConnection;
+ import at.fhv.audioracer.server.PlayerServer;
+@@ -34,7 +38,7 @@ public class GameModerator implements ICarClientListener, IWorldZigbeeConnection
+ 	private HashMap<Integer, Player> _playerList = new HashMap<Integer, Player>();
+ 	private int _plrId = 0;
+ 	
+-	private HashMap<Integer, Car> _carList = new HashMap<Integer, Car>();
++	private Map<Integer, Car> _carList = Collections.synchronizedMap(new HashMap<Integer, Car>());
+ 	private Thread _worldZigbeeThread = null;
+ 	private WorldZigbeeMediator _worldZigbeeRunnable = new WorldZigbeeMediator();
+ 	
+@@ -148,12 +152,18 @@ public class GameModerator implements ICarClientListener, IWorldZigbeeConnection
+ 		}
+ 	}
+ 	
+-	public void updateCar(int carId, float posX, float poxY, float direction) {
+-		_logger.debug("updateCar called for carId: {} game started: {}", carId, _gameRunning);
++	public void updateCar(int carId, float posX, float posY, float direction) {
++		// _logger.debug(
++		// "updateCar called for carId: {} game started: {} posX: {} posY: {} direction: {}",
++		// new Object[] { carId, _gameRunning, posX, posY, direction });
++		Car car = _carList.get(carId);
+ 		if (_gameRunning) {
+-			
++			_logger.debug("updateCar for id: {}", carId);
++			synchronized (_lockObject) {
++				car.updatePosition(new Position(posX, posY), new Direction(direction));
++			}
+ 		} else {
+-			
++			car.updatePosition(new Position(posX, posY), new Direction(direction));
+ 		}
+ 	}
+ 	
+@@ -333,4 +343,15 @@ public class GameModerator implements ICarClientListener, IWorldZigbeeConnection
+ 			_checkPreconditionsAndStartGameIfAllFine();
+ 		}
+ 	}
++	
++	public void updateVelocity(PlayerConnection playerConnection, float speed, float direction) {
++		ICarClient c = CarClientManager.getInstance().get(
++				playerConnection.getPlayer().getCar().getCarClientId());
++		if (c != null) {
++			c.updateVelocity(speed, direction);
++		} else {
++			_logger.warn("ICarClient for carId: {} is null!", playerConnection.getPlayer().getCar()
++					.getCarId());
++		}
++	}
+ }
+\ No newline at end of file
+diff --git a/AudioRacer-WorldSimulator/src/at/fhv/audioracer/simulator/world/impl/CarClient.java b/AudioRacer-WorldSimulator/src/at/fhv/audioracer/simulator/world/impl/CarClient.java
+index f508794..eabe87d 100644
+--- a/AudioRacer-WorldSimulator/src/at/fhv/audioracer/simulator/world/impl/CarClient.java
++++ b/AudioRacer-WorldSimulator/src/at/fhv/audioracer/simulator/world/impl/CarClient.java
+@@ -1,5 +1,8 @@
+ package at.fhv.audioracer.simulator.world.impl;
+ 
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++
+ import at.fhv.audioracer.communication.world.ICarClient;
+ import at.fhv.audioracer.core.model.Car;
+ import at.fhv.audioracer.core.util.Direction;
+@@ -7,6 +10,8 @@ import at.fhv.audioracer.core.util.Position;
+ 
+ public class CarClient implements ICarClient {
+ 	
++	private static Logger _logger = LoggerFactory.getLogger(CarClient.class);
++	
+ 	private Car _car = null;
+ 	
+ 	/**
+@@ -25,6 +30,9 @@ public class CarClient implements ICarClient {
+ 	
+ 	@Override
+ 	public void updateVelocity(float speed, float direction) {
++		_logger.debug("updateVelocity for car at x: {} y: {} new speed {} new direction: {})", new Object[] { _car.getPosition().getPosX(),
++				_car.getPosition().getPosY(), speed, direction });
++		
+ 		// get current position and direction
+ 		Position currentPosition = _car.getPosition();
+ 		

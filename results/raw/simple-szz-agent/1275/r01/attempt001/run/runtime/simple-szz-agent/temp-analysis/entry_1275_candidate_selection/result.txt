@@ -1,0 +1,14 @@
+SELECTED: candidate_02
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix adds an early-return guard `if (udts.isEmpty()) { return; }` at the top of `loadUserTypes` and simplifies the trailing recursive call from `if (notLoaded.size() > 0) { loadUserTypes(notLoaded, ks); }` to an unconditional `loadUserTypes(notLoaded, ks);`. The root cause is the check `if (notLoaded.size() == udts.size()) { throw new RuntimeException(...) }`: when `udts` is empty (a keyspace with no user-defined types), `notLoaded.size()` is 0 and `udts.size()` is 0, so `0 == 0` is true and the method incorrectly throws a RuntimeException instead of simply doing nothing, breaking the loader for keyspaces without UDTs.
+
+Candidate_01 creates the initial `BulkLoader.java` (and related sstableloader/build.xml scaffolding) but does not contain the `loadUserTypes` method at all — that logic doesn't exist yet in this commit.
+
+Candidate_02 introduces the entire `loadUserTypes`/`getCql3Type` UDT-loading machinery, including the exact problematic code: `if (notLoaded.size() == udts.size()) { throw new RuntimeException("Unable to load user types " + notLoaded); }` with no prior guard for an empty `udts` collection. This is precisely the bug the fix commit addresses, and it is the first commit where this code exists.
+
+Candidate_03 is actually the fix commit itself (its diff is identical to fix_commit_diff.txt), so it removes/patches the bug rather than introducing it.
+
+Therefore candidate_02 is the commit that introduced the bug.

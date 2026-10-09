@@ -1,0 +1,366 @@
+{
+  "metadata": {
+    "timestamp": "20260905_235629",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/828/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 118.329,
+      "max": 118.329,
+      "mean": 118.329,
+      "median": 118.329,
+      "total": 118.329,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 117.715,
+      "max": 117.715,
+      "mean": 117.715,
+      "median": 117.715,
+      "total": 117.715,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 12173,
+      "max": 12173,
+      "mean": 12173,
+      "median": 12173,
+      "total": 12173,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 79766,
+      "max": 79766,
+      "mean": 79766,
+      "median": 79766,
+      "total": 79766,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 301878,
+      "max": 301878,
+      "mean": 301878,
+      "median": 301878,
+      "total": 301878,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.7518144,
+      "max": 0.7518144,
+      "mean": 0.7518144,
+      "median": 0.7518144,
+      "total": 0.7518144,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 13,
+      "max": 13,
+      "mean": 13,
+      "median": 13,
+      "total": 13,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 6,
+      "Glob": 1,
+      "Grep": 5,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 13,
+      "max": 13,
+      "mean": 13,
+      "median": 13,
+      "total": 13,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 5,
+      "max": 5,
+      "mean": 5,
+      "median": 5,
+      "total": 5,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 5,
+      "max": 5,
+      "mean": 5,
+      "median": 5,
+      "total": 5,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "828",
+      "fix_commit_hash": "7546a2336ef8e493f7074f1e6ff887a8174eb1ed",
+      "ground_truth_bics": [
+        "fab0f61a025f824f76980d54c3aa2cfa435a8c79"
+      ],
+      "predicted_bics": [
+        "fab0f61a025f824f76980d54c3aa2cfa435a8c79"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "828",
+      "fix_commit": "7546a2336ef8e493f7074f1e6ff887a8174eb1ed",
+      "ground_truth_bics": [
+        "fab0f61a025f824f76980d54c3aa2cfa435a8c79"
+      ],
+      "total_candidates": 13,
+      "gt_in_candidates": true,
+      "selected_commit": "fab0f61a025f824f76980d54c3aa2cfa435a8c79",
+      "selected_index": 11,
+      "confidence": "HIGH",
+      "explanation": "The fix commit adds a second boolean argument (`true`) to several calls of `ConfigElement.getPath(TitanHadoopConfiguration.GRAPH_CONFIG_KEYS)` / `ConfigElement.getPath(TitanHadoopConfiguration.SCAN_JOB_CONFIG_KEYS)` in MapReduceIndexJobs.java, MapReduceIndexManagement.java, CassandraHadoopScanRunner.java, HBaseHadoopScanRunner.java, and CassandraScanJobIT.java, so that the generated Hadoop config key paths include the \"titanmr\" root namespace segment (e.g. \"titanmr.ioformat.conf.storage.backend\"",
+      "is_correct": true,
+      "num_files_touched_by_fix": 5,
+      "num_source_files_touched_by_fix": 5,
+      "files_analyzed": [
+        "titan-hadoop-parent/titan-hadoop-core/src/main/java/com/thinkaurelius/titan/hadoop/MapReduceIndexJobs.java",
+        "titan-hadoop-parent/titan-hadoop-core/src/main/java/com/thinkaurelius/titan/hadoop/MapReduceIndexManagement.java",
+        "titan-hadoop-parent/titan-hadoop-core/src/main/java/com/thinkaurelius/titan/hadoop/scan/CassandraHadoopScanRunner.java",
+        "titan-hadoop-parent/titan-hadoop-core/src/main/java/com/thinkaurelius/titan/hadoop/scan/HBaseHadoopScanRunner.java",
+        "titan-hadoop-parent/titan-hadoop-core/src/test/java/com/thinkaurelius/titan/hadoop/CassandraScanJobIT.java"
+      ],
+      "call_stats": {
+        "duration_s": 118.329,
+        "duration_api_s": 117.715,
+        "num_turns": 14,
+        "input_tokens": 20,
+        "output_tokens": 12173,
+        "cache_creation_input_tokens": 79766,
+        "cache_read_input_tokens": 301878,
+        "total_cost_usd": 0.7518144,
+        "total_tool_calls": 13,
+        "tool_calls_by_name": {
+          "Read": 6,
+          "Glob": 1,
+          "Grep": 5,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/828/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_828_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 14,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/828/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_828_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/828/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_828_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4956,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 544,
+            "cache_read_input_tokens": 14639,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getPath",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "GRAPH_CONFIG_KEYS|SCAN_JOB_CONFIG_KEYS",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "cache_creation_input_tokens": 594,
+            "cache_read_input_tokens": 15183,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/828/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_828_candidate_selection/candidates/candidate_04.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 24914,
+            "cache_read_input_tokens": 15777,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/828/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_828_candidate_selection/candidates/candidate_08.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 16282,
+            "cache_read_input_tokens": 40691,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "GRAPH_CONFIG_KEYS|TITAN_INPUT_CONFIG_KEYS|MapReduceIndexJobs",
+                  "path": "candidates/candidate_09.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "GRAPH_CONFIG_KEYS|TITAN_INPUT_CONFIG_KEYS|MapReduceIndexJobs",
+                  "path": "candidates/candidate_12.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "GRAPH_CONFIG_KEYS|TITAN_INPUT_CONFIG_KEYS|MapReduceIndexJobs",
+                  "path": "candidates/candidate_13.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4983,
+            "cache_read_input_tokens": 56973,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/828/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_828_candidate_selection/candidates/candidate_12.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 13342,
+            "cache_read_input_tokens": 61956,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/828/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_828_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_12\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit adds a second boolean argument (`true`) to several calls of\n`ConfigElement.getPath(TitanHadoopConfiguration.GRAPH_CONFIG_KEYS)` /\n`ConfigElement.getPath(TitanHadoopConfiguration.SCAN_JOB_CONFIG_KEYS)` in\nMapReduceIndexJobs.java, MapReduceIndexManagement.java,\nCassandraHadoopScanRunner.java, HBaseHadoopScanRunner.java, and\nCassandraScanJobIT.java, so that the generated Hadoop config key paths\ninclude the \"titanmr\" root namespace segment (e.g.\n\"titanmr.ioformat.conf.storage.backend\" instead of\n\"ioformat.conf.storage.backend\").\n\nCandidate_12 is the commit that created this inconsistency:\n\n1. It adds the new `ConfigElement.getPath(ConfigElement element, boolean\n   includeRoot, String... umbrellaElements)` overload to\n   `titan-core/.../ConfigElement.java`, which (when `includeRoot=true`)\n   prepends the top-level namespace's own name (\"titanmr\") to the\n   generated path \u2014 something the previous single-argument `getPath()`\n   never did.\n\n2. It updates `ModifiableHadoopConfiguration.prefixView()` to call the new\n   overload with `true`:\n   `ConfigElement.getPath(prefixRoot, true) + \".\"`\n   This means `getTitanGraphConf()` (used to *read* Titan graph settings\n   back out of the raw Hadoop `Configuration`) now expects keys to be\n   prefixed with \"titanmr.ioformat.conf.\" (i.e. including the root).\n\n3. However, in the very same commit, the code that *writes* those\n   settings into the raw Hadoop `Configuration` \u2014 in\n   `MapReduceIndexJobs.java`, `MapReduceIndexManagement.java`,\n   `CassandraHadoopScanRunner.java`, `HBaseHadoopScanRunner.java`, and the\n   `CassandraScanJobIT.java` test \u2014 was only mechanically renamed from\n   `TITAN_INPUT_CONFIG_KEYS` to `GRAPH_CONFIG_KEYS` but still calls the\n   old single-argument `ConfigElement.getPath(GRAPH_CONFIG_KEYS)`\n   (root excluded), producing keys prefixed with \"ioformat.conf.\" only.\n\nThis creates a mismatch between the keys written (without the \"titanmr\"\nroot) and the keys expected on read (with the \"titanmr\" root via\n`prefixView`), so Titan graph configuration properties set by these\nscanjob helper classes (MapReduceIndexJobs, MapReduceIndexManagement,\nCassandraHadoopScanRunner, HBaseHadoopScanRunner) are silently dropped \u2014\nexactly the \"broke some scanjob helper classes\" bug described in the fix\ncommit message. The fix simply adds the missing `, true` argument to\nthose write-side `getPath()` calls so they match the read side\nintroduced by candidate_12.\n\nThe exact same five files and call sites touched by the fix are all\npresent (and buggy in the described way) in candidate_12, confirming it\nas the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 7866,
+            "cache_read_input_tokens": 75298,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

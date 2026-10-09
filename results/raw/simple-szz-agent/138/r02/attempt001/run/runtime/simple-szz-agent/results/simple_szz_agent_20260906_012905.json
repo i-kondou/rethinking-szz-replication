@@ -1,0 +1,360 @@
+{
+  "metadata": {
+    "timestamp": "20260906_012905",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/138/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 56.228,
+      "max": 56.228,
+      "mean": 56.228,
+      "median": 56.228,
+      "total": 56.228,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 55.43,
+      "max": 55.43,
+      "mean": 55.43,
+      "median": 55.43,
+      "total": 55.43,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 15,
+      "max": 15,
+      "mean": 15,
+      "median": 15,
+      "total": 15,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 4334,
+      "max": 4334,
+      "mean": 4334,
+      "median": 4334,
+      "total": 4334,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 37877,
+      "max": 37877,
+      "mean": 37877,
+      "median": 37877,
+      "total": 37877,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 221059,
+      "max": 221059,
+      "mean": 221059,
+      "median": 221059,
+      "total": 221059,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.35864369999999995,
+      "max": 0.35864369999999995,
+      "mean": 0.35864369999999995,
+      "median": 0.35864369999999995,
+      "total": 0.35864369999999995,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 7,
+      "Glob": 1,
+      "Grep": 4,
+      "Write": 2
+    },
+    "num_candidates": {
+      "min": 7,
+      "max": 7,
+      "mean": 7,
+      "median": 7,
+      "total": 7,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "138",
+      "fix_commit_hash": "0705528149860c5e4aca92591f05b1e6dabc067f",
+      "ground_truth_bics": [
+        "37b84fb6425485bd5f2ab0396885a9a9d616e47c"
+      ],
+      "predicted_bics": [
+        "37b84fb6425485bd5f2ab0396885a9a9d616e47c"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "138",
+      "fix_commit": "0705528149860c5e4aca92591f05b1e6dabc067f",
+      "ground_truth_bics": [
+        "37b84fb6425485bd5f2ab0396885a9a9d616e47c"
+      ],
+      "total_candidates": 7,
+      "gt_in_candidates": true,
+      "selected_commit": "37b84fb6425485bd5f2ab0396885a9a9d616e47c",
+      "selected_index": 5,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes AbstractElement.equals() from calling getId().equals(...) back to using getID() == ... for both the TitanVertex and TitanEdge branches, because getId() (inherited from the Blueprints Element interface, returning an Object id) and getID() (the internal Titan method returning a primitive long id) were being confused - \"relying on capitalization significance to differentiate methods... seems like asking for trouble.\" Tracing the AbstractElement.java blob hashes through the ca",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "titan-core/src/main/java/com/thinkaurelius/titan/graphdb/internal/AbstractElement.java"
+      ],
+      "call_stats": {
+        "duration_s": 56.228,
+        "duration_api_s": 55.43,
+        "num_turns": 15,
+        "input_tokens": 18,
+        "output_tokens": 4334,
+        "cache_creation_input_tokens": 37877,
+        "cache_read_input_tokens": 221059,
+        "total_cost_usd": 0.35864369999999995,
+        "total_tool_calls": 14,
+        "tool_calls_by_name": {
+          "Read": 7,
+          "Glob": 1,
+          "Grep": 4,
+          "Write": 2
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/138/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_138_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/138/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_138_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/138/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_138_candidate_selection/fix_commit_diff.txt"
+                }
+              },
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1190,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/138/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_138_candidate_selection/candidates/candidate_01.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/138/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_138_candidate_selection/candidates/candidate_02.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/138/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_138_candidate_selection/candidates/candidate_03.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/138/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_138_candidate_selection/candidates/candidate_04.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 24922,
+            "cache_read_input_tokens": 10873,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "AbstractElement.java",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 305,
+            "cache_read_input_tokens": 35795,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "getId\\(\\)|getID\\(\\)|equals\\(Object",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 1263,
+            "cache_read_input_tokens": 36100,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "AbstractElement.java",
+                  "path": "candidates/candidate_06.diff",
+                  "output_mode": "content",
+                  "-n": true,
+                  "-A": 25
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "AbstractElement.java",
+                  "path": "candidates/candidate_07.diff",
+                  "output_mode": "content",
+                  "-n": true,
+                  "-A": 25
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1904,
+            "cache_read_input_tokens": 37363,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/138/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_138_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_06\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes AbstractElement.equals() from calling getId().equals(...) back to using getID() == ... for both the TitanVertex and TitanEdge branches, because getId() (inherited from the Blueprints Element interface, returning an Object id) and getID() (the internal Titan method returning a primitive long id) were being confused \u2014 \"relying on capitalization significance to differentiate methods... seems like asking for trouble.\"\n\nTracing the AbstractElement.java blob hashes through the candidates shows candidate_06 rewrites the equals() method from:\n    return getID()==((AbstractElement)other).getID();\nto:\n    return getId().equals(((TitanVertex)other).getId());\n    return getId().equals(((TitanEdge)other).getId());\n\nThis is exactly the buggy pattern the fix reverts (candidate_06's resulting blob hash 339f4a0 matches the \"before\" hash of the fix diff). Candidate_07 in this candidate set actually corresponds to the fix commit itself (its diff is identical to fix_commit_diff.txt, converting getId() back to getID()). Since candidate_06 is the commit that first introduced the getId()/getID() capitalization bug in the equals() method, it is the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1033,
+            "cache_read_input_tokens": 39267,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/138/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_138_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_06\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes AbstractElement.equals() from calling getId().equals(...) back to using getID() == ... for both the TitanVertex and TitanEdge branches, because getId() (inherited from the Blueprints Element interface, returning an Object id) and getID() (the internal Titan method returning a primitive long id) were being confused - \"relying on capitalization significance to differentiate methods... seems like asking for trouble.\"\n\nTracing the AbstractElement.java blob hashes through the candidates shows candidate_06 rewrites the equals() method from:\n    return getID()==((AbstractElement)other).getID();\nto:\n    return getId().equals(((TitanVertex)other).getId());\n    return getId().equals(((TitanEdge)other).getId());\n\nThis is exactly the buggy pattern the fix reverts (candidate_06's resulting blob hash 339f4a0 matches the \"before\" hash of the fix diff). Candidate_07 in this candidate set actually corresponds to the fix commit itself (its diff is identical to fix_commit_diff.txt, converting getId() back to getID()). Since candidate_06 is the commit that first introduced the getId()/getID() capitalization bug in the equals() method, it is the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 975,
+            "cache_read_input_tokens": 40300,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

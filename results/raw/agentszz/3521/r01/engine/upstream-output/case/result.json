@@ -1,0 +1,22 @@
+{
+  "fix_commit": "f09c02aa839edd46ba7e3f76271871fe24c090bb",
+  "bic": "8215a398219ae55ae3568a7a3946627dd3493e70",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "The fix commit adds a second BLOCK_POSITION-convention implementation to all \"distinct from\" operators (scalar types, Array/Map/Row), eliminating the need to extract native values out of Blocks via readNativeValue()/defaultValue() before invoking the comparison MethodHandle. Blaming the pre-fix code across all touched files (DoubleOperators, CharOperators, VarcharOperators, BooleanOperators, ArrayDistinctFromOperator, MapDistinctFromOperator, RowDistinctFromOperator, PolymorphicScalarFunction, etc.) consistently traces to commit 8215a398219ae55ae3568a7a3946627dd3493e70 (\"Reimplement IS DISTINCT FROM as an operator\"), which introduced the sole NULL_FLAG-based implementation of IS_DISTINCT_FROM for every type, including the structural types' readNativeValue-based extraction loop in Array/Map/RowDistinctFromOperator. This is precisely the implementation whose performance/design issue (repeated boxing/unboxing and Block value extraction) the fix commit addresses by adding the block/position convention alternative. Without that 2016 commit's design, there would be no NULL_FLAG-only path to fix.",
+  "metrics": {
+    "case_elapsed_seconds": 190.273455,
+    "api_elapsed_seconds": 188.850415,
+    "tool_elapsed_seconds": 1.271951,
+    "other_elapsed_seconds": 0.151094,
+    "api_call_count": 14,
+    "tool_call_count": 18,
+    "prompt_tokens": 271218,
+    "completion_tokens": 16227,
+    "total_tokens": 287445,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:46:40.533471"
+}

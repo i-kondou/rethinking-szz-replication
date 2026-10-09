@@ -1,0 +1,20 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The bug fix adds a `break;` statement inside `getCoverBytes()` in CoverManager.java, right after a cover is successfully downloaded (`if (coverBytes != null) { ... break; }`). Without this `break` (the buggy state), the loop continues iterating over all remaining `coverUrls` even after a valid cover has already been found, allowing a later failed/empty download attempt to overwrite the successful `coverBytes` result — this is the bug being fixed ("Fix local cover art").
+
+In `files/old/CoverManager.java`, the equivalent code in `getCoverBytes()` (around line 547-551) reads:
+
+```java
+if (coverBytes != null) {
+    if (DEBUG)
+        d(..., "Cover downloaded for " + ... );
+    return coverBytes;
+}
+```
+
+Here the method uses an early `return coverBytes;` as soon as a cover is successfully retrieved, which has the same effect as the `break` added in the fix: it stops the loop immediately after success and prevents any subsequent URL from overwriting the good result.
+
+This means the old version never exhibited the bug — the loop already exited correctly on success. The bug was introduced at some later point in history (the `return` was apparently refactored into a non-exiting `if` block without a `break`), producing the state seen in `files/buggy/`, and was then fixed by re-adding the `break`. Since `files/old/` predates that regression and already contains correct exit-on-success behavior, it does not contain the bug.

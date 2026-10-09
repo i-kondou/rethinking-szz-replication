@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "timestamp": "20260906_111645",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2037/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "2037",
+      "fix_commit_hash": "8e17c7c41321e8a6fae4a0ca1b95111beec181ff",
+      "bug_commit_hash": [
+        "f2dbecb84ec45427f76bf02fc29fa1a8b2c9dd2e"
+      ],
+      "szz_candidates": [
+        "f2dbecb84ec45427f76bf02fc29fa1a8b2c9dd2e"
+      ],
+      "szz_num_candidates": 1,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "f2dbecb84ec45427f76bf02fc29fa1a8b2c9dd2e"
+      ],
+      "llm_selected_commit": "f2dbecb84ec45427f76bf02fc29fa1a8b2c9dd2e",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit message states: \"mCurPage should be set to null immediately when last page is popped, even if there is a transition animation to play.\" The fix diff moves the statement `mCurPage = prevPage;` (along with `mContainerView.removeView(...)`) out of `doFinalWorkForPopPageInternal()` and up to execute unconditionally, immediately after the pop animation is kicked off \u2014 before the `if (animated && animationDuration != -1)` branch that may defer final work via `postDelayed`. Candidate_01'",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/2037",
+      "bug_fixing_commit": "8e17c7c41321e8a6fae4a0ca1b95111beec181ff",
+      "bug_inducing_commit": [
+        "f2dbecb84ec45427f76bf02fc29fa1a8b2c9dd2e"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "MaTriXy/Paginize"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+VERDICT: BUG_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit ("Add block/position convention to all distinct from operators") adds a second, block/position-based implementation of the IS_DISTINCT_FROM operator to many types, including TimeWithTimeZoneOperators, so that the value no longer needs to be extracted out of the Block (via NULL_FLAG convention / readNativeValue) before invoking the operator. This avoids unnecessary boxing/extraction and is described as resolving a performance issue.
+
+Comparing files/buggy/.../TimeWithTimeZoneOperators.java and files/fixed/.../TimeWithTimeZoneOperators.java confirms this: the buggy version has only the single NULL_FLAG-based isDistinctFrom(long, boolean, long, boolean) method, while the fixed version keeps that method (moved into a nested TimeWithTimeZoneDistinctFromOperator class) and adds a new isDistinctFrom(Block, int, Block, int) method using the BLOCK_POSITION convention.
+
+Examining files/old/.../TimeWithTimeZoneOperators.java shows it contains exactly the same NULL_FLAG-based isDistinctFrom method, byte-for-byte identical in logic to the buggy version (leftNull != rightNull -> true; leftNull -> false; else notEqual(left, right)). There is no block/position-based overload at all in the old file — the whole block/position mechanism (BlockPosition/BlockIndex annotations, the nested *DistinctFromOperator class pattern) is entirely absent from this older revision, confirming it predates the fix.
+
+Since the relevant code in old/ is unmodified from (and identical to) the buggy pre-fix implementation, and lacks the block/position optimization introduced by the fix, the old version contains the same issue (bug) that this commit fixes.

@@ -1,0 +1,14 @@
+SELECTED: candidate_04
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes `loader.getResources("cmsFreemarkerTransforms")` to `loader.getResources("cmsFreemarkerTransforms.properties")` in CmsRenderTemplate.java, restoring the missing ".properties" extension (and correspondingly restoring the extension in the associated Debug.logError message).
+
+Tracing the history of this exact line across the candidates:
+- candidate_01 introduces the CmsRenderTemplate.java resource-loading code with the CORRECT value `"cmsFreemarkerTransforms.properties"` (and adds the properties file `cmsFreemarkerTransforms.properties` itself), along with the matching log message.
+- candidate_02 and candidate_03 touch CmsRenderTemplate.java but do not modify this particular line/resource name.
+- candidate_04 changes the line from `loader.getResources("cmsFreemarkerTransforms.properties")` to `loader.getResources("cmsFreemarkerTransforms")`, stripping the ".properties" extension, and also strips it from the corresponding Debug.logError message. This is the exact inverse of the fix, and it is the first (and only) candidate that introduces the broken/extension-less resource name. This same commit also performs a broader, seemingly unrelated refactor changing several `UtilProperties.getPropertyAsBoolean("cms.properties", ...)` / `getPropertyValue("cms.properties", ...)` calls to `"cms"` elsewhere in the file, suggesting an over-eager find/replace of ".properties" suffixes that accidentally also hit the classloader resource lookup, which (unlike the UtilProperties calls) actually requires the file extension since it performs a raw classpath resource lookup rather than a properties-bundle lookup.
+- candidate_05 is identical to the actual fix diff itself (restoring ".properties"), confirming that the bug existed immediately before this candidate and that candidate_04 is where it was introduced.
+
+Therefore candidate_04 is the bug-introducing commit.

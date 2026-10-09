@@ -1,0 +1,25 @@
+SELECTED: candidate_04
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the @EnableWebSecurity annotation to @Configuration on
+the SecurityConfig class (index a581a92..62e20fc), fixing a "MIME" error
+caused by Spring Security's default configuration intercepting/misconfiguring
+responses (e.g., static resource MIME types) when @EnableWebSecurity is
+active alongside Spring Boot's autoconfiguration.
+
+Tracing the history of this exact annotation across the candidates:
+- candidate_01 created SecurityConfig.java with @EnableWebSecurity.
+- candidate_02 already corrected this to @Configuration (index
+  5419508..a03d2b1), so the bug was not present after candidate_02.
+- candidate_03 only touched an unrelated comment/override in the class and
+  did not affect the annotation.
+- candidate_04 reverted the annotation from @Configuration back to
+  @EnableWebSecurity (index ba84d4a..a581a92) — this is the exact inverse of
+  the fix diff, reintroducing the "MIME" bug immediately before the fix
+  commit (which restores @Configuration from the same base index a581a92).
+
+Since the fix directly undoes the change made in candidate_04, and no
+intervening candidate touched that line, candidate_04 is the commit that
+introduced the bug that was ultimately fixed.

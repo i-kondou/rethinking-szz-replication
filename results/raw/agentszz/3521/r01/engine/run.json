@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "kind": "claude-szz-agentic-baseline-subject-run",
+  "created_at": "2026-09-07T12:46:40.666596+00:00",
+  "state": "completed",
+  "scientific_result": true,
+  "test_stub": false,
+  "baseline": "agentszz",
+  "sample_id": "3521",
+  "repository": "prestodb/presto",
+  "synthetic_fix_hash": "f09c02aa839edd46ba7e3f76271871fe24c090bb",
+  "model": "claude-sonnet-5",
+  "base_url": "https://api.anthropic.com/v1/",
+  "per_run_cap_usd": "5",
+  "model_started": true,
+  "reported_cost_usd": "0.704706",
+  "duration_seconds": 190.58565370796714,
+  "predicted_bics": [
+    "8215a398219ae55ae3568a7a3946627dd3493e70"
+  ],
+  "reasoning": "The fix commit adds a second BLOCK_POSITION-convention implementation to all \"distinct from\" operators (scalar types, Array/Map/Row), eliminating the need to extract native values out of Blocks via readNativeValue()/defaultValue() before invoking the comparison MethodHandle. Blaming the pre-fix code across all touched files (DoubleOperators, CharOperators, VarcharOperators, BooleanOperators, ArrayDistinctFromOperator, MapDistinctFromOperator, RowDistinctFromOperator, PolymorphicScalarFunction, etc.) consistently traces to commit 8215a398219ae55ae3568a7a3946627dd3493e70 (\"Reimplement IS DISTINCT FROM as an operator\"), which introduced the sole NULL_FLAG-based implementation of IS_DISTINCT_FROM for every type, including the structural types' readNativeValue-based extraction loop in Array/Map/RowDistinctFromOperator. This is precisely the implementation whose performance/design issue (repeated boxing/unboxing and Block value extraction) the fix commit addresses by adding the block/position convention alternative. Without that 2016 commit's design, there would be no NULL_FLAG-only path to fix.",
+  "confidence": "high",
+  "upstream_metrics": {
+    "case_elapsed_seconds": 190.273455,
+    "api_elapsed_seconds": 188.850415,
+    "tool_elapsed_seconds": 1.271951,
+    "other_elapsed_seconds": 0.151094,
+    "api_call_count": 14,
+    "tool_call_count": 18,
+    "prompt_tokens": 271218,
+    "completion_tokens": 16227,
+    "total_tokens": 287445,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "provider_calls": [
+    {
+      "input_tokens": 7981,
+      "output_tokens": 668,
+      "cost_usd_equivalent": "0.022642",
+      "elapsed_seconds": 7.950742666958831
+    },
+    {
+      "input_tokens": 8212,
+      "output_tokens": 247,
+      "cost_usd_equivalent": "0.018894",
+      "elapsed_seconds": 3.6904883749666624
+    },
+    {
+      "input_tokens": 9489,
+      "output_tokens": 507,
+      "cost_usd_equivalent": "0.024048",
+      "elapsed_seconds": 6.032482167007402
+    },
+    {
+      "input_tokens": 11922,
+      "output_tokens": 622,
+      "cost_usd_equivalent": "0.030064",
+      "elapsed_seconds": 8.739334958023392
+    },
+    {
+      "input_tokens": 13247,
+      "output_tokens": 847,
+      "cost_usd_equivalent": "0.034964",
+      "elapsed_seconds": 9.638738250010647
+    },
+    {
+      "input_tokens": 15095,
+      "output_tokens": 1414,
+      "cost_usd_equivalent": "0.04433",
+      "elapsed_seconds": 17.890975832997356
+    },
+    {
+      "input_tokens": 16713,
+      "output_tokens": 671,
+      "cost_usd_equivalent": "0.040136",
+      "elapsed_seconds": 8.168433291022666
+    },
+    {
+      "input_tokens": 20482,
+      "output_tokens": 3064,
+      "cost_usd_equivalent": "0.071604",
+      "elapsed_seconds": 35.80210958298994
+    },
+    {
+      "input_tokens": 21870,
+      "output_tokens": 865,
+      "cost_usd_equivalent": "0.05239",
+      "elapsed_seconds": 10.442263333010487
+    },
+    {
+      "input_tokens": 24950,
+      "output_tokens": 564,
+      "cost_usd_equivalent": "0.05554",
+      "elapsed_seconds": 7.0065953329904005
+    },
+    {
+      "input_tokens": 27964,
+      "output_tokens": 3890,
+      "cost_usd_equivalent": "0.094828",
+      "elapsed_seconds": 40.53707741596736
+    },
+    {
+      "input_tokens": 29595,
+      "output_tokens": 410,
+      "cost_usd_equivalent": "0.06329",
+      "elapsed_seconds": 5.928040708997287
+    },
+    {
+      "input_tokens": 30964,
+      "output_tokens": 966,
+      "cost_usd_equivalent": "0.071588",
+      "elapsed_seconds": 10.664440458000172
+    },
+    {
+      "input_tokens": 32734,
+      "output_tokens": 1492,
+      "cost_usd_equivalent": "0.080388",
+      "elapsed_seconds": 16.343962999992073
+    }
+  ],
+  "source_provenance": {
+    "manifest_path": "/Users/user-01/research/workspaces/claude-szz/implementation/config/agentic-baseline-sources.json",
+    "manifest_sha256": "8fc7276c1bd2772698abeeaabfc6cc1a6bb24aac89db5601f27da49933147fb0",
+    "agentszz_source_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentszz-figshare-v2/replication_package/agentszz",
+    "agentszz_source_tree_sha256": "3436d1b781b11c9b2bf962105355f5f4ded84ede0ec599bda848e0cff9c72777",
+    "agentic_szz_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz",
+    "agentic_szz_commit": "0012a507b9087f15cdad340888a837f5618a3c29",
+    "agentic_szz_git_tree": "738bf1e17594df62dd198f7ffc220d728223b454",
+    "agentszz_python": {
+      "version": "3.11.11",
+      "modules": {
+        "openai": "2.16.0",
+        "git": "3.1.46"
+      },
+      "executable": "/Users/user-01/research/workspaces/claude-szz/baselines/venv/bin/python"
+    },
+    "agentic_szz_python": {
+      "version": "3.12.8",
+      "modules": {
+        "graphiti_core": "unknown",
+        "pydantic_ai": "2.31.1",
+        "neo4j": "6.2.0",
+        "git": "3.1.59",
+        "openai": "3.3.0"
+      },
+      "executable": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz-venv/bin/python"
+    },
+    "agentic_szz_requirements_path": "/Users/user-01/research/workspaces/claude-szz/implementation/config/llm-baselines/requirements-agentic-szz-python312.txt",
+    "agentic_szz_requirements_sha256": "e426ee65f956a8582aa195ac819d2c862d68abd66d20107d71558701ca313f22",
+    "neo4j": {
+      "reference": "neo4j:5.26.8-community",
+      "id": "sha256:c0f0ce3396c902c9ab6520d0c9d1c644a3aa83eed00036e609e5db10a84b2d92",
+      "repo_digests": [
+        "neo4j@sha256:5216b8f7bcca893448d5b4a809d91761609fc8aea900691d59531ada76c28c62"
+      ],
+      "architecture": "arm64",
+      "os": "linux"
+    }
+  },
+  "prompt_metadata_path": "/Users/user-01/research/workspaces/claude-szz/implementation/data/derived/subject-prompts-bfc-message-neutralized-final-v1/3521.json",
+  "prompt_metadata_sha256": "069aa923b145ea69d002a17ac12afb731286ebe736ad8a2d85ebe51e3d8e9d79",
+  "repository_before": {
+    "head": "f09c02aa839edd46ba7e3f76271871fe24c090bb",
+    "head_matches_synthetic_fix": true,
+    "source_fix_absent": true,
+    "clean": true,
+    "no_remotes": true,
+    "no_object_alternates": true
+  },
+  "repository_after": {
+    "head": "f09c02aa839edd46ba7e3f76271871fe24c090bb",
+    "head_matches_synthetic_fix": true,
+    "source_fix_absent": true,
+    "clean": true,
+    "no_remotes": true,
+    "no_object_alternates": true
+  },
+  "postflight_clean": true,
+  "error": null,
+  "limitations": [
+    "Sonnet 5 through Anthropic is a matched-backbone adaptation, not the original-model replication.",
+    "Both upstream methods emit a single primary BIC; multi-BIC recall is structurally capped.",
+    "Reported cost is reconstructed from token usage and the frozen Anthropic price snapshot, not provider billing records.",
+    "AgenticSZZ checks its conservative total-token limit between requests, so one in-flight request can cross the nominal trigger."
+  ]
+}

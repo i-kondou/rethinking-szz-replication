@@ -1,0 +1,357 @@
+{
+  "metadata": {
+    "timestamp": "20260906_033834",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 65.931,
+      "max": 65.931,
+      "mean": 65.931,
+      "median": 65.931,
+      "total": 65.931,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 65.862,
+      "max": 65.862,
+      "mean": 65.862,
+      "median": 65.862,
+      "total": 65.862,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 16,
+      "max": 16,
+      "mean": 16,
+      "median": 16,
+      "total": 16,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 6346,
+      "max": 6346,
+      "mean": 6346,
+      "median": 6346,
+      "total": 6346,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 23154,
+      "max": 23154,
+      "mean": 23154,
+      "median": 23154,
+      "total": 23154,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 82653,
+      "max": 82653,
+      "mean": 82653,
+      "median": 82653,
+      "total": 82653,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.2589519,
+      "max": 0.2589519,
+      "mean": 0.2589519,
+      "median": 0.2589519,
+      "total": 0.2589519,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 15,
+      "max": 15,
+      "mean": 15,
+      "median": 15,
+      "total": 15,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Grep": 9,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 211,
+      "max": 211,
+      "mean": 211,
+      "median": 211,
+      "total": 211,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "1065",
+      "fix_commit_hash": "35df8a045221ecf4c8710eb772bcbabb4c4030d0",
+      "ground_truth_bics": [
+        "7aecd02bea1ec57b96fd272257887cd1d589a26b"
+      ],
+      "predicted_bics": [
+        "7aecd02bea1ec57b96fd272257887cd1d589a26b"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "1065",
+      "fix_commit": "35df8a045221ecf4c8710eb772bcbabb4c4030d0",
+      "ground_truth_bics": [
+        "7aecd02bea1ec57b96fd272257887cd1d589a26b"
+      ],
+      "total_candidates": 211,
+      "gt_in_candidates": true,
+      "selected_commit": "7aecd02bea1ec57b96fd272257887cd1d589a26b",
+      "selected_index": 209,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes a single line in FlexReader.java's file-grouping loop: file.field = field % runCount; -> file.field = field % (nFiles / (wellCount * runCount)); This shows the bug was an incorrect field-index computation (\"field % runCount\") used when assigning FlexFile.field for each file, which produced wrong field indices whenever multiple acquisition \"runs\" were present (causing incorrect file indexing/lookup for wells with more than one run). Tracing the history of this exact line ac",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "components/formats-gpl/src/loci/formats/in/FlexReader.java"
+      ],
+      "call_stats": {
+        "duration_s": 65.931,
+        "duration_api_s": 65.862,
+        "num_turns": 16,
+        "input_tokens": 14,
+        "output_tokens": 6346,
+        "cache_creation_input_tokens": 23154,
+        "cache_read_input_tokens": 82653,
+        "total_cost_usd": 0.2589519,
+        "total_tool_calls": 15,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Grep": 9,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1065_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1065_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1065_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 833,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "field % runCount",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1065_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "file.field",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1065_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 720,
+            "cache_read_input_tokens": 10517,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "file\\.field",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1065_candidate_selection/candidates/candidate_149.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "file\\.field",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1065_candidate_selection/candidates/candidate_150.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "file\\.field",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1065_candidate_selection/candidates/candidate_157.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "file\\.field",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1065_candidate_selection/candidates/candidate_158.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "file\\.field",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1065_candidate_selection/candidates/candidate_202.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "file\\.field",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1065_candidate_selection/candidates/candidate_210.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "file\\.field",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1065_candidate_selection/candidates/candidate_211.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4328,
+            "cache_read_input_tokens": 11237,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1065_candidate_selection/candidates/candidate_210.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1065_candidate_selection/candidates/candidate_202.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 8405,
+            "cache_read_input_tokens": 15565,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1065/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1065_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_210\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes a single line in FlexReader.java's file-grouping loop:\n\n    file.field = field % runCount;\n  ->\n    file.field = field % (nFiles / (wellCount * runCount));\n\nThis shows the bug was an incorrect field-index computation (\"field % runCount\") used when assigning FlexFile.field for each file, which produced wrong field indices whenever multiple acquisition \"runs\" were present (causing incorrect file indexing/lookup for wells with more than one run).\n\nTracing the history of this exact line across the candidates:\n- candidate_202 is where multi-run support (runCount, runDirs, acquisition tracking) was first introduced. At that point the line read:\n      file.field = field / runCount;\n  (division, not modulo) \u2014 this was the original multi-run-aware computation.\n- candidate_210 changed this same line from division to modulo:\n      file.field = field / runCount;   ->   file.field = field % runCount;\n  This is exactly the buggy expression (\"field % runCount\") that the fix commit later replaces. No candidate between 210 and the fix touches this line again.\n- The fix commit (and the near-identical diff seen in candidate_211, which appears to correspond to the fix itself rather than a bug-introducing change) corrects the formula to \"field % (nFiles / (wellCount * runCount))\".\n\nSince candidate_210 is the commit that introduced the precise faulty expression (\"field % runCount\") that persisted unchanged until the fix, it is the bug-introducing commit. candidate_202, while it added the multi-run feature and a related but different (division-based) computation, did not contain the specific buggy pattern that the fix directly addresses.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2582,
+            "cache_read_input_tokens": 23970,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

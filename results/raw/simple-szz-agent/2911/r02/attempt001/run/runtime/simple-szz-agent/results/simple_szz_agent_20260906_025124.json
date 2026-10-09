@@ -1,0 +1,296 @@
+{
+  "metadata": {
+    "timestamp": "20260906_025124",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 37.514,
+      "max": 37.514,
+      "mean": 37.514,
+      "median": 37.514,
+      "total": 37.514,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 37.424,
+      "max": 37.424,
+      "mean": 37.424,
+      "median": 37.424,
+      "total": 37.424,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 8,
+      "max": 8,
+      "mean": 8,
+      "median": 8,
+      "total": 8,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 2777,
+      "max": 2777,
+      "mean": 2777,
+      "median": 2777,
+      "total": 2777,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 22830,
+      "max": 22830,
+      "mean": 22830,
+      "median": 22830,
+      "total": 22830,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 114295,
+      "max": 114295,
+      "mean": 114295,
+      "median": 114295,
+      "total": 114295,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.21296549999999997,
+      "max": 0.21296549999999997,
+      "mean": 0.21296549999999997,
+      "median": 0.21296549999999997,
+      "total": 0.21296549999999997,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 7,
+      "max": 7,
+      "mean": 7,
+      "median": 7,
+      "total": 7,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 4,
+      "Grep": 2,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 157,
+      "max": 157,
+      "mean": 157,
+      "median": 157,
+      "total": 157,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 6,
+      "max": 6,
+      "mean": 6,
+      "median": 6,
+      "total": 6,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 6,
+      "max": 6,
+      "mean": 6,
+      "median": 6,
+      "total": 6,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2911",
+      "fix_commit_hash": "1084c112ee85c7269baadafa0defc319f6c7ffc0",
+      "ground_truth_bics": [
+        "e33ec10aa400f32c2e0278c15ea80a0f624e5919"
+      ],
+      "predicted_bics": [
+        "6cfecea6c3e2b6e327fb53ac85f1894df81a10b2"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2911",
+      "fix_commit": "1084c112ee85c7269baadafa0defc319f6c7ffc0",
+      "ground_truth_bics": [
+        "e33ec10aa400f32c2e0278c15ea80a0f624e5919"
+      ],
+      "total_candidates": 157,
+      "gt_in_candidates": true,
+      "selected_commit": "6cfecea6c3e2b6e327fb53ac85f1894df81a10b2",
+      "selected_index": 91,
+      "confidence": "HIGH",
+      "explanation": "The fix commit corrects a bug in OrderedScheduler.java (formerly OrderedSafeExecutor.java) where the \"task_queued\" duration stat was being recorded incorrectly. The buggy code was: taskPendingStats.registerSuccessfulEvent(initNanos, TimeUnit.NANOSECONDS); which passes the raw timestamp captured when the task was submitted (`initNanos`) directly as the \"duration\" of the event, instead of computing the elapsed time since submission. The fix changes this to: taskPendingStats.registerSuccessfulEvent",
+      "is_correct": false,
+      "num_files_touched_by_fix": 6,
+      "num_source_files_touched_by_fix": 6,
+      "files_analyzed": [
+        "bookkeeper-common/src/main/java/org/apache/bookkeeper/common/util/OrderedScheduler.java",
+        "bookkeeper-server/src/main/java/org/apache/bookkeeper/conf/ServerConfiguration.java",
+        "bookkeeper-server/src/main/java/org/apache/bookkeeper/proto/BookieRequestProcessor.java",
+        "bookkeeper-server/src/test/java/org/apache/bookkeeper/test/BookKeeperClusterTestCase.java",
+        "bookkeeper-server/src/test/java/org/apache/bookkeeper/test/OpStatTest.java",
+        "bookkeeper-server/src/test/java/org/apache/bookkeeper/test/TestStatsProvider.java"
+      ],
+      "call_stats": {
+        "duration_s": 37.514,
+        "duration_api_s": 37.424,
+        "num_turns": 8,
+        "input_tokens": 14,
+        "output_tokens": 2777,
+        "cache_creation_input_tokens": 22830,
+        "cache_read_input_tokens": 114295,
+        "total_cost_usd": 0.21296549999999997,
+        "total_tool_calls": 7,
+        "tool_calls_by_name": {
+          "Read": 4,
+          "Grep": 2,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2911_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 20,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2911_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2911_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 12164,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "taskPendingStats",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2911_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 7,
+            "cache_creation_input_tokens": 628,
+            "cache_read_input_tokens": 21848,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "taskPendingStats|initNanos|registerSuccessfulEvent",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2911_candidate_selection/candidates/candidate_92.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 9,
+            "cache_creation_input_tokens": 1194,
+            "cache_read_input_tokens": 22476,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2911_candidate_selection/candidates/candidate_92.diff",
+                  "offset": 1,
+                  "limit": 30
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1267,
+            "cache_read_input_tokens": 23670,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2911_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_92\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit corrects a bug in OrderedScheduler.java (formerly OrderedSafeExecutor.java) where the \"task_queued\" duration stat was being recorded incorrectly. The buggy code was:\n\n    taskPendingStats.registerSuccessfulEvent(initNanos, TimeUnit.NANOSECONDS);\n\nwhich passes the raw timestamp captured when the task was submitted (`initNanos`) directly as the \"duration\" of the event, instead of computing the elapsed time since submission. The fix changes this to:\n\n    taskPendingStats.registerSuccessfulEvent(\n            MathUtils.elapsedNanos(initNanos),\n            TimeUnit.NANOSECONDS);\n\nSearching the 157 candidates for the string \"taskPendingStats\"/\"initNanos\"/\"registerSuccessfulEvent\" turned up five commits that touch this area: candidate_92, candidate_107, candidate_137, candidate_145, and candidate_157 (in chronological order). Examining candidate_92 (BOOKKEEPER-862: \"Add tracing and stats to OrderedSafeExecutor for debugging slow tasks\") shows this is the commit that originally introduced the `TimedRunnable` inner class along with the exact buggy line:\n\n    taskPendingStats.registerSuccessfulEvent(initNanos, TimeUnit.NANOSECONDS);\n\nThis is a brand-new class/feature added by this commit (all lines are `+` additions, including the `initNanos` field, the `TimedRunnable` constructor, and the `safeRun()` method containing the flawed stats call). Since the buggy line was added here for the first time (not modified from prior correct code), and the later commits (107, 137, 145, 157) that also touch this file just moved/refactored surrounding code without introducing this specific defect, candidate_92 is the true bug-introducing commit \u2014 it is the first point in history where the problematic code pattern (recording a timestamp instead of an elapsed duration) exists.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1291,
+            "cache_read_input_tokens": 24937,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

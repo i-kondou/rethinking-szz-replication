@@ -1,0 +1,24 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a null check (`if (myDataChoices != null) { ... }`) around a block in
+`DisplayControlImpl.init(...)` that inspects `myDataChoices.size()` and, if the first data
+choice is a `DerivedDataChoice`, reads a time-driver property (`usesTimeDriver`) from its
+data selection. The bug is a potential `NullPointerException` when `myDataChoices` is null
+at this point in initialization, because the buggy version calls `myDataChoices.size()`
+directly without checking for null first.
+
+Examining `files/old/src/ucar/unidata/idv/control/DisplayControlImpl.java`, the entire block
+of code related to this fix does not exist. In the old version's `init(...)` method, right
+after the `if (!init(myDataChoices)) { ... return; }` check, the code goes straight to the
+`//Check if we have been removed` / `hasBeenRemoved` check (old version, lines ~1010-1016).
+There is no code anywhere in the old file that references `DerivedDataChoice`, `usesTimeDriver`,
+`getTimeDriverTimes()`, or `PROP_USESTIMEDRIVER`. This time-driver-checking feature (and the
+associated `myDataChoices.size()` call that later became buggy) was introduced in a later
+revision of the codebase, after the "old" snapshot was taken.
+
+Since the specific code that contains the bug (unchecked `myDataChoices.size()` call in this
+time-driver block) does not exist at all in `files/old/`, the bug cannot be present in this
+version.

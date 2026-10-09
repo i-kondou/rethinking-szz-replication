@@ -1,0 +1,28 @@
+SELECTED: candidate_439
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) modifies NativeND2Reader.java's metadata parsing loop, changing:
+
+    while (sb.charAt(sb.length() - 1) != ':' && sb.indexOf("_") < 0 && i < lines.length) {
+
+to:
+
+    while ((sb.length() == 0 || sb.charAt(sb.length() - 1) != ':') && sb.indexOf("_") < 0 && i < lines.length) {
+
+This addresses a StringIndexOutOfBoundsException that occurs when `sb` is empty (i.e., `sb.length() == 0`), because calling `sb.charAt(sb.length() - 1)` on an empty StringBuffer evaluates to `sb.charAt(-1)`, which is invalid.
+
+candidate_439 is the commit that introduced this exact buggy line. It refactored the surrounding key-parsing logic from plain String concatenation to StringBuffer usage:
+
+    - String key = lines[i++];
+    - while (!key.endsWith(":") && key.indexOf('_') < 0 && i < lines.length) {
+    -   key += " " + lines[i++];
+    + StringBuffer sb = new StringBuffer(lines[i++]);
+    + while (sb.charAt(sb.length() - 1) != ':' && sb.indexOf("_") < 0 && i < lines.length) {
+    +   sb.append(" ");
+    +   sb.append(lines[i++]);
+
+Before this refactor, the code used `key.endsWith(":")`, which safely returns false for an empty string. The refactor to `sb.charAt(sb.length() - 1) != ':'` removed that safety, since StringBuffer's charAt() throws an exception on an empty buffer (which can happen if lines[i] is an empty string, e.g. from consecutive spaces in textString). This is precisely the bug that fix_commit_diff.txt corrects by re-adding the empty-length guard.
+
+candidate_440 also touches this same line, but it is the fix commit itself (its diff is identical to fix_commit_diff.txt), so it is excluded as the bug-introducing commit. No other candidates reference this line, confirming candidate_439 as the sole introduction point.

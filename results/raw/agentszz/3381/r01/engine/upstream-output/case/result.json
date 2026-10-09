@@ -1,0 +1,22 @@
+{
+  "fix_commit": "f03ca7e1753f67c63eaed8125a161a6bb743611a",
+  "bic": "5938ca78b6e6bd86364b6fdae7a84fcf7f65e761",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit rewrote ApplicationContextRequestMatcher's synchronization from a proper double-checked-locking pattern (synchronized block ensuring initialized() completes before matches() runs) to an AtomicBoolean.compareAndSet(false, true) check. The CAS-based approach allows a second concurrent thread to immediately proceed to call matches() as soon as the first thread flips the flag to true, even before the first thread's initialized(context) call has completed. This is exactly the race condition described in the fix commit (\"the second call proceeded before the initialized method had returned\"), and the fix reverts to a synchronized-lock approach very similar to what existed before this commit, confirming this commit introduced the bug.",
+  "metrics": {
+    "case_elapsed_seconds": 11.49343,
+    "api_elapsed_seconds": 11.030356,
+    "tool_elapsed_seconds": 0.346405,
+    "other_elapsed_seconds": 0.116681,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 24501,
+    "completion_tokens": 679,
+    "total_tokens": 25180,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:42:12.300242"
+}

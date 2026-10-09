@@ -1,0 +1,428 @@
+{
+  "metadata": {
+    "timestamp": "20260906_013535",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/399/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 58.122,
+      "max": 58.122,
+      "mean": 58.122,
+      "median": 58.122,
+      "total": 58.122,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 57.903,
+      "max": 57.903,
+      "mean": 57.903,
+      "median": 57.903,
+      "total": 57.903,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 24,
+      "max": 24,
+      "mean": 24,
+      "median": 24,
+      "total": 24,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 5449,
+      "max": 5449,
+      "mean": 5449,
+      "median": 5449,
+      "total": 5449,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 31351,
+      "max": 31351,
+      "mean": 31351,
+      "median": 31351,
+      "total": 31351,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 206759,
+      "max": 206759,
+      "mean": 206759,
+      "median": 206759,
+      "total": 206759,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.3319407,
+      "max": 0.3319407,
+      "mean": 0.3319407,
+      "median": 0.3319407,
+      "total": 0.3319407,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 19,
+      "max": 19,
+      "mean": 19,
+      "median": 19,
+      "total": 19,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 7,
+      "Glob": 1,
+      "Grep": 10,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "399",
+      "fix_commit_hash": "d33e5278b211753ac3d46acb7d6213f3ae75e087",
+      "ground_truth_bics": [
+        "c3554ec31dafbdfaa0ed646afb17a6f3378571f5"
+      ],
+      "predicted_bics": [
+        "406fd95d87bfcdbb282d65589ab1fb6e9fd0018a"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "399",
+      "fix_commit": "d33e5278b211753ac3d46acb7d6213f3ae75e087",
+      "ground_truth_bics": [
+        "c3554ec31dafbdfaa0ed646afb17a6f3378571f5"
+      ],
+      "total_candidates": 20,
+      "gt_in_candidates": true,
+      "selected_commit": "406fd95d87bfcdbb282d65589ab1fb6e9fd0018a",
+      "selected_index": 7,
+      "confidence": "HIGH",
+      "explanation": "The fix commit corrects a double-escaping bug in KVMPhysicalDisk.java where the rbd mon_host/port separator was written as the Java string literal \"\\\\\\\\:\" (which produces the two characters `\\\\` followed by `:`, i.e. a double-escaped backslash) instead of the intended \"\\\\:\" (a single escaped backslash followed by `:`). The fix changes `rbdOpts += \"\\\\\\\\:\" + monPort;` to `rbdOpts += \"\\\\:\" + monPort;`, and updates the corresponding unit test expectation from \"...mon_host=ceph-monitor\\\\\\\\:8000...\" t",
+      "is_correct": false,
+      "num_files_touched_by_fix": 2,
+      "num_source_files_touched_by_fix": 2,
+      "files_analyzed": [
+        "plugins/hypervisors/kvm/src/main/java/com/cloud/hypervisor/kvm/storage/KVMPhysicalDisk.java",
+        "plugins/hypervisors/kvm/src/test/java/com/cloud/hypervisor/kvm/storage/KVMPhysicalDiskTest.java"
+      ],
+      "call_stats": {
+        "duration_s": 58.122,
+        "duration_api_s": 57.903,
+        "num_turns": 20,
+        "input_tokens": 24,
+        "output_tokens": 5449,
+        "cache_creation_input_tokens": 31351,
+        "cache_read_input_tokens": 206759,
+        "total_cost_usd": 0.3319407,
+        "total_tool_calls": 19,
+        "tool_calls_by_name": {
+          "Read": 7,
+          "Glob": 1,
+          "Grep": 10,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/399/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_399_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 14,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/399/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_399_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/399/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_399_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1522,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 403,
+            "cache_read_input_tokens": 11205,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "mon_host|monPort|rbdOpts|RBDStringBuilder",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 283,
+            "cache_read_input_tokens": 11608,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "mon_host|monPort|rbdOpts",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1262,
+            "cache_read_input_tokens": 11891,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "mon_host",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-C": 2
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 7268,
+            "cache_read_input_tokens": 13153,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/399/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_399_candidate_selection/candidates/candidate_20.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1799,
+            "cache_read_input_tokens": 20421,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/399/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_399_candidate_selection/candidates/candidate_19.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/399/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_399_candidate_selection/candidates/candidate_16.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 7182,
+            "cache_read_input_tokens": 22220,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/399/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_399_candidate_selection/candidates/candidate_08.diff",
+                  "offset": 500,
+                  "limit": 100
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2601,
+            "cache_read_input_tokens": 29402,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "RBDStringBuilder|rbdOpts",
+                  "path": "candidates/candidate_01.diff",
+                  "output_mode": "count"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "RBDStringBuilder|rbdOpts",
+                  "path": "candidates/candidate_02.diff",
+                  "output_mode": "count"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "RBDStringBuilder|rbdOpts",
+                  "path": "candidates/candidate_03.diff",
+                  "output_mode": "count"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "RBDStringBuilder|rbdOpts",
+                  "path": "candidates/candidate_04.diff",
+                  "output_mode": "count"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "RBDStringBuilder|rbdOpts",
+                  "path": "candidates/candidate_05.diff",
+                  "output_mode": "count"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "RBDStringBuilder|rbdOpts",
+                  "path": "candidates/candidate_06.diff",
+                  "output_mode": "count"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "RBDStringBuilder|rbdOpts",
+                  "path": "candidates/candidate_07.diff",
+                  "output_mode": "count"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 1492,
+            "cache_read_input_tokens": 32003,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/399/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_399_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_08\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit corrects a double-escaping bug in KVMPhysicalDisk.java where the rbd mon_host/port\nseparator was written as the Java string literal \"\\\\\\\\:\" (which produces the two characters `\\\\`\nfollowed by `:`, i.e. a double-escaped backslash) instead of the intended \"\\\\:\" (a single escaped\nbackslash followed by `:`). The fix changes `rbdOpts += \"\\\\\\\\:\" + monPort;` to\n`rbdOpts += \"\\\\:\" + monPort;`, and updates the corresponding unit test expectation from\n\"...mon_host=ceph-monitor\\\\\\\\:8000...\" to \"...mon_host=ceph-monitor\\\\:8000...\".\n\nTracing the history of this code across the candidates:\n- Candidates 01-07 contain no reference to RBDStringBuilder or rbdOpts at all \u2014 the feature does\n  not yet exist.\n- candidate_08 introduces the `RBDStringBuilder` method for the first time in\n  agent/src/com/cloud/agent/storage/KVMPhysicalDisk.java, as entirely new code (all `+` lines):\n      rbdOpts += \":mon_host=\" + monHost + \"\\\\\\\\:\" + monPort;\n  This is exactly the buggy double-escaped literal that the fix commit later corrects.\n- Later candidates (11, 12, 13, 14, 16, 19) only refactor surrounding logic (e.g., splitting the\n  mon_host/port concatenation, changing the `monPort != 6789` condition to `monPort > 0`,\n  moving code between files) while preserving the same buggy \"\\\\\\\\:\" literal inherited from\n  candidate_08.\n- candidate_20 is the fix commit itself (identical to fix_commit_diff.txt), changing \"\\\\\\\\:\" to\n  \"\\\\:\" and updating the test \u2014 it fixes the bug rather than introducing it.\n\nSince candidate_08 is the first commit where the problematic double-escaped separator was\nintroduced, it is the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 12,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1254,
+            "cache_read_input_tokens": 33495,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+SELECTED: candidate_49
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single line to the ConsoleProgressDialog constructor:
+`consoleProcess_ = consoleProcess;` placed immediately before the check
+`if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)`. The
+fix commit message explains that getInteractionMode() reads the saved
+consoleProcess_ field, so that field must be assigned before the
+interaction-mode check runs.
+
+Tracing the history of ConsoleProgressDialog.java through the candidates
+shows that this exact line existed in the correct position (right before
+the getInteractionMode()/isInteractive() check) all the way through
+candidate_37 (where the constructor still contains:
+`consoleProcess_ = consoleProcess;` followed shortly after by
+`if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)`).
+
+candidate_49 is the commit that refactors ConsoleProgressDialog to
+introduce a new `attachToProcess(ConsoleProcess)` method (to support
+re-attaching the dialog to a second console process for the "create
+branch + push" workflow). As part of this refactor it explicitly removes
+the line:
+
+```
+-      consoleProcess_ = consoleProcess;
+```
+
+from the top of the constructor (right before the
+`if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)` check),
+and moves the actual assignment `consoleProcess_ = consoleProcess;` down
+into the new `attachToProcess()` method, which is only invoked at the very
+end of the constructor. This means `getInteractionMode()` (and the
+`INTERACTION_NEVER` check that gates shell/history setup) is now evaluated
+while `consoleProcess_` is still unset (null), causing incorrect
+interaction-mode detection (issue #1810).
+
+candidate_50, a later commit, reorganizes a second/related
+`INTERACTION_ALWAYS` check to run inside `attachToProcess()` (after
+`consoleProcess_` is set), but it does not touch or fix the earlier
+`INTERACTION_NEVER` check near the top of the constructor, so that
+occurrence of the bug remains. The final fix commit (also present in the
+candidate list as candidate_51, since it is chronologically the newest
+diff) restores the missing assignment before that specific check,
+resolving the bug precisely where candidate_49 introduced it.
+
+Therefore candidate_49 is the commit that introduced the bug by
+separating the `consoleProcess_` assignment from the interaction-mode
+check that depends on it.

@@ -1,0 +1,320 @@
+{
+  "metadata": {
+    "timestamp": "20260906_010333",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2854/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 67.032,
+      "max": 67.032,
+      "mean": 67.032,
+      "median": 67.032,
+      "total": 67.032,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 66.686,
+      "max": 66.686,
+      "mean": 66.686,
+      "median": 66.686,
+      "total": 66.686,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 13,
+      "max": 13,
+      "mean": 13,
+      "median": 13,
+      "total": 13,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 7196,
+      "max": 7196,
+      "mean": 7196,
+      "median": 7196,
+      "total": 7196,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 56943,
+      "max": 56943,
+      "mean": 56943,
+      "median": 56943,
+      "total": 56943,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 110578,
+      "max": 110578,
+      "mean": 110578,
+      "median": 110578,
+      "total": 110578,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.4828134,
+      "max": 0.4828134,
+      "mean": 0.4828134,
+      "median": 0.4828134,
+      "total": 0.4828134,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 8,
+      "Glob": 1,
+      "Grep": 2,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 28,
+      "max": 28,
+      "mean": 28,
+      "median": 28,
+      "total": 28,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2854",
+      "fix_commit_hash": "6d6fbf9de73271f747806fbd0ff21082a40d7dba",
+      "ground_truth_bics": [
+        "d76b709206ff88c8a8c295066d5d188ffe76fc69"
+      ],
+      "predicted_bics": [
+        "90985ee2ac46dcd6366bbc14172997a39ea20f16"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2854",
+      "fix_commit": "6d6fbf9de73271f747806fbd0ff21082a40d7dba",
+      "ground_truth_bics": [
+        "d76b709206ff88c8a8c295066d5d188ffe76fc69"
+      ],
+      "total_candidates": 28,
+      "gt_in_candidates": true,
+      "selected_commit": "90985ee2ac46dcd6366bbc14172997a39ea20f16",
+      "selected_index": 26,
+      "confidence": "HIGH",
+      "explanation": "The fix adds back a single line in CrossflowHandler.startExperiment(): workflow.getSerializer().setClassloader(classLoader); right after the workflow instance is created, so that the workflow's XStream-based Serializer uses the custom URLClassLoader (which points at the experiment's jar) instead of the default class loader. Without this call, deserializing job/message objects belonging to classes only present in the dynamically loaded experiment jar fails with a ClassNotFoundException-style erro",
+      "is_correct": false,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "crossflow/org.eclipse.scava.crossflow.web/src/org/eclipse/scava/crossflow/web/CrossflowHandler.java"
+      ],
+      "call_stats": {
+        "duration_s": 67.032,
+        "duration_api_s": 66.686,
+        "num_turns": 13,
+        "input_tokens": 14,
+        "output_tokens": 7196,
+        "cache_creation_input_tokens": 56943,
+        "cache_read_input_tokens": 110578,
+        "total_cost_usd": 0.4828134,
+        "total_tool_calls": 12,
+        "tool_calls_by_name": {
+          "Read": 8,
+          "Glob": 1,
+          "Grep": 2,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2854/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2854_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2854/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2854_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2854/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2854_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 928,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 632,
+            "cache_read_input_tokens": 10612,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "CrossflowHandler",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "setClassloader|getSerializer|classLoader",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 799,
+            "cache_read_input_tokens": 11244,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2854/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2854_candidate_selection/candidates/candidate_10.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2854/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2854_candidate_selection/candidates/candidate_25.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2854/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2854_candidate_selection/candidates/candidate_26.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2854/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2854_candidate_selection/candidates/candidate_27.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2854/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2854_candidate_selection/candidates/candidate_28.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 43272,
+            "cache_read_input_tokens": 12043,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2854/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2854_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_27\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix adds back a single line in CrossflowHandler.startExperiment():\n\n    workflow.getSerializer().setClassloader(classLoader);\n\nright after the workflow instance is created, so that the workflow's XStream-based\nSerializer uses the custom URLClassLoader (which points at the experiment's jar)\ninstead of the default class loader. Without this call, deserializing job/message\nobjects belonging to classes only present in the dynamically loaded experiment jar\nfails with a ClassNotFoundException-style error.\n\nTracing the history of this exact call in CrossflowHandler.java across the\ncandidates:\n\n- candidate_10 introduces the Serializer class and originally adds the call\n  `workflow.getSerializer().setClassloader(classLoader);` immediately after\n  `workflow.setInstanceId(experimentId);` in startExperiment(). At this point the\n  behavior is correct.\n- candidate_25 keeps this call unchanged (it appears only as unmodified context in\n  a larger refactor that introduces ExperimentRegistry, etc.).\n- candidate_26 rewrites CrossflowHandler.java and switches the workflow\n  construction to use a Workflow constructor overload that takes the ClassLoader\n  directly (`getConstructor(Mode.class, ClassLoader.class).newInstance(mode,\n  classLoader)`), removing the separate `workflow.getSerializer().setClassloader(...)`\n  call because the classloader is now expected to be wired up inside the\n  constructor instead.\n- candidate_27 then reverts the constructor call back to the single-argument form\n  `getConstructor(Mode.class).newInstance(mode)`, dropping the ClassLoader\n  parameter entirely \u2014 but it does NOT restore the\n  `workflow.getSerializer().setClassloader(classLoader)` call that candidate_26 had\n  removed in favor of the constructor-based approach. This leaves the code with no\n  mechanism at all for propagating the custom classLoader to the workflow's\n  serializer, which is exactly the bug the fix commit addresses.\n\nThe fix commit (and the final candidate_28, which is textually identical to the\nfix) simply re-adds the missing `workflow.getSerializer().setClassloader(classLoader);`\nline at the same location, confirming that candidate_27 is where the regression\nwas introduced (a constructor-signature revert that silently dropped the\nclassloader propagation logic without restoring the alternate mechanism for it).\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 5026,
+            "cache_read_input_tokens": 55315,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

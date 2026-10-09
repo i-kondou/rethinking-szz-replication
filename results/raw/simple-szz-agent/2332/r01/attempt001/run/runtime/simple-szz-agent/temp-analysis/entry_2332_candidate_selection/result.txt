@@ -1,0 +1,57 @@
+SELECTED: candidate_24
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit replaces a plain `private volatile boolean connected;` field in TS3Query with
+`AtomicBoolean connected` / `AtomicBoolean shuttingDown`, and rewrites `exit()` and
+`fireDisconnect()` to use compare-and-set + wait/notify instead of racy, unsynchronized
+reads/writes of the `connected` flag. Specifically, the pre-fix code that the patch removes was:
+
+    private volatile boolean connected;
+    ...
+    public synchronized void exit() {
+        if (connected) { ... api.quit() ... }
+        if (io != null) { io.disconnect(); }
+        connected = false;
+        userThreadPool.shutdown();
+    }
+    ...
+    void fireDisconnect() {
+        connected = false;
+        submitUserTask(..., new Runnable() {
+            public void run() {
+                try { connectionHandler.onDisconnect(TS3Query.this); }
+                finally { if (!connected) { exit(); } }
+            }
+        });
+    }
+
+This exact design — a `connected` boolean flag that is set false by `fireDisconnect()` and then
+checked (non-atomically, from a background thread) to decide whether to call `exit()`, while
+`exit()` itself checks/mutates the same flag and shuts down `io`/`userThreadPool` — was first
+introduced in candidate_24. That commit:
+  - adds `private volatile boolean connected;` to TS3Query,
+  - sets `connected = true` in `connect()` after creating the QueryIO,
+  - rewrites `exit()` to gate the `quit` command on `if (connected)` and to unconditionally call
+    `io.disconnect()` and `userThreadPool.shutdown()`,
+  - rewrites `fireDisconnect()` to set `connected = false` and then, inside a submitted background
+    task, call `exit()` again if `!connected` after invoking `connectionHandler.onDisconnect(...)`.
+  - It also removes the direct `ts3Query.exit()` call from `DisconnectingConnectionHandler`,
+    shifting responsibility for triggering `exit()` onto this new racy `fireDisconnect()`/`exit()`
+    interplay.
+
+This is precisely the "synchronization in TS3Api/TS3Query" hazard the fix resolves: multiple
+threads (the connect thread, the disconnect-handling background task, and any thread calling
+`exit()` directly, e.g. via `TS3Api.quit()`) can concurrently read/write `connected` and call
+`io.disconnect()` / `userThreadPool.shutdown()` without any real mutual exclusion, since a
+`volatile boolean` only guarantees visibility, not atomicity of check-then-act sequences, and the
+`synchronized` keyword was only added later (candidate_35) without fully closing the race (no
+wait/notify coordination between concurrent `exit()` callers, still relying on the same
+non-atomic `connected` flag).
+
+Later candidates (e.g. candidate_35) attempt to patch this by making `exit()`/`connect()`
+`synchronized`, but the fundamental design flaw of using a shared boolean flag to coordinate the
+"who is responsible for shutdown" decision across threads — the flaw the final fix's
+AtomicBoolean/CAS/wait-notify rewrite eliminates — traces back to its introduction in
+candidate_24.

@@ -1,0 +1,26 @@
+SELECTED: candidate_05
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit addresses two bugs in DokanyDriver.java, described in the commit message as "Not able to unmount filesystem" and "Wrongly set isMounted variable during shutdown". The fix replaces this problematic shutdown() logic:
+
+    isMounted.set(NativeMethods.DokanRemoveMountPoint(deviceOptions.MountPoint)); //TODO: check if the volume is already unmounted
+    if (isMounted.get()) {
+        LOG.error("Unable to unmount Dokan device at {}.", deviceOptions.MountPoint);
+    }
+
+with corrected logic that stores the unmount result in a local variable and only sets isMounted to false when the unmount succeeds:
+
+    boolean unmounted = NativeMethods.DokanRemoveMountPoint(deviceOptions.MountPoint);
+    if (unmounted) {
+        isMounted.set(false);
+    } else {
+        LOG.error(...);
+    }
+
+The original buggy line directly assigns the return value of DokanRemoveMountPoint (which returns true on a SUCCESSFUL unmount) to isMounted. This means isMounted is incorrectly set to true when the device is successfully unmounted (and stays true), and the subsequent `if (isMounted.get())` check — intended to detect an unmount failure — actually fires on unmount success, logging a spurious "Unable to unmount" error and leaving the isMounted flag stuck true (so a later shutdown call thinks the device is still mounted and misbehaves, i.e. "Not able to unmount filesystem").
+
+candidate_05 is the commit that rewrote DokanyDriver's start()/shutdown() methods to introduce the AtomicBoolean isMounted field and this exact problematic line: `isMounted.set(NativeMethods.DokanRemoveMountPoint(deviceOptions.MountPoint));`. This is the first appearance of both the isMounted field and the buggy assignment pattern; before this commit, shutdown() simply called static stop()/DokanRemoveMountPoint() with no isMounted bookkeeping at all, so the bug could not have existed earlier.
+
+candidate_06 only adds a `//TODO: check if the volume is already unmounted` comment to that same line — no behavioral change, so it merely carries the bug forward. candidate_07 is the fix commit itself (identical to fix_commit_diff.txt), not a bug-introducing candidate. Candidates 01-04 predate the introduction of the isMounted field/shutdown logic entirely (or only contain unrelated documentation/dependency changes to DokanyDriver.java), so they cannot be the source of this specific bug.

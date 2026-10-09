@@ -1,0 +1,329 @@
+{
+  "metadata": {
+    "timestamp": "20260906_021426",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1728/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 50.397,
+      "max": 50.397,
+      "mean": 50.397,
+      "median": 50.397,
+      "total": 50.397,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 50.046,
+      "max": 50.046,
+      "mean": 50.046,
+      "median": 50.046,
+      "total": 50.046,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 11,
+      "max": 11,
+      "mean": 11,
+      "median": 11,
+      "total": 11,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 3462,
+      "max": 3462,
+      "mean": 3462,
+      "median": 3462,
+      "total": 3462,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 36896,
+      "max": 36896,
+      "mean": 36896,
+      "median": 36896,
+      "total": 36896,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 170320,
+      "max": 170320,
+      "mean": 170320,
+      "median": 170320,
+      "total": 170320,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.32445599999999997,
+      "max": 0.32445599999999997,
+      "mean": 0.32445599999999997,
+      "median": 0.32445599999999997,
+      "total": 0.32445599999999997,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Glob": 1,
+      "Grep": 3,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 67,
+      "max": 67,
+      "mean": 67,
+      "median": 67,
+      "total": 67,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "1728",
+      "fix_commit_hash": "153acab91e5c096399e0302dbc7ea91293281536",
+      "ground_truth_bics": [
+        "cf27461bfaa78798252103345b1c14528bb4828c"
+      ],
+      "predicted_bics": [
+        "e56a814d47dbf8762a33f29f7e029b8d8e50097c"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "1728",
+      "fix_commit": "153acab91e5c096399e0302dbc7ea91293281536",
+      "ground_truth_bics": [
+        "cf27461bfaa78798252103345b1c14528bb4828c"
+      ],
+      "total_candidates": 67,
+      "gt_in_candidates": true,
+      "selected_commit": "e56a814d47dbf8762a33f29f7e029b8d8e50097c",
+      "selected_index": 58,
+      "confidence": "HIGH",
+      "explanation": "The fix commit adds a `destroy(Context)` method to `DownloadManagerInterface` (which unregisters `downloadCompletionReceiver` and clears the singleton `instance`) and calls it from `MainActivity.onDestroy()`. This addresses a resource leak: `DownloadManagerInterface.init()` calls `registerReceiver()`, which registers a `BroadcastReceiver` with the application context, but nothing ever unregisters it or tears down the singleton. Candidate_59 is the commit that created this exact situation. It: 1.",
+      "is_correct": false,
+      "num_files_touched_by_fix": 2,
+      "num_source_files_touched_by_fix": 2,
+      "files_analyzed": [
+        "Sebastiaanschool/src/main/java/nl/sebastiaanschool/contact/app/MainActivity.java",
+        "Sebastiaanschool/src/main/java/nl/sebastiaanschool/contact/app/data/downloadmanager/DownloadManagerInterface.java"
+      ],
+      "call_stats": {
+        "duration_s": 50.397,
+        "duration_api_s": 50.046,
+        "num_turns": 11,
+        "input_tokens": 18,
+        "output_tokens": 3462,
+        "cache_creation_input_tokens": 36896,
+        "cache_read_input_tokens": 170320,
+        "total_cost_usd": 0.32445599999999997,
+        "total_tool_calls": 10,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Glob": 1,
+          "Grep": 3,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 9,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1728/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1728_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1425,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1728/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1728_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1728/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1728_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1345,
+            "cache_read_input_tokens": 9707,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1121,
+            "cache_read_input_tokens": 11052,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "DownloadManagerInterface",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 284,
+            "cache_read_input_tokens": 12173,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1728/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1728_candidate_selection/candidates/candidate_59.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 24302,
+            "cache_read_input_tokens": 12457,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "destroy",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "onDestroy",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 917,
+            "cache_read_input_tokens": 36759,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1728/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1728_candidate_selection/candidates/candidate_67.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1140,
+            "cache_read_input_tokens": 37676,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1728/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1728_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_59\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit adds a `destroy(Context)` method to `DownloadManagerInterface` (which unregisters `downloadCompletionReceiver` and clears the singleton `instance`) and calls it from `MainActivity.onDestroy()`. This addresses a resource leak: `DownloadManagerInterface.init()` calls `registerReceiver()`, which registers a `BroadcastReceiver` with the application context, but nothing ever unregisters it or tears down the singleton.\n\nCandidate_59 is the commit that created this exact situation. It:\n1. Deletes the old `DownloadManagerAsyncTask`/`NewsletterDownloadHelper` classes and the old `MainActivity` receiver logic, which previously included an `onDestroy()` that called `unregisterReceiver(downloadCompletionReceiver)` \u2014 i.e. it removed the code path that used to clean up a receiver.\n2. Introduces the new `DownloadManagerInterface` class (in `.../data/DownloadManagerInterface.java`) with a `registerReceiver()` method that registers `downloadCompletionReceiver` via `context.registerReceiver(...)`, called from the new `init()` method (invoked once from `SebApp.onCreate()`).\n3. Does NOT add any corresponding teardown/destroy logic \u2014 no `unregisterReceiver` call and no `onDestroy` override in `MainActivity` referencing `DownloadManagerInterface`.\n\nThis is precisely the gap the fix commit later closes: it adds the missing `destroy(Context)` method to `DownloadManagerInterface` and wires it into `MainActivity.onDestroy()`. Since candidate_59 is the commit that first introduced the receiver registration without any matching disposal mechanism, it is the bug-introducing commit. No candidate prior to 59 contains `DownloadManagerInterface` at all (grep for `DownloadManagerInterface` across all candidates only matches 59 through 67), and candidates 60-66 only modify unrelated behavior of the same class without adding any destroy/unregister logic (only candidate_67, which is identical to the fix diff itself, finally adds it).\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1478,
+            "cache_read_input_tokens": 38816,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix in fix_commit_diff.txt wraps an existing block in DisplayControlImpl.java's
+`init(String, List, List, ControlContext, Hashtable, DataSelection)` method with a
+new `if (myDataChoices != null) { ... }` null check. The buggy version accessed
+`myDataChoices.size()` directly (right after the block that checks
+`(!init(myDataChoices))` and calls `displayControlFailed()`), which could throw a
+NullPointerException if `myDataChoices` was null after `init()` returned true.
+
+Examining files/old/src/ucar/unidata/idv/control/DisplayControlImpl.java, the
+corresponding `init(...)` method (found at the same location, right after the
+`setDataChoices(choices)` / `applyProperties(properties)` / initialSettings
+handling / `if (!init(myDataChoices)) { ... }` block) does not contain the
+`myDataChoices.size() > 0 && myDataChoices.get(0) instanceof DerivedDataChoice`
+block at all. That entire DerivedDataChoice/usesTimeDriver-checking code segment,
+along with the related `this.usesTimeDriver = this.dataSelection.getProperty(...)`
+logic seen in files/buggy, is absent in files/old — the method goes directly from
+the `init(myDataChoices)` check to the "Check if we have been removed" /
+`getIdv().getInteractiveMode()` section.
+
+Since the specific code that was fixed (the unguarded `myDataChoices.size()` call
+inside the DerivedDataChoice/usesTimeDriver check) does not exist yet in
+files/old, the bug cannot be present in this older version. This confirms the
+"buggy code introduced later" scenario described in the instructions.

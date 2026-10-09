@@ -1,0 +1,16 @@
+SELECTED: candidate_38
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit message states: "The Transactions were being looked up without the readLock and some of the controls for Read and Write lock were broken." The fix diff shows that in JournalImpl.java, calls to getTransactionInfo(txID) (and transactions.remove(txID)) inside appendAddRecordTransactional, appendUpdateRecordTransactional, appendDeleteRecordTransactional, appendPrepareRecord, appendCommitRecord, and appendRollbackRecord were moved from happening BEFORE the append is scheduled on the appendExecutor to happening INSIDE the appendExecutor's Runnable, after journalLock.readLock().lock() is acquired. The fix also adds locking directly inside getTransactionInfo() itself.
+
+candidate_38 is the commit that introduced this exact race condition. It performs a major architectural refactor of JournalImpl, converting the synchronous "acquire journalLock.readLock() then do work" pattern (visible in the older code, e.g. candidate_01) into an asynchronous model using a new `appendExecutor` (an ExecutorService) to which work is submitted via `appendExecutor.submit(new Runnable() {...})`. Critically, in this refactor:
+
+- `final JournalTransaction tx = getTransactionInfo(txID);` and `tx.checkErrorCondition();` are called directly in the calling thread, BEFORE `appendExecutor.submit(...)`, i.e. completely outside of any `journalLock.readLock()` protection.
+- Similarly, `appendCommitRecord` and `appendRollbackRecord` call `transactions.remove(txID)` before submitting to the executor, also outside the readLock.
+- The actual `journalLock.readLock().lock()` only happens inside the submitted Runnable, which runs asynchronously on a separate single thread, meaning the transaction lookup/removal races with the compactor thread which also manipulates `transactions`/journal state under the same lock.
+
+This is precisely the "Transactions were being looked up without the readLock" bug described in the fix. The problem could manifest as missing records after compacting, because the compactor (running concurrently, protected by locks/synchronization elsewhere) could interleave with an unprotected transaction lookup, corrupting the transaction bookkeeping used during compaction and causing records to be lost.
+
+Since candidate_38 is the commit that introduced the asynchronous appendExecutor pattern and simultaneously moved the transaction lookups outside of the read-lock-protected block, it is the commit that introduced the bug fixed in the target commit.

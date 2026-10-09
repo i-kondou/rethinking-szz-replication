@@ -1,0 +1,46 @@
+SELECTED: candidate_01
+
+CONFIDENCE: MEDIUM
+
+EXPLANATION:
+The fix commit renames the test file's package declaration from
+`com.github.piotr.rusin.yule` (and its matching directory
+`src/test/java/com/github/piotr/rusin/yule/`) to `com.github.piotr_rusin.yule`
+(directory `src/test/java/com/github/piotr_rusin/yule/`), so that it matches
+the main application's package `com.github.piotr_rusin.yule`. The commit
+message explains this was needed because Spring Boot's test context could not
+find the application configuration — a classic symptom of the test class
+living in a package that doesn't match (or share a parent with) the main
+`@SpringBootApplication` class's package.
+
+Tracing the exact line changed by the fix (`package com.github.piotr.rusin.yule;`
+in `YuleApplicationTests.java`):
+
+- candidate_01 is the initial project scaffolding commit. It creates both the
+  main application class and the test class under the same package,
+  `com.github.piotr.rusin.yule` (dot-separated, mirroring the directory
+  structure `com/github/piotr/rusin/yule`). At this point the code is
+  internally consistent (main and test packages match), but this
+  dot-separated naming (`piotr.rusin` as two nested sub-packages) is the root
+  naming scheme that later becomes wrong once the main application package is
+  changed to use an underscore (`piotr_rusin`) instead.
+
+- candidate_02 only modifies the test file to add a license header comment
+  block; it does not touch the `package` declaration line itself (it remains
+  as unchanged context in the diff). By the time of candidate_02, the main
+  source tree has already moved to `com.github.piotr_rusin.yule`, but the test
+  package/directory was left untouched at `com.github.piotr.rusin.yule` —
+  i.e., the mismatch is already present here, but this commit did not
+  introduce that specific line; it inherited it unchanged from candidate_01.
+
+- candidate_03 is effectively identical to the fix commit itself (the rename
+  from `piotr/rusin` to `piotr_rusin` for the test file), so it cannot be the
+  bug-introducing commit — it performs the fix, not the break.
+
+Since the exact `package` statement that the fix changes was introduced
+verbatim in candidate_01 and was never modified afterward (candidate_02 only
+added surrounding comments), candidate_01 is the commit that first introduced
+the now-stale package naming that the fix later had to correct. The rename of
+the *main* package to `piotr_rusin` (which is what turned this dormant naming
+choice into an actual bug) is not visible in any of the three provided
+diffs, so confidence is medium rather than high.

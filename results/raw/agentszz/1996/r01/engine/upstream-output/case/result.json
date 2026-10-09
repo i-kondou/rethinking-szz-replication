@@ -1,0 +1,22 @@
+{
+  "fix_commit": "333cd0d114de5bee2bdbfc3be91c7a373174dfe1",
+  "bic": "7434506f7fd3a069f899c1d535eaf0a876306c6f",
+  "confidence": "high",
+  "type": "refactor_penetration",
+  "reasoning": "This commit refactored `compilerComplianceLevel` handling from a stored `JavaVersion` field (converted via `JavaVersion.toVersion(compilerComplianceLevel)`) to inline logic that directly calls `compilerComplianceLevel.toString()` on the raw String parameter, dropping the `JavaVersion.toVersion()` normalization. Although framed as a \"move to local\" refactor with no intended behavior change, it introduced the actual bug that the fix commit (333cd0d) corrects by re-adding `JavaVersion.toVersion(...)` around the value before calling `.toString()`.",
+  "metrics": {
+    "case_elapsed_seconds": 14.075665,
+    "api_elapsed_seconds": 13.881027,
+    "tool_elapsed_seconds": 0.080865,
+    "other_elapsed_seconds": 0.11378,
+    "api_call_count": 4,
+    "tool_call_count": 3,
+    "prompt_tokens": 26023,
+    "completion_tokens": 997,
+    "total_tokens": 27020,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:43:26.196460"
+}

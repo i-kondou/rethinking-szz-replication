@@ -1,0 +1,61 @@
+SELECTED: candidate_18
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes `AbstractFile.onModification()` so that the path-uniqueness
+check is only performed `if (validatePathUniqueness)`, instead of calling
+`validatePath()` unconditionally. This shows that the bug was: `onModification()`
+(used when renaming a file/folder, since renaming triggers a modification of the
+`path` property) ignored the `application.filesystem.unique.paths` configuration
+switch, while `onCreation()` correctly respected it.
+
+Tracing the history of `AbstractFile.java`:
+
+- In candidate_13, the `validatePathUniqueness` static flag was introduced, and it
+  was checked *inside* `validatePath()` itself:
+      public boolean validatePath(...) {
+          if (validatePathUniqueness) {
+              ... actual uniqueness query ...
+          }
+          return true;
+      }
+  Both `onCreation()` and `onModification()` called `validatePath()`
+  unconditionally, which was still correct at this point because the guard lived
+  inside `validatePath()` — if the switch was off, `validatePath()` always
+  returned `true` regardless of caller.
+
+- candidate_14 only threads a new `ModificationQueue` parameter through the
+  `onModification` signature across the whole codebase (a mechanical interface
+  change); the call to `validatePath(...)` in `AbstractFile.onModification()` is
+  untouched otherwise.
+
+- **candidate_18** is where the regression is introduced. It refactors
+  `AbstractFile.java`:
+  1. `onCreation()` is changed to guard the check at the call site instead of
+     relying on validatePath()'s internal guard:
+         if (validatePathUniqueness) {
+             valid = validateAndRenameFileOnce(securityContext, errorBuffer);
+         }
+  2. `validatePath()`'s internal `if (validatePathUniqueness) { ... }` guard is
+     **removed** — the uniqueness query now always executes unconditionally
+     whenever `validatePath()` is called.
+  3. `onModification()` is **not touched** in this commit and still contains the
+     old code `final boolean valid = validatePath(securityContext, errorBuffer);`
+     with no call-site guard.
+
+  The combination of (2) and (3) means that after this commit, `onModification()`
+  always performs the path-uniqueness check regardless of the
+  `application.filesystem.unique.paths` setting, while `onCreation()` was
+  correctly updated to respect the switch. This exactly reproduces the bug
+  described in the fix commit message: "Correctly respects configuration switch
+  application.filesystem.unique.paths when renaming files/folders" — renaming
+  triggers `onModification()`, which ignored the switch after candidate_18.
+
+- candidate_20 is the fix itself (byte-identical to fix_commit_diff.txt): it adds
+  the missing `if (validatePathUniqueness) { valid = validatePath(...); }` guard
+  to `onModification()`, bringing it back in line with `onCreation()`'s behavior.
+
+Since candidate_18 is the commit that removed the safeguard from `validatePath()`
+without correspondingly updating `onModification()`'s call site, it is the
+bug-introducing commit.

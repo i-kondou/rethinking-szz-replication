@@ -1,0 +1,30 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The bug fixed by this commit is that `exist.home` was being logged using
+`SystemProperties.getInstance().getSystemProperty("exist.home", "unknown")`,
+which reads values from the build-time resource file `src/org/exist/system.properties`.
+That file never contains an `exist.home` key (it's a runtime JVM system property set
+by the launch scripts, not a build property), so the log line always printed "unknown".
+The fix replaces this call with a direct `System.getProperty("exist.home", "unknown")`.
+
+In `files/old/JettyStart.java`, which represents a much earlier version of the class
+(pre-dating the `SystemProperties` helper class entirely, still using log4j 1.x and Jetty 6
+APIs), the "eXist Home" log line is:
+
+    msg = "[eXist Home : " + System.getProperty("exist.home") + "]";
+
+This already reads `exist.home` directly via `System.getProperty(...)`, exactly the
+correct approach that the fix later restores. The other metadata fields in this old
+version (`product-version`, `product-build`, `svn-revision`) are read from a manually
+loaded `Properties sysProperties` object, but `exist.home` was never routed through
+that path.
+
+Therefore, the specific bug (incorrectly sourcing `exist.home` from the build
+properties file via `SystemProperties`) does not exist in `files/old/` — it must have
+been introduced later when the code was refactored to use the `SystemProperties`
+singleton for all metadata fields, at which point `exist.home` was mistakenly included
+among fields that should be looked up in the properties file, and was only fixed by
+this commit.

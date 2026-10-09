@@ -1,0 +1,24 @@
+SELECTED: candidate_11
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes two lines in PatriciaTreeMutable.reclaim():
+  - `sourceNode.getChildren(actItr.next())` -> `source.currentNode.getChildren(actItr.next())`
+  - `srcItr = sourceNode.keySequence.iterator()` -> `srcItr = source.currentNode.keySequence.iterator()`
+
+Both changed lines occur inside the branch of the while-loop that is entered AFTER `source.moveDown()` has just been called (in the immediately preceding iteration of the same branch), which mutates `source.currentNode` to point at the child node. The bug is that the code was using a stale local variable `sourceNode` (captured once, before the loop, as `final NodeBase sourceNode = source.currentNode;`) instead of re-reading `source.currentNode` after the traverser moved down. This caused the loop to keep computing children/keySequence from the original (now stale/parent) node instead of the node the traverser actually descended into — the "weird reclaim bug".
+
+Looking at candidates/candidate_11.diff, this is exactly where the `sourceNode` local variable was introduced. The diff shows the private `reclaim(PatriciaReclaimSourceTraverser, PatriciaReclaimActualTraverser)` method being rewritten from directly using `source.currentNode` and `actual.currentNode` everywhere, to instead caching them up front:
+
+    final NodeBase actualNode = actual.currentNode;
+    final NodeBase sourceNode = source.currentNode;
+    ...
+    ByteIterator srcItr = sourceNode.keySequence.iterator();
+    ByteIterator actItr = actualNode.keySequence.iterator();
+    ...
+    final NodeChildrenIterator children = sourceNode.getChildren(actItr.next());
+    ...
+    srcItr = sourceNode.keySequence.iterator();
+
+This refactor (part of a large commit removing IExpirationChecker and touching many GC/reclaim-related files) introduced the stale-reference bug: after `source.moveDown()` updates `source.currentNode`, the code kept referencing the old cached `sourceNode` variable instead of the freshly updated node. This is precisely the pattern the fix commit reverts by switching back to `source.currentNode`. No earlier candidate touches this code path with a `sourceNode` variable, and no later candidate (other than candidate_12, which is unrelated/precedes chronologically and does not touch this specific bug pattern) introduces it — candidate_11 is the first and only commit that creates the stale `sourceNode` caching pattern that the fix corrects.

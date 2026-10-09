@@ -1,0 +1,15 @@
+SELECTED: candidate_44
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit refactors Alarms.java so that expired-alarm handling and every alarm-mutating operation (create, delete, snooze, dismiss, enable, etc.) stop going through the old `changeAlarm(Alarm)` helper and instead call a new `writeToDb(int id)` method. Critically, `writeToDb()` only performs the ContentResolver DB update and does NOT touch the in-memory `set` collection, whereas the old `changeAlarm(Alarm alarm)` did `set.remove(alarm); set.add(alarm);` in addition to updating the DB.
+
+The reason this mattered: the code that disables expired alarms iterates directly over the same `set` field (`for (Alarm alarm : set) { ... enable(alarm.getId(), false); ... }`), and `enable()` calls `changeAlarm()`, which mutates `set` (remove+add) from inside the very for-each loop that is iterating over `set`. This is a classic ConcurrentModificationException bug: modifying a `Set` while iterating over it with a for-each loop. The fix commit explicitly removes this hazard by making `writeToDb()` not touch `set` at all, and by changing `disableExpiredAlarms`'s call from `enable(alarm.getId(), false)` to a direct `alarm.setEnabled(false); writeToDb(alarm.getId());`, avoiding any mutation of `set` during the iteration.
+
+Tracing the history, candidate_44 is the commit that introduced this exact combination of hazards for the first time:
+- It introduces the persistent `Set<Alarm> set` field on the manager class (previously alarms were loaded fresh from a Cursor query each time, with no persistent in-memory Set).
+- It introduces `changeAlarm(Alarm alarm)`, which does `set.remove(alarm); set.add(alarm);` alongside the DB write.
+- It rewrites `disableExpiredAlarms()` to iterate `for (Alarm alarm : set)` and call `enable(alarm.getId(), false)` (which triggers `changeAlarm()` and thus mutates `set`) from inside that same loop.
+
+Before candidate_44, `disableExpiredAlarms()` used a Cursor-based query (not the in-memory `set`), so there was no concurrent-modification hazard. Later candidates (e.g., candidate_47, which is a pure rename/move of the class from AlarmsManager.java to Alarms.java) carry the same faulty logic forward unchanged, and candidate_54 merely inlines `disableExpiredAlarms()` into `init()` without altering the underlying hazard. The fix commit's message ("Alarms: small refactoring - this fixes issue") matches removing the set-mutation-during-iteration bug that candidate_44 first introduced.

@@ -1,0 +1,15 @@
+SELECTED: candidate_15
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single line, `gridview.setAdapter(imageAdapter);`, immediately after the GridView is looked up via `findViewById` in `onCreateView()` of MainActivityFragment. This restores a synchronous adapter assignment that had previously existed there.
+
+Tracing the history of this exact line across the candidates:
+- candidate_03 first introduces `gridview.setAdapter(new ImageAdapter(getContext()));` right after the GridView lookup in `onCreateView()`.
+- candidate_04, candidate_07 (renaming the argument to the `imageAdapter` field), candidate_11, and candidate_14 all preserve this line unchanged in the same synchronous location — the adapter is always attached to the GridView right when the view is created.
+- candidate_15 is the commit that removes this line from `onCreateView()` (`- gridview.setAdapter(imageAdapter);`) and instead moves the adapter assignment into a `runOnUiThread` callback inside the JSON network response listener in `getMovies()`. This means the GridView is left without an adapter at view-creation time; the adapter is only attached later, asynchronously, after (and only if) the network request to fetch movies completes successfully. This is the exact bug the fix commit addresses: the GridView has no adapter set synchronously in `onCreateView()`.
+- candidate_16 touches nearby code (whitespace, URL string, log comment) but does not restore the removed synchronous `setAdapter` call, so the bug persists.
+- candidate_17 is essentially identical (same before/after blob hashes) to the fix_commit_diff.txt itself — it re-adds `gridview.setAdapter(imageAdapter);` right after the GridView lookup. This is the actual fix, not a bug-introducing change, and appears to have been mistakenly included in the candidate list (its diff is byte-for-byte the same as the provided fix commit diff).
+
+Since candidate_17 is the fix itself, the true bug-introducing commit is candidate_15, which is the first (and only) commit that removed the synchronous `gridview.setAdapter(imageAdapter)` call and relocated it to an asynchronous, conditional code path, leaving the GridView without an adapter under normal synchronous initialization.

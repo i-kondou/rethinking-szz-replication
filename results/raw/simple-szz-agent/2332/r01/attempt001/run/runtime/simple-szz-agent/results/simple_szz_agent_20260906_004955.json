@@ -1,0 +1,515 @@
+{
+  "metadata": {
+    "timestamp": "20260906_004955",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2332/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 117.612,
+      "max": 117.612,
+      "mean": 117.612,
+      "median": 117.612,
+      "total": 117.612,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 117.046,
+      "max": 117.046,
+      "mean": 117.046,
+      "median": 117.046,
+      "total": 117.046,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 22,
+      "max": 22,
+      "mean": 22,
+      "median": 22,
+      "total": 22,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 38,
+      "max": 38,
+      "mean": 38,
+      "median": 38,
+      "total": 38,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 8622,
+      "max": 8622,
+      "mean": 8622,
+      "median": 8622,
+      "total": 8622,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 52899,
+      "max": 52899,
+      "mean": 52899,
+      "median": 52899,
+      "total": 52899,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 661110,
+      "max": 661110,
+      "mean": 661110,
+      "median": 661110,
+      "total": 661110,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.645171,
+      "max": 0.645171,
+      "mean": 0.645171,
+      "median": 0.645171,
+      "total": 0.645171,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 21,
+      "max": 21,
+      "mean": 21,
+      "median": 21,
+      "total": 21,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 7,
+      "Glob": 1,
+      "Grep": 12,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 37,
+      "max": 37,
+      "mean": 37,
+      "median": 37,
+      "total": 37,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2332",
+      "fix_commit_hash": "052fc158198e97c6e44d9bdff1e5bf5595d61f83",
+      "ground_truth_bics": [
+        "c8156def8cdc0f33f763b3edd9cec79f86c9b390"
+      ],
+      "predicted_bics": [
+        "fd5b5a4b3238b34ecdceb6e24e113dfc80fa93fa"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2332",
+      "fix_commit": "052fc158198e97c6e44d9bdff1e5bf5595d61f83",
+      "ground_truth_bics": [
+        "c8156def8cdc0f33f763b3edd9cec79f86c9b390"
+      ],
+      "total_candidates": 37,
+      "gt_in_candidates": true,
+      "selected_commit": "fd5b5a4b3238b34ecdceb6e24e113dfc80fa93fa",
+      "selected_index": 23,
+      "confidence": "HIGH",
+      "explanation": "The fix commit replaces a plain `private volatile boolean connected;` field in TS3Query with `AtomicBoolean connected` / `AtomicBoolean shuttingDown`, and rewrites `exit()` and `fireDisconnect()` to use compare-and-set + wait/notify instead of racy, unsynchronized reads/writes of the `connected` flag. Specifically, the pre-fix code that the patch removes was: private volatile boolean connected; ... public synchronized void exit() { if (connected) { ... api.quit() ... }",
+      "is_correct": false,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/main/java/com/github/theholywaffle/teamspeak3/TS3Query.java"
+      ],
+      "call_stats": {
+        "duration_s": 117.612,
+        "duration_api_s": 117.046,
+        "num_turns": 22,
+        "input_tokens": 38,
+        "output_tokens": 8622,
+        "cache_creation_input_tokens": 52899,
+        "cache_read_input_tokens": 661110,
+        "total_cost_usd": 0.645171,
+        "total_tool_calls": 21,
+        "tool_calls_by_name": {
+          "Read": 7,
+          "Glob": 1,
+          "Grep": 12,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2332/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2332_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2332/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2332_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2332/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2332_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2282,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 824,
+            "cache_read_input_tokens": 11966,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "TS3Query.java",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 664,
+            "cache_read_input_tokens": 12790,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2332/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2332_candidate_selection/candidates/candidate_01.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 23747,
+            "cache_read_input_tokens": 13454,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "^\\+\\+\\+ b/.*TS3Query\\.java",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "fireDisconnect|shuttingDown|connected =|connected;|boolean connected",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1231,
+            "cache_read_input_tokens": 37201,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "fireDisconnect|onDisconnect|ReconnectStrategy|connectionHandler",
+                  "path": "candidates",
+                  "output_mode": "count"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1487,
+            "cache_read_input_tokens": 38432,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "fireDisconnect|onDisconnect|ReconnectStrategy|connectionHandler|volatile boolean connected|synchronized void exit",
+                  "path": "candidates/candidate_20.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1562,
+            "cache_read_input_tokens": 39919,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2332/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2332_candidate_selection/candidates/candidate_20.diff",
+                  "offset": 100,
+                  "limit": 140
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 3429,
+            "cache_read_input_tokens": 41481,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "void fireDisconnect|public synchronized void exit|private volatile boolean connected",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 459,
+            "cache_read_input_tokens": 44910,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "void fireDisconnect|public synchronized void exit|private volatile boolean connected|connected =|connected;",
+                  "path": "candidates/candidate_18.diff",
+                  "output_mode": "content",
+                  "-n": true,
+                  "-C": 3
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 12,
+            "input_tokens": 2,
+            "output_tokens": 14,
+            "cache_creation_input_tokens": 425,
+            "cache_read_input_tokens": 45369,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2332/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2332_candidate_selection/candidates/candidate_18.diff",
+                  "offset": 600,
+                  "limit": 200
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 13,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 3287,
+            "cache_read_input_tokens": 45794,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "connected",
+                  "path": "candidates/candidate_18.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 14,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 389,
+            "cache_read_input_tokens": 49081,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "connected",
+                  "path": "candidates/candidate_22.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "connected",
+                  "path": "candidates/candidate_24.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 15,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 629,
+            "cache_read_input_tokens": 49470,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2332/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2332_candidate_selection/candidates/candidate_24.diff",
+                  "offset": 1,
+                  "limit": 130
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 16,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2705,
+            "cache_read_input_tokens": 50099,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "synchronized void exit|synchronized.*exit\\(\\)",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 17,
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "cache_creation_input_tokens": 538,
+            "cache_read_input_tokens": 52804,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "exit\\(\\)|connected|synchronized",
+                  "path": "candidates/candidate_35.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 18,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 292,
+            "cache_read_input_tokens": 53342,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2332/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2332_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_24\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit replaces a plain `private volatile boolean connected;` field in TS3Query with\n`AtomicBoolean connected` / `AtomicBoolean shuttingDown`, and rewrites `exit()` and\n`fireDisconnect()` to use compare-and-set + wait/notify instead of racy, unsynchronized\nreads/writes of the `connected` flag. Specifically, the pre-fix code that the patch removes was:\n\n    private volatile boolean connected;\n    ...\n    public synchronized void exit() {\n        if (connected) { ... api.quit() ... }\n        if (io != null) { io.disconnect(); }\n        connected = false;\n        userThreadPool.shutdown();\n    }\n    ...\n    void fireDisconnect() {\n        connected = false;\n        submitUserTask(..., new Runnable() {\n            public void run() {\n                try { connectionHandler.onDisconnect(TS3Query.this); }\n                finally { if (!connected) { exit(); } }\n            }\n        });\n    }\n\nThis exact design \u2014 a `connected` boolean flag that is set false by `fireDisconnect()` and then\nchecked (non-atomically, from a background thread) to decide whether to call `exit()`, while\n`exit()` itself checks/mutates the same flag and shuts down `io`/`userThreadPool` \u2014 was first\nintroduced in candidate_24. That commit:\n  - adds `private volatile boolean connected;` to TS3Query,\n  - sets `connected = true` in `connect()` after creating the QueryIO,\n  - rewrites `exit()` to gate the `quit` command on `if (connected)` and to unconditionally call\n    `io.disconnect()` and `userThreadPool.shutdown()`,\n  - rewrites `fireDisconnect()` to set `connected = false` and then, inside a submitted background\n    task, call `exit()` again if `!connected` after invoking `connectionHandler.onDisconnect(...)`.\n  - It also removes the direct `ts3Query.exit()` call from `DisconnectingConnectionHandler`,\n    shifting responsibility for triggering `exit()` onto this new racy `fireDisconnect()`/`exit()`\n    interplay.\n\nThis is precisely the \"synchronization in TS3Api/TS3Query\" hazard the fix resolves: multiple\nthreads (the connect thread, the disconnect-handling background task, and any thread calling\n`exit()` directly, e.g. via `TS3Api.quit()`) can concurrently read/write `connected` and call\n`io.disconnect()` / `userThreadPool.shutdown()` without any real mutual exclusion, since a\n`volatile boolean` only guarantees visibility, not atomicity of check-then-act sequences, and the\n`synchronized` keyword was only added later (candidate_35) without fully closing the race (no\nwait/notify coordination between concurrent `exit()` callers, still relying on the same\nnon-atomic `connected` flag).\n\nLater candidates (e.g. candidate_35) attempt to patch this by making `exit()`/`connect()`\n`synchronized`, but the fundamental design flaw of using a shared boolean flag to coordinate the\n\"who is responsible for shutdown\" decision across threads \u2014 the flaw the final fix's\nAtomicBoolean/CAS/wait-notify rewrite eliminates \u2014 traces back to its introduction in\ncandidate_24.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 19,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 2663,
+            "cache_read_input_tokens": 53634,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

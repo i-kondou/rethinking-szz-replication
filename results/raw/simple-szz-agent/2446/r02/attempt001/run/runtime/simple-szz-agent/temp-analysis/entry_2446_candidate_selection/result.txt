@@ -1,0 +1,34 @@
+SELECTED: candidate_01
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the access modifier of RerouteActions.execute() from
+package-private ("static final CompletableFuture<Long> execute(...)") to
+"public static CompletableFuture<Long> execute(...)" in
+sql/src/main/java/io/crate/executor/transport/RerouteActions.java. This is
+a classic access-modifier compile error: the method had no explicit access
+modifier (defaulting to package-private) even though it needed to be called
+from other packages.
+
+candidate_01 is the commit that originally created RerouteActions.java
+(new file) as part of adding the "ALTER TABLE ... REROUTE ALLOCATE REPLICA
+SHARD" feature. In that same commit, RerouteActions.execute() was declared
+as `static final CompletableFuture<Long> execute(...)` (package-private,
+in package io.crate.executor.transport), while it is invoked from
+DDLStatementDispatcher.visitRerouteMoveShard/visitRerouteAllocateReplicaShard,
+which live in package io.crate.action.sql. Since the method lacked the
+`public` modifier, calling it from a different package causes a compile
+error ("execute() is not public in RerouteActions; cannot be accessed from
+outside package"), which is exactly the "fix compile error" addressed by
+the fix commit.
+
+candidate_02 is a much smaller, unrelated diff whose content is textually
+identical to the fix commit diff itself (changing `static final` to
+`public static`) — it does not introduce the bug but rather duplicates the
+correction. This strongly suggests candidate_02 is essentially the fix (or
+a re-application of it), not the bug-introducing commit.
+
+Therefore, candidate_01 — which first introduced the package-private
+`execute` method alongside cross-package callers — is the commit that
+introduced the compile error later corrected by the fix.

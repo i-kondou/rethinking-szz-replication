@@ -1,0 +1,30 @@
+SELECTED: candidate_15
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single line to MainActivityFragment.java's onCreateView():
+
+    gridview = (GridView) mainFragmentView.findViewById(R.id.gridView);
++   gridview.setAdapter(imageAdapter);
+
+This restores an adapter binding that immediately follows the GridView lookup, ensuring the GridView has its adapter attached as soon as the view is created.
+
+Looking at candidate_15.diff, this exact line was removed:
+
+-        GridView gridview = (GridView) mainFragmentView.findViewById(R.id.gridView);
+-        gridview.setAdapter(imageAdapter);
++         gridview = (GridView) mainFragmentView.findViewById(R.id.gridView);
+
+Instead of setting the adapter right after the findViewById call, candidate_15 moved the setAdapter invocation into a new runOnUiThread() callback inside the network response listener of getMovies():
+
++                        getActivity().runOnUiThread(new Runnable() {
++                            @Override
++                            public void run() {
++                                gridview.setAdapter(imageAdapter);
++                            }
++                        });
+
+This deferred the adapter binding until after the first network response was processed, meaning the GridView has no adapter set during initial fragment creation/lifecycle events (e.g., before any data has loaded, or if the fragment view is recreated without a fresh network call). This is precisely the defect that the fix commit addresses by re-inserting the immediate `gridview.setAdapter(imageAdapter);` call in onCreateView.
+
+None of the intervening candidates (candidate_16, candidate_17) restore this line prior to the actual fix; candidate_16 only touches unrelated lines (API key handling, whitespace, logging), and candidate_17 is the fix itself. Therefore candidate_15 is the commit that introduced the bug by removing the adapter binding from its correct location.

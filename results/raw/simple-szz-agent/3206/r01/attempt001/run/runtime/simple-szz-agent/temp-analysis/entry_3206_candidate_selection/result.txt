@@ -1,0 +1,21 @@
+SELECTED: candidate_76
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit modifies JavaSource/org/unitime/timetable/solver/studentsct/StudentSectioningDatabaseLoader.java, changing:
+
+    for (CourseOffering course: io.getCourseOfferings())
+        section.setName(course.getUniqueId(), c.getClassSuffix(course));
+
+into a version that only calls section.setName(...) when the class suffix is not null:
+
+    for (CourseOffering course: io.getCourseOfferings()) {
+        String suffix = c.getClassSuffix(course);
+        if (suffix != null)
+            section.setName(course.getUniqueId(), suffix);
+    }
+
+The fix commit message explains that this null value was later passed into an XML document during passivation/XML export, which is not allowed (adding null text to an XML document throws an error).
+
+candidate_76 is the commit that originally introduced this exact for-loop and the unguarded `section.setName(course.getUniqueId(), c.getClassSuffix(course));` call into StudentSectioningDatabaseLoader.java (the diff hunk context and line numbers exactly match the pre-fix code shown in fix_commit_diff.txt). No other candidate touches or introduces this specific line in this file — candidate_78 is actually the fix commit itself, and other matches for "getClassSuffix" in candidates (e.g., candidate_10, candidate_39) refer to unrelated code paths (XSection/XClassAssignment models, not this loader method). Since candidate_76 is the sole commit that added the vulnerable, unguarded call, it is the bug-introducing commit.

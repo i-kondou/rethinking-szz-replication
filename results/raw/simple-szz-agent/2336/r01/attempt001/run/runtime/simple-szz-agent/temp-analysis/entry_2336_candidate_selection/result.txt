@@ -1,0 +1,45 @@
+SELECTED: candidate_279
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes this line in Minecraft.java:
+
+    if (currentScreen == null) {
+        if (Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
+-           if (!packetHandler.isLoadingLevel){
++           if (!packetHandler.isLoadingLevel || !isOnline()){
+                pause();
+            } else {
+                Mouse.setGrabbed(false);
+            }
+
+i.e. it adds "|| !isOnline()" to the condition that decides whether pressing
+Escape should open the pause menu. Without that clause, if
+packetHandler.isLoadingLevel happened to be true while playing singleplayer
+(isOnline() == false), pressing Escape would just call
+Mouse.setGrabbed(false) instead of pause(), so the pause/menu screen would
+never show up in singleplayer — exactly the bug described in the fix commit
+message ("Fixed a bug which was causing the menu to not show up in
+singleplayer").
+
+candidate_279 is the commit that first introduced this exact
+if/else structure:
+
+    if (currentScreen == null) {
+        if (Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
++           if (!packetHandler.isLoadingLevel){
++               pause();
++           } else {
++               Mouse.setGrabbed(false);
++           }
+        }
+
+Before candidate_279, this block simply called pause() unconditionally on
+Escape, so the missing-menu bug could not occur. candidate_279 is therefore
+the first commit that made pause() conditional on packetHandler.isLoadingLevel
+without accounting for singleplayer (isOnline() == false), which is precisely
+the root cause fixed later by adding "|| !isOnline()". candidate_280 only
+touches an unrelated Escape-handling block earlier in the file (toggling
+between pause()/Mouse.setGrabbed(false) in a different loading-screen input
+loop) and does not affect this bug. candidate_281 is the fix commit itself.

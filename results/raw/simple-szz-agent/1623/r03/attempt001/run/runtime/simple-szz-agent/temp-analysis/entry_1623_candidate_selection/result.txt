@@ -1,0 +1,33 @@
+SELECTED: candidate_30
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes FlamingoThemeIT.java at the block that follows
+`ViewThemePage themePage = themeApplicationWebHomePage.seeTheme(testMethodName);`,
+replacing `editThemePage.waitUntilPreviewIsLoaded();` with
+`themePage.waitUntilPreviewIsLoaded();` and `editThemePage = new EditThemePage();`
+with `themePage = new ViewThemePage();`. This is a wrong-variable bug: the code
+was operating on the (now out-of-scope/incorrect) `editThemePage` object instead
+of the `themePage` object that was just obtained via `seeTheme(...)`.
+
+candidate_30.diff introduces exactly this buggy code. Its hunk
+(`@@ -140,7 +140,17 ...`) replaces the previously-correct single line
+`themePage.waitUntilPreviewIsLoaded();` with a new try/catch block that
+erroneously references `editThemePage` instead of `themePage`:
+
+    try {
+        editThemePage.waitUntilPreviewIsLoaded();
+    } catch (TimeoutException e) {
+        setup.getDriver().get(setup.getDriver().getCurrentUrl());
+        editThemePage = new EditThemePage();
+    }
+
+This appears to be a copy-paste of a similar retry pattern used earlier in the
+same test (for the actual `editThemePage` object, added in candidate_27), but
+applied to the `themePage` section without updating the variable name/type,
+which is precisely the mistake corrected by the fix commit. No other candidate
+diff touches this specific section of the file with this variable-name error;
+candidate_27's similar try/catch blocks correctly use `editThemePage` in
+contexts where `editThemePage` is indeed the active variable, so they are not
+the source of the bug.

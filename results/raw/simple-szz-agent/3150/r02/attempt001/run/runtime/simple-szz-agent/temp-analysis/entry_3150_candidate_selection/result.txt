@@ -1,0 +1,44 @@
+SELECTED: candidate_53
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit removes an `if (sourceTrack != null) { ... }` guard around the
+retargeting of a bone track and instead makes `retargetTrack` handle a null
+`sourceTrack` internally by falling back to a single-keyframe "bind pose"
+track. Before the fix, whenever a target bone's mapped source bone had no
+animation track (`sourceTrack == null`), the code simply skipped adding any
+track for that bone at all — this is the "retargeting logic error" described
+in the fix commit message.
+
+Tracing the history of `Util.retargetAnimation`/`retargetTrack`:
+
+- candidate_36 first introduces `retargetTrack`, but at that point the
+  `sourceTrack` lookup (`MyAnimation.findTrack`) happens *inside*
+  `retargetTrack` itself and is used unconditionally
+  (`sourceTrack.getTimes()`), with no null check anywhere. A null source
+  track would simply cause a `NullPointerException`, not the "skip the bone"
+  logic error being fixed.
+
+- candidate_40 only removes an unrelated `twist` parameter from the same
+  methods; it does not touch null handling.
+
+- candidate_53 refactors the call site to look up `sourceTrack` in
+  `retargetAnimation` (via `MyAnimation.findTrack`) and pass it into
+  `retargetTrack`, and — critically — wraps the track-creation/`addTrack`
+  call in a brand-new `if (sourceTrack != null) { ... }` guard, while also
+  adding `Validate.nonNull(sourceTrack, "source track")` inside
+  `retargetTrack`. This is exactly the buggy "skip bones with no source
+  track" behavior that the fix commit later removes.
+
+- candidate_54 only adds an explanatory comment
+  (`// handle null sourceTrack`) to the same `if` statement introduced in
+  candidate_53, with no functional change.
+
+- candidate_55 is essentially identical to the fix commit itself (removing
+  the guard and adding bind-pose fallback logic), so it is the fix, not the
+  bug introduction.
+
+Since candidate_53 is the first commit to introduce the specific
+"silently skip bones whose source track is null" logic that the fix commit
+corrects, it is the bug-introducing commit.

@@ -1,0 +1,49 @@
+SELECTED: candidate_35
+
+CONFIDENCE: MEDIUM
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) rewrites TS3Query's shutdown/synchronization logic:
+it replaces the plain `private volatile boolean connected;` field with an `AtomicBoolean
+connected` plus a new `AtomicBoolean shuttingDown`, and it changes `exit()` from
+`public synchronized void exit()` to a plain (non-synchronized) method that uses
+`shuttingDown.compareAndSet(...)` plus a `synchronized`/`wait()`/`notifyAll()` hand-off
+via a new private `shutDown()` method. The commit message ("Fix synchronization in
+TS3Api"/TS3Query) is squarely about the flawed use of `synchronized` on `exit()`.
+
+Tracing the history of TS3Query.java through the candidates:
+
+- candidate_24 introduces the `connected` field (as `private volatile boolean connected;`)
+  together with the `fireDisconnect()` pattern that sets `connected = false` and then, in a
+  task submitted to the user thread pool, calls `exit()` again if `!connected`. At this
+  point `exit()` is still a plain, non-synchronized method.
+
+- candidate_27 adds the public `isConnected()` accessor that simply returns the raw
+  `connected` field, without any synchronization.
+
+- candidate_35 is the commit that changes `exit()` (and `connect()`, `doCommandAsync()`)
+  from unsynchronized to `synchronized`:
+      -public void exit() {
+      +public synchronized void exit() {
+  This is exactly the buggy state the fix commit later dismantles. Making `exit()`
+  synchronized while it can call itself indirectly (via the disconnect-handling task
+  spawned by `fireDisconnect()`, which invokes `exit()` again on the same monitor) creates
+  a synchronization hazard: if a thread is blocked inside `exit()` waiting for the quit
+  command to be acknowledged over a connection that has already failed, any other thread
+  (including the internal disconnect-handler task) trying to enter the synchronized
+  `exit()`/shutdown path blocks indefinitely on the same lock, hanging shutdown.
+
+- candidate_36 only renames/refactors `submitUserTask` and tightens exception handling in
+  `fireDisconnect()`; it does not touch the `synchronized` modifier on `exit()`.
+
+- The state right before the fix (matching the `57ef52d` blob hash referenced in
+  fix_commit_diff.txt) still has `private volatile boolean connected;` and
+  `public synchronized void exit()`, i.e., exactly what candidate_35 produced, carried
+  forward unchanged by candidate_36.
+
+Since the fix is specifically about removing the naive `synchronized` locking on `exit()`
+in favor of atomic/CAS-based coordination, candidate_35 is the commit that introduced the
+precise faulty synchronization strategy being corrected. (candidate_24, which introduced
+the `connected` field and the exit-calls-itself pattern, is a contributing/related change,
+but the actual defect targeted by this fix — synchronizing `exit()` — was introduced in
+candidate_35.)

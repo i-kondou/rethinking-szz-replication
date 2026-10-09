@@ -1,0 +1,22 @@
+{
+  "fix_commit": "9282132c5abd230b0ff94a332e01d5c2ba876986",
+  "bic": "11b15cf907ecab5c950fa02df0c5cec2f233d4d8",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit added the call `orgDao.findByCommonName(account.getOrg()).getName()` in NewAccountFormController.java to fix the display of org name (using name instead of id). This new call to orgDao.findByCommonName was not accounted for in the existing unit test's mock setup, causing NewAccountFormControllerTest to throw an NPE since mockOrgDao.findByCommonName() returned null by default. The fix commit explicitly states this is exactly the issue: \"the call to orgDao.findByCommonName(...) in NewAccountFormController is not mocked up and resulted in NPE,\" directly matching the code introduced by this commit.",
+  "metrics": {
+    "case_elapsed_seconds": 13.660099,
+    "api_elapsed_seconds": 13.471615,
+    "tool_elapsed_seconds": 0.078335,
+    "other_elapsed_seconds": 0.110154,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 15204,
+    "completion_tokens": 730,
+    "total_tokens": 15934,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:43:27.643329"
+}

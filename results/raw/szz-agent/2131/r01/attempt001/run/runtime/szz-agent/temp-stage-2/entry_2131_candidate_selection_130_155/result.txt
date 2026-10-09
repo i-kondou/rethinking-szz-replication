@@ -1,0 +1,62 @@
+SELECTED: candidate_06
+
+CONFIDENCE: LOW
+
+EXPLANATION:
+The fix (EA-79438) reorders a single statement in the FileHistoryPanelImpl
+constructor: `myPopupActions = createPopupActions();` was moved from AFTER
+`createDualView(); if (isStaticEmbedded) {...}` to BEFORE `createDualView();`.
+The bug is that something invoked during/via createDualView() (ultimately
+PopupHandler.installPopupHandler) depends on myPopupActions already being
+initialized, causing an IllegalArgumentException when it is still null.
+
+I reviewed all 26 candidates in chronological order looking for the commit
+that either (a) moved the `myPopupActions = createPopupActions();` statement
+relative to `createDualView();`, or (b) introduced/extracted the
+`createDualView()` method itself, or (c) added a dependency on
+`myPopupActions` where none existed before.
+
+None of candidates 1-3, 5, 7-9, 11-26 touch the specific lines involved in
+this reordering; their changes to FileHistoryPanelImpl.java are unrelated
+(column info refactors, DiffFromHistoryHandler introduction, data key
+additions, background-task refactors, empty-text handling, etc.).
+
+Candidate_06 is the only candidate (aside from two very large diffs,
+candidate_04 and candidate_10, which could not be fully inspected due to
+tool size limits despite multiple targeted attempts) that touches code in
+the immediate vicinity of the bug. Specifically, candidate_06 is a massive,
+sweeping refactor (>5000 lines, hundreds of files) that converts
+MouseAdapter/`.install()`-based click handling throughout the codebase to
+the new ClickListener/DoubleClickListener `.installOn()` API. Within this
+refactor, it modifies FileHistoryPanelImpl.java directly adjacent to the
+buggy block:
+
+    final TableLinkMouseListener listener = new TableLinkMouseListener();
+-   listener.install(myDualView.getFlatView());
+-   listener.install(myDualView.getTreeView());
++   listener.installOn(myDualView.getFlatView());
++   listener.installOn(myDualView.getTreeView());
+
+    createDualView();
+    if (isStaticEmbedded) {
+      setIsStaticAndEmbedded(isStaticEmbedded);
+    }
+
+This is the closest any candidate comes to the exact buggy region, and
+large, mechanical, cross-cutting refactors like this are a classic source
+of collateral ordering/initialization bugs, since code blocks and listener
+installation sequences are touched and effectively "re-verified" (or
+inadvertently left inconsistent) across many call sites simultaneously.
+
+I flag LOW confidence because I was not able to directly observe a diff
+hunk that shows the `myPopupActions = createPopupActions();` statement
+being moved or newly added in this position by any of the 26 candidates,
+including candidate_06 (whose visible hunk only renames install->installOn
+and does not show the myPopupActions lines, meaning those lines lie outside
+the diff's context window or were already in their final position at this
+point). It remains possible the bug predates all 26 candidates (i.e., was
+present in the original base state) or was introduced within candidate_04
+or candidate_10, both extremely large diffs (900KB-1.2MB) that could not be
+exhaustively searched within the available tooling/budget. Candidate_06 is
+selected as the best-supported answer given the evidence actually
+observed.

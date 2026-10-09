@@ -1,0 +1,29 @@
+SELECTED: candidate_08
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a null check to CourseEvent.getSession():
+
+    public Session getSession() {
++       if (getRelatedCourses() == null) return null;
+        for (RelatedCourseInfo rc: getRelatedCourses())
+            return rc.getCourse().getInstructionalOffering().getSession();
+        return null;
+    }
+
+This means the bug is that CourseEvent.getSession() iterates over getRelatedCourses() without checking whether it is null first, causing a NullPointerException when a course-related event is not yet fully created (as stated in the fix commit message).
+
+Candidate_08 is the commit that first introduces this exact getSession() method in CourseEvent.java:
+
+    public Session getSession() {
+        for (RelatedCourseInfo rc: getRelatedCourses())
+            return rc.getCourse().getInstructionalOffering().getSession();
+        return null;
+    }
+
+This is precisely the buggy code (missing the null check) that the fix commit later patches. I verified that no earlier candidate (candidate_01 through candidate_07, including candidate_05 which touches CourseEvent.java for other methods) contains this getSession() method — it does not exist prior to candidate_08.
+
+Candidate_09 contains an essentially identical diff (same getSession() method addition, differing only in unrelated GWT client-side changes and blob hashes), suggesting it may be a near-duplicate/cherry-pick commit. Since candidates are ordered chronologically and the bug-introducing commit is defined as the FIRST commit to introduce the problematic code, candidate_08 is selected over candidate_09.
+
+Candidate_10 is actually the fix commit itself (identical to fix_commit_diff.txt), included among the candidates as a decoy, and is therefore not a valid bug-introducing candidate.

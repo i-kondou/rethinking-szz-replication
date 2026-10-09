@@ -1,0 +1,473 @@
+{
+  "metadata": {
+    "timestamp": "20260906_010805",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2911/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 163.039,
+      "max": 163.039,
+      "mean": 163.039,
+      "median": 163.039,
+      "total": 163.039,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 162.902,
+      "max": 162.902,
+      "mean": 162.902,
+      "median": 162.902,
+      "total": 162.902,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 24,
+      "max": 24,
+      "mean": 24,
+      "median": 24,
+      "total": 24,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 24,
+      "max": 24,
+      "mean": 24,
+      "median": 24,
+      "total": 24,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 14612,
+      "max": 14612,
+      "mean": 14612,
+      "median": 14612,
+      "total": 14612,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 53155,
+      "max": 53155,
+      "mean": 53155,
+      "median": 53155,
+      "total": 53155,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 345628,
+      "max": 345628,
+      "mean": 345628,
+      "median": 345628,
+      "total": 345628,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.6418704000000001,
+      "max": 0.6418704000000001,
+      "mean": 0.6418704000000001,
+      "median": 0.6418704000000001,
+      "total": 0.6418704000000001,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 23,
+      "max": 23,
+      "mean": 23,
+      "median": 23,
+      "total": 23,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 7,
+      "Glob": 1,
+      "Grep": 14,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 157,
+      "max": 157,
+      "mean": 157,
+      "median": 157,
+      "total": 157,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 6,
+      "max": 6,
+      "mean": 6,
+      "median": 6,
+      "total": 6,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 6,
+      "max": 6,
+      "mean": 6,
+      "median": 6,
+      "total": 6,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2911",
+      "fix_commit_hash": "1084c112ee85c7269baadafa0defc319f6c7ffc0",
+      "ground_truth_bics": [
+        "e33ec10aa400f32c2e0278c15ea80a0f624e5919"
+      ],
+      "predicted_bics": [
+        "25c113f62a40bff6ff91cf82f699fd1d35b102fb"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2911",
+      "fix_commit": "1084c112ee85c7269baadafa0defc319f6c7ffc0",
+      "ground_truth_bics": [
+        "e33ec10aa400f32c2e0278c15ea80a0f624e5919"
+      ],
+      "total_candidates": 157,
+      "gt_in_candidates": true,
+      "selected_commit": "25c113f62a40bff6ff91cf82f699fd1d35b102fb",
+      "selected_index": 111,
+      "confidence": "MEDIUM",
+      "explanation": "The fix commit addresses two related but distinct bugs in OrderedScheduler (bookkeeper-common/.../OrderedScheduler.java, formerly bookkeeper-server/.../util/OrderedSafeExecutor.java before it was moved/renamed in candidate_137): 1. PRIMARY BUG - \"failed to track execution time with some calls\": The submitOrdered(long orderingKey, SafeRunnable r) and submitOrdered(int orderingKey, SafeRunnable r) overloads called chooseThread(orderingKey).execute(r) directly instead of wrapping the",
+      "is_correct": false,
+      "num_files_touched_by_fix": 6,
+      "num_source_files_touched_by_fix": 6,
+      "files_analyzed": [
+        "bookkeeper-common/src/main/java/org/apache/bookkeeper/common/util/OrderedScheduler.java",
+        "bookkeeper-server/src/main/java/org/apache/bookkeeper/conf/ServerConfiguration.java",
+        "bookkeeper-server/src/main/java/org/apache/bookkeeper/proto/BookieRequestProcessor.java",
+        "bookkeeper-server/src/test/java/org/apache/bookkeeper/test/BookKeeperClusterTestCase.java",
+        "bookkeeper-server/src/test/java/org/apache/bookkeeper/test/OpStatTest.java",
+        "bookkeeper-server/src/test/java/org/apache/bookkeeper/test/TestStatsProvider.java"
+      ],
+      "call_stats": {
+        "duration_s": 163.039,
+        "duration_api_s": 162.902,
+        "num_turns": 24,
+        "input_tokens": 24,
+        "output_tokens": 14612,
+        "cache_creation_input_tokens": 53155,
+        "cache_read_input_tokens": 345628,
+        "total_cost_usd": 0.6418704000000001,
+        "total_tool_calls": 23,
+        "tool_calls_by_name": {
+          "Read": 7,
+          "Glob": 1,
+          "Grep": 14,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 20,
+            "cache_creation_input_tokens": 1284,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 11928,
+            "cache_read_input_tokens": 9566,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "taskPendingStats.registerSuccessfulEvent|initNanos, TimeUnit.NANOSECONDS|submitOrdered\\(long|submitOrdered\\(int",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 2240,
+            "cache_read_input_tokens": 21494,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "taskPendingStats.registerSuccessfulEvent|initNanos, TimeUnit.NANOSECONDS|submitOrdered\\(long|submitOrdered\\(int|safeRun\\(\\)",
+                  "path": "candidates/candidate_92.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "taskPendingStats.registerSuccessfulEvent|initNanos, TimeUnit.NANOSECONDS|submitOrdered\\(long|submitOrdered\\(int|safeRun\\(\\)",
+                  "path": "candidates/candidate_112.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "taskPendingStats.registerSuccessfulEvent|initNanos, TimeUnit.NANOSECONDS|submitOrdered\\(long|submitOrdered\\(int|safeRun\\(\\)",
+                  "path": "candidates/candidate_113.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "taskPendingStats.registerSuccessfulEvent|initNanos, TimeUnit.NANOSECONDS|submitOrdered\\(long|submitOrdered\\(int|safeRun\\(\\)",
+                  "path": "candidates/candidate_116.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "taskPendingStats.registerSuccessfulEvent|initNanos, TimeUnit.NANOSECONDS|submitOrdered\\(long|submitOrdered\\(int|safeRun\\(\\)",
+                  "path": "candidates/candidate_137.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "taskPendingStats.registerSuccessfulEvent|initNanos, TimeUnit.NANOSECONDS|submitOrdered\\(long|submitOrdered\\(int|safeRun\\(\\)",
+                  "path": "candidates/candidate_157.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 6357,
+            "cache_read_input_tokens": 23734,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "^diff --git",
+                  "path": "candidates/candidate_92.diff",
+                  "output_mode": "content"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "^diff --git",
+                  "path": "candidates/candidate_112.diff",
+                  "output_mode": "content"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "^diff --git",
+                  "path": "candidates/candidate_113.diff",
+                  "output_mode": "content"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "^diff --git",
+                  "path": "candidates/candidate_116.diff",
+                  "output_mode": "content"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "^diff --git",
+                  "path": "candidates/candidate_137.diff",
+                  "output_mode": "content"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "^diff --git",
+                  "path": "candidates/candidate_157.diff",
+                  "output_mode": "content"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 5894,
+            "cache_read_input_tokens": 30091,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "candidates/candidate_137.diff",
+                  "offset": 970,
+                  "limit": 120
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2908,
+            "cache_read_input_tokens": 35985,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "registerSuccessfulEvent\\(initNanos|submitOrdered\\(long|submitOrdered\\(int",
+                  "path": "candidates/candidate_137.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 597,
+            "cache_read_input_tokens": 38893,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "candidates/candidate_92.diff",
+                  "offset": 369,
+                  "limit": 120
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2680,
+            "cache_read_input_tokens": 39490,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "candidates/candidate_92.diff",
+                  "offset": 488,
+                  "limit": 180
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 3284,
+            "cache_read_input_tokens": 42170,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "candidates/candidate_112.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1617,
+            "cache_read_input_tokens": 45454,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "result.txt",
+                  "content": "SELECTED: candidate_112\n\nCONFIDENCE: MEDIUM\n\nEXPLANATION:\nThe fix commit addresses two related but distinct bugs in OrderedScheduler\n(bookkeeper-common/.../OrderedScheduler.java, formerly\nbookkeeper-server/.../util/OrderedSafeExecutor.java before it was moved/renamed\nin candidate_137):\n\n1. PRIMARY BUG - \"failed to track execution time with some calls\": The\n   submitOrdered(long orderingKey, SafeRunnable r) and\n   submitOrdered(int orderingKey, SafeRunnable r) overloads called\n   chooseThread(orderingKey).execute(r) directly instead of wrapping the\n   runnable with the existing timedRunnable(r) helper (as the\n   submitOrdered(Object orderingKey, ...) overload already correctly did).\n   Because of this, tasks submitted through the long/int-keyed overloads never\n   had their task_queued / task_execution stats recorded at all \u2014 exactly\n   matching the phrase \"failed to track execution time with SOME calls\" in the\n   fix commit message.\n\n   This was introduced in candidate_112, which added the new\n   submitOrdered(long orderingKey, SafeRunnable r) and\n   submitOrdered(int orderingKey, SafeRunnable r) methods for the first time,\n   using chooseThread(orderingKey).submit(r) \u2014 without the timedRunnable()\n   wrapper that the pre-existing Object-keyed overload used. (candidate_113\n   later changed .submit(r) to .execute(r) for these same methods, but the\n   missing timedRunnable() wrapper \u2014 the actual bug \u2014 was already present\n   from candidate_112 onward, and persisted through the OrderedSafeExecutor\n   -> OrderedScheduler rename in candidate_137, all the way to the fix.)\n\n2. SECONDARY BUG - \"task_queued duration\": In the TimedRunnable.safeRun()\n   method, taskPendingStats.registerSuccessfulEvent(initNanos,\n   TimeUnit.NANOSECONDS) passed the raw initNanos timestamp instead of the\n   elapsed duration (MathUtils.elapsedNanos(initNanos)), producing a\n   nonsensical huge \"duration\" value. This bug was introduced earlier, in\n   candidate_92, which originally created the TimedRunnable class and the\n   timedRunnable()/taskPendingStats mechanism.\n\nSince the fix commit's headline bug (\"failed to track execution time with\nsome calls\") is fixed by wiring timedRunnable() into the long/int overloads,\nand this omission was first introduced in candidate_112, I selected\ncandidate_112 as the primary bug-introducing commit. Candidate_92 is a\nplausible alternate answer for the secondary (task_queued duration) bug, but\ncandidate_112 more directly matches the primary described symptom.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 12,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 9482,
+            "cache_read_input_tokens": 47071,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

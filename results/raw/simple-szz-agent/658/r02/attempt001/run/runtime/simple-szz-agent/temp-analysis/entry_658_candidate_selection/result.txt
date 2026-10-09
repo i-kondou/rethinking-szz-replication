@@ -1,0 +1,31 @@
+SELECTED: candidate_34
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) modifies GHOrganization.getMembers()'s
+anonymous PagedIterator's wrapUp(GHUser[] page) callback, which previously
+had an EMPTY body, to instead call GHUser.wrap(users, root). This wrap()
+call is what populates each returned GHUser with a reference to `root`,
+which lets shallow user objects lazily fill in remaining fields (avoiding
+NullPointerException when e.g. user.getCreatedAt() is called).
+
+Tracing the history of this method across candidates:
+- candidate_34 rewrites getMembers() from an AbstractList-based
+  implementation (which fetched a fully populated user via
+  root.getUser(...) for each entry) into a new PagedIterable/PagedIterator
+  implementation. In this rewrite, the overridden
+  `protected void wrapUp(GHUser[] page) { }` method body is left EMPTY -
+  this is exactly the missing-wrap bug that the fix later addresses. Before
+  this commit, users were being populated via root.getUser() per item, so
+  the bug did not exist.
+- candidate_35, candidate_36, and candidate_37 (the actual fix) all
+  preserve/refactor this method (adding filter support, renaming to
+  getMembers(suffix, filter), etc.) but the wrapUp body remains empty
+  throughout candidates 34-36, carrying the bug forward unchanged.
+- candidate_37 is the fix commit itself, changing the empty wrapUp(GHUser[]
+  page) into wrapUp(GHUser[] users) { GHUser.wrap(users, root); }.
+
+Since candidate_34 is the first commit to introduce the PagedIterator-based
+getMembers() with the empty wrapUp() (i.e., the point where "wrapping" of
+returned users was dropped), it is the bug-introducing commit.

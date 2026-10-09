@@ -1,0 +1,18 @@
+SELECTED: candidate_52
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes two `return ret;` statements in `Input.java`'s time-parsing logic (used to parse the 'hh:mm:ss' and 'hh:mm:ss.ssssss' time formats) to `return ret * 1e-6;`. This shows that `ret` was accumulated in microseconds (using `usPerHr`, `usPerMin`, `usPerSec` multipliers) but was being returned directly instead of being converted back to seconds, causing values to be off by a factor of 1,000,000.
+
+candidate_52 is the commit that introduces this exact bug for the first time. It adds the new `isextendtime` regex pattern (`\d{1,}:\d{2}:\d{2}`) to match the 'hh:mm:ss' format and adds the corresponding parsing branch inside `parseRFC8601DateTime`:
+
+    long ret = 0;
+    ret += hh * usPerHr;
+    ret += mm * usPerMin;
+    ret += ss * usPerSec;
+    return ret;
+
+This is precisely the code block targeted by the first hunk of the fix (context lines `ret += hh * usPerHr; ret += mm * usPerMin; ret += ss * usPerSec;` immediately followed by `return ret;`, right before the `isextendfull` check). The commit accumulates the total in microseconds but returns it unconverted, which is the root cause of the bug described in the fix commit message.
+
+A later commit, candidate_62, adds support for the extended 'hh:mm:ss.ssssss' format (`isextendfull`) by copying this same faulty pattern (accumulating in microseconds and returning `ret` directly, addressed by the fix's second hunk), which is why the fix needed to correct both spots. However, since candidate_52 is the commit that FIRST introduced the underlying bug (the missing conversion from microseconds to seconds when returning from this time-parsing function), it is the true bug-introducing commit; candidate_62 merely propagated the same flaw to a new code path.

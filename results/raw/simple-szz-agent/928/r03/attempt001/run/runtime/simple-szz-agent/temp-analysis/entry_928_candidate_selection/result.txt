@@ -1,0 +1,14 @@
+SELECTED: candidate_09
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes TransitionHandler.java so that mouse-transparency is set on `view` (the whole container) instead of on `previousNode` (the individual outgoing view), and removes the now-unused `MOUSE_TRANSPARENT` properties-map bookkeeping (`previousNode.getProperties().put(MOUSE_TRANSPARENT, ...)` / `.get(MOUSE_TRANSPARENT)`) and the `MOUSE_TRANSPARENT` constant itself. This tells us the bug is: mouse-transparency was toggled per-node (`previousNode`) rather than for the whole view, so mouse events could still leak through to the container/underlying UI during transitions.
+
+Searching the candidates for the `MOUSE_TRANSPARENT` pattern shows it only appears starting in candidate_09, which adds:
+- `previousNode.getProperties().put(MOUSE_TRANSPARENT, previousNode.isMouseTransparent());`
+- `previousNode.setMouseTransparent(true);`
+- the `KeyFrame` callback restoring transparency via `previousNode.setMouseTransparent((Boolean) previousNode.getProperties().get(MOUSE_TRANSPARENT));`
+- the `private static final String MOUSE_TRANSPARENT = ...` constant
+
+This is exactly the code structure that the fix commit later reverts/replaces with `view.setMouseTransparent(...)`. Candidate_10 also contains this same logic, but it only moves the existing block inside a `Platform.runLater(...)` wrapper (and touches AnimationProducer/ContainerAnimations for an unrelated `init()` feature) — it does not introduce the per-node mouse-transparency logic, it merely carries it forward unchanged from candidate_09. Therefore candidate_09 is the first commit that introduced the buggy per-node mouse-transparency handling that the fix commit corrects.

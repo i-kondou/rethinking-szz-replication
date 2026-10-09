@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "timestamp": "20260906_095234",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/313/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 0.0
+  },
+  "results": [
+    {
+      "id": "313",
+      "fix_commit_hash": "6a2dd27d7b12117f21ad7b9fd3f42327958ba1bc",
+      "bug_commit_hash": [
+        "49d5841f04025e5a481117e4100e946e0666b331"
+      ],
+      "szz_candidates": [
+        "49d5841f04025e5a481117e4100e946e0666b331",
+        "52d8630f0ff645485ec9dd15cbfad88f29440f9b",
+        "7f5420e2ea8af7cea28a4f719e70551444b96c36",
+        "a856feb20dcb376258fdda27008a9f01d8e249fc"
+      ],
+      "szz_num_candidates": 4,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "49d5841f04025e5a481117e4100e946e0666b331"
+      ],
+      "llm_selected_commit": "52d8630f0ff645485ec9dd15cbfad88f29440f9b",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit's core change is in the loop inside init() that disables expired alarms: for (Alarm alarm : set) { boolean isExpired = alarm.getNextTimeInMillis() < now; if (isExpired && !alarm.isEnabled()) { - enable(alarm.getId(), false); + alarm.setEnabled(false); + writeToDb(alarm.getId()); }",
+      "llm_correct": false,
+      "llm_error": null,
+      "repo_name": "subjects/313",
+      "bug_fixing_commit": "6a2dd27d7b12117f21ad7b9fd3f42327958ba1bc",
+      "bug_inducing_commit": [
+        "49d5841f04025e5a481117e4100e946e0666b331"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "yuriykulikov/AlarmClock"
+    }
+  ]
+}

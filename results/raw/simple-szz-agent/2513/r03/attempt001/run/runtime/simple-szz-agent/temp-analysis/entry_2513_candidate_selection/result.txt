@@ -1,0 +1,14 @@
+SELECTED: candidate_08
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix (fix_commit_diff.txt) modifies spoon.reflect.visitor.MinimalImportScanner to correct a name-collision detection bug that caused an unwanted `import static` to be generated for a private static field (STREAM_BUFFER_LENGTH in DigestUtil) that is only used within its own declaring class. The fix:
+1. Changes `Set<String> qualifiedNameTokens` to a `LinkedList<String>` and, instead of testing every collected token (class name + every package-name segment) against `fieldAndMethodsNames`/`localVariablesOfBlock`, tests only the last token.
+2. Adds a check on the enclosing package traversal to stop at `CtPackage.TOP_LEVEL_PACKAGE_NAME`.
+
+Both of these changes target code whose exact shape (variable names `fieldAndMethodsNames`, `localVariablesOfBlock`, the `Set<String> qualifiedNameTokens` collection, the `lookForLocalVariables`/`AccessibleVariablesFinder` machinery, and the loop `for (String token : qualifiedNameTokens) { if (fieldAndMethodsNames.contains(token) || localVariablesOfBlock.contains(token)) ... }`) was introduced in candidate_08. That commit added AccessibleVariablesFinder.java and rewrote MinimalImportScanner's `shouldTypeBeImported` to replace the earlier `namedElements` approach (from candidate_04/06/07) with the field/method-name and local-variable tracking that the bug lives in.
+
+The root cause: because the check iterated over ALL qualifiedNameTokens (including unrelated package-name segments, e.g. the package segment "digest" in `spoon.test.variable.testclasses.digest`), any coincidental match against an unrelated field or method name elsewhere in the same class (e.g. a static method also named `digest`) would incorrectly trigger "name conflict" detection and force a static import, even for private members that should never be statically imported from within their own class. This exact matching logic, with these exact variable/collection names, first appears in candidate_08 — none of the earlier candidates (04, 06, 07) have this construct, and candidate_09 is identical to the fix commit itself (not a bug-introducing candidate).
+
+Since the file names of candidates are chronological and candidate_09's diff is byte-for-byte identical to fix_commit_diff.txt, it is effectively the fix commit duplicated into the candidate list, not a true candidate. The real introducing commit for the faulty logic is candidate_08, the commit immediately preceding it that created the buggy matching code the fix later corrects.

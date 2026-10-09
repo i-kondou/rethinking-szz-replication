@@ -1,0 +1,22 @@
+{
+  "fix_commit": "04a68cf8a934f27cd6c59fee3267ff17751bd9db",
+  "bic": "4516bc398890e38238d02b4a1f5fe1440f107ea9",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit introduced the `savedFilteringAndGrouping` mechanism along with the code path that unconditionally sets `savedFilteringAndGrouping = null` after triggering global optimization (`if (doGlobalOpt) { ... globalOptPopup.doClick(); } savedFilteringAndGrouping = null;`), regardless of whether global optimization actually consumed it. This unconditional discard is exactly what the fix commit corrects by moving the discard into an `else` branch. The later commit acef72c39cbf made global optimization asynchronous, which exposed/exacerbated the race, but the core buggy logic of discarding the saved filtering/grouping without regard to the async global-opt flow was introduced in 4516bc398890.",
+  "metrics": {
+    "case_elapsed_seconds": 14.73713,
+    "api_elapsed_seconds": 14.525392,
+    "tool_elapsed_seconds": 0.104089,
+    "other_elapsed_seconds": 0.107653,
+    "api_call_count": 3,
+    "tool_call_count": 4,
+    "prompt_tokens": 22472,
+    "completion_tokens": 1196,
+    "total_tokens": 23668,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:22:11.485777"
+}

@@ -1,0 +1,44 @@
+SELECTED: candidate_05
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit modifies CallerFinder.getStackForCallerOf() to add back a "skip" parameter and
+changes the scan loop from `for (int index = 0; index < depth; index++)` to
+`for (int index = skip; index < depth; index++)`, along with a new comment in LogContext.java
+explaining that skipping is "essential for correctness" because postProcess() can be overridden,
+producing a stack like:
+
+  UserCode::someMethod
+  LogContext::log
+  LogContext::shouldLog
+  OtherChildContext::postProcess
+  ChildContext::postProcess   << not the real caller
+  LogContext::postProcess     << current frame
+
+Without skipping past the LogContext/subclass frames, the class-name-matching logic in
+getStackForCallerOf can find and stop at the wrong "caller" frame (an overridden postProcess()
+in an intermediate subclass), producing a corrupted/incorrect synthetic stack trace.
+
+candidate_05 is the commit that removed this exact skip mechanism. Originally (as seen in
+candidate_01, the initial commit), getStackForCallerOf(Class target, Throwable throwable, int skip,
+int maxDepth) took an explicit skip count and looped with `for (int index = skip; index < depth; index++)`,
+with LogContext.java calling it as `getStackForCallerOf(LogContext.class, new Throwable(), 2, stackSize.getMaxDepth())`
+(skipping 2 known frames: postProcess() and shouldLog()).
+
+candidate_05's diff shows:
+- LogContext.java: removes the `2` skip argument entirely, calling
+  `getStackForCallerOf(LogContext.class, new Throwable(), stackSize.getMaxDepth())`
+- CallerFinder.java: removes the `skip` parameter and its validation, and replaces
+  `for (int index = skip; index < depth; index++)` with `for (int index = 0; index < depth; index++)`,
+  adding a comment claiming this change was needed because a fixed skip count was "problematic in
+  the face of things like Proguard, which can fold method/classes and change the number of
+  intermediate stack frames."
+
+This regression removed the ability to skip known intermediate frames, relying solely on
+class-name matching to find the caller. That approach fails when postProcess() is overridden in a
+subclass hierarchy (multiple frames match/are adjacent to LogContext-related classes), which is
+exactly the "synthetic stack bug" the fix commit addresses by reintroducing a skip count (this
+time hardcoded to 1 rather than 2, as a narrower/safer fix). No other candidate touches
+getStackForCallerOf, CallerFinder's loop logic, or the skip parameter, confirming candidate_05 as
+the sole introduction point of this bug.

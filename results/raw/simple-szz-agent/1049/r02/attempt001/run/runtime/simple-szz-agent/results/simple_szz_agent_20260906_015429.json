@@ -1,0 +1,327 @@
+{
+  "metadata": {
+    "timestamp": "20260906_015429",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1049/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 38.66,
+      "max": 38.66,
+      "mean": 38.66,
+      "median": 38.66,
+      "total": 38.66,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 38.548,
+      "max": 38.548,
+      "mean": 38.548,
+      "median": 38.548,
+      "total": 38.548,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 3095,
+      "max": 3095,
+      "mean": 3095,
+      "median": 3095,
+      "total": 3095,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 21419,
+      "max": 21419,
+      "mean": 21419,
+      "median": 21419,
+      "total": 21419,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 114232,
+      "max": 114232,
+      "mean": 114232,
+      "median": 114232,
+      "total": 114232,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.2092626,
+      "max": 0.2092626,
+      "mean": 0.2092626,
+      "median": 0.2092626,
+      "total": 0.2092626,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 4,
+      "Glob": 1,
+      "Grep": 3,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "1049",
+      "fix_commit_hash": "7c5e119134c20141b7af1322d08cca0d047d1e34",
+      "ground_truth_bics": [
+        "86013dc9f8cf02813418f41c3c49c745f9ee6ea5"
+      ],
+      "predicted_bics": [
+        "86013dc9f8cf02813418f41c3c49c745f9ee6ea5"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "1049",
+      "fix_commit": "7c5e119134c20141b7af1322d08cca0d047d1e34",
+      "ground_truth_bics": [
+        "86013dc9f8cf02813418f41c3c49c745f9ee6ea5"
+      ],
+      "total_candidates": 9,
+      "gt_in_candidates": true,
+      "selected_commit": "86013dc9f8cf02813418f41c3c49c745f9ee6ea5",
+      "selected_index": 7,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes ImplicitLinkedHashCollectionIterator.remove() so that instead of calling removeFromList(head, elements, nextElement.prev()) followed by size--, it calls ImplicitLinkedHashCollection.this.removeElementAtSlot(nextElement.prev()). The commit message explains that removeFromList alone does not preserve the hash table's denseness invariant; removeElementAtSlot is required because it performs the additional slot-compaction work (moving other elements) needed after a removal. can",
+      "is_correct": true,
+      "num_files_touched_by_fix": 2,
+      "num_source_files_touched_by_fix": 2,
+      "files_analyzed": [
+        "clients/src/main/java/org/apache/kafka/common/utils/ImplicitLinkedHashCollection.java",
+        "clients/src/test/java/org/apache/kafka/common/utils/ImplicitLinkedHashCollectionTest.java"
+      ],
+      "call_stats": {
+        "duration_s": 38.66,
+        "duration_api_s": 38.548,
+        "num_turns": 10,
+        "input_tokens": 18,
+        "output_tokens": 3095,
+        "cache_creation_input_tokens": 21419,
+        "cache_read_input_tokens": 114232,
+        "total_cost_usd": 0.2092626,
+        "total_tool_calls": 9,
+        "tool_calls_by_name": {
+          "Read": 4,
+          "Glob": 1,
+          "Grep": 3,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1049/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1049_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1049/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1049_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1049/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1049_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1889,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 282,
+            "cache_read_input_tokens": 11573,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "removeFromList|removeElementAtSlot|class.*Iterator|public void remove\\(\\)",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 251,
+            "cache_read_input_tokens": 11855,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "removeFromList|removeElementAtSlot|class.*Iterator|public void remove\\(\\)",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true,
+                  "-C": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1235,
+            "cache_read_input_tokens": 12106,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "public void remove\\(\\)",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true,
+                  "-A": 15
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 6956,
+            "cache_read_input_tokens": 13341,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1049/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1049_candidate_selection/candidates/candidate_08.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 3399,
+            "cache_read_input_tokens": 20297,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1049/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1049_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_08\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes ImplicitLinkedHashCollectionIterator.remove() so that instead of calling\nremoveFromList(head, elements, nextElement.prev()) followed by size--, it calls\nImplicitLinkedHashCollection.this.removeElementAtSlot(nextElement.prev()). The commit message\nexplains that removeFromList alone does not preserve the hash table's denseness invariant;\nremoveElementAtSlot is required because it performs the additional slot-compaction work\n(moving other elements) needed after a removal.\n\ncandidate_08.diff is the commit that introduced this exact buggy pattern. It rewrote the\niterator implementation (replacing the old cursor/lastReturnedSlot-based design with a\ncur/lastReturned-based design) and, as part of that rewrite, implemented remove() as:\n\n    Element nextElement = indexToElement(head, elements, lastReturned.next());\n    removeFromList(head, elements, nextElement.prev());\n    size--;\n    ...\n\nThis is precisely the buggy code shown as being removed in the fix's diff (the \"-\" lines\nmatch candidate_08's added \"+\" lines almost verbatim, differing only in surrounding\ncur/lastReturned bookkeeping which the fix left untouched). No other candidate introduces or\ntouches this removeFromList/size-- pattern in the iterator's remove() method \u2014 candidate_03\nuses removeElementAtSlot correctly with the older lastReturnedSlot design, and candidate_08\nis the commit that replaced that correct call with the buggy removeFromList+size-- call.\nTherefore candidate_08 is the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1121,
+            "cache_read_input_tokens": 23696,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

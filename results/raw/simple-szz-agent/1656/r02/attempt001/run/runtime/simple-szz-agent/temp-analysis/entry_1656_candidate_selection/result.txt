@@ -1,0 +1,35 @@
+SELECTED: candidate_02
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit renames the test file's package declaration from
+`com.github.piotr.rusin.yule` to `com.github.piotr_rusin.yule` (and moves the
+file to the corresponding directory), with the commit message stating this
+fixes a test initialization error where "No application configuration could
+be found."
+
+Tracing the package name across the candidates:
+- candidate_01 creates the initial project. Both the main application class
+  (`YuleApplication`) and the test class (`YuleApplicationTests`) are
+  consistently placed under the package `com.github.piotr.rusin.yule`. At
+  this point everything is consistent, so no bug exists yet.
+- candidate_02 renames/moves the main source files (`YuleApplication.java`,
+  `Post.java`) to the package `com.github.piotr_rusin.yule` (adding an
+  underscore), matching the Maven groupId `com.github.piotr-rusin.yule`. It
+  also adds a license header to the test file, but critically it does NOT
+  rename the test file's package — the test class is left behind in
+  `com.github.piotr.rusin.yule`. This creates a mismatch: the
+  `@SpringBootApplication` class now lives in a different package tree than
+  the `@SpringBootTest` test class. Since Spring Boot's component/context
+  scanning for tests relies on finding the `@SpringBootApplication` class in
+  the same or a parent package, this mismatch causes the "No application
+  configuration could be found" error referenced in the fix commit message.
+- candidate_03 is the fix itself (it is byte-for-byte the diff described in
+  fix_commit_diff.txt): it renames the test file from
+  `com.github.piotr.rusin.yule` to `com.github.piotr_rusin.yule`, restoring
+  package consistency and resolving the initialization error.
+
+Since the bug (package divergence between main and test code) was first
+introduced when the main package was renamed without updating the test
+package — i.e., in candidate_02 — that is the bug-introducing commit.

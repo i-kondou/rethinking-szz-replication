@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "timestamp": "20260906_150341",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/828/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "828",
+      "fix_commit_hash": "7546a2336ef8e493f7074f1e6ff887a8174eb1ed",
+      "bug_commit_hash": [
+        "fab0f61a025f824f76980d54c3aa2cfa435a8c79"
+      ],
+      "szz_candidates": [
+        "fab0f61a025f824f76980d54c3aa2cfa435a8c79",
+        "711d109e3d1a8ed28e0ee7521084470cfc8a9771"
+      ],
+      "szz_num_candidates": 2,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "fab0f61a025f824f76980d54c3aa2cfa435a8c79"
+      ],
+      "llm_selected_commit": "fab0f61a025f824f76980d54c3aa2cfa435a8c79",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit changes several write-side call sites (in MapReduceIndexJobs.java, MapReduceIndexManagement.java, CassandraHadoopScanRunner.java, HBaseHadoopScanRunner.java, and CassandraScanJobIT.java) from `ConfigElement.getPath(TitanHadoopConfiguration.GRAPH_CONFIG_KEYS)` to `ConfigElement.getPath(TitanHadoopConfiguration.GRAPH_CONFIG_KEYS, true)`, i.e. adding the new `includeRoot` argument so that the namespace root is included in the generated config key prefix. Tracing the two candidates:",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/828",
+      "bug_fixing_commit": "7546a2336ef8e493f7074f1e6ff887a8174eb1ed",
+      "bug_inducing_commit": [
+        "fab0f61a025f824f76980d54c3aa2cfa435a8c79"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "thinkaurelius/titan"
+    }
+  ]
+}

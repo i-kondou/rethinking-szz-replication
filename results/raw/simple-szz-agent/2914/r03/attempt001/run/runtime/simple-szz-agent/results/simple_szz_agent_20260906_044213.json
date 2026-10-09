@@ -1,0 +1,476 @@
+{
+  "metadata": {
+    "timestamp": "20260906_044213",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2914/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 87.384,
+      "max": 87.384,
+      "mean": 87.384,
+      "median": 87.384,
+      "total": 87.384,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 87.139,
+      "max": 87.139,
+      "mean": 87.139,
+      "median": 87.139,
+      "total": 87.139,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 21,
+      "max": 21,
+      "mean": 21,
+      "median": 21,
+      "total": 21,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 32,
+      "max": 32,
+      "mean": 32,
+      "median": 32,
+      "total": 32,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 6674,
+      "max": 6674,
+      "mean": 6674,
+      "median": 6674,
+      "total": 6674,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 28924,
+      "max": 28924,
+      "mean": 28924,
+      "median": 28924,
+      "total": 28924,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 303071,
+      "max": 303071,
+      "mean": 303071,
+      "median": 303071,
+      "total": 303071,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.3646713,
+      "max": 0.3646713,
+      "mean": 0.3646713,
+      "median": 0.3646713,
+      "total": 0.3646713,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 7,
+      "Glob": 1,
+      "Grep": 11,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 227,
+      "max": 227,
+      "mean": 227,
+      "median": 227,
+      "total": 227,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2914",
+      "fix_commit_hash": "d9853de000d36dd300e4b29bce34779725438770",
+      "ground_truth_bics": [
+        "c374ff3ebc6d11f67ac2ee1336f92a2fb96c6ff2"
+      ],
+      "predicted_bics": [
+        "71da58f79e350fca73a7541d535f0574936fdcde"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2914",
+      "fix_commit": "d9853de000d36dd300e4b29bce34779725438770",
+      "ground_truth_bics": [
+        "c374ff3ebc6d11f67ac2ee1336f92a2fb96c6ff2"
+      ],
+      "total_candidates": 227,
+      "gt_in_candidates": true,
+      "selected_commit": "71da58f79e350fca73a7541d535f0574936fdcde",
+      "selected_index": 51,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes two `return ret;` statements in `Input.java`'s time-parsing logic (used to parse the 'hh:mm:ss' and 'hh:mm:ss.ssssss' time formats) to `return ret * 1e-6;`. This shows that `ret` was accumulated in microseconds (using `usPerHr`, `usPerMin`, `usPerSec` multipliers) but was being returned directly instead of being converted back to seconds, causing values to be off by a factor of 1,000,000. candidate_52 is the commit that introduces this exact bug for the first time. It adds",
+      "is_correct": false,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/main/java/com/jaamsim/input/Input.java"
+      ],
+      "call_stats": {
+        "duration_s": 87.384,
+        "duration_api_s": 87.139,
+        "num_turns": 21,
+        "input_tokens": 32,
+        "output_tokens": 6674,
+        "cache_creation_input_tokens": 28924,
+        "cache_read_input_tokens": 303071,
+        "total_cost_usd": 0.3646713,
+        "total_tool_calls": 20,
+        "tool_calls_by_name": {
+          "Read": 7,
+          "Glob": 1,
+          "Grep": 11,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2914/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2914_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2914/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2914_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2914/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2914_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 9,
+            "cache_creation_input_tokens": 943,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 1491,
+            "cache_read_input_tokens": 10627,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "usPerHr|usPerMin|usPerSec|isextendfull|parseSemicolonTime|hh \\* usPerHr",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 340,
+            "cache_read_input_tokens": 12118,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2914/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2914_candidate_selection/candidates/candidate_44.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2914/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2914_candidate_selection/candidates/candidate_45.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 6617,
+            "cache_read_input_tokens": 12458,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isextendfull|isshortfull|hh:mm:ss|parseTimeString|hh \\* usPerHr\\+",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 544,
+            "cache_read_input_tokens": 19075,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2914/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2914_candidate_selection/candidates/candidate_01.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2914/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2914_candidate_selection/candidates/candidate_32.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2060,
+            "cache_read_input_tokens": 19619,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isextendfull|isshortfull|hh \\* usPerHr",
+                  "path": "candidates/candidate_133.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isextendfull|isshortfull|hh \\* usPerHr",
+                  "path": "candidates/candidate_223.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 495,
+            "cache_read_input_tokens": 21679,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isextendfull",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isshortfull",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 430,
+            "cache_read_input_tokens": 22174,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isextendfull",
+                  "path": "candidates/candidate_62.diff",
+                  "output_mode": "content",
+                  "-B": 40,
+                  "-A": 20
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2209,
+            "cache_read_input_tokens": 22604,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isextendtime|isextendfull|return ret|getUS",
+                  "path": "candidates/candidate_62.diff",
+                  "output_mode": "content",
+                  "-B": 2,
+                  "-A": 15
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 12,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2191,
+            "cache_read_input_tokens": 24813,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isextendtime",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 13,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1516,
+            "cache_read_input_tokens": 27004,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isextendtime",
+                  "path": "candidates/candidate_52.diff",
+                  "output_mode": "content",
+                  "-B": 10,
+                  "-A": 20
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 14,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1594,
+            "cache_read_input_tokens": 28520,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "parseRFC8601DateTime",
+                  "path": "candidates/candidate_52.diff",
+                  "output_mode": "content",
+                  "-A": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 15,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 788,
+            "cache_read_input_tokens": 30114,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2914/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2914_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_52\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes two `return ret;` statements in `Input.java`'s time-parsing logic (used to parse the 'hh:mm:ss' and 'hh:mm:ss.ssssss' time formats) to `return ret * 1e-6;`. This shows that `ret` was accumulated in microseconds (using `usPerHr`, `usPerMin`, `usPerSec` multipliers) but was being returned directly instead of being converted back to seconds, causing values to be off by a factor of 1,000,000.\n\ncandidate_52 is the commit that introduces this exact bug for the first time. It adds the new `isextendtime` regex pattern (`\\d{1,}:\\d{2}:\\d{2}`) to match the 'hh:mm:ss' format and adds the corresponding parsing branch inside `parseRFC8601DateTime`:\n\n    long ret = 0;\n    ret += hh * usPerHr;\n    ret += mm * usPerMin;\n    ret += ss * usPerSec;\n    return ret;\n\nThis is precisely the code block targeted by the first hunk of the fix (context lines `ret += hh * usPerHr; ret += mm * usPerMin; ret += ss * usPerSec;` immediately followed by `return ret;`, right before the `isextendfull` check). The commit accumulates the total in microseconds but returns it unconverted, which is the root cause of the bug described in the fix commit message.\n\nA later commit, candidate_62, adds support for the extended 'hh:mm:ss.ssssss' format (`isextendfull`) by copying this same faulty pattern (accumulating in microseconds and returning `ret` directly, addressed by the fix's second hunk), which is why the fix needed to correct both spots. However, since candidate_52 is the commit that FIRST introduced the underlying bug (the missing conversion from microseconds to seconds when returning from this time-parsing function), it is the true bug-introducing commit; candidate_62 merely propagated the same flaw to a new code path.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 16,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1420,
+            "cache_read_input_tokens": 30902,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

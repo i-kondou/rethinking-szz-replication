@@ -1,0 +1,18 @@
+SELECTED: candidate_59
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the "eXist Home" log line in src/org/exist/jetty/JettyStart.java from:
+    SystemProperties.getInstance().getSystemProperty("exist.home", "unknown")
+back to:
+    System.getProperty("exist.home", "unknown")
+The commit message states the bug is that "exist.home is not in src/org/exist/system.properties" — i.e. SystemProperties.getInstance().getSystemProperty() reads values from a bundled/generated properties resource file (org/exist/system.properties), which contains build metadata like product-version, product-build, svn-revision/git-commit, but never contains "exist.home" (that value is only ever supplied as an actual JVM system property via -Dexist.home=... on the command line). So looking it up through SystemProperties always yields the fallback "unknown".
+
+candidate_59.diff shows a refactor of JettyStart.java that removed the old manual loading of "org/exist/system.properties" into a local Properties object and replaced it with calls to the new SystemProperties.getInstance().getSystemProperty(...) helper. Critically, this refactor changed the exist.home line as well:
+    - msg = "[eXist Home : " + System.getProperty("exist.home") + "]";
+    + msg = "[eXist Home : " + SystemProperties.getInstance().getSystemProperty("exist.home", "unknown") + "]";
+
+Before this commit, exist.home was correctly read via System.getProperty (matching how it's actually set as a JVM property in the startup scripts, e.g. -Dexist.home=$EXIST_HOME). This commit incorrectly folded it into the same SystemProperties-based lookup used for the other build-metadata fields (version, build, svn-revision), even though exist.home is fundamentally a different kind of property (a runtime JVM system property, not a build-time resource property). This introduced the bug that the fix commit later corrects by reverting exist.home specifically back to System.getProperty while leaving the other fields (which legitimately come from the properties resource) using SystemProperties.
+
+No other candidate introduces or touches this specific exist.home lookup logic in a way that creates this mismatch; candidates 66, 69, and 75 only show the already-buggy code as unchanged context, and candidate_75 is the fix itself being partially visible in a later diff context.

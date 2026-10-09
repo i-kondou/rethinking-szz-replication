@@ -1,0 +1,38 @@
+SELECTED: candidate_46
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes RuleSet.java's getParents() method from
+`SConceptOperations.getAllSuperConcepts(nextConcept, false)` to
+`SConceptOperations.getDirectSuperConcepts(nextConcept, false)`. Using
+getAllSuperConcepts (which returns the full transitive closure of super
+concepts) instead of getDirectSuperConcepts corrupts the concept-hierarchy
+traversal used by the type-system rule dispatcher (SingleTermRules), which
+walks getParents() step-by-step expecting only the immediate parents at each
+level. This caused rule lookup/dispatch to misbehave for certain
+overload-resolution scenarios, producing the reported typesystem error for
+`String a="abc"; a+='d';`.
+
+Tracing the history of this exact line in RuleSet.java through the
+candidates:
+- candidate_44 first refactors getParents() from a String-FQName-based
+  signature to an SAbstractConcept-based one and introduces the buggy call
+  `SConceptOperations.getAllSuperConcepts(nextConcept, false)`.
+- candidate_45 fully reverts this refactor back to the original
+  String-FQName-based implementation, removing the buggy call entirely
+  (blob hash goes back to the pre-44 state).
+- candidate_46 re-applies the exact same SAbstractConcept-based refactor,
+  reintroducing `SConceptOperations.getAllSuperConcepts(nextConcept, false)`
+  (resulting blob hash identical to candidate_44's output).
+- candidate_47 only adds logging/error handling around addRuleSetItem and
+  does not touch the getParents()/getAllSuperConcepts line.
+- The fix commit's diff has a starting blob hash that exactly matches
+  candidate_47's resulting hash, meaning the buggy line present at fix time
+  was the one last written by candidate_46 (candidate_45 having erased
+  candidate_44's original introduction in between).
+
+Because candidate_45 reverted the original introduction from candidate_44,
+the code that was actually present and fixed by the bug-fix commit was
+(re-)introduced by candidate_46, making it the effective bug-introducing
+commit under standard blame-based SZZ reasoning.

@@ -1,0 +1,34 @@
+SELECTED: candidate_08
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes ImplicitLinkedHashCollection's iterator remove() method from:
+    removeFromList(head, elements, nextElement.prev());
+    size--;
+to:
+    ImplicitLinkedHashCollection.this.removeElementAtSlot(nextElement.prev());
+
+The fix commit message explains that removeElementAtSlot must be used instead of removeFromList,
+because the underlying hash table relies on a "denseness invariant": removing an element may
+require moving other elements to fill the gap left in the open-addressed slot array. removeFromList
+only unlinks the element from the doubly-linked traversal order and decrements size, but it does not
+perform this slot-compaction/rehashing step, silently corrupting the hash table's invariant when
+elements are removed via the iterator.
+
+Tracing the history of this exact code path across the candidates:
+
+- candidate_03 introduces the ListIterator rewrite of ImplicitLinkedHashCollectionIterator (with a
+  cursor/lastReturnedSlot model). Its remove() implementation correctly calls
+  `ImplicitLinkedHashCollection.this.removeElementAtSlot(lastReturnedSlot);` — no bug here.
+- candidates_04 through _07 do not touch this iterator's remove() logic at all.
+- candidate_08 refactors the iterator to a new index/lastReturned model and, in doing so, REPLACES
+  the correct `removeElementAtSlot(lastReturnedSlot)` call with the buggy pattern
+  `removeFromList(head, elements, nextElement.prev()); size--;` — this is exactly the buggy code
+  later corrected by the fix commit. This is where the bug was introduced.
+- candidate_09 is actually the fix commit itself (its diff is identical to fix_commit_diff.txt),
+  reverting candidate_08's buggy removeFromList/size-- back to removeElementAtSlot.
+
+Therefore candidate_08 is the commit that introduced the bug by swapping a correct
+removeElementAtSlot() call for the incomplete removeFromList()+size-- combination in the iterator's
+remove() method.

@@ -1,0 +1,38 @@
+SELECTED: candidate_66
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit ("fixed findbug") addresses three separate static-analysis
+warnings across two files. The most concrete and directly traceable one is in
+GitLabLogoutAction.java's getGitLabText() method, where the fix:
+  - renames the local variable `Jenkins j` to `Jenkins jenkins`
+  - removes the unused local variable `GitLabSecurityRealm glsr =
+    (GitLabSecurityRealm) r;` (a classic dead-store/unused-variable FindBugs
+    warning, since `glsr` was assigned but never referenced in that branch)
+
+candidate_66 is the commit that created GitLabLogoutAction.java from scratch
+(`new file mode 100644`), and it introduces getGitLabText() with exactly this
+code:
+
+    Jenkins j = Jenkins.getInstance();
+    assert j != null;
+    SecurityRealm r = j.getSecurityRealm();
+    if (r instanceof GitLabSecurityRealm) {
+        GitLabSecurityRealm glsr = (GitLabSecurityRealm) r;
+        return "GitLab";
+    }
+
+This is an exact match to the pre-fix code shown in fix_commit_diff.txt,
+including the identical variable names `j` and `glsr`. A search across all 67
+candidates shows GitLabLogoutAction.java is only touched by candidate_66
+(creation) and candidate_67 (the fix itself), so candidate_66 is unambiguously
+the sole origin of this bug pattern with no intervening modifications.
+
+(Note: the fix also touches an unrelated if/else-to-switch refactor in
+GitLabSecurityRealm.setValue(), whose if/else chain was first introduced much
+earlier in candidate_16, and a redundant JsonProcessingException catch block
+first introduced in candidate_55. These are independent, older bug
+introductions for the other two hunks in this multi-part FindBugs cleanup
+commit, but candidate_66 provides the cleanest, highest-confidence 1:1 match
+to a specific hunk in the fix.)

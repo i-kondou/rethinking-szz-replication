@@ -1,0 +1,25 @@
+SELECTED: candidate_25
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) adds a single line to `XMLFileReader.read(String updateSite, InputStream in, long timestamp)`:
+
+    this.updateSite = updateSite;
+    filesFromThisSite.clear();
+    newTimestamp = timestamp;
+
+This means the bug is that the field `filesFromThisSite` (a Set<FileObject> tracking which FileObjects were added while parsing the *current* update site's db.xml.gz) was never cleared at the start of a new `read()` call, so entries from a previously-read update site remained in the set when a subsequent, different update site was read.
+
+Tracing the history of `XMLFileReader.java` across the 27 candidates:
+- candidate_01 through candidate_17: `XMLFileReader` has no `filesFromThisSite` field at all. Shadowing detection (when it exists) is done by directly comparing `this.updateSite` against `file.updateSite` on the already-stored FileObject, or later (candidate_18 onward) via a rank-based `overriddenUpdateSites`/`getRank()` mechanism. None of these use or declare `filesFromThisSite`.
+- candidate_18 through candidate_24: progressively build out the update-site "rank" and shadowing/override bookkeeping (`overriddenUpdateSites`, `getRank`, obsolete-file merging, previous-version filename tracking), but still without any `filesFromThisSite` field.
+- candidate_25 is the commit that FIRST introduces the field:
+
+      protected Set<FileObject> filesFromThisSite = new HashSet<FileObject>();
+
+  and changes the merge logic to test `filesFromThisSite.contains(file)` (replacing the previous direct `updateSite.equals(file.updateSite)` comparison) in order to decide whether an existing FileObject was already contributed by the site currently being parsed. Every code path that adds a FileObject to the collection during parsing (`files.add(current); filesFromThisSite.add(current);` etc.) correctly adds to this set — but the commit never resets/clears the set at the start of `read()`. Since `XMLFileReader` instances (or the `filesFromThisSite` field itself) persist across multiple `read()` invocations for different update sites, `filesFromThisSite` keeps accumulating FileObjects from every site ever read, so `filesFromThisSite.contains(file)` incorrectly returns true even for files that actually came from a *different, earlier-read* update site. This directly breaks shadowing: a file that should be recognized as coming from a different (lower/higher-ranked) update site is instead treated as "from this site," so the rank-comparison/override branch that produces the shadowing warning and override behavior is never reached.
+- candidate_26 only changes how the shadow warning is emitted (`warnings.append(...)` to `files.log.warn(...)`) — cosmetic, not related to the bug.
+- candidate_27 is the fix itself: it adds `filesFromThisSite.clear();` at the top of `read()`, exactly matching fix_commit_diff.txt, confirming that candidate_25's introduction of the never-cleared `filesFromThisSite` field is the root cause.
+
+Therefore candidate_25 is the bug-introducing commit: it introduced the `filesFromThisSite` tracking field and its use in shadow/merge detection without ever clearing it between reads of different update sites, which is precisely the "brown paper bag" bug described in the fix commit message ("would prevent any shadowing (update sites overriding other update sites' files)").

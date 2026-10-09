@@ -1,0 +1,14 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The bug fixed in this commit was that the "eXist Home" value logged at startup was being read via `SystemProperties.getInstance().getSystemProperty("exist.home", "unknown")`, which pulls values from a static `org/exist/system.properties` resource file bundled at build time. That file never contains an `exist.home` entry (it only holds things like product-version, product-build, git-commit), so the logged value was always "unknown". The fix changes this line to `System.getProperty("exist.home", "unknown")`, which reads the actual JVM system property that is set at runtime (e.g., in JettyStart.run() via ConfigurationHelper.getExistHome()), producing the correct value.
+
+Examining files/old/src/org/exist/jetty/JettyStart.java shows a much earlier version of the file (2009 copyright header, pre-SystemProperties-class usage, no `SystemProperties` import at all). The relevant line reads:
+
+    msg = "[eXist Home : " + System.getProperty("exist.home") + "]";
+
+This directly calls `System.getProperty("exist.home")`, which is exactly the same (correct) approach used in the fixed version, not the buggy `SystemProperties.getInstance().getSystemProperty("exist.home", ...)` pattern. The buggy pattern was evidently introduced later (when the code was refactored to use the `SystemProperties` singleton for version/build/git-commit info, and `exist.home` was mistakenly folded into that same pattern), and did not exist yet in this older revision.
+
+Since the old version never contains the buggy `SystemProperties.getInstance().getSystemProperty("exist.home", ...)` call, and instead directly reads the correct JVM system property, the bug is not present in files/old/.

@@ -1,0 +1,102 @@
+diff --git a/src/net/nightwhistler/pageturner/epub/PageTurnerSpine.java b/src/net/nightwhistler/pageturner/epub/PageTurnerSpine.java
+index a0be94e..2018262 100644
+--- a/src/net/nightwhistler/pageturner/epub/PageTurnerSpine.java
++++ b/src/net/nightwhistler/pageturner/epub/PageTurnerSpine.java
+@@ -97,25 +97,8 @@ public class PageTurnerSpine {
+ 		return total;
+ 	}
+ 	
+-	public int getPageNumberFor( int index, int position ) {
+-		
+-		int pageNum = 0;
+-		
+-		if ( index >= pageOffsets.size() ) {
+-			return -1;
+-		}
+-		
+-		for ( int i=0; i < index; i++ ) {
+-			pageNum += pageOffsets.get(i).size();			
+-		}
+-		
+-		List<Integer> offsets = pageOffsets.get(index);
+-		
+-		for ( int i=0; i < offsets.size() && offsets.get(i) < position; i++ ) {
+-			pageNum++;
+-		}
+-		
+-		return pageNum;
++	public List<List<Integer>> getPageOffsets() {
++		return pageOffsets;
+ 	}
+ 	
+ 	
+diff --git a/src/net/nightwhistler/pageturner/view/bookview/BookView.java b/src/net/nightwhistler/pageturner/view/bookview/BookView.java
+index 3b5903c..b11806e 100644
+--- a/src/net/nightwhistler/pageturner/view/bookview/BookView.java
++++ b/src/net/nightwhistler/pageturner/view/bookview/BookView.java
+@@ -1118,7 +1118,7 @@ public class BookView extends ScrollView {
+ 
+ 			if (progress != -1) {
+ 
+-				int pageNumber = spine.getPageNumberFor(getIndex(),
++				int pageNumber = getPageNumberFor(getIndex(),
+ 						getPosition());
+ 
+ 				for (BookViewListener listener : this.listeners) {
+@@ -1128,6 +1128,36 @@ public class BookView extends ScrollView {
+ 			}
+ 		}
+ 	}
++	
++	public int getPageNumberFor( int index, int position ) {
++		
++		int pageNum = 0;
++		
++		List<List<Integer>> pageOffsets = spine.getPageOffsets();
++		
++		if ( index >= pageOffsets.size() ) {
++			return -1;
++		}
++		
++		for ( int i=0; i < index; i++ ) {
++			pageNum += pageOffsets.get(i).size();			
++		}
++		
++		List<Integer> offsets;
++		
++		if ( this.strategy.isScrolling() ) {		
++			offsets = pageOffsets.get(index);
++		
++			for ( int i=0; i < offsets.size() && offsets.get(i) < position; i++ ) {
++				pageNum++;
++			}
++		
++		} else {
++			pageNum+= ((FixedPagesStrategy) strategy).getCurrentPage();
++		}		
++		
++		return pageNum;
++	}
+ 
+ 	public void setEnableScrolling(boolean enableScrolling) {
+ 
+diff --git a/src/net/nightwhistler/pageturner/view/bookview/FixedPagesStrategy.java b/src/net/nightwhistler/pageturner/view/bookview/FixedPagesStrategy.java
+index 7442578..ae304c5 100644
+--- a/src/net/nightwhistler/pageturner/view/bookview/FixedPagesStrategy.java
++++ b/src/net/nightwhistler/pageturner/view/bookview/FixedPagesStrategy.java
+@@ -47,6 +47,15 @@ public class FixedPagesStrategy implements PageChangeStrategy {
+ 		this.pageOffsets = new ArrayList<Integer>();
+ 	}
+ 	
++	/**
++	 * Returns the current page INSIDE THE SECTION.
++	 * 
++	 * @return
++	 */
++	public int getCurrentPage() {
++		return this.pageNum;
++	}
++	
+ 	public static List<Integer> getPageOffsets( BookView bookView, CharSequence text, boolean includePageNumbers ) {
+ 		
+ 		if ( text == null ) {

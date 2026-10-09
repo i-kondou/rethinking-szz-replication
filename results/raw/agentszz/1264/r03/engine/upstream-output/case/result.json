@@ -1,0 +1,22 @@
+{
+  "fix_commit": "f8ac9708ff8656cdc2518896271ea0b978c34d67",
+  "bic": "199ca4e59019df4572190f32b03ca709274ced7c",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"migrating to SConcept in typesystem rules (isApplicable): runtime\") replaced the RuleSet.getParents() implementation, which previously returned only direct parent concept names via ConceptRegistry's getParentsNames(), with a call to SConceptOperations.getAllSuperConcepts(nextConcept, false) \u2014 returning the entire transitive supertype hierarchy instead of just direct parents. Since getParents() is meant to walk the hierarchy one level at a time (as used by the SingleTermRules BFS/traversal logic), using getAllSuperConcepts instead of getDirectSuperConcepts caused incorrect/duplicate rule lookups, leading to the typesystem error described in the bug (e.g., a+='d' failing). The fix simply swaps getAllSuperConcepts for getDirectSuperConcepts, directly reverting the semantic error introduced by this commit.",
+  "metrics": {
+    "case_elapsed_seconds": 27.257446,
+    "api_elapsed_seconds": 24.001141,
+    "tool_elapsed_seconds": 3.133272,
+    "other_elapsed_seconds": 0.123036,
+    "api_call_count": 6,
+    "tool_call_count": 6,
+    "prompt_tokens": 54907,
+    "completion_tokens": 1898,
+    "total_tokens": 56805,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:25:32.611392"
+}

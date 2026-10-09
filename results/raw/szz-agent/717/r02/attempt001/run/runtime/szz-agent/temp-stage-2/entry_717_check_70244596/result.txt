@@ -1,0 +1,8 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the method `addBootCP(List<File> value)` in `src/polyglot/main/Options.java` from calling `bootclasspathDirectories().addAll(value)` to `bootclasspathDirectories().addAll(0, value)`, so that values passed via `-bootclasspath`/prepend-style options are inserted at the front of the boot classpath list rather than appended at the end.
+
+The `files/old/` version of `Options.java` is a much older revision of this file. It does not contain the `addBootCP` method at all, nor does it have the `bootclasspathDirectories()` helper method or the list-based classpath infrastructure that the buggy/fixed versions use (it instead uses a simple `String bootclasspath` field manipulated directly in `parseCommand`). Since the specific method and code construct that contains the bug (`addBootCP`'s use of `addAll` vs `addAll(0, ...)`) does not exist yet in this version of the file, the bug cannot be present in `files/old/`. This is a clear case of "the buggy code was introduced later," as anticipated by the instructions.

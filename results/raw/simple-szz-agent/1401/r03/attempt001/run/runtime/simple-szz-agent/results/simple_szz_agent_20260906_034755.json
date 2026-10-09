@@ -1,0 +1,333 @@
+{
+  "metadata": {
+    "timestamp": "20260906_034755",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1401/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 41.303,
+      "max": 41.303,
+      "mean": 41.303,
+      "median": 41.303,
+      "total": 41.303,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 41.228,
+      "max": 41.228,
+      "mean": 41.228,
+      "median": 41.228,
+      "total": 41.228,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 13,
+      "max": 13,
+      "mean": 13,
+      "median": 13,
+      "total": 13,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 3962,
+      "max": 3962,
+      "mean": 3962,
+      "median": 3962,
+      "total": 3962,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 14036,
+      "max": 14036,
+      "mean": 14036,
+      "median": 14036,
+      "total": 14036,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 71901,
+      "max": 71901,
+      "mean": 71901,
+      "median": 71901,
+      "total": 71901,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.16525830000000002,
+      "max": 0.16525830000000002,
+      "mean": 0.16525830000000002,
+      "median": 0.16525830000000002,
+      "total": 0.16525830000000002,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 3,
+      "Grep": 8,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 328,
+      "max": 328,
+      "mean": 328,
+      "median": 328,
+      "total": 328,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "1401",
+      "fix_commit_hash": "0d211148fb659fd22181ac82d103eae4b0e1897f",
+      "ground_truth_bics": [
+        "ac494c6c2710a207f51a219e3b09360a9c94203c"
+      ],
+      "predicted_bics": [
+        "ac494c6c2710a207f51a219e3b09360a9c94203c"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "1401",
+      "fix_commit": "0d211148fb659fd22181ac82d103eae4b0e1897f",
+      "ground_truth_bics": [
+        "ac494c6c2710a207f51a219e3b09360a9c94203c"
+      ],
+      "total_candidates": 328,
+      "gt_in_candidates": true,
+      "selected_commit": "ac494c6c2710a207f51a219e3b09360a9c94203c",
+      "selected_index": 326,
+      "confidence": "HIGH",
+      "explanation": "The fix commit (fix_commit_diff.txt) changes this exact line in LocalInspectionsPass.java: - tooltip = XmlStringUtil.wrapInHtml(message.startsWith(\"<html>\") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link ; + tooltip = XmlStringUtil.wrapInHtml((message.startsWith(\"<html>\") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link); The bug was that `+ link` was appended OUTSIDE of `XmlStringUtil.wrapInHtml(...)`, meaning the link text (an `<a",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "platform/lang-impl/src/com/intellij/codeInsight/daemon/impl/LocalInspectionsPass.java"
+      ],
+      "call_stats": {
+        "duration_s": 41.303,
+        "duration_api_s": 41.228,
+        "num_turns": 13,
+        "input_tokens": 14,
+        "output_tokens": 3962,
+        "cache_creation_input_tokens": 14036,
+        "cache_read_input_tokens": 71901,
+        "total_cost_usd": 0.16525830000000002,
+        "total_tool_calls": 12,
+        "tool_calls_by_name": {
+          "Read": 3,
+          "Grep": 8,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1401/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1401_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1401/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1401_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1401/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1401_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1036,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "tooltip = XmlStringUtil.wrapInHtml",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1401/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1401_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "+ link",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1401/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1401_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 772,
+            "cache_read_input_tokens": 10720,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "tooltip",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1401/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1401_candidate_selection/candidates/candidate_291.diff",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "tooltip",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1401/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1401_candidate_selection/candidates/candidate_327.diff",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "tooltip",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1401/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1401_candidate_selection/candidates/candidate_328.diff",
+                  "-C": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 892,
+            "cache_read_input_tokens": 11492,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "tooltip",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1401/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1401_candidate_selection/candidates/candidate_291.diff",
+                  "output_mode": "content",
+                  "-C": 6
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "tooltip",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1401/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1401_candidate_selection/candidates/candidate_327.diff",
+                  "output_mode": "content",
+                  "-C": 6
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "tooltip",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1401/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1401_candidate_selection/candidates/candidate_328.diff",
+                  "output_mode": "content",
+                  "-C": 6
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 3557,
+            "cache_read_input_tokens": 12384,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1401/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1401_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_327\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit (fix_commit_diff.txt) changes this exact line in LocalInspectionsPass.java:\n\n  - tooltip = XmlStringUtil.wrapInHtml(message.startsWith(\"<html>\") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link ;\n  + tooltip = XmlStringUtil.wrapInHtml((message.startsWith(\"<html>\") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link);\n\nThe bug was that `+ link` was appended OUTSIDE of `XmlStringUtil.wrapInHtml(...)`, meaning the link text (an `<a href=\"...\">...</a>` anchor used to navigate to the inspection) was not wrapped inside the `<html>...</html>` tags produced by wrapInHtml. As a result, when the tooltip was rendered, the link portion (and hence part of the warning content) would not display correctly inside the HTML tooltip, causing \"Not all warnings are displayed in the editor\" (IDEA-140967).\n\nSearching all 328 candidates for this exact buggy line, only candidate_327.diff introduces it. In that diff, the prior code was a two-branch if/else:\n\n  if (message.startsWith(\"<html>\")) {\n    tooltip = XmlStringUtil.wrapInHtml(XmlStringUtil.stripHtml(message) + link);\n  } else {\n    tooltip = XmlStringUtil.wrapInHtml(XmlStringUtil.escapeString(message) + link);\n  }\n\nwhich correctly wrapped `+ link` inside `wrapInHtml(...)` in both branches. candidate_327 refactored this into a single ternary expression but moved `+ link` outside of `wrapInHtml(...)`, introducing the bug:\n\n  tooltip = XmlStringUtil.wrapInHtml(message.startsWith(\"<html>\") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link ;\n\ncandidate_328.diff is identical to the fix_commit_diff itself (the corrective commit), and candidate_291.diff contains an unrelated `tooltip` variable in a different class (PackagingElementNode), not the LocalInspectionsPass.java code path. Therefore candidate_327 is the commit that introduced the bug.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1493,
+            "cache_read_input_tokens": 15941,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

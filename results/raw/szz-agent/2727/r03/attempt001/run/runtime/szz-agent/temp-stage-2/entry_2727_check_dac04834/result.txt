@@ -1,0 +1,10 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The bug fixed by this commit is that `consoleProcess_` was not assigned before the constructor calls `getInteractionMode()` (which reads `consoleProcess_`). In the buggy version, the constructor calls `attachToProcess(consoleProcess)` at the very end, and it is only inside `attachToProcess()` that `consoleProcess_ = consoleProcess;` is set. However, earlier in the same constructor, `getInteractionMode()` is called (line 80 in buggy) before `consoleProcess_` has been assigned, so it always sees `consoleProcess_ == null` and returns `INTERACTION_NEVER`, incorrectly forcing the read-only shell/output path even when a real console process was passed in. The fix simply moves the assignment `consoleProcess_ = consoleProcess;` up to right before the `getInteractionMode()` check in the constructor.
+
+In `files/old/`, the class is structured very differently (extends `ModalDialogBase` rather than `ProgressDialog`, no `attachToProcess()` method exists at all). Critically, in the old constructor, the line `consoleProcess_ = consoleProcess;` (old line 113) appears directly in the constructor body, immediately before the `getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER` check (old line 126). This means at the time `getInteractionMode()` is invoked, `consoleProcess_` has already been correctly assigned, so `getInteractionMode()` reflects the actual process's interaction mode rather than defaulting to `INTERACTION_NEVER`.
+
+Since the ordering bug (assigning `consoleProcess_` too late, after the `getInteractionMode()` check) does not exist in this older version — the assignment already precedes the check — the specific bug fixed by this commit is not present in `files/old/`. The later refactor that introduced `attachToProcess()` and deferred the assignment to the end of the constructor is what introduced the bug, and that refactor had not yet occurred in the old version.

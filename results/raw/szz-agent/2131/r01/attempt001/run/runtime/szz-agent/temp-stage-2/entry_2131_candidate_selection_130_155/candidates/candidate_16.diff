@@ -1,0 +1,168 @@
+diff --git a/platform/vcs-api/src/com/intellij/openapi/vcs/history/DiffFromHistoryHandler.java b/platform/vcs-api/src/com/intellij/openapi/vcs/history/DiffFromHistoryHandler.java
+index e7edc3a16f2..f49fc4d3bc8 100644
+--- a/platform/vcs-api/src/com/intellij/openapi/vcs/history/DiffFromHistoryHandler.java
++++ b/platform/vcs-api/src/com/intellij/openapi/vcs/history/DiffFromHistoryHandler.java
+@@ -32,11 +32,15 @@ public interface DiffFromHistoryHandler {
+   /**
+    * Show diff when a single revision is selected in the file history panel.
+    *
+-   * @param e        AnActionEvent which happened, when user invoked "Show Diff".
+-   * @param filePath the file which history is shown.
+-   * @param revision the revision selected in the file history panel.
++   * @param e                AnActionEvent which happened, when user invoked "Show Diff".
++   * @param filePath         the file which history is shown.
++   * @param previousRevision the previous revision in the list displayed file history panel, may be {@link VcsFileRevision#NULL}.
++   * @param revision         the revision selected in the file history panel.
+    */
+-  void showDiff(@NotNull AnActionEvent e, @NotNull FilePath filePath, @NotNull VcsFileRevision revision);
++  void showDiffForOne(@NotNull AnActionEvent e,
++                      @NotNull FilePath filePath,
++                      @NotNull VcsFileRevision previousRevision,
++                      @NotNull VcsFileRevision revision);
+ 
+   /**
+    * Show diff for 2 revisions selected from the file history panel,
+@@ -47,6 +51,6 @@ public interface DiffFromHistoryHandler {
+    * @param revision1 one of the selected revisions.
+    * @param revision2 another selected revision.
+    */
+-  void showDiff(@NotNull FilePath filePath, @NotNull VcsFileRevision revision1, @NotNull VcsFileRevision revision2);
++  void showDiffForTwo(@NotNull FilePath filePath, @NotNull VcsFileRevision revision1, @NotNull VcsFileRevision revision2);
+ 
+ }
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+index ca14240cb1e..84781e12ed5 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+@@ -859,12 +859,23 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+ 
+       int selectionSize = sel.size();
+       if (selectionSize > 1) {
+-        myDiffHandler.showDiff(e, myFilePath, sel.get(0).getRevision());
++        myDiffHandler.showDiffForTwo(myFilePath, sel.get(0), sel.get(sel.size() - 1));
+       }
+       else if (selectionSize == 1) {
++        final TableView<TreeNodeOnVcsRevision> flatView = myDualView.getFlatView();
++        final int selectedRow = flatView.getSelectedRow();
+         VcsFileRevision revision = getFirstSelectedRevision();
++
++        VcsFileRevision previousRevision;
++        if (selectedRow == (flatView.getRowCount() - 1)) {
++          // no previous
++          previousRevision = myBottomRevisionForShowDiff != null ? myBottomRevisionForShowDiff : VcsFileRevision.NULL;
++        } else {
++          previousRevision = flatView.getRow(selectedRow + 1);
++        }
++
+         if (revision != null) {
+-          myDiffHandler.showDiff(e, myFilePath, revision);
++          myDiffHandler.showDiffForOne(e, myFilePath, previousRevision, revision);
+         }
+       }
+     }
+@@ -907,7 +918,7 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+       final VcsRevisionNumber currentRevisionNumber = myHistorySession.getCurrentRevisionNumber();
+       VcsFileRevision selectedRevision = getFirstSelectedRevision();
+       if (currentRevisionNumber != null && selectedRevision != null) {
+-        myDiffHandler.showDiff(myFilePath, selectedRevision, new CurrentRevision(myFilePath.getVirtualFile(), currentRevisionNumber));
++        myDiffHandler.showDiffForTwo(myFilePath, selectedRevision, new CurrentRevision(myFilePath.getVirtualFile(), currentRevisionNumber));
+       }
+     }
+ 
+@@ -1814,21 +1825,13 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+   private class StandardDiffFromHistoryHandler implements DiffFromHistoryHandler {
+ 
+     @Override
+-    public void showDiff(@NotNull AnActionEvent e, @NotNull FilePath filePath, @NotNull VcsFileRevision revision) {
+-      final TableView<TreeNodeOnVcsRevision> flatView = myDualView.getFlatView();
+-      final int selectedRow = flatView.getSelectedRow();
+-      if (selectedRow == (flatView.getRowCount() - 1)) {
+-        // no previous
+-        VcsHistoryUtil.showDifferencesInBackground(myVcs.getProject(), filePath,
+-                                                   myBottomRevisionForShowDiff != null ? myBottomRevisionForShowDiff : VcsFileRevision.NULL,
+-                                                   revision, true);
+-      } else {
+-        VcsHistoryUtil.showDifferencesInBackground(myVcs.getProject(), myFilePath, flatView.getRow(selectedRow + 1), revision, true);
+-      }
++    public void showDiffForOne(@NotNull AnActionEvent e, @NotNull FilePath filePath,
++                               @NotNull VcsFileRevision previousRevision, @NotNull VcsFileRevision revision) {
++      VcsHistoryUtil.showDifferencesInBackground(myVcs.getProject(), myFilePath, previousRevision, revision, true);
+     }
+ 
+     @Override
+-    public void showDiff(@NotNull FilePath filePath, @NotNull VcsFileRevision revision1, @NotNull VcsFileRevision revision2) {
++    public void showDiffForTwo(@NotNull FilePath filePath, @NotNull VcsFileRevision revision1, @NotNull VcsFileRevision revision2) {
+       VcsHistoryUtil.showDifferencesInBackground(myProject, myFilePath, revision1, revision2, true);
+     }
+   }
+diff --git a/plugins/git4idea/src/git4idea/actions/GitCompareWithBranchAction.java b/plugins/git4idea/src/git4idea/actions/GitCompareWithBranchAction.java
+index d6a347fe9f4..691d5e08c88 100644
+--- a/plugins/git4idea/src/git4idea/actions/GitCompareWithBranchAction.java
++++ b/plugins/git4idea/src/git4idea/actions/GitCompareWithBranchAction.java
+@@ -206,7 +206,7 @@ public class GitCompareWithBranchAction extends DumbAwareAction {
+       final VcsFileRevision compareRevision =
+         new GitFileRevision(project, filePath, new GitRevisionNumber(branchToCompare, compareRevisionNumber.getTimestamp()), false);
+       CurrentRevision currentRevision = new CurrentRevision(file, new GitRevisionNumber(head, currentRevisionNumber.getTimestamp()));
+-      new GitDiffFromHistoryHandler(project).showDiff(new FilePathImpl(file), compareRevision, currentRevision);
++      new GitDiffFromHistoryHandler(project).showDiffForTwo(new FilePathImpl(file), compareRevision, currentRevision);
+     }
+ 
+     private static void fileDoesntExistInBranchError(Project project, VirtualFile file, String branchToCompare) {
+diff --git a/plugins/git4idea/src/git4idea/history/GitDiffFromHistoryHandler.java b/plugins/git4idea/src/git4idea/history/GitDiffFromHistoryHandler.java
+index 00bc7ff011c..c8f9fb8a613 100644
+--- a/plugins/git4idea/src/git4idea/history/GitDiffFromHistoryHandler.java
++++ b/plugins/git4idea/src/git4idea/history/GitDiffFromHistoryHandler.java
+@@ -59,8 +59,8 @@ import java.util.List;
+ import java.util.concurrent.atomic.AtomicBoolean;
+ 
+ /**
+- * {@link DiffFromHistoryHandler#showDiff(FilePath, VcsFileRevision, VcsFileRevision) "Show Diff" for 2 revision} calls the common code.
+- * {@link DiffFromHistoryHandler#showDiff(AnActionEvent, FilePath, VcsFileRevision) "Show diff" for 1 revision}
++ * {@link DiffFromHistoryHandler#showDiffForTwo(FilePath, VcsFileRevision, VcsFileRevision) "Show Diff" for 2 revision} calls the common code.
++ * {@link DiffFromHistoryHandler#showDiffForOne(com.intellij.openapi.actionSystem.AnActionEvent, com.intellij.openapi.vcs.FilePath, com.intellij.openapi.vcs.history.VcsFileRevision, com.intellij.openapi.vcs.history.VcsFileRevision) "Show diff" for 1 revision}
+  * behaves differently for merge commits: for them it shown a popup displaying the parents of the selected commit. Selecting a parent
+  * from the popup shows the difference with this parent.
+  * If an ordinary (not merge) revision with 1 parent, it is the same as usual: just compare with the parent;
+@@ -82,11 +82,12 @@ public class GitDiffFromHistoryHandler implements DiffFromHistoryHandler {
+   }
+ 
+   @Override
+-  public void showDiff(@NotNull AnActionEvent e, @NotNull FilePath filePath, @NotNull VcsFileRevision revision) {
++  public void showDiffForOne(@NotNull AnActionEvent e, @NotNull FilePath filePath,
++                             @NotNull VcsFileRevision previousRevision, @NotNull VcsFileRevision revision) {
+     GitFileRevision rev = (GitFileRevision)revision;
+     Collection<String> parents = rev.getParents();
+     if (parents.size() < 2) {
+-      showDiffWithParent(revision, filePath, parents);
++      doShowDiff(filePath, previousRevision, revision, false);
+     }
+     else { // merge 
+       showDiffForMergeCommit(e, filePath, rev, parents);
+@@ -94,7 +95,7 @@ public class GitDiffFromHistoryHandler implements DiffFromHistoryHandler {
+   }
+ 
+   @Override
+-  public void showDiff(@NotNull FilePath filePath, @NotNull VcsFileRevision revision1, @NotNull VcsFileRevision revision2) {
++  public void showDiffForTwo(@NotNull FilePath filePath, @NotNull VcsFileRevision revision1, @NotNull VcsFileRevision revision2) {
+     doShowDiff(filePath, revision1, revision2, true);
+   }
+ 
+@@ -283,18 +284,6 @@ public class GitDiffFromHistoryHandler implements DiffFromHistoryHandler {
+     return new ShowDiffWithParentAction(filePath, rev, parent);
+   }
+ 
+-  private void showDiffWithParent(@NotNull VcsFileRevision revision, @NotNull FilePath filePath, @NotNull Collection<String> parents) {
+-    VcsFileRevision parentRevision;
+-    if (parents.size() == 1) {
+-      String parent = parents.iterator().next();
+-      parentRevision = makeRevisionFromHash(filePath, parent);
+-    }
+-    else {
+-      parentRevision = VcsFileRevision.NULL;
+-    }
+-    doShowDiff(filePath, parentRevision, revision, false);
+-  }
+-
+   @NotNull
+   private GitFileRevision makeRevisionFromHash(@NotNull FilePath filePath, @NotNull String hash) {
+     return new GitFileRevision(myProject, filePath, new GitRevisionNumber(hash), false);

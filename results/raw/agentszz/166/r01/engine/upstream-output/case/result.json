@@ -1,0 +1,22 @@
+{
+  "fix_commit": "7179f4d17786a5f4e8ec16b560b335609ea16dd2",
+  "bic": "4fc7f4447c990082e8322c42ebafd1f33a2e60aa",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit introduced the line `EnvVars env = context.getBuild().getEnvironment();` in InverseBuildChooser.getCandidateRevisions(), in order to expand branch specifiers with build environment variables. However, as the commit message itself notes, \"no build environment is available\" during repository polling, meaning context.getBuild() returns null in that scenario, causing the NPE described in the fix commit. The fix replaces this call with context.getEnvironment(), which properly handles both build and polling contexts (mirroring a similar fix already applied to DefaultBuildChooser).",
+  "metrics": {
+    "case_elapsed_seconds": 7.430537,
+    "api_elapsed_seconds": 7.281526,
+    "tool_elapsed_seconds": 0.054184,
+    "other_elapsed_seconds": 0.094829,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 17735,
+    "completion_tokens": 557,
+    "total_tokens": 18292,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T17:40:06.952617"
+}

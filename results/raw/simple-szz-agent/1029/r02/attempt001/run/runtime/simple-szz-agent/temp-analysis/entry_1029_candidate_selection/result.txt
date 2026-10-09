@@ -1,0 +1,30 @@
+SELECTED: candidate_40
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit describes two bugs in the 'words' FTS3 table ID-offsetting scheme:
+1. In MmsProvider.java, the MMS part row ID was computed as `(2 << 32) + rowId`, but
+   since Java's `<<` shift amount is taken modulo 32 for `int` operands, `2 << 32`
+   evaluates to `2 << 0` == 2, not the intended large offset. The fix changes this to
+   `(1L << 33) + rowId`, using a `long` literal to get the correct shift.
+2. In MmsSmsDatabaseHelper.java, `populateWordsTable` (used on DB upgrade) inserted MMS
+   part rows into the words table using the raw part `_id` with no offset at all
+   (`cv.put(Telephony.MmsSms.WordsTable.ID, id);`), colliding with SMS row IDs. The fix
+   adds the `(1L << 33) + id` offset for these rows.
+
+candidate_40 is the commit that originally introduced this exact "words" table
+indexing scheme, and it contains both defects verbatim:
+- In MmsProvider.java: `cv.put(Telephony.MmsSms.WordsTable.ID, (2 << 32) + rowId);`
+  with the comment "The row ids from the part table start at 2 << 32" — the precise
+  buggy shift expression later corrected by the fix commit.
+- In MmsSmsDatabaseHelper.java's new `populateWordsTable` method, the MMS/part branch
+  inserts `cv.put(Telephony.MmsSms.WordsTable.ID, id);` with no offset applied at all,
+  identical to the second bug described in the fix commit message ("The
+  populateWordsTable method... didn't add the offset at all").
+
+No other candidate (other than candidate_136, which is the fix commit itself, and it
+was excluded since fixes cannot introduce the bug they fix) contains the `2 << 32`
+expression or the unoffset populateWordsTable insert for MMS parts. candidate_40 is
+therefore the first and only commit that introduces both problems, making it the
+bug-introducing commit.

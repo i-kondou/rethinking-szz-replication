@@ -1,0 +1,34 @@
+SELECTED: candidate_25
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (sceAtracGetStreamDataInfo: fixed issue) modifies setHalfwayBuffer() in
+src/jpcsp/HLE/modules/sceAtrac3plus.java. Before the fix, the code unconditionally computed:
+
+    int maxSizeBeforeFirstWrap = bufferSize - ((bufferSize - info.inputFileDataOffset) % info.atracBytesPerFrame);
+    int maxSizeAfterFirstWrap = bufferSize - (bufferSize % info.atracBytesPerFrame);
+    inputBuffer = new pspFileBuffer(addr, maxSizeBeforeFirstWrap, maxSizeAfterFirstWrap, readSize, readSize);
+
+The fix wraps this alignment logic in a conditional (`if (readSize < bufferSize) { ... }`), defaulting
+maxSizeBeforeFirstWrap/maxSizeAfterFirstWrap to the plain bufferSize otherwise, and only applying the
+frame-aligned wrap sizes when the aligned size is still >= readSize. This shows that the unconditional
+alignment computation could produce an incorrect (too-small) buffer size whenever the buffer was
+already fully read in (readSize == bufferSize) or when the aligned size ended up smaller than readSize,
+causing corrupted stream/read-position tracking (surfacing in sceAtracGetStreamDataInfo).
+
+Candidate_25 is exactly the commit that introduced this unconditional alignment logic. Prior to
+candidate_25 (see candidate_16, which contains the original/simple form), setHalfwayBuffer used:
+
+    inputBuffer = new pspFileBuffer(addr, bufferSize, readSize, readSize);
+
+Candidate_25 changed this to the buggy unconditional computation:
+
+    int maxSizeBeforeFirstWrap = bufferSize - ((bufferSize - info.inputFileDataOffset) % info.atracBytesPerFrame);
+    int maxSizeAfterFirstWrap = bufferSize - (bufferSize % info.atracBytesPerFrame);
+    inputBuffer = new pspFileBuffer(addr, maxSizeBeforeFirstWrap, maxSizeAfterFirstWrap, readSize, readSize);
+
+This is verbatim the code removed by the fix (the "-" lines in fix_commit_diff.txt match candidate_25's
+added "+" lines exactly), confirming candidate_25 is the bug-introducing commit. No intervening
+candidate (candidate_34, which only adds logging/reinit guard changes) touches this logic, so the bug
+persisted unchanged from candidate_25 until the fix.

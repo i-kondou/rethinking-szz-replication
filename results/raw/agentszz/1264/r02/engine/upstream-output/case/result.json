@@ -1,0 +1,22 @@
+{
+  "fix_commit": "f8ac9708ff8656cdc2518896271ea0b978c34d67",
+  "bic": "199ca4e59019df4572190f32b03ca709274ced7c",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit migrated RuleSet's getParents() method from using ConceptRegistry.getConceptDescriptor().getParentsNames() (which returned only direct parents) to SConceptOperations.getAllSuperConcepts(nextConcept, false) \u2014 incorrectly using the \"all ancestors\" variant instead of the direct-parents equivalent. This caused the rule-matching traversal (getParents is used for BFS-style traversal per level) to behave incorrectly, producing the typesystem error described in the fix. The fix simply corrects this by replacing getAllSuperConcepts with getDirectSuperConcepts, restoring the original (pre-migration) direct-parent semantics.",
+  "metrics": {
+    "case_elapsed_seconds": 9.411605,
+    "api_elapsed_seconds": 9.191231,
+    "tool_elapsed_seconds": 0.099451,
+    "other_elapsed_seconds": 0.120928,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 14605,
+    "completion_tokens": 725,
+    "total_tokens": 15330,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:25:01.517957"
+}

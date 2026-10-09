@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "kind": "claude-szz-agentic-baseline-subject-run",
+  "created_at": "2026-09-07T11:04:50.628969+00:00",
+  "state": "completed",
+  "scientific_result": true,
+  "test_stub": false,
+  "baseline": "agentszz",
+  "sample_id": "718",
+  "repository": "palantir/atlasdb",
+  "synthetic_fix_hash": "e3a09244c0309b814ff0b6ce85908a0d3ba82840",
+  "model": "claude-sonnet-5",
+  "base_url": "https://api.anthropic.com/v1/",
+  "per_run_cap_usd": "5",
+  "model_started": true,
+  "reported_cost_usd": "0.156512",
+  "duration_seconds": 24.551604666979983,
+  "predicted_bics": [
+    "af93ae74310639f406c35f885cc1204917c68dc5"
+  ],
+  "reasoning": "git_blame on the buggy lines (calling `of(row)` and `new Row(...)` instead of `Row.of(...)`, absence of `getRawTableName()`, wrong argument ordering) in SweepPriorityTable.java (and analogous generated table files) at fix~1 traces back to commit af93ae74310639f406c35f885cc1204917c68dc5, \"initial open source code\". This commit added the generated table code (originally located at atlas/atlas-client/.../schema/generated/SweepPriorityTable.java before later reorganization) that contains the flawed row-factory calls and missing static accessor, which the fix commit e3a09244c030 corrects. No later refactor introduced the buggy `of()`/`new Row()` invocation pattern — it was present from the very first commit that added these generated classes to the repository, and subsequent commits (3b9411d5d0d0, 877422f5174b) only touched unrelated lines (toString formatting), not this logic.",
+  "confidence": "high",
+  "upstream_metrics": {
+    "case_elapsed_seconds": 24.340934,
+    "api_elapsed_seconds": 23.717766,
+    "tool_elapsed_seconds": 0.511693,
+    "other_elapsed_seconds": 0.111479,
+    "api_call_count": 6,
+    "tool_call_count": 6,
+    "prompt_tokens": 71066,
+    "completion_tokens": 1438,
+    "total_tokens": 72504,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "provider_calls": [
+    {
+      "input_tokens": 7703,
+      "output_tokens": 348,
+      "cost_usd_equivalent": "0.018886",
+      "elapsed_seconds": 4.673885750002228
+    },
+    {
+      "input_tokens": 7958,
+      "output_tokens": 211,
+      "cost_usd_equivalent": "0.018026",
+      "elapsed_seconds": 3.777120707964059
+    },
+    {
+      "input_tokens": 9140,
+      "output_tokens": 127,
+      "cost_usd_equivalent": "0.01955",
+      "elapsed_seconds": 2.2064117079717107
+    },
+    {
+      "input_tokens": 15120,
+      "output_tokens": 209,
+      "cost_usd_equivalent": "0.03233",
+      "elapsed_seconds": 4.0543370000086725
+    },
+    {
+      "input_tokens": 15498,
+      "output_tokens": 122,
+      "cost_usd_equivalent": "0.032216",
+      "elapsed_seconds": 2.463093750004191
+    },
+    {
+      "input_tokens": 15647,
+      "output_tokens": 421,
+      "cost_usd_equivalent": "0.035504",
+      "elapsed_seconds": 6.5371654169866815
+    }
+  ],
+  "source_provenance": {
+    "manifest_path": "/Users/user-01/research/workspaces/claude-szz/implementation/config/agentic-baseline-sources.json",
+    "manifest_sha256": "8fc7276c1bd2772698abeeaabfc6cc1a6bb24aac89db5601f27da49933147fb0",
+    "agentszz_source_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentszz-figshare-v2/replication_package/agentszz",
+    "agentszz_source_tree_sha256": "3436d1b781b11c9b2bf962105355f5f4ded84ede0ec599bda848e0cff9c72777",
+    "agentic_szz_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz",
+    "agentic_szz_commit": "0012a507b9087f15cdad340888a837f5618a3c29",
+    "agentic_szz_git_tree": "738bf1e17594df62dd198f7ffc220d728223b454",
+    "agentszz_python": {
+      "version": "3.11.11",
+      "modules": {
+        "openai": "2.16.0",
+        "git": "3.1.46"
+      },
+      "executable": "/Users/user-01/research/workspaces/claude-szz/baselines/venv/bin/python"
+    },
+    "agentic_szz_python": {
+      "version": "3.12.8",
+      "modules": {
+        "graphiti_core": "unknown",
+        "pydantic_ai": "2.31.1",
+        "neo4j": "6.2.0",
+        "git": "3.1.59",
+        "openai": "3.3.0"
+      },
+      "executable": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz-venv/bin/python"
+    },
+    "agentic_szz_requirements_path": "/Users/user-01/research/workspaces/claude-szz/implementation/config/llm-baselines/requirements-agentic-szz-python312.txt",
+    "agentic_szz_requirements_sha256": "e426ee65f956a8582aa195ac819d2c862d68abd66d20107d71558701ca313f22",
+    "neo4j": {
+      "reference": "neo4j:5.26.8-community",
+      "id": "sha256:c0f0ce3396c902c9ab6520d0c9d1c644a3aa83eed00036e609e5db10a84b2d92",
+      "repo_digests": [
+        "neo4j@sha256:5216b8f7bcca893448d5b4a809d91761609fc8aea900691d59531ada76c28c62"
+      ],
+      "architecture": "arm64",
+      "os": "linux"
+    }
+  },
+  "prompt_metadata_path": "/Users/user-01/research/workspaces/claude-szz/implementation/data/derived/subject-prompts-bfc-message-neutralized-final-v1/718.json",
+  "prompt_metadata_sha256": "b4193715dff826dd6463f83faf625d1ddcfade47df9e3b7dfc2f7baee12dc8b9",
+  "repository_before": {
+    "head": "e3a09244c0309b814ff0b6ce85908a0d3ba82840",
+    "head_matches_synthetic_fix": true,
+    "source_fix_absent": true,
+    "clean": true,
+    "no_remotes": true,
+    "no_object_alternates": true
+  },
+  "repository_after": {
+    "head": "e3a09244c0309b814ff0b6ce85908a0d3ba82840",
+    "head_matches_synthetic_fix": true,
+    "source_fix_absent": true,
+    "clean": true,
+    "no_remotes": true,
+    "no_object_alternates": true
+  },
+  "postflight_clean": true,
+  "error": null,
+  "limitations": [
+    "Sonnet 5 through Anthropic is a matched-backbone adaptation, not the original-model replication.",
+    "Both upstream methods emit a single primary BIC; multi-BIC recall is structurally capped.",
+    "Reported cost is reconstructed from token usage and the frozen Anthropic price snapshot, not provider billing records.",
+    "AgenticSZZ checks its conservative total-token limit between requests, so one in-flight request can cross the nominal trigger."
+  ]
+}

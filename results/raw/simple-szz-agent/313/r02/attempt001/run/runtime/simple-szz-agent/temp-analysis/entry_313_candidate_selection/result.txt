@@ -1,0 +1,56 @@
+SELECTED: candidate_44
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) changes the body of the "disable expired
+alarms" loop in Alarms.java from:
+
+    if (isExpired && !alarm.isEnabled()) {
+        enable(alarm.getId(), false);
+    }
+
+to:
+
+    if (isExpired && !alarm.isEnabled()) {
+        alarm.setEnabled(false);
+        writeToDb(alarm.getId());
+    }
+
+and it also removes the `changeAlarm(Alarm alarm)` helper (which did
+`set.remove(alarm); set.add(alarm);` on the in-memory `Set<Alarm> set` field)
+in favor of a plain `writeToDb()` that never touches the `set` collection.
+
+The bug being fixed is a ConcurrentModificationException / structural-mutation
+hazard: the loop `for (Alarm alarm : set) { ... enable(alarm.getId(), false); }`
+iterates over the in-memory `set`, but `enable()` calls `changeAlarm()`, which
+does `set.remove(alarm); set.add(alarm);` — i.e. it structurally mutates the
+very collection that is currently being iterated. This is a classic
+`ConcurrentModificationException` bug when a HashSet/TreeSet is modified while
+using its iterator.
+
+Tracing the history of this code:
+- In earlier revisions (e.g. candidate_34, and still after the rename to
+  AlarmsManager.java in candidate_38), `disableExpiredAlarms()` queried the
+  database directly through a `Cursor` (`getFilteredAlarmsCursor(...)`) and
+  called `enableAlarmInternal(alarm, false)`, which only issued a
+  ContentResolver update — no in-memory `Set<Alarm>` was involved, so there was
+  no concurrent-modification hazard.
+- candidate_44 is the commit that introduces the in-memory `Set<Alarm> set`
+  field to `AlarmsManager.java`, rewrites `getAlarm()`, `getAlarmsList()`, and
+  `calculateNextAlert()` to use it, adds the private `changeAlarm(Alarm alarm)`
+  method containing `set.remove(alarm); set.add(alarm);`, and — critically —
+  rewrites `disableExpiredAlarms()` to iterate `for (Alarm alarm : set)` and
+  call `enable(alarm.getId(), false)` inside that same loop. This is the exact
+  moment the "iterate over `set` while `enable()`/`changeAlarm()` mutates
+  `set`" pattern is created.
+- Subsequent commits (candidate_47's file split/rename between Alarms.java and
+  AlarmsManager.java, and candidate_54's introduction of `nextTimeInMillis`)
+  merely carry this already-buggy pattern forward unchanged into the version
+  that the fix commit ultimately patches. candidate_55 in the candidate list is
+  actually identical to the fix commit itself, confirming the bug was already
+  present by then.
+
+Because candidate_44 is the first commit where the hazardous combination
+(in-memory `set` iteration + `enable()`/`changeAlarm()` mutating that same
+`set`) exists, it is the bug-introducing commit.

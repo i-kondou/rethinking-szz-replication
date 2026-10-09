@@ -1,0 +1,27 @@
+SELECTED: candidate_179
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit reverts the following code in src/games/strategy/triplea/TripleAPlayer.java:
+
+    if ((nonCombat && !m_soundPlayedAlreadyNonCombatMove) || (!nonCombat && !m_soundPlayedAlreadyCombatMove)) {
+      ClipPlayer.play(SoundPath.CLIP_PHASE_MOVE_NONCOMBAT, id.getName());
+      m_soundPlayedAlreadyNonCombatMove = true;
+    }
+
+back into two separate conditions, one for combat and one for non-combat, each setting its own flag and playing its own sound.
+
+Tracing this exact line through the candidates shows it was introduced in candidate_179. Immediately prior to candidate_179 (visible in candidate_178's context and earlier candidates such as 140-142/156), the code correctly used two separate if/else-if branches:
+
+    if (nonCombat && !m_soundPlayedAlreadyNonCombatMove) {
+      DefaultSoundChannel.playSoundOnLocalMachine(SoundPath.CLIP_PHASE_MOVE_NONCOMBAT, id.getName());
+      m_soundPlayedAlreadyNonCombatMove = true;
+    } else if (!nonCombat && !m_soundPlayedAlreadyCombatMove) {
+      DefaultSoundChannel.playSoundOnLocalMachine(SoundPath.CLIP_PHASE_MOVE_COMBAT, id.getName());
+      m_soundPlayedAlreadyCombatMove = true;
+    }
+
+candidate_179's diff shows this exact transformation: it collapses the two branches into a single OR-combined condition, drops the m_soundPlayedAlreadyCombatMove = true assignment, and replaces both CLIP_PHASE_MOVE_NONCOMBAT/CLIP_PHASE_MOVE_COMBAT clip references with a single CLIP_PHASE_MOVE_NONCOMBAT call (and also swaps DefaultSoundChannel.playSoundOnLocalMachine for ClipPlayer.play). This is precisely the buggy pattern that the fix commit later undoes, restoring two distinct if-blocks with correct, separate clip paths and flag assignments for combat vs. non-combat movement.
+
+Later candidates (182, 183, 189-191) only make minor cosmetic/API changes (e.g., id vs id.getName(), formatting, brace/whitespace changes, removal of the now-unused DefaultSoundChannel import) but retain the same merged-condition bug introduced in candidate_179. Therefore candidate_179 is the first commit to introduce the problematic code that the fix commit addresses.

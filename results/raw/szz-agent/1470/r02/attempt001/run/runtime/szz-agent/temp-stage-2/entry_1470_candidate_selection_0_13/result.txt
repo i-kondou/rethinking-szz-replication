@@ -1,0 +1,22 @@
+SELECTED: candidate_13
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit removes a single line from AbstractStickyAssignor.generalAssign():
+
+    boolean isFreshAssignment = currentAssignment.isEmpty();
+
+because spotBugs flagged it as a "Dead store to isFreshAssignment" — the variable was computed but never used.
+
+Candidate_13 is a large refactor of AbstractStickyAssignor that split the single assign() method into two paths: an optimized constrainedAssign() for the case where all consumers share identical subscriptions, and a generalAssign() fallback for the general case. As part of this refactor, the sortPartitions() helper was simplified: previously it took the current assignment, the set of partitions with a different previous owner, and the isFreshAssignment flag, and used isFreshAssignment to decide between a round-robin-based sort and a plain sort. In candidate_13, sortPartitions() was reduced to a single-argument method:
+
+    private List<TopicPartition> sortPartitions(Map<TopicPartition, List<String>> partition2AllPotentialConsumers)
+
+and the call site in generalAssign() became:
+
+    List<TopicPartition> sortedPartitions = sortPartitions(partition2AllPotentialConsumers);
+
+However, the line computing `isFreshAssignment` (`boolean isFreshAssignment = currentAssignment.isEmpty();`) was left behind in generalAssign(), even though the value is no longer passed to sortPartitions() or used anywhere else. This left a dead store exactly matching the spotBugs error message quoted in the fix commit ("Dead store to isFreshAssignment in ... AbstractStickyAssignor.generalAssign(Map, Map)").
+
+Candidate_14 is the fix itself (it matches fix_commit_diff.txt exactly), so it cannot be the bug-introducing commit. Candidate_13 is the commit where the dead variable was first introduced as an unintended side effect of the constrainedAssign/generalAssign refactor.

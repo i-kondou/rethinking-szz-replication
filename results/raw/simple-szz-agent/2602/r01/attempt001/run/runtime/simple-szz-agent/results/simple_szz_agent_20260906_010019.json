@@ -1,0 +1,317 @@
+{
+  "metadata": {
+    "timestamp": "20260906_010019",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2602/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 55.006,
+      "max": 55.006,
+      "mean": 55.006,
+      "median": 55.006,
+      "total": 55.006,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 54.682,
+      "max": 54.682,
+      "mean": 54.682,
+      "median": 54.682,
+      "total": 54.682,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 4492,
+      "max": 4492,
+      "mean": 4492,
+      "median": 4492,
+      "total": 4492,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 62578,
+      "max": 62578,
+      "mean": 62578,
+      "median": 62578,
+      "total": 62578,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 158415,
+      "max": 158415,
+      "mean": 158415,
+      "median": 158415,
+      "total": 158415,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.4904144999999999,
+      "max": 0.4904144999999999,
+      "mean": 0.4904144999999999,
+      "median": 0.4904144999999999,
+      "total": 0.4904144999999999,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Glob": 2,
+      "Grep": 1,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 82,
+      "max": 82,
+      "mean": 82,
+      "median": 82,
+      "total": 82,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "2602",
+      "fix_commit_hash": "16840bb9d0f22fac743f756711ee60d135840c1d",
+      "ground_truth_bics": [
+        "b129de34fe57d61a11745745c72c91f54422c4ba"
+      ],
+      "predicted_bics": [
+        "65a7383f98f831cf957630ed5750bf2ec7f249cf"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "2602",
+      "fix_commit": "16840bb9d0f22fac743f756711ee60d135840c1d",
+      "ground_truth_bics": [
+        "b129de34fe57d61a11745745c72c91f54422c4ba"
+      ],
+      "total_candidates": 82,
+      "gt_in_candidates": true,
+      "selected_commit": "65a7383f98f831cf957630ed5750bf2ec7f249cf",
+      "selected_index": 80,
+      "confidence": "HIGH",
+      "explanation": "The fix commit's diff modifies core/src/de/gg/util/TickCounter.java, removing the line `tickCount = maxTicks;` from the constructor (along with the associated javadoc note \"Has to be reset() first to get used.\"). This is the actual bug fix: in the original TickCounter constructor, `tickCount` was initialized to `maxTicks` at construction time. Since `update()` only runs its tick-processing loop `while (updateTime >= tickDuration && tickCount < maxTicks)`, and immediately after checks `if (tickCo",
+      "is_correct": false,
+      "num_files_touched_by_fix": 18,
+      "num_source_files_touched_by_fix": 18,
+      "files_analyzed": [
+        "core/src/de/gg/event/AllPlayersReadyEvent.java",
+        "core/src/de/gg/event/NextRoundEvent.java",
+        "core/src/de/gg/event/RoundEndDataReceivedEvent.java",
+        "core/src/de/gg/event/ServerReadyEvent.java",
+        "core/src/de/gg/game/AuthoritativeSession.java",
+        "core/src/de/gg/game/GameSession.java",
+        "core/src/de/gg/game/SlaveSession.java",
+        "core/src/de/gg/game/data/RoundEndData.java",
+        "core/src/de/gg/game/system/smp/RoundEndSystem.java",
+        "core/src/de/gg/network/GameServer.java",
+        "core/src/de/gg/network/NetworkRegisterer.java",
+        "core/src/de/gg/network/rmi/AuthoritativeResultListener.java",
+        "core/src/de/gg/network/rmi/ServerAuthoritativResultListenerStub.java",
+        "core/src/de/gg/screen/BaseGameScreen.java",
+        "core/src/de/gg/screen/GameLoadingScreen.java",
+        "core/src/de/gg/screen/GameRoundendScreen.java",
+        "core/src/de/gg/screen/SettingsScreen.java",
+        "core/src/de/gg/util/TickCounter.java"
+      ],
+      "call_stats": {
+        "duration_s": 55.006,
+        "duration_api_s": 54.682,
+        "num_turns": 10,
+        "input_tokens": 14,
+        "output_tokens": 4492,
+        "cache_creation_input_tokens": 62578,
+        "cache_read_input_tokens": 158415,
+        "total_cost_usd": 0.4904144999999999,
+        "total_tool_calls": 9,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Glob": 2,
+          "Grep": 1,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2602/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2602_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2602/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2602_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2602/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2602_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 13737,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "**/TickCounter.java"
+                }
+              },
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1632,
+            "cache_read_input_tokens": 23421,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "TickCounter",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 222,
+            "cache_read_input_tokens": 25053,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2602/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2602_candidate_selection/candidates/candidate_81.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2602/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2602_candidate_selection/candidates/candidate_82.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 38027,
+            "cache_read_input_tokens": 25275,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2602/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_2602_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_81\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit's diff modifies core/src/de/gg/util/TickCounter.java, removing the line `tickCount = maxTicks;` from the constructor (along with the associated javadoc note \"Has to be reset() first to get used.\"). This is the actual bug fix: in the original TickCounter constructor, `tickCount` was initialized to `maxTicks` at construction time. Since `update()` only runs its tick-processing loop `while (updateTime >= tickDuration && tickCount < maxTicks)`, and immediately after checks `if (tickCount == maxTicks)` to signal that the round/period is over, initializing `tickCount` to `maxTicks` in the constructor caused `update()` to report \"finished\" on essentially the very first call, before any real ticks had been processed \u2014 unless `reset()` was manually called first. This produced the bug that had to be fixed here (rounds ending instantly / requiring an easy-to-forget manual reset before first use).\n\nSearching all 82 candidates for references to TickCounter.java, only two candidates touch this file: candidate_81 and candidate_82. candidate_81's diff shows TickCounter.java being added as a brand-new file (`new file mode 100644`), and its constructor already contains the problematic line:\n\n    this.tickHandler = tickHandler;\n    this.maxTicks = maxTicks;\n    this.tickDuration = tickDuration;\n\n    tickCount = maxTicks;\n\nThis is exactly the faulty initialization that the fix commit later removes. Since candidate_81 is the commit that first introduces TickCounter.java (and thus first introduces this erroneous initialization), it is the bug-introducing commit. No earlier candidate contains this file or logic (confirmed via search), so the bug could not have been introduced before candidate_81.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2674,
+            "cache_read_input_tokens": 63302,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

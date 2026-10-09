@@ -1,0 +1,323 @@
+{
+  "metadata": {
+    "timestamp": "20260905_235253",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/658/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 34.17,
+      "max": 34.17,
+      "mean": 34.17,
+      "median": 34.17,
+      "total": 34.17,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 34.071,
+      "max": 34.071,
+      "mean": 34.071,
+      "median": 34.071,
+      "total": 34.071,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "median": 10,
+      "total": 10,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 18,
+      "max": 18,
+      "mean": 18,
+      "median": 18,
+      "total": 18,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 2925,
+      "max": 2925,
+      "mean": 2925,
+      "median": 2925,
+      "total": 2925,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 12269,
+      "max": 12269,
+      "mean": 12269,
+      "median": 12269,
+      "total": 12269,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 95614,
+      "max": 95614,
+      "mean": 95614,
+      "median": 95614,
+      "total": 95614,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.1462272,
+      "max": 0.1462272,
+      "mean": 0.1462272,
+      "median": 0.1462272,
+      "total": 0.1462272,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 4,
+      "Glob": 1,
+      "Grep": 3,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 37,
+      "max": 37,
+      "mean": 37,
+      "median": 37,
+      "total": 37,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "658",
+      "fix_commit_hash": "6e9ec7a38c9ffc87ce881fbe679f5a7e65b7eb2c",
+      "ground_truth_bics": [
+        "fee02a3d16aa835c2f1e606897e4bd08e51ba7d5"
+      ],
+      "predicted_bics": [
+        "fee02a3d16aa835c2f1e606897e4bd08e51ba7d5"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "658",
+      "fix_commit": "6e9ec7a38c9ffc87ce881fbe679f5a7e65b7eb2c",
+      "ground_truth_bics": [
+        "fee02a3d16aa835c2f1e606897e4bd08e51ba7d5"
+      ],
+      "total_candidates": 37,
+      "gt_in_candidates": true,
+      "selected_commit": "fee02a3d16aa835c2f1e606897e4bd08e51ba7d5",
+      "selected_index": 33,
+      "confidence": "HIGH",
+      "explanation": "The fix commit modifies GHOrganization.java's getMembers() method, changing the anonymous PagedIterator's wrapUp(GHUser[] page) method (renamed to wrapUp(GHUser[] users)) from an empty body to a body calling GHUser.wrap(users, root). This wrap() call is what populates (\"wraps\") the shallow GHUser objects returned by the API with a reference to 'root', enabling lazy population of fields (avoiding NullPointerException on calls like user.getCreatedAt()). candidate_34 is the commit that introduced t",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/main/java/org/kohsuke/github/GHOrganization.java"
+      ],
+      "call_stats": {
+        "duration_s": 34.17,
+        "duration_api_s": 34.071,
+        "num_turns": 10,
+        "input_tokens": 18,
+        "output_tokens": 2925,
+        "cache_creation_input_tokens": 12269,
+        "cache_read_input_tokens": 95614,
+        "total_cost_usd": 0.1462272,
+        "total_tool_calls": 9,
+        "tool_calls_by_name": {
+          "Read": 4,
+          "Glob": 1,
+          "Grep": 3,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/658/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_658_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "cache_creation_input_tokens": 1416,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/658/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_658_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/658/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_658_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 991,
+            "cache_read_input_tokens": 9696,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 625,
+            "cache_read_input_tokens": 10687,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "wrapUp|GHOrganization.java",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 649,
+            "cache_read_input_tokens": 11312,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "wrapUp",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 472,
+            "cache_read_input_tokens": 11961,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "listMembers|PagedIterator<GHUser>|GHUser\\[\\] page",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 997,
+            "cache_read_input_tokens": 12433,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/658/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_658_candidate_selection/candidates/candidate_34.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 987,
+            "cache_read_input_tokens": 13430,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/658/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_658_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_34\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit modifies GHOrganization.java's getMembers() method, changing the\nanonymous PagedIterator's wrapUp(GHUser[] page) method (renamed to wrapUp(GHUser[] users))\nfrom an empty body to a body calling GHUser.wrap(users, root). This wrap() call is what\npopulates (\"wraps\") the shallow GHUser objects returned by the API with a reference to\n'root', enabling lazy population of fields (avoiding NullPointerException on calls like\nuser.getCreatedAt()).\n\ncandidate_34 is the commit that introduced this exact code structure. It refactored\ngetMembers() from an old implementation (an AbstractList that fully populated each user via\nroot.getUser(shallow[index].getLogin())) into the new PagedIterable/PagedIterator-based\nimplementation. Critically, in this refactor the new wrapUp(GHUser[] page) method was left\nwith an EMPTY body:\n\n    protected void wrapUp(GHUser[] page) {\n    }\n\nThis is precisely the bug: the previous implementation fully populated each returned user\nobject, but the new PagedIterator-based implementation added a wrapUp() hook intended to\npopulate/wrap users, yet never actually did so in this commit. As a result, users returned\nby getMembers() after this commit were shallow (only partially populated) and calling\nmethods like getCreatedAt() on them would throw NullPointerException.\n\nLater candidates (35, 36, 37) modify surrounding code (parameterizing the URL, adding\nfilters, renaming the suffix, etc.) but the wrapUp() body remains empty in all of them\nthrough candidate_37, until the actual fix commit adds the GHUser.wrap(users, root) call.\nThis confirms candidate_34 as the original point where the problematic empty wrapUp()\n(and thus the un-populated user bug) was introduced.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1250,
+            "cache_read_input_tokens": 14417,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+SELECTED: candidate_02
+
+CONFIDENCE: MEDIUM
+
+EXPLANATION:
+The fix commit changes StartUpView.java's anonymous IPlayerClientListener implementation of
+onUpdateCheckpointDirection() (no arguments) to onUpdateCheckpointDirection(Position pos),
+adding an import for at.fhv.audioracer.core.util.Position. This is a classic "build error"
+fix: the @Override-annotated method in StartUpView.java no longer matched the interface
+method's signature, so the project failed to compile until the parameter was added.
+
+Tracing the origin of that exact code, candidate_02 is the commit that first created the
+IPlayerClientListener interface (with the method declared as `void onUpdateCheckpointDirection();`,
+no arguments) and simultaneously introduced the anonymous listener implementation inside
+StartUpView.java with the matching no-argument override:
+`public void onUpdateCheckpointDirection() { ... }`.
+
+Across the remaining candidates (03-07), this specific line in StartUpView.java is never
+touched again, and no candidate updates the interface's onUpdateCheckpointDirection() to add
+a Position parameter (candidate_06 only adds a no-op `Adapter` class to the interface that
+still uses the original no-argument signature). This means the no-argument implementation in
+StartUpView.java, first written in candidate_02, is the code that eventually became stale
+relative to the interface contract and had to be patched by the fix commit. Since no other
+candidate re-touches or introduces a conflicting signature for this method before the fix, and
+candidate_02 is the sole place where this problematic (later-to-be-broken) implementation was
+first written, it is the most likely bug-introducing commit under SZZ blame-based reasoning
+(git blame on the removed line in the fix diff would resolve to candidate_02).
+
+Note: candidate_08's diff is textually identical to the fix commit's diff (same before/after
+blob hashes), meaning candidate_08 essentially duplicates the fix itself rather than
+introducing the bug, so it was excluded from consideration despite touching the same line.

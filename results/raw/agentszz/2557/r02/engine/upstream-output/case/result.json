@@ -1,0 +1,22 @@
+{
+  "fix_commit": "6cb1c62cb4b58db126b8fc76c1725f2503f38f58",
+  "bic": "c74c87e94e10420f559212db631d33ff37847c7c",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "The BddRunContext class was introduced in the \"Init project\" commit with the field `runningBatchKey` declared as `Optional<String>` without any default initialization. This left the field null until `putRunningBatch()` was explicitly called (which happens only when Vividus batches execute). When stories are run via the jbehave-junit-runner, which builds the execution tree without ever calling `putRunningBatch()`, `getRunningBatchKey()` throws NPE because the field remains uninitialized (null) rather than an empty Optional or a sane default. The fix directly addresses this by initializing the field to `Optional.of(\"batch-1\")` at declaration, fixing the exact bug introduced by this commit's original declaration of the field without a default value. Git blame traces this exact line straight back to the project's initial commit, and no intermediate commit altered the semantics of this field's initialization before the fix.",
+  "metrics": {
+    "case_elapsed_seconds": 10.073279,
+    "api_elapsed_seconds": 9.925279,
+    "tool_elapsed_seconds": 0.060163,
+    "other_elapsed_seconds": 0.087845,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 17545,
+    "completion_tokens": 694,
+    "total_tokens": 18239,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:16:51.804940"
+}

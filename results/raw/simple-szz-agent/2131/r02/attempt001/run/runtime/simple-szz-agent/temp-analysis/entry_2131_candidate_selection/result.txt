@@ -1,0 +1,44 @@
+SELECTED: candidate_208
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit resolves an "IAE: PopupHandler.installPopupHandler" crash in
+FileHistoryPanelImpl by moving `myPopupActions = createPopupActions();` to run
+BEFORE `createDualView();` in the constructor (previously it ran after).
+
+Tracing the history of createDualView() across the candidates shows that the
+constructor order (createDualView() called, then myPopupActions assigned
+afterward) actually existed unchanged all the way back to candidate_01, when
+the class (then named FileHistoryPanel) was first created. In that original
+code, createDualView() installed popup menus using an anonymous
+`PopupHandler` subclass whose `invokePopup()` method referenced the
+`myPopupActions` field only lazily -- i.e., only when the user actually
+right-clicked, by which time the constructor (and thus the field assignment)
+had long since completed. So the "wrong" order of statements was harmless for
+a very long time.
+
+candidate_208 changes this: it refactors createDualView() to replace the
+anonymous PopupHandler mouse listeners with direct calls to the static
+helper:
+
+    PopupHandler.installPopupHandler(myDualView.getTreeView(), myPopupActions, ActionPlaces.UPDATE_POPUP, ActionManager.getInstance());
+    PopupHandler.installPopupHandler(myDualView.getFlatView(), myPopupActions, ActionPlaces.UPDATE_POPUP, ActionManager.getInstance());
+
+Here `myPopupActions` is passed as a method argument, so it is evaluated
+EAGERLY at the moment createDualView() executes -- not lazily inside a
+callback anymore. Since the constructor still calls createDualView() before
+assigning `myPopupActions = createPopupActions();` (an ordering that was
+never actually fixed at this point), `myPopupActions` is still null/
+uninitialized when passed into `installPopupHandler`, which throws an
+IllegalArgumentException (IAE) when trying to build the action popup menu
+with a null action group.
+
+This is precisely the initialization-order bug the fix commit addresses.
+candidate_208 is the commit that turned the previously-latent, harmless
+statement ordering into an actual runtime bug by switching from lazy to
+eager evaluation of `myPopupActions`. Supporting this conclusion,
+candidate_209 (the very next candidate in the chronological sequence) is
+byte-for-byte identical to the fix_commit_diff.txt provided, confirming that
+candidate_208 is the last commit before the fix and therefore the true
+bug-introducing commit.

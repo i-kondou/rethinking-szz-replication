@@ -1,0 +1,64 @@
+{
+  "sample_id": "1381",
+  "repository": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/repos/IronTeaPot/react-native-charts-wrapper",
+  "source_bfc": "3da25d5164cd69ed1ee83c89b5660917e81faf62",
+  "records": [
+    {
+      "requested": "3da25d5164cd69ed1ee83c89b5660917e81faf62",
+      "commit": "3da25d5164cd69ed1ee83c89b5660917e81faf62",
+      "metadata": {
+        "returncode": 0,
+        "stdout": "commit 3da25d5164cd69ed1ee83c89b5660917e81faf62\nAuthor:     RayMin <rmin@thoughtworks.com>\nAuthorDate: Wed Feb 28 19:51:06 2018 +0800\nCommit:     RayMin <rmin@thoughtworks.com>\nCommitDate: Wed Feb 28 19:51:06 2018 +0800\n\n    fix ci error introduced by 6862f13bd\n",
+        "stderr": ""
+      },
+      "changed_files": {
+        "returncode": 0,
+        "stdout": "M\tandroid/src/main/java/com/github/wuxudong/rncharts/charts/CustomPieChart.java\n",
+        "stderr": ""
+      },
+      "relevant_diff": {
+        "returncode": 0,
+        "stdout": "commit 3da25d5164cd69ed1ee83c89b5660917e81faf62\nAuthor:     RayMin <rmin@thoughtworks.com>\nAuthorDate: Wed Feb 28 19:51:06 2018 +0800\nCommit:     RayMin <rmin@thoughtworks.com>\nCommitDate: Wed Feb 28 19:51:06 2018 +0800\n\n    fix ci error introduced by 6862f13bd\n\ndiff --git a/android/src/main/java/com/github/wuxudong/rncharts/charts/CustomPieChart.java b/android/src/main/java/com/github/wuxudong/rncharts/charts/CustomPieChart.java\nindex 6110ef6..53cdf76 100644\n--- a/android/src/main/java/com/github/wuxudong/rncharts/charts/CustomPieChart.java\n+++ b/android/src/main/java/com/github/wuxudong/rncharts/charts/CustomPieChart.java\n@@ -3,12 +3,9 @@ package com.github.wuxudong.rncharts.charts;\n import android.content.Context;\n import android.util.AttributeSet;\n import android.view.MotionEvent;\n-import android.view.View;\n \n import com.github.mikephil.charting.charts.PieChart;\n import com.github.mikephil.charting.highlight.Highlight;\n-import com.github.mikephil.charting.listener.ChartTouchListener;\n-import com.github.mikephil.charting.listener.OnChartGestureListener;\n import com.github.mikephil.charting.listener.PieRadarChartTouchListener;\n \n /**\n@@ -34,9 +31,12 @@ public class CustomPieChart extends PieChart {\n \n         mChartTouchListener = new PieRadarChartTouchListener(this){\n \n-            if (h != null && !h.equalTo(mLastHighlighted)) {\n-                mChart.highlightValue(h, true);\n-                mLastHighlighted = h;\n+            protected void performHighlight(Highlight h, MotionEvent e) {\n+\n+                if (h != null && !h.equalTo(mLastHighlighted)) {\n+                    mChart.highlightValue(h, true);\n+                    mLastHighlighted = h;\n+                }\n             }\n         };\n     }\n",
+        "stderr": ""
+      }
+    },
+    {
+      "requested": "6862f13bd93a10370d6cffe84086033004e4fb84",
+      "commit": "6862f13bd93a10370d6cffe84086033004e4fb84",
+      "metadata": {
+        "returncode": 0,
+        "stdout": "commit 6862f13bd93a10370d6cffe84086033004e4fb84\nAuthor:     RayMin <rmin@thoughtworks.com>\nAuthorDate: Wed Feb 28 16:07:37 2018 +0800\nCommit:     RayMin <rmin@thoughtworks.com>\nCommitDate: Wed Feb 28 16:07:37 2018 +0800\n\n    [SCB-824] disable PieChart unhighlight function in android and ios native code\n",
+        "stderr": ""
+      },
+      "changed_files": {
+        "returncode": 0,
+        "stdout": "M\tios/ReactNativeCharts/pie/RNPieChartView.swift\n",
+        "stderr": ""
+      },
+      "relevant_diff": {
+        "returncode": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "requested": "878f010685",
+      "commit": "878f01068593e4f72334452100d346ccd050f1e3",
+      "metadata": {
+        "returncode": 0,
+        "stdout": "commit 878f01068593e4f72334452100d346ccd050f1e3\nAuthor:     RayMin <rmin@thoughtworks.com>\nAuthorDate: Wed Feb 28 14:35:32 2018 +0800\nCommit:     RayMin <rmin@thoughtworks.com>\nCommitDate: Wed Feb 28 14:35:32 2018 +0800\n\n    [SCB-824] disable PieChart unhighlight function in android and ios native code\n",
+        "stderr": ""
+      },
+      "changed_files": {
+        "returncode": 0,
+        "stdout": "A\tandroid/src/main/java/com/github/wuxudong/rncharts/charts/CustomPieChart.java\nM\tandroid/src/main/java/com/github/wuxudong/rncharts/charts/PieChartManager.java\nA\tios/ReactNativeCharts/pie/MyPieChartView.swift\n",
+        "stderr": ""
+      },
+      "relevant_diff": {
+        "returncode": 0,
+        "stdout": "commit 878f01068593e4f72334452100d346ccd050f1e3\nAuthor:     RayMin <rmin@thoughtworks.com>\nAuthorDate: Wed Feb 28 14:35:32 2018 +0800\nCommit:     RayMin <rmin@thoughtworks.com>\nCommitDate: Wed Feb 28 14:35:32 2018 +0800\n\n    [SCB-824] disable PieChart unhighlight function in android and ios native code\n\ndiff --git a/android/src/main/java/com/github/wuxudong/rncharts/charts/CustomPieChart.java b/android/src/main/java/com/github/wuxudong/rncharts/charts/CustomPieChart.java\nnew file mode 100644\nindex 0000000..6110ef6\n--- /dev/null\n+++ b/android/src/main/java/com/github/wuxudong/rncharts/charts/CustomPieChart.java\n@@ -0,0 +1,43 @@\n+package com.github.wuxudong.rncharts.charts;\n+\n+import android.content.Context;\n+import android.util.AttributeSet;\n+import android.view.MotionEvent;\n+import android.view.View;\n+\n+import com.github.mikephil.charting.charts.PieChart;\n+import com.github.mikephil.charting.highlight.Highlight;\n+import com.github.mikephil.charting.listener.ChartTouchListener;\n+import com.github.mikephil.charting.listener.OnChartGestureListener;\n+import com.github.mikephil.charting.listener.PieRadarChartTouchListener;\n+\n+/**\n+ * Created by rmin on 28/02/2018.\n+ * Override to disable unhighlight function\n+ */\n+public class CustomPieChart extends PieChart {\n+    public CustomPieChart(Context context) {\n+        super(context);\n+    }\n+\n+    public CustomPieChart(Context context, AttributeSet attrs) {\n+        super(context, attrs);\n+    }\n+\n+    public CustomPieChart(Context context, AttributeSet attrs, int defStyle) {\n+        super(context, attrs, defStyle);\n+    }\n+\n+    @Override\n+    protected void init() {\n+        super.init();\n+\n+        mChartTouchListener = new PieRadarChartTouchListener(this){\n+\n+            if (h != null && !h.equalTo(mLastHighlighted)) {\n+                mChart.highlightValue(h, true);\n+                mLastHighlighted = h;\n+            }\n+        };\n+    }\n+}\n",
+        "stderr": ""
+      }
+    }
+  ]
+}

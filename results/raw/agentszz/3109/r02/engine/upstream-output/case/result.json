@@ -1,0 +1,22 @@
+{
+  "fix_commit": "395d7ef9ff15d70632f75e4eb4816680e612f9e1",
+  "bic": "0dd84a04f05c4a852194e92db650588d1a8166c0",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"HQL Reports: Export HQL\") introduced the code path that reads `helper.getParameter(option.name())` for single-choice parameters and immediately constructs an IdValue/attempts to parse it as a Long without checking if `value` is null. The fix commit simply wraps this logic in a `if (value != null)` check. Blame on the lines directly preceding the fix traces exactly to this commit, and the diff shows this logic was newly added here as part of a broader export/HQL rewrite, not a mere refactor of prior null-safe code.",
+  "metrics": {
+    "case_elapsed_seconds": 8.964732,
+    "api_elapsed_seconds": 8.773286,
+    "tool_elapsed_seconds": 0.072465,
+    "other_elapsed_seconds": 0.118988,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 16210,
+    "completion_tokens": 592,
+    "total_tokens": 16802,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:36:17.227361"
+}

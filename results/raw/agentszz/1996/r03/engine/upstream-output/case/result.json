@@ -1,0 +1,22 @@
+{
+  "fix_commit": "333cd0d114de5bee2bdbfc3be91c7a373174dfe1",
+  "bic": "7434506f7fd3a069f899c1d535eaf0a876306c6f",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "Prior to this commit, `compilerComplianceLevel` was stored as a converted `JavaVersion` field (`this.compilerComplianceLevel = JavaVersion.toVersion(compilerComplianceLevel)`), so `.toString()` on it produced the normalized version string. This refactor moved the logic to a local lambda but mistakenly used the raw String parameter `compilerComplianceLevel` directly (calling `.toString()` on the String itself) instead of converting it via `JavaVersion.toVersion(...)`, losing the normalization and introducing the bug. The fix commit restores the `JavaVersion.toVersion(compilerComplianceLevel).toString()` call.",
+  "metrics": {
+    "case_elapsed_seconds": 13.43185,
+    "api_elapsed_seconds": 13.239032,
+    "tool_elapsed_seconds": 0.086743,
+    "other_elapsed_seconds": 0.106082,
+    "api_call_count": 4,
+    "tool_call_count": 3,
+    "prompt_tokens": 25664,
+    "completion_tokens": 937,
+    "total_tokens": 26601,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:44:07.965607"
+}

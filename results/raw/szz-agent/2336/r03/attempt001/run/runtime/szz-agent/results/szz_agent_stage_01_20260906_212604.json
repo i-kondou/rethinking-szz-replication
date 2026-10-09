@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "timestamp": "20260906_212604",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/2336/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "2336",
+      "fix_commit_hash": "c34d7adf53e71e8998596689581a1611d0d0353f",
+      "bug_commit_hash": [
+        "d37442cdb1189c7202c177901832e34f582e2feb"
+      ],
+      "szz_candidates": [
+        "d37442cdb1189c7202c177901832e34f582e2feb"
+      ],
+      "szz_num_candidates": 1,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "d37442cdb1189c7202c177901832e34f582e2feb"
+      ],
+      "llm_selected_commit": "d37442cdb1189c7202c177901832e34f582e2feb",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit changes the condition on line 1928 of Minecraft.java from `if (!packetHandler.isLoadingLevel){` to `if (!packetHandler.isLoadingLevel || !isOnline()){`, which is the exact line of code that candidate_01 introduced. Candidate_01's diff shows the addition of this if/else block (`if (!packetHandler.isLoadingLevel){ pause(); } else { Mouse.setGrabbed(false); }`) that gates whether pause() (which shows the menu) is called when Escape is pressed. The bug described in the fix (\"menu to n",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/2336",
+      "bug_fixing_commit": "c34d7adf53e71e8998596689581a1611d0d0353f",
+      "bug_inducing_commit": [
+        "d37442cdb1189c7202c177901832e34f582e2feb"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "andrewphorn/ClassiCube-Client"
+    }
+  ]
+}

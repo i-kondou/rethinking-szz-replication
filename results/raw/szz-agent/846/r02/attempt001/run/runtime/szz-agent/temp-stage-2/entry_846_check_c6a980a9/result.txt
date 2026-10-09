@@ -1,0 +1,8 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a null check `if (myDataChoices != null)` wrapping a block that inspects `myDataChoices.get(0)` for a `DerivedDataChoice` and reads the `usesTimeDriver` property from a `DataSelection`. This block does not exist at all in `files/old/DisplayControlImpl.java`. Comparing the same region of the `init()` method in the old file (around the `if (!init(myDataChoices))` call), the old version proceeds directly to the "Check if we have been removed" section without any of the `myDataChoices.size() > 0 && myDataChoices.get(0) instanceof DerivedDataChoice` / `usesTimeDriver` logic present in both the buggy and fixed versions.
+
+Since the entire code section that was patched (and that contains the potential NullPointerException on `myDataChoices`) had not yet been introduced in the old version, the specific bug being fixed cannot be present there. The bug was introduced later, after this older version, when the time-driver-checking feature was added without the necessary null check.

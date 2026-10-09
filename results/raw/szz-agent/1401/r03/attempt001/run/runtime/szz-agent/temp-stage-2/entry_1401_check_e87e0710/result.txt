@@ -1,0 +1,27 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes this line in LocalInspectionsPass.java (createHighlightInfo):
+
+Buggy:
+  tooltip = XmlStringUtil.wrapInHtml(message.startsWith("<html>") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link ;
+
+Fixed:
+  tooltip = XmlStringUtil.wrapInHtml((message.startsWith("<html>") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link);
+
+The bug is a misplaced closing parenthesis: in the buggy version, `+ link` is appended outside of `wrapInHtml(...)`, so the link text ends up outside the generated HTML wrapper (e.g. outside the <html> tags), which caused the tooltip/warning to not render/display correctly in the editor. The fix moves the parenthesis so `link` is concatenated inside `wrapInHtml(...)`.
+
+Examining files/old/.../LocalInspectionsPass.java at the equivalent logic (createHighlightInfo), the tooltip construction is written differently, using an explicit if/else instead of a ternary:
+
+  if (message.startsWith("<html>")) {
+    tooltip = XmlStringUtil.wrapInHtml(XmlStringUtil.stripHtml(message) + link);
+  }
+  else {
+    tooltip = XmlStringUtil.wrapInHtml(XmlStringUtil.escapeString(message) + link);
+  }
+
+In both branches, `link` is concatenated with the message *before* being passed into `wrapInHtml(...)`, i.e., the link is correctly placed inside the HTML wrapper. This is functionally equivalent to the fixed version's behavior, not the buggy version's behavior. The buggy ternary form (with the misplaced parenthesis placing `link` outside `wrapInHtml`) was introduced later, when the if/else was refactored into a single ternary expression and the parenthesis placement was mistakenly changed.
+
+Therefore, the old version predates the introduction of this specific bug and does not contain it.

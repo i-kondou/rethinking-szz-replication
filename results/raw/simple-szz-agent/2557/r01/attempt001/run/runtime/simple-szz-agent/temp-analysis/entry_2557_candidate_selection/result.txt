@@ -1,0 +1,22 @@
+SELECTED: candidate_01
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix adds a default value to the `runningBatchKey` field in `BddRunContext.java`:
+
+    - private Optional<String> runningBatchKey;
+    + // must be initialized for jbehave-junit-runner
+    + private Optional<String> runningBatchKey = Optional.of("batch-1");
+
+The fix commit message explains that jbehave-junit-runner builds the JUnit execution tree before actual story execution and knows nothing about Vividus batches, so `getRunningBatch()`/`getRunningBatchKey()` can be invoked before any call to `putRunningBatch()`. Since `runningBatchKey` was declared without an initializer, it defaults to plain Java `null` (not `Optional.empty()`), so calling `.orElseThrow(...)` on it throws a `NullPointerException` instead of the intended `IllegalStateException`.
+
+Tracing the history of this field across the candidates:
+
+- candidate_01 introduces `BddRunContext.java` as a brand-new file (new file mode 100644), declaring `private Optional<String> runningBatchKey;` with no initializer, and immediately dereferencing it via `runningBatchKey.orElseThrow(() -> new IllegalStateException(...))` inside `getRunningBatch()`. This is the exact buggy pattern that the fix corrects.
+- candidate_02 does not touch `runningBatchKey` at all (no matches found), so the field remains uninitialized as introduced in candidate_01.
+- candidate_03 only refactors the accessor (extracting `getRunningBatchKey()` from `getRunningBatch()`), but the underlying uninitialized field and the `.orElseThrow()` call site predate this commit unchanged.
+- candidate_04 and candidate_05 show the field declaration `private Optional<String> runningBatchKey;` as unchanged surrounding context (not modified), confirming the lack of initialization persisted through these commits.
+- candidate_06 corresponds to the fix commit itself (adds the `Optional.of("batch-1")` default), so it cannot be the bug-introducing commit.
+
+Since candidate_01 is the first (and only) commit that introduces the field without a default value together with the code path that dereferences it via `.orElseThrow()`, it is the commit that introduced the NPE bug later fixed.

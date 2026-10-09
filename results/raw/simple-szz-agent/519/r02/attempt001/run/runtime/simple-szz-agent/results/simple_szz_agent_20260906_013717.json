@@ -1,0 +1,428 @@
+{
+  "metadata": {
+    "timestamp": "20260906_013717",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 96.387,
+      "max": 96.387,
+      "mean": 96.387,
+      "median": 96.387,
+      "total": 96.387,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 96.204,
+      "max": 96.204,
+      "mean": 96.204,
+      "median": 96.204,
+      "total": 96.204,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 16,
+      "max": 16,
+      "mean": 16,
+      "median": 16,
+      "total": 16,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 30,
+      "max": 30,
+      "mean": 30,
+      "median": 30,
+      "total": 30,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 8735,
+      "max": 8735,
+      "mean": 8735,
+      "median": 8735,
+      "total": 8735,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 38989,
+      "max": 38989,
+      "mean": 38989,
+      "median": 38989,
+      "total": 38989,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 333036,
+      "max": 333036,
+      "mean": 333036,
+      "median": 333036,
+      "total": 333036,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.4649598,
+      "max": 0.4649598,
+      "mean": 0.4649598,
+      "median": 0.4649598,
+      "total": 0.4649598,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 15,
+      "max": 15,
+      "mean": 15,
+      "median": 15,
+      "total": 15,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 6,
+      "Grep": 8,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 40,
+      "max": 40,
+      "mean": 40,
+      "median": 40,
+      "total": 40,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "519",
+      "fix_commit_hash": "bbcc596ff1f3b1e7d3351947c9a9e441ab825be7",
+      "ground_truth_bics": [
+        "1e8d8cde5bfab25b1d6e5ff39221c237374957f7"
+      ],
+      "predicted_bics": [
+        "1e8d8cde5bfab25b1d6e5ff39221c237374957f7"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "519",
+      "fix_commit": "bbcc596ff1f3b1e7d3351947c9a9e441ab825be7",
+      "ground_truth_bics": [
+        "1e8d8cde5bfab25b1d6e5ff39221c237374957f7"
+      ],
+      "total_candidates": 40,
+      "gt_in_candidates": true,
+      "selected_commit": "1e8d8cde5bfab25b1d6e5ff39221c237374957f7",
+      "selected_index": 37,
+      "confidence": "HIGH",
+      "explanation": "The fix commit restores a check in AbstractFile.onModification() so that the path-uniqueness validation (validatePath()) is only invoked when the static flag `validatePathUniqueness` (populated from the config switch `application.filesystem.unique.paths`) is true: boolean valid = true; if (validatePathUniqueness) { valid = validatePath(securityContext, errorBuffer); }",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "structr-ui/src/main/java/org/structr/web/entity/AbstractFile.java"
+      ],
+      "call_stats": {
+        "duration_s": 96.387,
+        "duration_api_s": 96.204,
+        "num_turns": 16,
+        "input_tokens": 30,
+        "output_tokens": 8735,
+        "cache_creation_input_tokens": 38989,
+        "cache_read_input_tokens": 333036,
+        "total_cost_usd": 0.4649598,
+        "total_tool_calls": 15,
+        "tool_calls_by_name": {
+          "Read": 6,
+          "Grep": 8,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 9,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_519_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1409,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_519_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_519_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 946,
+            "cache_read_input_tokens": 9689,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "validatePath|validatePathUniqueness|onModification",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_519_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 499,
+            "cache_read_input_tokens": 10635,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "validatePath|validatePathUniqueness|onModification|application.filesystem.unique.paths",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_519_candidate_selection/candidates/candidate_01.diff",
+                  "output_mode": "content",
+                  "-C": 10
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1708,
+            "cache_read_input_tokens": 11134,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "AbstractFile.java",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_519_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 925,
+            "cache_read_input_tokens": 12842,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "validatePathUniqueness",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_519_candidate_selection/candidates",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 9363,
+            "cache_read_input_tokens": 13767,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "public boolean onModification|public boolean onCreation|public boolean validatePath|validatePathUniqueness|validateAndRenameFileOnce",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_519_candidate_selection/candidates/candidate_33.diff",
+                  "output_mode": "content",
+                  "-C": 2
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2014,
+            "cache_read_input_tokens": 23130,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_519_candidate_selection/candidates/candidate_33.diff",
+                  "offset": 225,
+                  "limit": 80
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1965,
+            "cache_read_input_tokens": 25144,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_519_candidate_selection/candidates/candidate_38.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 5542,
+            "cache_read_input_tokens": 27109,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_519_candidate_selection/candidates/candidate_40.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1651,
+            "cache_read_input_tokens": 32651,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "validatePathUniqueness|onModification|onCreation|validatePath\\(",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_519_candidate_selection/candidates/candidate_34.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 12,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 5620,
+            "cache_read_input_tokens": 34302,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "validatePathUniqueness",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_519_candidate_selection/candidates/candidate_36.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 13,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 398,
+            "cache_read_input_tokens": 39922,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "validatePathUniqueness|onModification|onCreation",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_519_candidate_selection/candidates/candidate_39.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 14,
+            "input_tokens": 2,
+            "output_tokens": 7,
+            "cache_creation_input_tokens": 393,
+            "cache_read_input_tokens": 40320,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/519/r02/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_519_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_38\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit restores a check in AbstractFile.onModification() so that the path-uniqueness\nvalidation (validatePath()) is only invoked when the static flag `validatePathUniqueness`\n(populated from the config switch `application.filesystem.unique.paths`) is true:\n\n    boolean valid = true;\n    if (validatePathUniqueness) {\n        valid = validatePath(securityContext, errorBuffer);\n    }\n\nTracing the history of AbstractFile.java across the candidates:\n\n- candidate_33 introduces the `validatePathUniqueness` field (populated from\n  `Services.APPLICATION_FILESYSTEM_UNIQUE_PATHS`) and, crucially, puts the\n  `if (validatePathUniqueness) { ... }` guard INSIDE the `validatePath()` method itself.\n  At this point both `onCreation()` and `onModification()` call `validatePath()`\n  unconditionally, but since the guard lives inside `validatePath()`, the config switch\n  is still correctly respected for both creation and modification.\n\n- candidate_38 refactors this logic: it removes the `if (validatePathUniqueness)` guard\n  from inside `validatePath()` (which now always performs the uniqueness check when\n  called) and instead moves the flag check out to the call site in `onCreation()`,\n  wrapping a *new* method `validateAndRenameFileOnce()`:\n\n      if (validatePathUniqueness) {\n          valid = validateAndRenameFileOnce(securityContext, errorBuffer);\n      }\n\n  However, `onModification()` was left completely unchanged - it still calls\n  `validatePath(securityContext, errorBuffer)` directly and unconditionally. Since\n  `validatePath()` no longer contains the internal flag check (that check was moved\n  out only for the onCreation path), `onModification()` now ALWAYS performs the\n  path-uniqueness validation regardless of the `application.filesystem.unique.paths`\n  configuration switch. This is exactly the bug described in the fix: \"Correctly\n  respects configuration switch `application.filesystem.unique.paths` when renaming\n  files/folders\" - renaming (an update/modification operation) ignored the switch\n  after this refactor.\n\n- candidate_40 is textually identical to fix_commit_diff.txt (same blob hashes\n  5bb005d96..ab8131d11), i.e. it IS the fix commit itself, re-adding the guard\n  directly in `onModification()`. It cannot be the bug-introducing commit.\n\n- No candidate between 33 and 38, nor between 38 and 40, touches\n  `validatePathUniqueness`, `validatePath()`, or `onModification()` in AbstractFile.java\n  in a way relevant to this behavior (verified via search across all 40 candidates).\n\nTherefore candidate_38 is the commit that introduced the bug: by moving the\nconfig-switch check out of validatePath() and into onCreation()'s new\nvalidateAndRenameFileOnce() wrapper, it silently removed the switch's effect on\nonModification(), causing renames/updates to always be validated for path\nuniqueness even when the switch was disabled.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 15,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1674,
+            "cache_read_input_tokens": 40713,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

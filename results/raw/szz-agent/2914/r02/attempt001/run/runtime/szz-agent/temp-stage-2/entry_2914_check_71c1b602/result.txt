@@ -1,0 +1,12 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes `Input.parseRFC8601DateTime(JaamSimModel simModel, String input)` so that, in the `isextendtime` ("hh:mm:ss") and `isextendfull` ("hh:mm:ss.ssssss") branches, the method multiplies the accumulated microsecond total `ret` by `1e-6` before returning it. In the buggy version this method is declared to return a `double` representing simulation time in *seconds* (it takes a `JaamSimModel` and, for the RFC8601-date branch, calls `simModel.calendarMillisToSimTime(millis)` which already yields seconds), but for the two "extended" time-only formats it built up `ret` in microseconds and returned that raw microsecond value directly as if it were seconds — a unit-conversion bug.
+
+In `files/old/Input.java`, the method with this exact signature and behavior does not exist. Instead, the old version has an earlier design: `public static long parseRFC8601DateTime(String input)` (no `JaamSimModel` parameter) that is explicitly documented to "return it as an offset in microseconds from 0AD" and returns a `long` in all branches, including the `isextendtime`/`isextendfull` branches (`return ret;` at old lines ~715 and ~743), consistently in microseconds — matching the `is8601`/`getUS()` branches, which also return raw microseconds.
+
+Critically, all call sites of this old method perform the unit conversion themselves: both usages found in the same file (`Input.parseDoubles(KeywordIndex...)` and `Input.parseDoubles(List<String>...)`) call `Input.parseRFC8601DateTime(...)/1e6` to convert the returned microseconds into seconds. This is consistent across all code paths (RFC8601-date, extended-time, and extended-full-time), so there is no missing conversion or mismatched unit anywhere in the old version.
+
+The bug introduced in the "buggy" version was created later, when the API was refactored to return seconds directly (folding in the `simModel.calendarMillisToSimTime` conversion for the date branch) but the two extended-time branches were not updated to also convert their microsecond totals to seconds — that refactor and omission had not yet happened in `files/old/`. Since the relevant code path (a method that mixes seconds-returning semantics with an unconverted microsecond calculation) does not exist in the old version, the bug cannot be present there.

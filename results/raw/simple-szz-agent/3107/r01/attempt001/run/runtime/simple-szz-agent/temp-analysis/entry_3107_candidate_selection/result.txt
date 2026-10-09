@@ -1,0 +1,17 @@
+SELECTED: candidate_04
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes a single line in CmsRenderTemplate.java, restoring the ".properties" file extension:
+
+-    resources = loader.getResources("cmsFreemarkerTransforms");
++    resources = loader.getResources("cmsFreemarkerTransforms.properties");
+
+Tracing this exact line across the candidates:
+
+- candidate_01 introduces the CmsRenderTemplate.java code with the CORRECT call: loader.getResources("cmsFreemarkerTransforms.properties"), matching the newly-added applications/cms/config/cmsFreemarkerTransforms.properties resource file added in the same commit. At this point the code is correct and the bug does not exist.
+- candidate_04 performs a broader refactor across several CMS template classes that strips the ".properties" suffix from resource/property names passed to UtilProperties (e.g. "cms.properties" -> "cms"). As part of this same sweeping change, it incorrectly also strips the extension from the unrelated loader.getResources() call, changing "cmsFreemarkerTransforms.properties" to "cmsFreemarkerTransforms". Unlike the UtilProperties.getPropertyAsBoolean/getPropertyValue calls (which resolve properties files and correctly should not have the extension), ClassLoader.getResources() requires the literal resource file name including its extension, so this line was mistakenly changed to be broken by the refactor.
+- candidate_05 is the fix itself, reverting exactly this one line back to include ".properties", restoring correct behavior.
+
+This is a "same-refactor collateral damage" bug: candidate_04 correctly removed ".properties" from several UtilProperties calls but mistakenly applied the same transformation to a getResources() call that actually needs the raw file name, thereby introducing the bug that the fix commit later corrects.

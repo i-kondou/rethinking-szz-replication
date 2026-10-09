@@ -1,0 +1,22 @@
+{
+  "fix_commit": "c34d7adf53e71e8998596689581a1611d0d0353f",
+  "bic": "d37442cdb1189c7202c177901832e34f582e2feb",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"Fixes #319\") replaced the unconditional `pause()` call on ESC key press with a check on `packetHandler.isLoadingLevel`, without accounting for singleplayer (offline) mode. In singleplayer, `isLoadingLevel` presumably remains true or is not properly reset since there's no real network packet handling, so the condition `!packetHandler.isLoadingLevel` evaluates false and `pause()` (which shows the menu) never gets called \u2014 causing the menu to not show up in singleplayer. The fix adds `|| !isOnline()` to restore the pause behavior for singleplayer, directly correcting the logic introduced by this commit.",
+  "metrics": {
+    "case_elapsed_seconds": 13.396452,
+    "api_elapsed_seconds": 13.197475,
+    "tool_elapsed_seconds": 0.092878,
+    "other_elapsed_seconds": 0.106105,
+    "api_call_count": 4,
+    "tool_call_count": 3,
+    "prompt_tokens": 18763,
+    "completion_tokens": 816,
+    "total_tokens": 19579,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:06:22.498111"
+}

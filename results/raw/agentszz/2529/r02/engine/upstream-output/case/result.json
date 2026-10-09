@@ -1,0 +1,22 @@
+{
+  "fix_commit": "fea56932fffe94e2d7dde77d8d27c159acac1795",
+  "bic": "42809e676825643189e9c16dfc8f5e7e17261077",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit introduced the logic checking `fieldNameForRoutingKey.startsWith(\"metadata.\")` after the field had already been mangled (periods replaced with %2E) elsewhere, and used substring(9) to strip the \"metadata.\" prefix \u2014 a bug because the check would fail once the field name had periods replaced, or logic order issues as described. The fix commit directly replaces this exact `startsWith(\"metadata.\")` / `substring(9)` logic with a boolean flag computed earlier (before the replaceAll), confirming this commit is the origin of the buggy logic being fixed.",
+  "metrics": {
+    "case_elapsed_seconds": 8.930341,
+    "api_elapsed_seconds": 8.759304,
+    "tool_elapsed_seconds": 0.061199,
+    "other_elapsed_seconds": 0.109844,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 17093,
+    "completion_tokens": 679,
+    "total_tokens": 17772,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:16:16.857381"
+}

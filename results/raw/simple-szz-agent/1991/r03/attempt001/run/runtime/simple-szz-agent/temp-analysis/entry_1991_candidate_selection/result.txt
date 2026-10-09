@@ -1,0 +1,15 @@
+SELECTED: candidate_70
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes a single line in BookView.java's getPageNumberFor(int index, int position) method: `int pageNum = 0;` -> `int pageNum = -1;`. This variable is the return value used to signal "no page number found" (title page / not-yet-paginated state), and initializing it to 0 instead of -1 caused the title page to incorrectly report page number 0 instead of the proper sentinel value.
+
+Tracing this method's history through the candidates:
+- candidate_70 is the FIRST commit to introduce the `getPageNumberFor(int index, int position)` method at all (in src/main/java/net/nightwhistler/pageturner/epub/PageTurnerSpine.java), including the line `int pageNum = 0;` as its initial value. This is the exact origin of the buggy initialization.
+- candidate_80 and candidate_84 merely call `spine.getPageNumberFor(...)`, not modifying its internals.
+- candidate_104 moves the method (unchanged logic, still `int pageNum = 0;`) from PageTurnerSpine.java into BookView.java (matching the file path and package structure seen in the fix diff: src/net/nightwhistler/pageturner/view/bookview/BookView.java).
+- candidate_147/148/157/162/163/166 all show `int pageNum = 0;` only as unchanged context while making unrelated edits nearby (adding LOG.debug statements, null checks, etc.), confirming the buggy line persisted untouched from candidate_70 all the way through to the fix.
+- candidate_173 is the fix commit itself (`int pageNum = 0;` -> `int pageNum = -1;`).
+
+Since the problematic initialization value (0 instead of -1) was never changed between its introduction and the fix, candidate_70 is the commit that introduced the bug.

@@ -1,0 +1,54 @@
+diff --git a/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsFileRevisionEx.java b/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsFileRevisionEx.java
+index d7ba8e7fb68..c45270a4f7f 100644
+--- a/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsFileRevisionEx.java
++++ b/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsFileRevisionEx.java
+@@ -15,6 +15,8 @@
+  */
+ package com.intellij.openapi.vcs.history;
+ 
++import com.intellij.openapi.vcs.FilePath;
++import org.jetbrains.annotations.NotNull;
+ import org.jetbrains.annotations.Nullable;
+ 
+ /**
+@@ -29,4 +31,10 @@ public abstract class VcsFileRevisionEx implements VcsFileRevision {
+ 
+   @Nullable
+   public abstract String getCommitterEmail();
++
++  /**
++   * Returns the path of the file as it were in this revision
++   */
++  @NotNull
++  public abstract FilePath getPath();
+ }
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+index 383634fa588..66e49ab0ced 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+@@ -1299,7 +1299,8 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+ 
+   private VirtualFile createVirtualFileForRevision(VcsFileRevision revision) {
+     if (!myRevisionToVirtualFile.containsKey(revision)) {
+-      myRevisionToVirtualFile.put(revision, new VcsVirtualFile(myFilePath.getPath(), revision, VcsFileSystem.getInstance()));
++      FilePath filePath = (revision instanceof VcsFileRevisionEx ? ((VcsFileRevisionEx)revision).getPath() : myFilePath);
++      myRevisionToVirtualFile.put(revision, new VcsVirtualFile(filePath.getPath(), revision, VcsFileSystem.getInstance()));
+     }
+     return myRevisionToVirtualFile.get(revision);
+   }
+diff --git a/plugins/git4idea/src/git4idea/GitFileRevision.java b/plugins/git4idea/src/git4idea/GitFileRevision.java
+index b344ff5da54..265ecc5a9a5 100644
+--- a/plugins/git4idea/src/git4idea/GitFileRevision.java
++++ b/plugins/git4idea/src/git4idea/GitFileRevision.java
+@@ -77,9 +77,8 @@ public class GitFileRevision extends VcsFileRevisionEx implements Comparable<Vcs
+     myParents = parents;
+   }
+ 
+-  /**
+-   * @return file path
+-   */
++  @Override
++  @NotNull
+   public FilePath getPath() {
+     return path;
+   }

@@ -1,0 +1,29 @@
+SELECTED: candidate_11
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes two lines in PatriciaTreeMutable.reclaim():
+  final NodeChildrenIterator children = sourceNode.getChildren(actItr.next());
+  srcItr = sourceNode.keySequence.iterator();
+back to using `source.currentNode` instead of the cached local variable `sourceNode`:
+  final NodeChildrenIterator children = source.currentNode.getChildren(actItr.next());
+  srcItr = source.currentNode.keySequence.iterator();
+
+The bug is a stale-reference bug: `sourceNode` is captured once at the top of the method
+(`final NodeBase sourceNode = source.currentNode;`), but inside the traversal loop
+`source.moveDown()` mutates `source.currentNode` to point at a new (child) node. After that
+call, code that keeps using the old cached `sourceNode` variable instead of re-reading
+`source.currentNode` operates on the wrong (stale/expired) node — this is exactly the
+"weird reclaim bug" being fixed.
+
+Searching the candidate diffs for where this caching pattern was introduced, candidate_11
+is the commit that added the `final NodeBase sourceNode = source.currentNode;` /
+`final NodeBase actualNode = actual.currentNode;` caching refactor to the `reclaim()` method,
+and it is exactly where the two lines later reverted by the fix
+(`sourceNode.getChildren(...)` and `sourceNode.keySequence.iterator()` after `source.moveDown()`)
+were first written. Before candidate_11, this code used `source.currentNode` directly
+(no caching, no bug). candidate_12 contains a diff textually identical to the fix commit's
+diff itself, meaning it is not another bug introduction but rather where this exact bug
+was already being corrected/re-corrected — confirming candidate_11 as the true origin of
+the stale-node bug.

@@ -1,0 +1,12 @@
+SELECTED: candidate_16
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit modifies src/de/doe300/activerecord/store/impl/SimpleJDBCRecordStore.java, removing try-with-resources blocks around two ResultSet objects (in the methods that back streamAllWithData / allWithDataStream, and getValues(String,String,String,Object) / valuesStream), replacing them with a plain (unwrapped) ResultSet variable plus the explanatory comments "this result-set can't be try-with-resource because it is required to stay open" and "can't use try-with-resource here, because result-set is required to stay open".
+
+This reveals the bug: these two methods return a lazily-evaluated Stream that reads from the ResultSet on demand via a custom Spliterator (allWithDataStream/valuesStream). If the ResultSet is closed as soon as the try-with-resources block exits (which happens immediately, since the Stream is only returned, not consumed, inside the try block), the ResultSet is closed before the caller ever iterates the stream, causing failures (e.g. SQLException "ResultSet is closed" or empty results) whenever the stream is consumed.
+
+Examining candidate_16, this is exactly the commit that introduced this bug. Prior to candidate_16, the code used a bare `ResultSet res = stm.executeQuery();` (or `ResultSet rs = stmt.getGeneratedKeys();`) without try-with-resources for these result sets used to back lazy streams. Candidate_16 is a large refactor that changed these to `try (final ResultSet res = stm.executeQuery()) { return allWithDataStream(columns, res); }` and `try (final ResultSet res = stmt.executeQuery()) { return valuesStream(res); }` — introducing the premature-close bug. It also extracted the inline Spliterator logic into the new private helper methods allWithDataStream() and valuesStream(), which is precisely the code structure the fix commit's diff operates on.
+
+No other candidate touches this ResultSet-lifetime pattern in these methods, and candidate_16 is the only commit where the try-with-resources wrapping around these specific executeQuery() calls was introduced. The fix commit is essentially the direct, minimal revert of this specific part of candidate_16's refactor (undoing the try-with-resources on these two ResultSets while keeping the rest of the refactor, such as the extracted stream helper methods), confirming candidate_16 as the bug-introducing commit.

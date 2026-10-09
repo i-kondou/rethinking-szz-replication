@@ -1,0 +1,22 @@
+{
+  "fix_commit": "6e9ec7a38c9ffc87ce881fbe679f5a7e65b7eb2c",
+  "bic": "fee02a3d16aa835c2f1e606897e4bd08e51ba7d5",
+  "confidence": "high",
+  "type": "omission",
+  "reasoning": "This commit refactored getMembers() from a shallow-list-then-fetch-full-user approach to a PagedIterable/PagedIterator pattern. In doing so it introduced the wrapUp(GHUser[] page) override with an empty body, which no longer calls GHUser.wrap()/root.getUser() to fully populate the user objects. Previously each returned user object was fully fetched via root.getUser(), but this refactor left the paged users unpopulated (no reference to root set), causing NullPointerException when methods like getCreatedAt() are called. The fix commit simply adds back \"GHUser.wrap(users, root);\" in that same empty wrapUp method that this commit created.",
+  "metrics": {
+    "case_elapsed_seconds": 11.270015,
+    "api_elapsed_seconds": 11.083606,
+    "tool_elapsed_seconds": 0.085178,
+    "other_elapsed_seconds": 0.101238,
+    "api_call_count": 4,
+    "tool_call_count": 3,
+    "prompt_tokens": 22466,
+    "completion_tokens": 819,
+    "total_tokens": 23285,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:03:36.923182"
+}

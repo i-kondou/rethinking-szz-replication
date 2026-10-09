@@ -1,0 +1,355 @@
+{
+  "metadata": {
+    "timestamp": "20260906_032007",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/399/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 58.732,
+      "max": 58.732,
+      "mean": 58.732,
+      "median": 58.732,
+      "total": 58.732,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 58.574,
+      "max": 58.574,
+      "mean": 58.574,
+      "median": 58.574,
+      "total": 58.574,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 15,
+      "max": 15,
+      "mean": 15,
+      "median": 15,
+      "total": 15,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 5433,
+      "max": 5433,
+      "mean": 5433,
+      "median": 5433,
+      "total": 5433,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 23870,
+      "max": 23870,
+      "mean": 23870,
+      "median": 23870,
+      "total": 23870,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 82033,
+      "max": 82033,
+      "mean": 82033,
+      "median": 82033,
+      "total": 82033,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.24936689999999997,
+      "max": 0.24936689999999997,
+      "mean": 0.24936689999999997,
+      "median": 0.24936689999999997,
+      "total": 0.24936689999999997,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 3,
+      "Glob": 1,
+      "Grep": 9,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "median": 2,
+      "total": 2,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "399",
+      "fix_commit_hash": "d33e5278b211753ac3d46acb7d6213f3ae75e087",
+      "ground_truth_bics": [
+        "c3554ec31dafbdfaa0ed646afb17a6f3378571f5"
+      ],
+      "predicted_bics": [
+        "406fd95d87bfcdbb282d65589ab1fb6e9fd0018a"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "399",
+      "fix_commit": "d33e5278b211753ac3d46acb7d6213f3ae75e087",
+      "ground_truth_bics": [
+        "c3554ec31dafbdfaa0ed646afb17a6f3378571f5"
+      ],
+      "total_candidates": 20,
+      "gt_in_candidates": true,
+      "selected_commit": "406fd95d87bfcdbb282d65589ab1fb6e9fd0018a",
+      "selected_index": 7,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes KVMPhysicalDisk.java line \"rbdOpts += \"\\\\\\\\:\" + monPort;\" to \"rbdOpts += \"\\\\:\" + monPort;\" (i.e. a Java source string that produces two literal backslashes before the colon is reduced to one), fixing a \"double-escape\" of the rados monitor port separator, as described in the commit message (\"Fix double-escape issue while creating rbd disk options ... the rados host/monitor port was double escaped\"). Tracing the history of this exact code across the candidates, the method KV",
+      "is_correct": false,
+      "num_files_touched_by_fix": 2,
+      "num_source_files_touched_by_fix": 2,
+      "files_analyzed": [
+        "plugins/hypervisors/kvm/src/main/java/com/cloud/hypervisor/kvm/storage/KVMPhysicalDisk.java",
+        "plugins/hypervisors/kvm/src/test/java/com/cloud/hypervisor/kvm/storage/KVMPhysicalDiskTest.java"
+      ],
+      "call_stats": {
+        "duration_s": 58.732,
+        "duration_api_s": 58.574,
+        "num_turns": 15,
+        "input_tokens": 14,
+        "output_tokens": 5433,
+        "cache_creation_input_tokens": 23870,
+        "cache_read_input_tokens": 82033,
+        "total_cost_usd": 0.24936689999999997,
+        "total_tool_calls": 14,
+        "tool_calls_by_name": {
+          "Read": 3,
+          "Glob": 1,
+          "Grep": 9,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/399/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_399_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 20,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/399/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_399_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/399/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_399_candidate_selection/fix_commit_diff.txt"
+                }
+              },
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1862,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "rbdOpts|RBDStringBuilder|mon_host|monPort",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 330,
+            "cache_read_input_tokens": 11545,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "rbdOpts|RBDStringBuilder|mon_host|monPort",
+                  "path": "candidates",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1341,
+            "cache_read_input_tokens": 11875,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "rbdOpts|RBDStringBuilder|mon_host|monPort",
+                  "path": "candidates/candidate_08.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "rbdOpts|RBDStringBuilder|mon_host|monPort",
+                  "path": "candidates/candidate_12.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "rbdOpts|RBDStringBuilder|mon_host|monPort",
+                  "path": "candidates/candidate_13.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "rbdOpts|RBDStringBuilder|mon_host|monPort",
+                  "path": "candidates/candidate_14.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "rbdOpts|RBDStringBuilder|mon_host|monPort",
+                  "path": "candidates/candidate_16.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "rbdOpts|RBDStringBuilder|mon_host|monPort",
+                  "path": "candidates/candidate_19.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "rbdOpts|RBDStringBuilder|mon_host|monPort",
+                  "path": "candidates/candidate_20.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 10820,
+            "cache_read_input_tokens": 13216,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/399/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_399_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_08\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes KVMPhysicalDisk.java line \"rbdOpts += \"\\\\\\\\:\" + monPort;\" to \"rbdOpts += \"\\\\:\" + monPort;\" (i.e. a Java source string that produces two literal backslashes before the colon is reduced to one), fixing a \"double-escape\" of the rados monitor port separator, as described in the commit message (\"Fix double-escape issue while creating rbd disk options ... the rados host/monitor port was double escaped\").\n\nTracing the history of this exact code across the candidates, the method KVMPhysicalDisk.RBDStringBuilder(...) is first introduced in candidate_08, which adds:\n\n    rbdOpts = \"rbd:\" + image;\n    rbdOpts += \":mon_host=\" + monHost + \"\\\\\\\\:\" + monPort;\n\nThis is the very first appearance of the \"\\\\\\\\:\" (double-escaped backslash) pattern in the codebase \u2014 no prior candidate (01-07) contains any reference to RBDStringBuilder, mon_host, or monPort. Subsequent candidates (11, 12, 13, 14, 16, 19) only restructure surrounding logic (e.g., splitting the port-append into a conditional, reformatting call sites, adding rbd_default_format/client_mount_timeout options) but all preserve the same buggy \"\\\\\\\\:\" double-escaped separator introduced in candidate_08. Candidate_20 is the actual bug fix itself (its diff is byte-for-byte identical to fix_commit_diff.txt, changing \"\\\\\\\\:\" to \"\\\\:\"), confirming that the double backslash had persisted unchanged from its origin in candidate_08 all the way to the fix.\n\nSince candidate_08 is the commit that first wrote the double-escaped \"\\\\\\\\:\" string that every later commit (until the fix) merely inherited, it is the bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 3232,
+            "cache_read_input_tokens": 24036,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

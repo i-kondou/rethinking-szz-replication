@@ -1,0 +1,27 @@
+SELECTED: candidate_40
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes StitchingExplorerPanel.java so that the unconditional statement
+"savedFilteringAndGrouping = null;" (which ran right after triggering the asynchronous
+global-optimization popup via globalOptPopup.doClick()) is moved into an "else" branch,
+so it only discards the saved SpimDataFilteringAndGrouping when global optimization was
+NOT triggered. Previously, the field was always nulled out immediately, even when global
+optimization was requested, so the asynchronous global-optimization task (which reads
+the saved filtering/grouping later, on another thread) found it already discarded.
+
+candidate_40 is the commit that originally introduced this entire mechanism: it adds the
+`savedFilteringAndGrouping` field to StitchingExplorerPanel, the `doGlobalOpt` flow that
+calls `globalOptPopup.doClick()`, and immediately following it the unconditional
+"// discard the temp. SpimDataFilteringAndGrouping / savedFilteringAndGrouping = null;"
+line — exactly the buggy code path later corrected by the fix. It also adds the
+corresponding getSavedFilteringAndGrouping()/setSavedFilteringAndGrouping() accessors and
+wires OptimizeGloballyPopupExpertBatch and the CalculatePC popups to use the saved
+filtering/grouping, establishing the whole feature (and its race-condition bug) at once.
+
+No candidate between 40 and 49 touches this code again — candidate_49's diff is in fact
+byte-identical to the fix commit's diff, confirming it is the actual bug-fix commit
+included in the candidate range, not a separate bug-introducing change. This confirms
+candidate_40 is the first (and only) commit that introduced the problematic unconditional
+discard of savedFilteringAndGrouping.

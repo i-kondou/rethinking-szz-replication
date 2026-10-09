@@ -1,0 +1,27 @@
+SELECTED: candidate_38
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit message states: "The Transactions were being looked up without the readLock and some of the controls for Read and Write lock were broken." The fix diff shows that in JournalImpl.java, calls like `getTransactionInfo(txID)` (and `transactions.remove(txID)`) plus the subsequent `tx.checkErrorCondition()` are moved from BEFORE `appendExecutor.execute(...)` (i.e. outside of the `journalLock.readLock()` critical section) to INSIDE the submitted Runnable, right after `journalLock.readLock().lock()` is acquired. This is exactly the "missing readLock during transaction lookup" bug being fixed.
+
+Candidate_38 is the commit that introduced this exact problematic pattern. It is a large refactor of JournalImpl that switches from `synchronized(lockAppend)` blocks guarded entirely inside `journalLock.readLock()...finally{unlock}` to an asynchronous model using `appendExecutor.submit(...)`. In this refactor, for every transactional append method (`appendAddRecordTransactional`, `appendUpdateRecordTransactional`, `appendDeleteRecordTransactional`, `appendPrepareRecord`, `appendCommitRecord`, `appendRollbackRecord`), the transaction lookup (`getTransactionInfo(txID)` or `transactions.remove(txID)`) and the `tx.checkErrorCondition()` check were pulled OUT of the Runnable and executed on the calling thread BEFORE `journalLock.readLock()` is acquired inside the Runnable. For example:
+
+```java
+// before appendExecutor.submit — NO readLock held here
+final JournalTransaction tx = getTransactionInfo(txID);
+tx.checkErrorCondition();
+
+appendExecutor.submit(new Runnable() {
+   public void run() {
+      journalLock.readLock().lock();   // lock acquired only here, after tx was already looked up
+      try {
+         ...
+      } finally {
+         journalLock.readLock().unlock();
+      }
+   }
+});
+```
+
+This unprotected transaction lookup/removal race is precisely what the fix commit corrects, by moving `getTransactionInfo`/`transactions.remove` and the error-condition checks back inside the Runnable after the readLock is acquired (and in some cases guarding compaction-related access with the write/read lock as well). Since candidate_38 is the commit that first introduced this asynchronous execution model with the transaction lookup outside the lock, it is the bug-introducing commit. Later candidates continue to build on top of this same broken pattern (e.g. candidate_39, candidate_43) without correcting the core issue, which is only resolved in the fix commit itself.

@@ -1,0 +1,34 @@
+SELECTED: candidate_214
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit reverts fiat/equivalent-value amount formatting in
+TransfersTableAdapter.java back to using `Smartcoins.getFiatSymbol()` +
+`String.format("~ %s %.2f", ...)`, and removes the `Locale` parameter that
+had been added to the `TransfersTableAdapter` constructor.
+
+candidate_214 is the commit that introduced the exact code being reverted.
+In candidate_214:
+1. In TransfersTableAdapter.java, the working code
+   `String fiatSymbol = Smartcoins.getFiatSymbol(smartcoinAmount.getAsset());
+    String eqValue = String.format("~ %s %.2f", fiatSymbol, Util.fromBase(smartcoinAmount));`
+   was commented out and replaced with:
+   `final Currency currency = Currency.getInstance(smartcoinAmount.getAsset().getSymbol());
+    NumberFormat currencyFormatter = Helper.newCurrencyFormat(getContext(), currency, locale);
+    String eqValue = currencyFormatter.format(Util.fromBase(smartcoinAmount));`
+   `Currency.getInstance()` requires a valid ISO 4217 currency code, but
+   `smartcoinAmount.getAsset().getSymbol()` returns a BitShares smartcoin
+   symbol (e.g. "BITUSD"/"USD"-like custom symbols), which is not guaranteed
+   to be a valid `Currency` code, causing this new code path to throw/crash
+   or otherwise misbehave — the bug being fixed.
+2. candidate_214 also changed the `TransfersTableAdapter` constructor to
+   accept an extra `Locale locale` parameter and updated the single call
+   site in `BalancesFragment.java` (`new TransfersTableAdapter(getContext(),
+   locale, account, ...)`) accordingly.
+
+The fix commit's diff is a near line-for-line inverse of candidate_214's
+change to these same two files, including matching (reversed) git blob
+hashes for TransfersTableAdapter.java (b9cad9f -> 134eb82 in candidate_214,
+134eb82 -> b9cad9f in the fix) and BalancesFragment.java, confirming the fix
+is a direct revert of the change introduced in candidate_214.

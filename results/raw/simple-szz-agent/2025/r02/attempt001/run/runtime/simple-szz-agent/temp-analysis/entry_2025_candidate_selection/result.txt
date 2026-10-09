@@ -1,0 +1,33 @@
+SELECTED: candidate_59
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the "eXist Home" log line in src/org/exist/jetty/JettyStart.java from
+`SystemProperties.getInstance().getSystemProperty("exist.home", "unknown")` back to
+`System.getProperty("exist.home", "unknown")`. The bug is that `exist.home` is a JVM system
+property, not one of the build-time properties stored in src/org/exist/system.properties (which
+only contains things like product-version, product-build, svn-revision, git-commit), so reading it
+via SystemProperties.getInstance().getSystemProperty() always returns "unknown".
+
+Tracing the history of this line across the candidates:
+- candidate_28/29/33 (and others) correctly used `System.getProperty("exist.home"...)` or
+  `System.getProperty("exist.home")` — the correct JVM property lookup.
+- candidate_59 performs a refactor that replaces the whole block of version/build/home/svn info
+  lines to uniformly use `SystemProperties.getInstance().getSystemProperty(...)`, changing:
+    `msg = "[eXist Home : " + System.getProperty("exist.home") + "]";`
+  to:
+    `msg = "[eXist Home : " + SystemProperties.getInstance().getSystemProperty("exist.home", "unknown") + "]";`
+  This is exactly the erroneous pattern the fix commit later reverts. This candidate also
+  introduces the `SystemProperties` class usage and removes the old `Properties sysProperties`
+  loading code, consistent with the broader refactor context.
+- candidate_66 and candidate_69 subsequently only restyle the surrounding code (converting the
+  `msg` variable pattern into direct `logger.info(...)` calls, formatting changes) but retain the
+  same buggy `SystemProperties.getInstance().getSystemProperty("exist.home", "unknown")` call,
+  showing the bug was inherited rather than reintroduced.
+- candidate_75 is essentially the fix itself, reverting `exist.home` lookup back to
+  `System.getProperty(...)`.
+
+Since candidate_59 is the first commit in the chronological candidate list to introduce the
+incorrect `SystemProperties.getInstance().getSystemProperty("exist.home", "unknown")` call,
+it is the bug-introducing commit.

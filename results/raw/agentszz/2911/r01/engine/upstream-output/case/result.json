@@ -1,0 +1,22 @@
+{
+  "fix_commit": "1084c112ee85c7269baadafa0defc319f6c7ffc0",
+  "bic": "8399707f054e5d387e1af18384efab4cd1b26e57",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit introduced the `TimedRunnable` class in `OrderedScheduler.java`, including the buggy line `taskPendingStats.registerSuccessfulEvent(initNanos, TimeUnit.NANOSECONDS)`, which passes the raw start timestamp instead of the actual elapsed duration. The fix commit corrects this exact line by wrapping it with `MathUtils.elapsedNanos(initNanos)`. Blame directly traces the buggy line back to this commit which created the file and this logic from scratch.",
+  "metrics": {
+    "case_elapsed_seconds": 11.597838,
+    "api_elapsed_seconds": 11.424429,
+    "tool_elapsed_seconds": 0.056397,
+    "other_elapsed_seconds": 0.117018,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 27146,
+    "completion_tokens": 840,
+    "total_tokens": 27986,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:28:40.078803"
+}

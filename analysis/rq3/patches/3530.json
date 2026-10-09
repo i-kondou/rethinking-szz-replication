@@ -1,0 +1,64 @@
+{
+  "sample_id": "3530",
+  "repository": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/repos/starlightknight/jpcsp",
+  "source_bfc": "74e104b06a5cf8584829631c3b97304e0eaff071",
+  "records": [
+    {
+      "requested": "74e104b06a5cf8584829631c3b97304e0eaff071",
+      "commit": "74e104b06a5cf8584829631c3b97304e0eaff071",
+      "metadata": {
+        "returncode": 0,
+        "stdout": "commit 74e104b06a5cf8584829631c3b97304e0eaff071\nAuthor:     gid15@web.de <gid15@web.de>\nAuthorDate: Thu Dec 20 19:23:02 2018 +0100\nCommit:     gid15@web.de <gid15@web.de>\nCommitDate: Thu Dec 20 19:23:02 2018 +0100\n\n    sceAtracGetStreamDataInfo: fixed issue introduced in 84e97c4\n",
+        "stderr": ""
+      },
+      "changed_files": {
+        "returncode": 0,
+        "stdout": "M\tsrc/jpcsp/HLE/modules/sceAtrac3plus.java\n",
+        "stderr": ""
+      },
+      "relevant_diff": {
+        "returncode": 0,
+        "stdout": "commit 74e104b06a5cf8584829631c3b97304e0eaff071\nAuthor:     gid15@web.de <gid15@web.de>\nAuthorDate: Thu Dec 20 19:23:02 2018 +0100\nCommit:     gid15@web.de <gid15@web.de>\nCommitDate: Thu Dec 20 19:23:02 2018 +0100\n\n    sceAtracGetStreamDataInfo: fixed issue introduced in 84e97c4\n\ndiff --git a/src/jpcsp/HLE/modules/sceAtrac3plus.java b/src/jpcsp/HLE/modules/sceAtrac3plus.java\nindex 292ed7b8..23e55e09 100644\n--- a/src/jpcsp/HLE/modules/sceAtrac3plus.java\n+++ b/src/jpcsp/HLE/modules/sceAtrac3plus.java\n@@ -209,9 +209,19 @@ public class sceAtrac3plus extends HLEModule {\n         public int setHalfwayBuffer(int addr, int readSize, int bufferSize, boolean isMonoOutput, AtracFileInfo info) {\n         \tthis.info = info;\n         \tchannels = info.atracChannels;\n-        \tint maxSizeBeforeFirstWrap = bufferSize - ((bufferSize - info.inputFileDataOffset) % info.atracBytesPerFrame);\n-        \tint maxSizeAfterFirstWrap = bufferSize - (bufferSize % info.atracBytesPerFrame);\n-    \t\tinputBuffer = new pspFileBuffer(addr, maxSizeBeforeFirstWrap, maxSizeAfterFirstWrap, readSize, readSize);\n+        \tint maxSizeBeforeFirstWrap = bufferSize;\n+        \tint maxSizeAfterFirstWrap = bufferSize;\n+\n+        \t// If the buffer is not already full, try to align it on multiple of atracBytesPerFrame\n+        \tif (readSize < bufferSize) {\n+        \t\tint maxSizeAligned = bufferSize - ((bufferSize - info.inputFileDataOffset) % info.atracBytesPerFrame);\n+        \t\tif (maxSizeAligned >= readSize) {\n+        \t\t\tmaxSizeBeforeFirstWrap = maxSizeAligned;\n+        \t\t\tmaxSizeAfterFirstWrap = bufferSize - (bufferSize % info.atracBytesPerFrame);\n+        \t\t}\n+        \t}\n+\n+        \tinputBuffer = new pspFileBuffer(addr, maxSizeBeforeFirstWrap, maxSizeAfterFirstWrap, readSize, readSize);\n         \tinputBuffer.notifyRead(info.inputFileDataOffset);\n     \t\tinputBuffer.setFileMaxSize(info.inputFileSize);\n         \tcurrentReadPosition = info.inputFileDataOffset;\n@@ -308,6 +318,9 @@ public class sceAtrac3plus extends HLEModule {\n \n         \tif (log.isDebugEnabled()) {\n         \t\tlog.debug(String.format(\"decodeData from 0x%08X(0x%X) to 0x%08X(0x%X), skippedSamples=0x%X, currentSample=0x%X, outputChannels=%d\", readAddr, info.atracBytesPerFrame, decodedSamplesAddr, maxSamples, skippedSamples, currentSample, outputChannels));\n+        \t\tif (log.isTraceEnabled()) {\n+        \t\t\tlog.trace(String.format(\"decodeData from:%s\", Utilities.getMemoryDump(readAddr, info.atracBytesPerFrame)));\n+        \t\t}\n         \t}\n \n         \tint result = codec.decode(mem, readAddr, info.atracBytesPerFrame, mem, decodedSamplesAddr);\n@@ -399,6 +412,9 @@ public class sceAtrac3plus extends HLEModule {\n         \t\t\t\tlog.debug(String.format(\"addStreamData ignored as the atrac has looped inbetween: sample 0x%X -> 0x%X\", getStreamDataInfoCurrentSample, getAtracCurrentSample()));\n         \t\t\t}\n         \t\t} else {\n+        \t\t\tif (log.isTraceEnabled()) {\n+        \t\t\t\tlog.trace(String.format(\"addStreamData length=0x%X: %s\", length, Utilities.getMemoryDump(inputBuffer.getWriteAddr(), length)));\n+        \t\t\t}\n         \t\t\tinputBuffer.notifyWrite(length);\n         \t\t}\n         \t}\n@@ -1028,6 +1044,10 @@ public class sceAtrac3plus extends HLEModule {\n         // Allow negative values.\n         // \"Tales of VS - ULJS00209\" is even passing an uninitialized value bufferSize=0xDEADBEEF\n \n+        if (log.isTraceEnabled()) {\n+        \tlog.trace(String.format(\"hleSetHalfwayBufferAndGetID buffer=%s\", Utilities.getMemoryDump(buffer, readSize)));\n+        }\n+\n         AtracFileInfo info = new AtracFileInfo();\n         int codecType = analyzeRiffFile(buffer.getMemory(), buffer.getAddress(), readSize, info);\n         if (codecType < 0) {\n",
+        "stderr": ""
+      }
+    },
+    {
+      "requested": "84e97c4979c18cfc68054137098f4df71a1bba45",
+      "commit": "84e97c4979c18cfc68054137098f4df71a1bba45",
+      "metadata": {
+        "returncode": 0,
+        "stdout": "commit 84e97c4979c18cfc68054137098f4df71a1bba45\nAuthor:     gid15@web.de <gid15@web.de>\nAuthorDate: Wed Dec 12 18:31:39 2018 +0100\nCommit:     gid15@web.de <gid15@web.de>\nCommitDate: Wed Dec 12 18:31:39 2018 +0100\n\n    Improved scePsmfPlayerGetPsmfInfo() for the special version used by\n    \"LocoRoco 2\" which is having 4 parameters instead of 2.\n",
+        "stderr": ""
+      },
+      "changed_files": {
+        "returncode": 0,
+        "stdout": "M\tsrc/jpcsp/HLE/modules/sceMpeg.java\nM\tsrc/jpcsp/HLE/modules/scePsmfPlayer.java\n",
+        "stderr": ""
+      },
+      "relevant_diff": {
+        "returncode": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "requested": "e98ea09934",
+      "commit": "e98ea09934cea64ca7b9f8b7be6416c5afc23a4b",
+      "metadata": {
+        "returncode": 0,
+        "stdout": "commit e98ea09934cea64ca7b9f8b7be6416c5afc23a4b\nAuthor:     gid15@web.de <gid15@web.de>\nAuthorDate: Wed Dec 12 18:22:54 2018 +0100\nCommit:     gid15@web.de <gid15@web.de>\nCommitDate: Wed Dec 12 18:22:54 2018 +0100\n\n    Improved compatibility of sceAtracGetStreamDataInfo: the number of\n    writable bytes is always a multiple of the atrac frame size.\n",
+        "stderr": ""
+      },
+      "changed_files": {
+        "returncode": 0,
+        "stdout": "M\tsrc/jpcsp/HLE/kernel/types/pspFileBuffer.java\nM\tsrc/jpcsp/HLE/modules/sceAtrac3plus.java\n",
+        "stderr": ""
+      },
+      "relevant_diff": {
+        "returncode": 0,
+        "stdout": "commit e98ea09934cea64ca7b9f8b7be6416c5afc23a4b\nAuthor:     gid15@web.de <gid15@web.de>\nAuthorDate: Wed Dec 12 18:22:54 2018 +0100\nCommit:     gid15@web.de <gid15@web.de>\nCommitDate: Wed Dec 12 18:22:54 2018 +0100\n\n    Improved compatibility of sceAtracGetStreamDataInfo: the number of\n    writable bytes is always a multiple of the atrac frame size.\n\ndiff --git a/src/jpcsp/HLE/modules/sceAtrac3plus.java b/src/jpcsp/HLE/modules/sceAtrac3plus.java\nindex 98bd302f..292ed7b8 100644\n--- a/src/jpcsp/HLE/modules/sceAtrac3plus.java\n+++ b/src/jpcsp/HLE/modules/sceAtrac3plus.java\n@@ -209,7 +209,9 @@ public class sceAtrac3plus extends HLEModule {\n         public int setHalfwayBuffer(int addr, int readSize, int bufferSize, boolean isMonoOutput, AtracFileInfo info) {\n         \tthis.info = info;\n         \tchannels = info.atracChannels;\n-    \t\tinputBuffer = new pspFileBuffer(addr, bufferSize, readSize, readSize);\n+        \tint maxSizeBeforeFirstWrap = bufferSize - ((bufferSize - info.inputFileDataOffset) % info.atracBytesPerFrame);\n+        \tint maxSizeAfterFirstWrap = bufferSize - (bufferSize % info.atracBytesPerFrame);\n+    \t\tinputBuffer = new pspFileBuffer(addr, maxSizeBeforeFirstWrap, maxSizeAfterFirstWrap, readSize, readSize);\n         \tinputBuffer.notifyRead(info.inputFileDataOffset);\n     \t\tinputBuffer.setFileMaxSize(info.inputFileSize);\n         \tcurrentReadPosition = info.inputFileDataOffset;\n@@ -282,6 +284,9 @@ public class sceAtrac3plus extends HLEModule {\n         \t\tif (temporaryDecodeArea != null) {\n         \t\t\treadAddr = temporaryDecodeArea.addr;\n         \t\t\tint wrapLength = inputBuffer.getReadSize();\n+        \t\t\tif (log.isDebugEnabled()) {\n+        \t\t\t\tlog.debug(String.format(\"decodeData from temporary buffer: 0x%08X/0x%X (from 0x%08X), 0x%08X/0x%X (from 0x%08X)\", readAddr, wrapLength, inputBuffer.getReadAddr(), readAddr + wrapLength, info.atracBytesPerFrame - wrapLength, inputBuffer.getAddr()));\n+        \t\t\t}\n         \t\t\tmem.memcpy(readAddr, inputBuffer.getReadAddr(), wrapLength);\n         \t\t\tmem.memcpy(readAddr + wrapLength, inputBuffer.getAddr(), info.atracBytesPerFrame - wrapLength);\n         \t\t}\n",
+        "stderr": ""
+      }
+    }
+  ]
+}

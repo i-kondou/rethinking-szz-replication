@@ -1,0 +1,13 @@
+SELECTED: candidate_11
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix changes `JDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, compilerComplianceLevel.toString()));` to `JDT_COMPLIANCE_PROPS.forEach(p -> props.put(p, JavaVersion.toVersion(compilerComplianceLevel).toString()));` in ConventionJdt.java. The bug is that `compilerComplianceLevel` (a raw `String` method parameter) was being used directly via `.toString()` (a no-op on a String), instead of being normalized through Gradle's `JavaVersion.toVersion()` parser, which converts inputs like "1.6", "6", or "JavaVersion.VERSION_1_6" into a canonical version string (e.g. "1.6"). Without normalization, non-canonical user input would be written as-is into the `org.eclipse.jdt.core.compiler.*` preference properties, producing invalid/inconsistent Eclipse JDT compliance settings.
+
+Tracing the history of `ConventionJdt.java`:
+- In candidate_08, `compilerComplianceLevel(String)` stored the value as a `private JavaVersion compilerComplianceLevel` field via `JavaVersion.toVersion(compilerComplianceLevel)`, and a separate `JavaComplianceAction` class correctly called `.toString()` on that already-normalized `JavaVersion` field. At this point the code was correct (any string form was normalized once, at assignment time).
+- In candidate_11, `ConventionJdt` was refactored: the `JavaComplianceAction`/`JavaClasspathVariableAction` inner classes and the `JavaVersion` field were removed, and the compliance-setting logic was inlined directly into the `compilerComplianceLevel(String compilerComplianceLevel)` method. In this refactor, the code was changed to `props.put(p, compilerComplianceLevel.toString())`, but now `compilerComplianceLevel` is just the raw `String` parameter rather than a `JavaVersion` object — so the `JavaVersion.toVersion()` normalization step was silently dropped. This is exactly the bug the fix commit re-introduces (wrapping the parameter back in `JavaVersion.toVersion(...)` before calling `.toString()`).
+- candidate_12 makes unrelated changes (only the `JDT_COMPLIANCE_PROPS`/`JDT_CLASSPATH_VAR_FMT` visibility/format changes shown for candidate_09/10), and does not touch this logic.
+
+Since the fix's diff hunk exactly reverts the loss of normalization introduced during the candidate_11 refactor, candidate_11 is the bug-introducing commit.

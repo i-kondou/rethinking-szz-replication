@@ -1,0 +1,14 @@
+SELECTED: candidate_18
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit re-introduces a `skip` parameter to `CallerFinder.getStackForCallerOf()` and changes the caller-search loop from `for (int index = 0; index < depth; index++)` back to `for (int index = skip; index < depth; index++)`. The fix's comment explains that skipping at least 1 stack frame is essential because `LogContext.postProcess()` can be overridden by subclasses, which inserts extra frames (e.g. `ChildContext::postProcess`) between the actual caller and the point where the synthetic stack trace is captured; without skipping, the wrong frame can be matched as the "caller".
+
+candidate_18 is exactly the commit that removed this skip logic. Its diff to `CallerFinder.java` changes:
+- `getStackForCallerOf(Class<?> target, Throwable throwable, int skip, int maxDepth)` -> `getStackForCallerOf(Class<?> target, Throwable throwable, int maxDepth)` (dropping the `skip` parameter and its validation/javadoc entirely)
+- `for (int index = skip; index < depth; index++)` -> `for (int index = 0; index < depth; index++)`
+
+with an added comment explicitly justifying the removal: "previous versions of this code skipped some variable number of stack frames... Now we just start at the immediate 'parent' frame." This is precisely the code and reasoning that the fix commit undoes (word-for-word matching comment is removed in the fix), confirming candidate_18 introduced the synthetic stack bug that the fix addresses. The corresponding `LogContext.java` change in candidate_18 (removing the explicit `skip=2` argument in the call to `getStackForCallerOf`) is also reverted/reworked by the fix.
+
+No other candidate touches this exact removal of the skip mechanism; candidate_05, in fact, is the earlier commit that originally added the skip-based loop (which candidate_18 later removed), so candidate_18 is unambiguously the commit that introduced the regression fixed here.

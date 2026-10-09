@@ -1,0 +1,33 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The bug fixed in this commit was that logging of the "eXist Home" value used
+`SystemProperties.getInstance().getSystemProperty("exist.home", "unknown")`,
+which reads from the bundled `system.properties` resource file. Since
+`exist.home` is never written into that properties file, this call always
+returned "unknown". The fix changes it to `System.getProperty("exist.home", "unknown")`,
+which correctly reads the JVM system property that is actually set with the
+eXist home directory.
+
+Examining `files/old/src/org/exist/JettyStart.java` (an older version of the
+same file, prior to the package move to `org.exist.jetty`), the relevant line
+is:
+
+    msg = "[eXist Home : " + System.getProperty("exist.home") + "]";
+
+This already uses `System.getProperty("exist.home")` directly, exactly the
+correct approach that the fix commit restores. There is no `SystemProperties`/
+`sysProperties.get("exist.home")` lookup for the home directory at all in this
+old version (the `sysProperties` Properties object loaded from
+`system.properties` is only used for `product-version`, `product-build`, and
+`svn-revision`, never for `exist.home`).
+
+This indicates the bug was introduced later, likely during a refactor that
+replaced direct `System.getProperty` calls with the `SystemProperties`
+utility class for all of the version/build/home fields uniformly, incorrectly
+including `exist.home` in that refactor even though it is a JVM system
+property, not a value present in `system.properties`. Since the old version
+predates this refactor and already retrieves `exist.home` the correct way,
+it does not contain the bug.

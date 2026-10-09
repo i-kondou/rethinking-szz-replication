@@ -1,0 +1,12 @@
+SELECTED: candidate_02
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds an early-return guard (`if (udts.isEmpty()) { return; }`) to `BulkLoader.loadUserTypes()` and simplifies the recursive call at the end from `if (notLoaded.size() > 0) { loadUserTypes(notLoaded, ks); }` to an unconditional `loadUserTypes(notLoaded, ks);`. The root cause of the bug is the check `if (notLoaded.size() == udts.size()) { throw new RuntimeException(...) }`: when `udts` is empty, `notLoaded.size()` is also 0, so `0 == 0` is true and the method throws a RuntimeException instead of succeeding trivially — meaning the loader could never work with keyspaces that have zero user-defined types.
+
+Candidate_01 creates the initial `BulkLoader.java` file but does NOT contain the `loadUserTypes` method at all (no UDT-loading logic exists yet), so the bug could not have been introduced here.
+
+Candidate_02 is the commit that introduces the `loadUserTypes(Collection<UserType> udts, KSMetaData ks)` method for the first time, including the exact problematic logic: the loop over `udts`, the `notLoaded.size() == udts.size()` throw condition, and the conditional recursive call — with no guard for an empty `udts` collection. This is precisely the code the fix commit later patches, so candidate_02 is the commit that introduced the bug.
+
+Candidate_03 is identical to the fix_commit_diff itself (it contains the exact same guard and simplification), so it represents the fix, not the bug's introduction.

@@ -1,0 +1,18 @@
+SELECTED: candidate_49
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single line to ConsoleProgressDialog.java's constructor:
+
+    consoleProcess_ = consoleProcess;
+
+placed immediately before the `if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)` check, with the comment "save console process so that we can compute interaction mode below". This implies that at the time of the fix, `consoleProcess_` was NOT assigned before `getInteractionMode()` was called, so `getInteractionMode()` (which reads `consoleProcess_`) was operating on a null/stale value.
+
+Tracing the history of ConsoleProgressDialog.java's constructor across the candidates:
+- In candidate_14 and candidate_20 (and other earlier revisions), the constructor set `consoleProcess_ = consoleProcess;` right at the top of the constructor, well before the `getInteractionMode()` check further down — so the bug did not exist yet.
+- candidate_49 performs a significant refactor of the constructor: it removes the early `consoleProcess_ = consoleProcess;` assignment (diff shows it being deleted right before the `getInteractionMode()` check: "- consoleProcess_ = consoleProcess;" followed by "if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)"). Instead, the assignment is moved into a new `attachToProcess(ConsoleProcess consoleProcess)` method, which is only invoked at the very end of the constructor (after the `getInteractionMode()`-based UI setup, including the INTERACTION_ALWAYS branch that also calls `getInteractionMode()`).
+- This means that when the constructor now calls `getInteractionMode()` to decide UI behavior, `consoleProcess_` has not yet been set, so `getInteractionMode()` incorrectly falls back to its "consoleProcess_ == null" branch (returning INTERACTION_NEVER), causing the interactive shell UI setup to be skipped incorrectly. This is exactly the class of bug the fix commit addresses.
+- candidate_51 in this dataset is identical to the actual fix commit diff itself (re-adding `consoleProcess_ = consoleProcess;` before the check), confirming that candidate_49's refactor is what removed/broke the ordering that the fix later restores.
+
+Therefore, candidate_49 is the commit that introduced the bug by decoupling the `consoleProcess_` assignment from the constructor's `getInteractionMode()` check, moving it to after the check runs.

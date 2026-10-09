@@ -1,0 +1,16 @@
+SELECTED: candidate_81
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit's diff modifies core/src/de/gg/util/TickCounter.java, removing the line `tickCount = maxTicks;` from the constructor (along with the associated javadoc note "Has to be reset() first to get used."). This is the actual bug fix: in the original TickCounter constructor, `tickCount` was initialized to `maxTicks` at construction time. Since `update()` only runs its tick-processing loop `while (updateTime >= tickDuration && tickCount < maxTicks)`, and immediately after checks `if (tickCount == maxTicks)` to signal that the round/period is over, initializing `tickCount` to `maxTicks` in the constructor caused `update()` to report "finished" on essentially the very first call, before any real ticks had been processed — unless `reset()` was manually called first. This produced the bug that had to be fixed here (rounds ending instantly / requiring an easy-to-forget manual reset before first use).
+
+Searching all 82 candidates for references to TickCounter.java, only two candidates touch this file: candidate_81 and candidate_82. candidate_81's diff shows TickCounter.java being added as a brand-new file (`new file mode 100644`), and its constructor already contains the problematic line:
+
+    this.tickHandler = tickHandler;
+    this.maxTicks = maxTicks;
+    this.tickDuration = tickDuration;
+
+    tickCount = maxTicks;
+
+This is exactly the faulty initialization that the fix commit later removes. Since candidate_81 is the commit that first introduces TickCounter.java (and thus first introduces this erroneous initialization), it is the bug-introducing commit. No earlier candidate contains this file or logic (confirmed via search), so the bug could not have been introduced before candidate_81.

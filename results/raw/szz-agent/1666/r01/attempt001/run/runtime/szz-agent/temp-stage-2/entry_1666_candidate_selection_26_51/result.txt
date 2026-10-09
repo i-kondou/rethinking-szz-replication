@@ -1,0 +1,26 @@
+SELECTED: candidate_25
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single `break;` statement inside `CoverManager.getCoverBytes(String[] coverUrls, CoverInfo coverInfo)`, right after the debug log line "Cover downloaded for ... size=..." inside the `for (String url : coverUrls)` loop. Before the fix, once a cover was successfully downloaded (coverBytes != null), the loop had no way to stop and would continue iterating over the remaining URLs (e.g. continuing on to try the local/other cover sources) instead of stopping at the first successful result — this is the "local cover art" bug described in the fix commit message.
+
+Tracing the history of this method:
+- In earlier candidates (e.g. candidate_10, and unchanged through candidates 11-24), the loop body read:
+  ```
+  if (coverBytes != null) {
+      if (DEBUG) d(..., "Cover downloaded for " ... );
+      return coverBytes;
+  }
+  ```
+  This used an early `return` to immediately exit the method (and therefore the loop) as soon as a cover was successfully downloaded — correct behavior, no bug.
+
+- candidate_25 refactored several methods in CoverManager.java (and AbstractWebCover.java) to use a single-exit style: results are now assigned to a local variable and returned once at the end of the method (matching the pattern applied to `executeGetRequestWithConnection` and `download` in the same commit). As part of this refactor, the line `return coverBytes;` inside the `getCoverBytes` loop was deleted:
+  ```
+  -                    return coverBytes;
+  ```
+  However, unlike the sibling refactors (`download`, `cleanGetRequest`, etc.), no `break;` (or equivalent loop-exit mechanism) was added to replace the removed `return`. This left the loop able to fall through and continue trying subsequent cover URLs/retrievers even after a cover had already been successfully downloaded, which caused the local cover art to sometimes be discarded/overwritten by a later (possibly failing or wrong) retriever attempt.
+
+- The fix commit (the 26th/last candidate, immediately following candidate_25) restores correct behavior by adding back the missing `break;` at exactly the location where the `return` was removed.
+
+Since candidate_25 is the exact commit that removed the loop-exit statement without providing a replacement, it is the bug-introducing commit.

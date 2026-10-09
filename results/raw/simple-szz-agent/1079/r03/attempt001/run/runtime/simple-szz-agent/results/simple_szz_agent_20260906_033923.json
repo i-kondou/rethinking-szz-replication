@@ -1,0 +1,294 @@
+{
+  "metadata": {
+    "timestamp": "20260906_033923",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1079/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 43.946,
+      "max": 43.946,
+      "mean": 43.946,
+      "median": 43.946,
+      "total": 43.946,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 43.618,
+      "max": 43.618,
+      "mean": 43.618,
+      "median": 43.618,
+      "total": 43.618,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 3999,
+      "max": 3999,
+      "mean": 3999,
+      "median": 3999,
+      "total": 3999,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 37736,
+      "max": 37736,
+      "mean": 37736,
+      "median": 37736,
+      "total": 37736,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 93546,
+      "max": 93546,
+      "mean": 93546,
+      "median": 93546,
+      "total": 93546,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.3145068,
+      "max": 0.3145068,
+      "mean": 0.3145068,
+      "median": 0.3145068,
+      "total": 0.3145068,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 8,
+      "max": 8,
+      "mean": 8,
+      "median": 8,
+      "total": 8,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 5,
+      "Glob": 1,
+      "Grep": 1,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "median": 12,
+      "total": 12,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "1079",
+      "fix_commit_hash": "b1fbad54f2acadd010d3960fb1bb475c59ca2a38",
+      "ground_truth_bics": [
+        "0dff56fdb2525803c950b97fd6d2469357075703"
+      ],
+      "predicted_bics": [
+        "0dff56fdb2525803c950b97fd6d2469357075703"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "1079",
+      "fix_commit": "b1fbad54f2acadd010d3960fb1bb475c59ca2a38",
+      "ground_truth_bics": [
+        "0dff56fdb2525803c950b97fd6d2469357075703"
+      ],
+      "total_candidates": 12,
+      "gt_in_candidates": true,
+      "selected_commit": "0dff56fdb2525803c950b97fd6d2469357075703",
+      "selected_index": 10,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes two lines in PatriciaTreeMutable.reclaim(): - `sourceNode.getChildren(actItr.next())` -> `source.currentNode.getChildren(actItr.next())` - `srcItr = sourceNode.keySequence.iterator()` -> `srcItr = source.currentNode.keySequence.iterator()` Both changed lines occur inside the branch of the while-loop that is entered AFTER `source.moveDown()` has just been called (in the immediately preceding iteration of the same branch), which mutates `source.currentNode` to point at the c",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "environment/src/main/java/jetbrains/exodus/tree/patricia/PatriciaTreeMutable.java"
+      ],
+      "call_stats": {
+        "duration_s": 43.946,
+        "duration_api_s": 43.618,
+        "num_turns": 9,
+        "input_tokens": 14,
+        "output_tokens": 3999,
+        "cache_creation_input_tokens": 37736,
+        "cache_read_input_tokens": 93546,
+        "total_cost_usd": 0.3145068,
+        "total_tool_calls": 8,
+        "tool_calls_by_name": {
+          "Read": 5,
+          "Glob": 1,
+          "Grep": 1,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4884,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1079/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1079_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1402,
+            "cache_read_input_tokens": 8282,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1079/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1079_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1079/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1079_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1129,
+            "cache_read_input_tokens": 9684,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 438,
+            "cache_read_input_tokens": 10813,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "sourceNode",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1079/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1079_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 16,
+            "cache_creation_input_tokens": 305,
+            "cache_read_input_tokens": 11251,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1079/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1079_candidate_selection/candidates/candidate_11.diff"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1079/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1079_candidate_selection/candidates/candidate_12.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 27006,
+            "cache_read_input_tokens": 11556,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/1079/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_1079_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_11\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes two lines in PatriciaTreeMutable.reclaim():\n  - `sourceNode.getChildren(actItr.next())` -> `source.currentNode.getChildren(actItr.next())`\n  - `srcItr = sourceNode.keySequence.iterator()` -> `srcItr = source.currentNode.keySequence.iterator()`\n\nBoth changed lines occur inside the branch of the while-loop that is entered AFTER `source.moveDown()` has just been called (in the immediately preceding iteration of the same branch), which mutates `source.currentNode` to point at the child node. The bug is that the code was using a stale local variable `sourceNode` (captured once, before the loop, as `final NodeBase sourceNode = source.currentNode;`) instead of re-reading `source.currentNode` after the traverser moved down. This caused the loop to keep computing children/keySequence from the original (now stale/parent) node instead of the node the traverser actually descended into \u2014 the \"weird reclaim bug\".\n\nLooking at candidates/candidate_11.diff, this is exactly where the `sourceNode` local variable was introduced. The diff shows the private `reclaim(PatriciaReclaimSourceTraverser, PatriciaReclaimActualTraverser)` method being rewritten from directly using `source.currentNode` and `actual.currentNode` everywhere, to instead caching them up front:\n\n    final NodeBase actualNode = actual.currentNode;\n    final NodeBase sourceNode = source.currentNode;\n    ...\n    ByteIterator srcItr = sourceNode.keySequence.iterator();\n    ByteIterator actItr = actualNode.keySequence.iterator();\n    ...\n    final NodeChildrenIterator children = sourceNode.getChildren(actItr.next());\n    ...\n    srcItr = sourceNode.keySequence.iterator();\n\nThis refactor (part of a large commit removing IExpirationChecker and touching many GC/reclaim-related files) introduced the stale-reference bug: after `source.moveDown()` updates `source.currentNode`, the code kept referencing the old cached `sourceNode` variable instead of the freshly updated node. This is precisely the pattern the fix commit reverts by switching back to `source.currentNode`. No earlier candidate touches this code path with a `sourceNode` variable, and no later candidate (other than candidate_12, which is unrelated/precedes chronologically and does not touch this specific bug pattern) introduces it \u2014 candidate_11 is the first and only commit that creates the stale `sourceNode` caching pattern that the fix corrects.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 2572,
+            "cache_read_input_tokens": 38562,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

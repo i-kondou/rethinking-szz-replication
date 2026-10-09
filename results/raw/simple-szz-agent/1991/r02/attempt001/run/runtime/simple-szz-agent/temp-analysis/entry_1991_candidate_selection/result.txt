@@ -1,0 +1,27 @@
+SELECTED: candidate_70
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes a single line in BookView.java's page-number lookup logic: `int pageNum = 0;` -> `int pageNum = -1;` inside the method that computes the page number for a given spine index/position ("Looking for pageNumber for index=..., position=..."). The bug report states the title page incorrectly gets reported as page-num 0 instead of a sentinel value.
+
+Tracing this method back through the candidates: it did not exist in BookView.java originally. It was first introduced in candidate_70, as `getPageNumberFor(int index, int position)` in `PageTurnerSpine.java`, with the exact same initialization `int pageNum = 0;` and the same loop structure that is later fixed:
+
+    public int getPageNumberFor( int index, int position ) {
+        int pageNum = 0;
+        if ( index >= pageOffsets.size() ) {
+            return -1;
+        }
+        for ( int i=0; i < index; i++ ) {
+            pageNum += pageOffsets.get(i).size();
+        }
+        List<Integer> offsets = pageOffsets.get(index);
+        for ( int i=0; i < offsets.size() && offsets.get(i) < position; i++ ) {
+            pageNum++;
+        }
+        return pageNum;
+    }
+
+When index=0 and position=0 (the title page), neither loop executes, so pageNum remains at its initial value of 0 — exactly the bug described ("Title-page has page-num 0 again"). This method was later moved/refactored into BookView.java (confirmed by subsequent candidates such as candidate_157, which show `int pageNum = 0;` already present as unchanged context when the surrounding logging/refactoring was added), carrying the same flawed initialization forward until the fix commit finally changed the default to -1.
+
+Since candidate_70 is the first commit (chronologically) to introduce this initialization pattern and the associated loop logic that fails to distinguish "no page yet" from "page 0", it is the bug-introducing commit.

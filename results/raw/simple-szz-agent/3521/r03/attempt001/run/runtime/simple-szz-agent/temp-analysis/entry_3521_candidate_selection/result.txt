@@ -1,0 +1,12 @@
+SELECTED: candidate_413
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit ("Add block/position convention to all distinct from operators") adds a second, block/position-based implementation to every IS_DISTINCT_FROM operator so that, for container types (ARRAY, MAP, ROW), it is "no longer necessary to extract the value out of the Block in order to invoke 'distinct from' operator." This is explicitly stated to be a performance fix.
+
+The core performance problem being fixed lives in ArrayDistinctFromOperator, MapDistinctFromOperator, and RowDistinctFromOperator: for every element/entry/field, the old code called `readNativeValue(type, block, i)` to pull the value out of the Block into a boxed Java Object, substituted `defaultValue(type.getJavaType())` when the value was null, and then invoked the child comparator via `function.invoke(leftValue, leftValueNull, rightValue, rightValueNull)` — incurring boxing, reflection, and an extra Block read per element on every comparison.
+
+candidate_413 is the commit that FIRST introduces this exact pattern: it adds ArrayDistinctFromOperator.java, MapDistinctFromOperator.java, and RowDistinctFromOperator.java as brand-new files (`new file mode 100644`), each containing the `readNativeValue` + `defaultValue` + `function.invoke(...)` per-element loop that the fix commit later rips out and replaces with direct `BLOCK_POSITION`/`invokeExact` calls. It is the earliest candidate (chronologically) that contains this code — no earlier candidate touches these files, and all other candidates matching these filenames (434+) are later modifications built on top of this same original design.
+
+Since this is the commit that introduced the inefficient value-extraction pattern that the fix commit was specifically written to eliminate for performance reasons, candidate_413 is the bug(performance)-introducing commit.

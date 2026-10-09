@@ -1,0 +1,10 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix changes the `addBootCP` method in `src/polyglot/main/Options.java` from `bootclasspathDirectories().addAll(value)` to `bootclasspathDirectories().addAll(0, value)`, so that boot classpath entries are prepended to the front of the list rather than appended to the end.
+
+Examining `files/old/src/polyglot/main/Options.java`, the class does not have an `addBootCP` method at all, nor does it have the `bootclasspathDirectories()` accessor method used in the buggy/fixed versions. Instead, this older version uses a plain field `bootclasspath_directories` and a `setBootclasspath` method that clears the list and then adds the new values (`bootclasspath_directories.clear(); bootclasspath_directories.addAll(value);`). There is no equivalent "add without clearing" method that exhibits the ordering issue fixed in the patch.
+
+Since the specific method containing the bug (`addBootCP`) does not exist in this version of the codebase, the exact bug being fixed could not have been present in `old/`. The relevant functionality/API was introduced later in the project's history, after this old snapshot.

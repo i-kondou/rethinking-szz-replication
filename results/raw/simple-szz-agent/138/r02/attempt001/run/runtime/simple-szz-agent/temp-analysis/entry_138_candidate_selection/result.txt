@@ -1,0 +1,14 @@
+SELECTED: candidate_06
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes AbstractElement.equals() from calling getId().equals(...) back to using getID() == ... for both the TitanVertex and TitanEdge branches, because getId() (inherited from the Blueprints Element interface, returning an Object id) and getID() (the internal Titan method returning a primitive long id) were being confused - "relying on capitalization significance to differentiate methods... seems like asking for trouble."
+
+Tracing the AbstractElement.java blob hashes through the candidates shows candidate_06 rewrites the equals() method from:
+    return getID()==((AbstractElement)other).getID();
+to:
+    return getId().equals(((TitanVertex)other).getId());
+    return getId().equals(((TitanEdge)other).getId());
+
+This is exactly the buggy pattern the fix reverts (candidate_06's resulting blob hash 339f4a0 matches the "before" hash of the fix diff). Candidate_07 in this candidate set actually corresponds to the fix commit itself (its diff is identical to fix_commit_diff.txt, converting getId() back to getID()). Since candidate_06 is the commit that first introduced the getId()/getID() capitalization bug in the equals() method, it is the bug-introducing commit.

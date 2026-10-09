@@ -1,0 +1,28 @@
+SELECTED: candidate_08
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes ImplicitLinkedHashCollectionIterator.remove() so that instead of calling
+removeFromList(head, elements, nextElement.prev()) followed by size--, it calls
+ImplicitLinkedHashCollection.this.removeElementAtSlot(nextElement.prev()). The commit message
+explains that removeFromList alone does not preserve the hash table's denseness invariant;
+removeElementAtSlot is required because it performs the additional slot-compaction work
+(moving other elements) needed after a removal.
+
+candidate_08.diff is the commit that introduced this exact buggy pattern. It rewrote the
+iterator implementation (replacing the old cursor/lastReturnedSlot-based design with a
+cur/lastReturned-based design) and, as part of that rewrite, implemented remove() as:
+
+    Element nextElement = indexToElement(head, elements, lastReturned.next());
+    removeFromList(head, elements, nextElement.prev());
+    size--;
+    ...
+
+This is precisely the buggy code shown as being removed in the fix's diff (the "-" lines
+match candidate_08's added "+" lines almost verbatim, differing only in surrounding
+cur/lastReturned bookkeeping which the fix left untouched). No other candidate introduces or
+touches this removeFromList/size-- pattern in the iterator's remove() method — candidate_03
+uses removeElementAtSlot correctly with the older lastReturnedSlot design, and candidate_08
+is the commit that replaced that correct call with the buggy removeFromList+size-- call.
+Therefore candidate_08 is the bug-introducing commit.

@@ -1,0 +1,22 @@
+{
+  "fix_commit": "120201466dc5554166a2b5a894f50eb508a2d904",
+  "bic": "02a5f3fff3110cdf2fc8e1770e2cc238efa36dff",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit removed the `skip` parameter from `CallerFinder.getStackForCallerOf` and hardcoded the starting index to 0, replacing the previous skip=2 call from LogContext.postProcess(). This change is the root cause of the \"synthetic stack bug\" \u2014 because postProcess() can be overridden by subclasses, starting exactly at index 0 captures the wrong caller frames. The fix commit re-introduces a skip parameter (skip=1) with detailed reasoning directly addressing the issue caused by this earlier removal.",
+  "metrics": {
+    "case_elapsed_seconds": 17.60065,
+    "api_elapsed_seconds": 17.388197,
+    "tool_elapsed_seconds": 0.093989,
+    "other_elapsed_seconds": 0.118472,
+    "api_call_count": 4,
+    "tool_call_count": 3,
+    "prompt_tokens": 23959,
+    "completion_tokens": 1227,
+    "total_tokens": 25186,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:11:20.447360"
+}

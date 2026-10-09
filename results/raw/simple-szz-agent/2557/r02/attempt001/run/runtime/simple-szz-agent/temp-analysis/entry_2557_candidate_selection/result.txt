@@ -1,0 +1,26 @@
+SELECTED: candidate_01
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit initializes the field `runningBatchKey` in `BddRunContext.java` with a default value:
+
+    - private Optional<String> runningBatchKey;
+    + // must be initialized for jbehave-junit-runner
+    + private Optional<String> runningBatchKey = Optional.of("batch-1");
+
+The fix message explains that jbehave-junit-runner builds the JUnit execution tree before any actual story execution happens, and it knows nothing about Vividus batches. Because of this, `getRunningBatchKey()`/`getRunningBatch()` can be called before `putRunningBatch()` is ever invoked, and since `runningBatchKey` was left uninitialized (null `Optional` reference), calling `.orElseThrow(...)` on it throws a NullPointerException instead of the intended `IllegalStateException`.
+
+Tracing the field back through the candidates:
+- candidate_01 is the commit that creates `BddRunContext.java` from scratch (new file). It introduces the field exactly as:
+      private Optional<String> runningBatchKey;
+  with no initializer, and immediately uses it in `getRunningBatch()`:
+      String batchKey = runningBatchKey.orElseThrow(...);
+  This is the very first appearance of the buggy, uninitialized field.
+- candidate_02 does not touch `BddRunContext.java`/`runningBatchKey` at all.
+- candidate_03 refactors `getRunningBatch()` to extract a `getRunningBatchKey()` method, but the field declaration itself is untouched (still uninitialized).
+- candidate_04 shows the field declaration only as unchanged context while other parts of the batch-storage subsystem are refactored — the uninitialized field is inherited unchanged.
+- candidate_05 removes `getRunningBatch()`/`batchStorage` (unrelated cleanup) but again leaves `runningBatchKey` uninitialized as context.
+- candidate_06 is actually the fix commit itself (adds the default `Optional.of("batch-1")` initializer and comment), matching `fix_commit_diff.txt` exactly.
+
+Since the uninitialized field was present from the moment the class was created and every intermediate candidate merely inherited it without addressing the initialization, candidate_01 is the commit that introduced the bug.

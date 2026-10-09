@@ -1,0 +1,35 @@
+SELECTED: candidate_04
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes CmsRenderTemplate.java line 187 from
+`loader.getResources("cmsFreemarkerTransforms")` back to
+`loader.getResources("cmsFreemarkerTransforms.properties")`, restoring the
+".properties" extension that the classloader resource lookup requires to find
+the actual file (config/cmsFreemarkerTransforms.properties, created originally
+in candidate_01).
+
+Tracing the history of this exact line across the candidates:
+- candidate_01 introduces the file `cmsFreemarkerTransforms.properties` and the
+  original correct call `loader.getResources("cmsFreemarkerTransforms.properties")`.
+- candidate_04 performs a broad refactor that strips the ".properties" suffix
+  from resource/property names used with `UtilProperties.getPropertyValue`/
+  `getPropertyAsBoolean` (e.g. "cms.properties" -> "cms"), which is correct for
+  those UtilProperties calls since that API expects the base name without the
+  extension. However, this same refactor incorrectly also applied the same
+  transformation to the unrelated `loader.getResources(...)` call in
+  CmsRenderTemplate.java, changing it from
+  `"cmsFreemarkerTransforms.properties"` to `"cmsFreemarkerTransforms"`. Since
+  `ClassLoader.getResources` does a raw resource-path lookup (not going through
+  UtilProperties' implicit ".properties" resolution), this broke the lookup of
+  the actual file and introduced the bug described in the fix ("cms: fix
+  .properties extension bug").
+- candidate_05 is identical to the fix commit diff itself (same before/after
+  blob hashes as fix_commit_diff.txt), reverting the change back to
+  `"cmsFreemarkerTransforms.properties"`. This is the fix, not the
+  bug-introducing commit.
+
+Therefore candidate_04 is the commit that introduced the bug by mistakenly
+stripping the ".properties" extension from a raw classloader resource lookup
+during an otherwise-legitimate refactor of UtilProperties calls.

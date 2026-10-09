@@ -1,0 +1,67 @@
+SELECTED: candidate_24
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds the line `consoleProcess_ = consoleProcess;` (with the comment
+"save console process so that we can compute interaction mode below") immediately
+before the `if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)` check
+in the `ConsoleProgressDialog` constructor. This is necessary because
+`getInteractionMode()` reads the `consoleProcess_` field to decide the interaction
+mode, so the field must be assigned before that check runs.
+
+Tracing the history of `ConsoleProgressDialog.java`'s constructor across the
+candidates:
+
+- In earlier candidates (e.g. candidate_12/13-era refactor to `extends
+  ProgressDialog`), the constructor correctly contained:
+  ```java
+  if (consoleProcess == null && exitCode == null) { throw ... }
+
+  consoleProcess_ = consoleProcess;
+
+  if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)
+  { ... }
+  ```
+  i.e. the assignment happened before the interaction-mode check, so the field was
+  never stale at that point.
+
+- candidate_24 performs a significant refactor of `ConsoleProgressDialog` (adding
+  git "list remotes" / "create branch + push" support and a new
+  `attachToProcess(ConsoleProcess)` public method so a dialog can be reused/attached
+  to a process after construction). As part of this refactor, the diff explicitly
+  shows:
+  ```java
+     }
+  -
+  -      consoleProcess_ = consoleProcess;
+
+     if (getInteractionMode() != ConsoleProcessInfo.INTERACTION_NEVER)
+     {
+  ```
+  The direct assignment of `consoleProcess_` right before the interaction-mode
+  check is REMOVED from the constructor. Instead, a new method is introduced:
+  ```java
+  public void attachToProcess(final ConsoleProcess consoleProcess)
+  {
+     consoleProcess_ = consoleProcess;
+     stopButton().setText("Stop");
+     ...
+  }
+  ```
+  and this method is invoked only at the very end of the constructor body
+  (`attachToProcess(consoleProcess);`), i.e. AFTER the `getInteractionMode()`
+  check (and the later `INTERACTION_ALWAYS` check) have already executed using a
+  `consoleProcess_` field that is still at its default (unset) value. This is
+  exactly the bug that the fix commit corrects.
+
+- Subsequent candidate_25 only reorders logic within `attachToProcess()`
+  (moving the INTERACTION_ALWAYS UI customization there) but does not restore the
+  early assignment, so the bug persists.
+
+- candidate_26 contains the actual fix itself (identical to fix_commit_diff.txt),
+  re-adding `consoleProcess_ = consoleProcess;` before the interaction-mode check.
+
+Since candidate_24 is the first commit where the correct early assignment was
+removed and replaced by a call that happens too late relative to the
+`getInteractionMode()` check, it is the bug-introducing commit.

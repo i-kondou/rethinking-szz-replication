@@ -1,0 +1,37 @@
+SELECTED: candidate_413
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit ("Add block/position convention to all distinct from operators") adds a
+second, block/position-based implementation of the IS_DISTINCT_FROM scalar operator to
+every type (Bigint, Boolean, Char, Color, Date, Double, Integer, Interval, Real,
+Smallint, Time, Timestamp, TimeWithTimeZone, TimestampWithTimeZone, Tinyint, Ip, Json,
+Unknown, Varbinary, Varchar, Array, Map, Row, etc.), explicitly stating that with the
+old (NULL_FLAG-convention) implementation "it's no longer necessary to extract the value
+out of the Block in order to invoke 'distinct from' operator," and that this change "is
+expected to resolve [a] performance issue."
+
+This means the bug being fixed is a performance regression caused by the original
+implementation of the IS_DISTINCT_FROM operator, which forced every value to be
+extracted out of its Block (via readNativeValue/getObject and boxing into Object,
+plus IsNull flags) before invoking the comparison, instead of operating directly on
+Block+position.
+
+candidate_413 is the commit that originally introduced this exact NULL_FLAG-based
+IS_DISTINCT_FROM implementation across the entire codebase in one shot: it adds
+`@ScalarOperator(IS_DISTINCT_FROM)` / `public static boolean isDistinctFrom(...,
+@IsNull boolean leftNull, ..., @IsNull boolean rightNull)` methods to BigintOperators,
+BooleanOperators, CharOperators, ColorOperators, DateOperators, DoubleOperators,
+IntegerOperators, IntervalDayTimeOperators, IntervalYearMonthOperators, RealOperators,
+SmallintOperators, TimeOperators, TimeWithTimeZoneOperators, TimestampOperators,
+TimestampWithTimeZoneOperators, TinyintOperators, UnknownOperators, VarbinaryOperators,
+and also introduces ArrayDistinctFromOperator, MapDistinctFromOperator, and the
+DECIMAL_DISTINCT_FROM_OPERATOR, registering them all in FunctionRegistry. This is
+identical in shape and scope to the "before" code shown throughout fix_commit_diff.txt
+(the code being replaced/removed), confirming candidate_413 is where the
+performance-problematic value-extraction-based distinct-from implementation was first
+introduced. No other candidate introduces this pattern (candidate_69 only lays the
+groundwork for the general OperatorInfo/OperatorType framework but does not add any of
+the per-type isDistinctFrom methods; later candidates in the 540s-570s range only touch
+individual files incrementally, long after the pattern was already established).

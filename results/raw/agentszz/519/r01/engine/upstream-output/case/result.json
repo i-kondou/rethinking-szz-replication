@@ -1,0 +1,22 @@
+{
+  "fix_commit": "bbcc596ff1f3b1e7d3351947c9a9e441ab825be7",
+  "bic": "1e8d8cde5bfab25b1d6e5ff39221c237374957f7",
+  "confidence": "high",
+  "type": "omission",
+  "reasoning": "This commit refactored path uniqueness validation, removing the `validatePathUniqueness` config check from inside `validatePath()` and moving it into the newly introduced `onCreation`/`validateAndRenameFileOnce` path. However, it neglected to add the equivalent `validatePathUniqueness` gate to `onModification()`, which continued to call `validatePath()` unconditionally. This means that even when `application.filesystem.unique.paths` was disabled, renaming files/folders would still incorrectly trigger path uniqueness validation. The fix commit directly restores the missing check in `onModification()`, matching the gap introduced here.",
+  "metrics": {
+    "case_elapsed_seconds": 39.765062,
+    "api_elapsed_seconds": 38.880905,
+    "tool_elapsed_seconds": 0.768861,
+    "other_elapsed_seconds": 0.115299,
+    "api_call_count": 12,
+    "tool_call_count": 14,
+    "prompt_tokens": 111368,
+    "completion_tokens": 3106,
+    "total_tokens": 114474,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T19:59:17.639871"
+}

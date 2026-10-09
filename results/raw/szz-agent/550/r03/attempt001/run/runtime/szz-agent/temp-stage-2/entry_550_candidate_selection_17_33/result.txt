@@ -1,0 +1,23 @@
+SELECTED: candidate_16
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit resolves an ArrayIndexOutOfBoundsException in InstructorDetailAction.java's "Class Assignments" WebTable, thrown when an instructor is assigned to classes that have no committed timetable yet (the `else`/no-timetable branch of the `hasTimetable` ternary that builds `classTable`). The fix diff shows the alignment array in that branch being expanded from 5 to 6 elements:
+
+  new String[] {"left", "left","left", "left", "left"}
+  -> new String[] {"left", "left","left", "left", "left", "left"}
+
+while the header array in that same branch already had 6 entries: MSG.columnClass(), MSG.columnInstructorCheckConflicts(), MSG.columnInstructorShare(), MSG.columnTeachingResponsibility(), MSG.columnLimit(), MSG.columnManager(). WebTable uses the header array length to determine the number of columns/alignments expected, so a 6-header/5-align mismatch causes an ArrayIndexOutOfBoundsException.
+
+Tracing the history of this code block across the candidates:
+- candidate_09 refactored the else-branch headers from hardcoded strings to MSG.xxx() localization calls, but kept exactly 5 headers (columnClass, columnInstructorCheckConflicts, columnInstructorShare, columnLimit, columnManager) matching 5 "left" alignments — correctly balanced.
+- candidates_10 through candidate_15 do not touch this header/alignment pair (they add unrelated features: distribution type visibility, instructor assignment preferences, instructor attributes, icon renames, cancelled class support, conflict-highlighting logic).
+- candidate_16 adds the "Teaching Responsibility" feature (new teaching_responsibility DB table, CourseMessages.columnTeachingResponsibility(), ClassInstructor.responsibility field, etc.) and modifies the else-branch header array to insert MSG.columnTeachingResponsibility(), producing 6 headers:
+    new String[] {MSG.columnClass(), MSG.columnInstructorCheckConflicts(), MSG.columnInstructorShare(), MSG.columnTeachingResponsibility(), MSG.columnLimit(), MSG.columnManager()}
+  but leaves the alignment array untouched at 5 elements:
+    new String[] {"left", "left","left", "left", "left"}
+  (Also note candidate_16 correctly updated the hasTimetable=true branch from 9 to 10 balanced header/align entries, but missed updating the alignment array in the else branch — the exact off-by-one bug.)
+- candidate_17 is unrelated to this array (it adds conflict icon logic to WebTable line building) and does not touch the header/alignment sizes, so the bug persists into the fix commit.
+
+The fix commit (fix_commit_diff.txt) directly corrects candidate_16's omission by adding the missing 6th "left" entry to the alignment array. This one-to-one match between what candidate_16 introduced and what the fix commit reverses/completes makes candidate_16 the clear bug-introducing commit.

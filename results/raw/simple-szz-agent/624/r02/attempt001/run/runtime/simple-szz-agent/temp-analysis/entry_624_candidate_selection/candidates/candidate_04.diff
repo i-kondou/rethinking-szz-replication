@@ -1,0 +1,400 @@
+diff --git a/AudioRacer-Core/src/at/fhv/audioracer/core/model/Player.java b/AudioRacer-Core/src/at/fhv/audioracer/core/model/Player.java
+index 3e3218f..1d3e121 100644
+--- a/AudioRacer-Core/src/at/fhv/audioracer/core/model/Player.java
++++ b/AudioRacer-Core/src/at/fhv/audioracer/core/model/Player.java
+@@ -10,7 +10,7 @@ public class Player {
+ 	/**
+ 	 * player name
+ 	 */
+-	private String _loginName;
++	private String _name;
+ 	
+ 	/**
+ 	 * time in milliseconds since game start
+@@ -32,12 +32,12 @@ public class Player {
+ 	 */
+ 	private Car _car;
+ 	
+-	public String getLoginName() {
+-		return _loginName;
++	public String getName() {
++		return _name;
+ 	}
+ 	
+-	public void setLoginName(String loginName) {
+-		this._loginName = loginName;
++	public void setName(String playerName) {
++		this._name = playerName;
+ 	}
+ 	
+ 	public boolean isReady() {
+diff --git a/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerClient.java b/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerClient.java
+index a4500a4..847d422 100644
+--- a/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerClient.java
++++ b/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerClient.java
+@@ -178,7 +178,7 @@ public class PlayerClient extends Listener implements IPlayerClient {
+ 		if (!_players.containsKey(Integer.valueOf(playerId))) {
+ 			Player p = new Player();
+ 			p.setPlayerId(playerId);
+-			p.setLoginName(playerName);
++			p.setName(playerName);
+ 			_players.put(playerId, p);
+ 		}
+ 		
+@@ -285,7 +285,7 @@ public class PlayerClient extends Listener implements IPlayerClient {
+ 		_connected = true;
+ 		
+ 		setPlayerServer(serverClient);
+-		getPlayer().setPlayerId(getPlayerServer().connect(playerName));
++		getPlayer().setPlayerId(getPlayerServer().setPlayerName(playerName));
+ 	}
+ 	
+ 	public void stopClient() {
+diff --git a/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerServerClient.java b/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerServerClient.java
+index 2563dbe..9300b1d 100644
+--- a/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerServerClient.java
++++ b/AudioRacer-PlayerClient/src/at/fhv/audioracer/client/player/PlayerServerClient.java
+@@ -3,8 +3,8 @@ package at.fhv.audioracer.client.player;
+ import at.fhv.audioracer.communication.player.IPlayerServer;
+ import at.fhv.audioracer.communication.player.message.CarImageRequestMessage;
+ import at.fhv.audioracer.communication.player.message.CarImageResponseMessage;
+-import at.fhv.audioracer.communication.player.message.ConnectRequestMessage;
+-import at.fhv.audioracer.communication.player.message.ConnectResponseMessage;
++import at.fhv.audioracer.communication.player.message.SetPlayerNameRequestMessage;
++import at.fhv.audioracer.communication.player.message.SetPlayerNameResponseMessage;
+ import at.fhv.audioracer.communication.player.message.PlayerMessage;
+ import at.fhv.audioracer.communication.player.message.PlayerMessage.MessageId;
+ import at.fhv.audioracer.communication.player.message.SelectCarRequestMessage;
+@@ -36,10 +36,10 @@ public class PlayerServerClient extends Listener implements IPlayerServer {
+ 	}
+ 	
+ 	@Override
+-	public int connect(String playerName) {
+-		ConnectRequestMessage connectMsg = new ConnectRequestMessage();
+-		connectMsg.playerName = playerName;
+-		_client.sendTCP(connectMsg);
++	public int setPlayerName(String playerName) {
++		SetPlayerNameRequestMessage setNameMsg = new SetPlayerNameRequestMessage();
++		setNameMsg.playerName = playerName;
++		_client.sendTCP(setNameMsg);
+ 		
+ 		_playerIdResponse = -1;
+ 		
+@@ -116,9 +116,9 @@ public class PlayerServerClient extends Listener implements IPlayerServer {
+ 		if (object instanceof PlayerMessage) {
+ 			PlayerMessage message = (PlayerMessage) object;
+ 			switch (message.messageId) {
+-				case CONNECT_RESPONSE:
+-					ConnectResponseMessage connectResponse = (ConnectResponseMessage) message;
+-					_playerIdResponse = connectResponse.playerId;
++				case SET_PLAYER_NAME_RESPONSE:
++					SetPlayerNameResponseMessage setNameResponse = (SetPlayerNameResponseMessage) message;
++					_playerIdResponse = setNameResponse.playerId;
+ 					synchronized (_lock) {
+ 						_lock.notifyAll(); // could be improved
+ 					}
+diff --git a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerServer.java b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerServer.java
+index e4e174e..3ff37d0 100644
+--- a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerServer.java
++++ b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/IPlayerServer.java
+@@ -6,7 +6,7 @@ public interface IPlayerServer {
+ 	 * @param playerName
+ 	 * @return playerId
+ 	 */
+-	public int connect(String playerName);
++	public int setPlayerName(String playerName);
+ 	
+ 	public void disconnect();
+ 	
+diff --git a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/PlayerNetwork.java b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/PlayerNetwork.java
+index 9ac02da..d1d7f13 100644
+--- a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/PlayerNetwork.java
++++ b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/PlayerNetwork.java
+@@ -1,7 +1,7 @@
+ package at.fhv.audioracer.communication.player;
+ 
+-import at.fhv.audioracer.communication.player.message.ConnectRequestMessage;
+-import at.fhv.audioracer.communication.player.message.ConnectResponseMessage;
++import at.fhv.audioracer.communication.player.message.SetPlayerNameRequestMessage;
++import at.fhv.audioracer.communication.player.message.SetPlayerNameResponseMessage;
+ import at.fhv.audioracer.communication.player.message.FreeCarsMessage;
+ import at.fhv.audioracer.communication.player.message.PlayerConnectedMessage;
+ import at.fhv.audioracer.communication.player.message.PlayerMessage;
+@@ -26,8 +26,8 @@ public class PlayerNetwork {
+ 		
+ 		// The interfaces that will be used as remote objects must be registered.
+ 		kryo.register(PlayerMessage.MessageId.class);
+-		kryo.register(ConnectRequestMessage.class);
+-		kryo.register(ConnectResponseMessage.class);
++		kryo.register(SetPlayerNameRequestMessage.class);
++		kryo.register(SetPlayerNameResponseMessage.class);
+ 		kryo.register(FreeCarsMessage.class);
+ 		kryo.register(SelectCarRequestMessage.class);
+ 		kryo.register(SelectCarResponseMessage.class);
+diff --git a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/ConnectRequestMessage.java b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/ConnectRequestMessage.java
+deleted file mode 100644
+index 48d5edf..0000000
+--- a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/ConnectRequestMessage.java
++++ /dev/null
+@@ -1,10 +0,0 @@
+-package at.fhv.audioracer.communication.player.message;
+-
+-public class ConnectRequestMessage extends PlayerMessage {
+-	
+-	public ConnectRequestMessage() {
+-		super(PlayerMessage.MessageId.CONNECT_REQUEST);
+-	}
+-	
+-	public String playerName;
+-}
+diff --git a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/ConnectResponseMessage.java b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/ConnectResponseMessage.java
+deleted file mode 100644
+index 3229b8e..0000000
+--- a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/ConnectResponseMessage.java
++++ /dev/null
+@@ -1,10 +0,0 @@
+-package at.fhv.audioracer.communication.player.message;
+-
+-public class ConnectResponseMessage extends PlayerMessage {
+-	
+-	public ConnectResponseMessage() {
+-		super(PlayerMessage.MessageId.CONNECT_RESPONSE);
+-	}
+-	
+-	public int playerId;
+-}
+diff --git a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/PlayerConnectedMessage.java b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/PlayerConnectedMessage.java
+index 3ad9b53..4ed6ec8 100644
+--- a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/PlayerConnectedMessage.java
++++ b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/PlayerConnectedMessage.java
+@@ -3,7 +3,7 @@ package at.fhv.audioracer.communication.player.message;
+ public class PlayerConnectedMessage extends PlayerMessage {
+ 	
+ 	public int id;
+-	public String loginName;
++	public String playerName;
+ 	
+ 	public PlayerConnectedMessage() {
+ 		super(MessageId.PLAYER_CONNECTED);
+diff --git a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/PlayerMessage.java b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/PlayerMessage.java
+index b08edca..d49e786 100644
+--- a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/PlayerMessage.java
++++ b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/PlayerMessage.java
+@@ -3,7 +3,7 @@ package at.fhv.audioracer.communication.player.message;
+ public class PlayerMessage {
+ 	
+ 	public enum MessageId {
+-		CONNECT_REQUEST, CONNECT_RESPONSE, DISCONNECT, UPDATE_VELOCITY, SELECT_CAR_REQUEST, SELECT_CAR_RESPONSE, GET_CAR_IMG_REQUEST, GET_CAR_IMG_RESPONSE, SET_READY, UPDATE_FREE_CARS, PLAYER_CONNECTED;
++		SET_PLAYER_NAME_REQUEST, SET_PLAYER_NAME_RESPONSE, DISCONNECT, UPDATE_VELOCITY, SELECT_CAR_REQUEST, SELECT_CAR_RESPONSE, GET_CAR_IMG_REQUEST, GET_CAR_IMG_RESPONSE, SET_READY, UPDATE_FREE_CARS, PLAYER_CONNECTED;
+ 	}
+ 	
+ 	public PlayerMessage(MessageId id) {
+diff --git a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/SetPlayerNameRequestMessage.java b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/SetPlayerNameRequestMessage.java
+new file mode 100644
+index 0000000..3013826
+--- /dev/null
++++ b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/SetPlayerNameRequestMessage.java
+@@ -0,0 +1,10 @@
++package at.fhv.audioracer.communication.player.message;
++
++public class SetPlayerNameRequestMessage extends PlayerMessage {
++	
++	public SetPlayerNameRequestMessage() {
++		super(PlayerMessage.MessageId.SET_PLAYER_NAME_REQUEST);
++	}
++	
++	public String playerName;
++}
+diff --git a/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/SetPlayerNameResponseMessage.java b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/SetPlayerNameResponseMessage.java
+new file mode 100644
+index 0000000..8c4bbf5
+--- /dev/null
++++ b/AudioRacer-PlayerCommunication/src/at/fhv/audioracer/communication/player/message/SetPlayerNameResponseMessage.java
+@@ -0,0 +1,10 @@
++package at.fhv.audioracer.communication.player.message;
++
++public class SetPlayerNameResponseMessage extends PlayerMessage {
++	
++	public SetPlayerNameResponseMessage() {
++		super(PlayerMessage.MessageId.SET_PLAYER_NAME_RESPONSE);
++	}
++	
++	public int playerId;
++}
+diff --git a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java
+index e3ae35c..41e8b5a 100644
+--- a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java
++++ b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/gui/StartUpView.java
+@@ -188,7 +188,7 @@ public class StartUpView extends JFrame {
+ 			public void actionPerformed(ActionEvent e) {
+ 				try {
+ 					if (!_playerClient.hasConnection()) {
+-						_playerClient.startClient(_playerClient.getPlayer().getLoginName());
++						_playerClient.startClient(_playerClient.getPlayer().getName());
+ 						_btnConnect.setText("Disconnect");
+ 						_lblConnected.setText("Connected");
+ 					} else {
+@@ -209,7 +209,7 @@ public class StartUpView extends JFrame {
+ 			@Override
+ 			public void actionPerformed(ActionEvent arg0) {
+ 				
+-				_playerClient.getPlayer().setLoginName(_NameField.getText());
++				_playerClient.getPlayer().setName(_NameField.getText());
+ 				
+ 			}
+ 		});
+diff --git a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/Main.java b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/Main.java
+index 3318782..816063d 100644
+--- a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/Main.java
++++ b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/Main.java
+@@ -4,9 +4,9 @@ import java.io.IOException;
+ import java.net.InetAddress;
+ 
+ import at.fhv.audioracer.communication.player.PlayerNetwork;
+-import at.fhv.audioracer.communication.player.message.ConnectResponseMessage;
+ import at.fhv.audioracer.communication.player.message.FreeCarsMessage;
+ import at.fhv.audioracer.communication.player.message.PlayerMessage;
++import at.fhv.audioracer.communication.player.message.SetPlayerNameResponseMessage;
+ 
+ import com.esotericsoftware.kryonet.Client;
+ import com.esotericsoftware.kryonet.Connection;
+@@ -38,9 +38,9 @@ public class Main {
+ 				if (object instanceof PlayerMessage) {
+ 					PlayerMessage message = (PlayerMessage) object;
+ 					switch (message.messageId) {
+-						case CONNECT_RESPONSE:
+-							ConnectResponseMessage connectRespone = (ConnectResponseMessage) message;
+-							System.out.println("Connected ... server responsed with id: " + connectRespone.playerId);
++						case SET_PLAYER_NAME_RESPONSE:
++							SetPlayerNameResponseMessage setNameRespone = (SetPlayerNameResponseMessage) message;
++							System.out.println("player name set ... server responded with id: " + setNameRespone.playerId);
+ 							break;
+ 						case UPDATE_FREE_CARS:
+ 							System.out.println("Free cars message incoming.");
+diff --git a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/SimulatedPlayerClient.java b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/SimulatedPlayerClient.java
+index 83b17cf..5800679 100644
+--- a/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/SimulatedPlayerClient.java
++++ b/AudioRacer-PlayerSimulator/src/at/fhv/audioracer/simulator/player/SimulatedPlayerClient.java
+@@ -92,7 +92,7 @@ public class SimulatedPlayerClient extends Connection implements IPlayerClient {
+ 		if (_players != null && !_players.containsKey(playerId)) {
+ 			Player p = new Player();
+ 			p.setPlayerId(playerId);
+-			p.setLoginName(playerName);
++			p.setName(playerName);
+ 		}
+ 		
+ 	}
+diff --git a/AudioRacer-Server/src/at/fhv/audioracer/server/PlayerServerListener.java b/AudioRacer-Server/src/at/fhv/audioracer/server/PlayerServerListener.java
+index a56b5e2..18e9963 100644
+--- a/AudioRacer-Server/src/at/fhv/audioracer/server/PlayerServerListener.java
++++ b/AudioRacer-Server/src/at/fhv/audioracer/server/PlayerServerListener.java
+@@ -3,7 +3,7 @@ package at.fhv.audioracer.server;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
+-import at.fhv.audioracer.communication.player.message.ConnectRequestMessage;
++import at.fhv.audioracer.communication.player.message.SetPlayerNameRequestMessage;
+ import at.fhv.audioracer.communication.player.message.PlayerMessage;
+ import at.fhv.audioracer.communication.player.message.SelectCarRequestMessage;
+ import at.fhv.audioracer.server.game.GameModerator;
+@@ -25,9 +25,9 @@ public class PlayerServerListener extends Listener {
+ 			PlayerMessage message = (PlayerMessage) object;
+ 			PlayerConnection playerConnection = (PlayerConnection) connection;
+ 			switch (message.messageId) {
+-				case CONNECT_REQUEST:
+-					ConnectRequestMessage conReqMsg = (ConnectRequestMessage) message;
+-					_gameModerator.connect(playerConnection, conReqMsg.playerName);
++				case SET_PLAYER_NAME_REQUEST:
++					SetPlayerNameRequestMessage setNameReqMsg = (SetPlayerNameRequestMessage) message;
++					_gameModerator.setPlayerName(playerConnection, setNameReqMsg.playerName);
+ 					break;
+ 				case SELECT_CAR_REQUEST:
+ 					SelectCarRequestMessage selectCarReqMsg = (SelectCarRequestMessage) message;
+diff --git a/AudioRacer-Server/src/at/fhv/audioracer/server/game/GameModerator.java b/AudioRacer-Server/src/at/fhv/audioracer/server/game/GameModerator.java
+index 800a81d..03f9842 100644
+--- a/AudioRacer-Server/src/at/fhv/audioracer/server/game/GameModerator.java
++++ b/AudioRacer-Server/src/at/fhv/audioracer/server/game/GameModerator.java
+@@ -9,10 +9,10 @@ import java.util.Map.Entry;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
+-import at.fhv.audioracer.communication.player.message.ConnectResponseMessage;
+ import at.fhv.audioracer.communication.player.message.FreeCarsMessage;
+ import at.fhv.audioracer.communication.player.message.PlayerConnectedMessage;
+ import at.fhv.audioracer.communication.player.message.SelectCarResponseMessage;
++import at.fhv.audioracer.communication.player.message.SetPlayerNameResponseMessage;
+ import at.fhv.audioracer.core.model.Car;
+ import at.fhv.audioracer.core.model.Player;
+ import at.fhv.audioracer.server.PlayerConnection;
+@@ -42,28 +42,28 @@ public class GameModerator {
+ 	}
+ 	
+ 	/**
+-	 * called on Player "connect" request
++	 * called on Player tries to set his player name
+ 	 * 
+ 	 * @param playerConnection
+ 	 *            the socket connection of this player
+-	 * @param loginName
++	 * @param playerName
+ 	 *            name of player
+ 	 */
+-	public void connect(PlayerConnection playerConnection, String loginName) {
++	public void setPlayerName(PlayerConnection playerConnection, String playerName) {
+ 		int id = -1;
+-		if (loginName != null) {
++		if (playerName != null) {
+ 			Player player = playerConnection.getPlayer();
+-			player.setLoginName(loginName);
++			player.setName(playerName);
+ 			synchronized (_playerList) {
+ 				id = ++_plrId;
+ 				player.setPlayerId(_plrId);
+ 				_playerList.put(_plrId, player);
+-				_logger.debug("added player {} with playerId {}", loginName, id);
++				_logger.debug("added player {} with playerId {}", playerName, id);
+ 			}
+ 		} else {
+-			_logger.warn("login in name received is null! This is not allowed!");
++			_logger.warn("player name received is null! This is not allowed!");
+ 		}
+-		ConnectResponseMessage resp = new ConnectResponseMessage();
++		SetPlayerNameResponseMessage resp = new SetPlayerNameResponseMessage();
+ 		resp.playerId = id;
+ 		_playerServer.sendToTCP(playerConnection.getID(), resp);
+ 		broadcastFreeCars();
+@@ -121,13 +121,13 @@ public class GameModerator {
+ 	
+ 	public void selectCar(PlayerConnection playerConnection, int carId) {
+ 		_logger.debug("selectCar called from player with id: {} and name: {}", playerConnection.getPlayer().getPlayerId(), playerConnection.getPlayer()
+-				.getLoginName());
++				.getName());
+ 		
+ 		SelectCarResponseMessage selectResponse = new SelectCarResponseMessage();
+ 		selectResponse.successfull = false;
+ 		
+-		if (playerConnection.getPlayer().getLoginName() == null) {
+-			_logger.warn("selectCar - player has to send ConnectRequestMessage first" + " and set a login name for himself!");
++		if (playerConnection.getPlayer().getName() == null) {
++			_logger.warn("selectCar - player has to set player name first before selecting a car!");
+ 		} else {
+ 			synchronized (_lockObject) {
+ 				if (_gameRunning) {
+@@ -144,7 +144,7 @@ public class GameModerator {
+ 							_logger.warn("car with id: {} doesn't exist!", carId);
+ 						} else {
+ 							Player player = _carList.get(carId).getPlayer();
+-							_logger.warn("car with id: {} allready owned by login: {}", carId, player.getLoginName());
++							_logger.warn("car with id: {} allready owned by: {}", carId, player.getName());
+ 						}
+ 					}
+ 				}
+@@ -157,7 +157,7 @@ public class GameModerator {
+ 			
+ 			PlayerConnectedMessage plrConnectedMsg = new PlayerConnectedMessage();
+ 			plrConnectedMsg.id = playerConnection.getPlayer().getPlayerId();
+-			plrConnectedMsg.loginName = playerConnection.getPlayer().getLoginName();
++			plrConnectedMsg.playerName = playerConnection.getPlayer().getName();
+ 			_playerServer.sendToAllExceptTCP(playerConnection.getID(), plrConnectedMsg);
+ 			
+ 			broadcastFreeCars();

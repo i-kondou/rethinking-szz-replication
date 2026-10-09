@@ -1,0 +1,48 @@
+import java.lang.reflect.*;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
+import org.apache.bookkeeper.stats.*;
+import org.apache.bookkeeper.util.*;
+
+public class Probe {
+    static final Map<String,List<Long>> values = new ConcurrentHashMap<>();
+    static Object logger(Class<?> type, String key) {
+        return Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, (p,m,a) -> {
+            switch(m.getName()) {
+                case "scope": return logger(StatsLogger.class, "");
+                case "getOpStatsLogger": return logger(OpStatsLogger.class, (String)a[0]);
+                case "registerGauge": case "unregisterGauge": case "removeScope": return null;
+                case "registerSuccessfulEvent":
+                    long nanos=TimeUnit.NANOSECONDS.convert(((Number)a[0]).longValue(), (TimeUnit)a[1]);
+                    values.computeIfAbsent(key,k->Collections.synchronizedList(new ArrayList<>())).add(nanos);
+                    return null;
+                case "toString": return "RecordingStatsLogger("+key+")";
+                default: throw new UnsupportedOperationException(m.toString());
+            }
+        });
+    }
+    public static void main(String[] args) throws Exception {
+        String mode=args[0]; boolean trace=Boolean.parseBoolean(args[1]);
+        AtomicInteger taskCount=new AtomicInteger();
+        OrderedSafeExecutor executor=OrderedSafeExecutor.newBuilder().name("probe").numThreads(1)
+            .statsLogger((StatsLogger)logger(StatsLogger.class,""))
+            .traceTaskExecution(trace).build();
+        SafeRunnable task=new SafeRunnable(){public void safeRun(){taskCount.incrementAndGet();}};
+        long start=System.nanoTime();
+        if(mode.equals("object")) executor.submitOrdered((Object)Long.valueOf(7),task);
+        else if(mode.equals("long")) executor.submitOrdered(7L,task);
+        else if(mode.equals("int")) executor.submitOrdered(7,task);
+        else throw new IllegalArgumentException(mode);
+        executor.shutdown();
+        if(!executor.awaitTermination(5,TimeUnit.SECONDS)) throw new IllegalStateException("unfinished");
+        long elapsed=System.nanoTime()-start;
+        List<Long> queued=values.getOrDefault("task_queued",Collections.emptyList());
+        List<Long> executed=values.getOrDefault("task_execution",Collections.emptyList());
+        boolean bounded=queued.size()==1&&queued.get(0)>=0&&queued.get(0)<=elapsed;
+        System.out.println("{\"mode\":\""+mode+"\",\"trace\":"+trace
+            +",\"task_count\":"+taskCount.get()+",\"queued_nanos\":"+queued
+            +",\"execution_nanos\":"+executed+",\"elapsed_nanos\":"+elapsed
+            +",\"queued_within_elapsed\":"+bounded+"}");
+    }
+}

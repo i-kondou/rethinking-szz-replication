@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "timestamp": "20260906_094624",
+    "sample_size": 1,
+    "sample_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/138/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "gt_in_szz_candidates": 1,
+    "gt_in_szz_candidates_rate": 1.0,
+    "llm_accuracy": 1.0
+  },
+  "results": [
+    {
+      "id": "138",
+      "fix_commit_hash": "0705528149860c5e4aca92591f05b1e6dabc067f",
+      "bug_commit_hash": [
+        "37b84fb6425485bd5f2ab0396885a9a9d616e47c"
+      ],
+      "szz_candidates": [
+        "37b84fb6425485bd5f2ab0396885a9a9d616e47c"
+      ],
+      "szz_num_candidates": 1,
+      "gt_in_szz_candidates": true,
+      "matching_gt_in_candidates": [
+        "37b84fb6425485bd5f2ab0396885a9a9d616e47c"
+      ],
+      "llm_selected_commit": "37b84fb6425485bd5f2ab0396885a9a9d616e47c",
+      "llm_abstained": false,
+      "llm_confidence": "HIGH",
+      "llm_explanation": "The fix commit changes `AbstractElement.equals()` so that it calls `getID()` instead of `getId()` when comparing vertex/edge identifiers, explicitly noting in the commit message that \"getID()\" and \"getId()\" are being confused due to capitalization, and that this was a bug. Candidate_01's diff is the commit titled \"Remove unchecked cast in AbstractElement#equals()\". Its change is: - Before: `return getID()==((AbstractElement)other).getID();` - After: `return getId().equals(((TitanVertex)other).ge",
+      "llm_correct": true,
+      "llm_error": null,
+      "repo_name": "subjects/138",
+      "bug_fixing_commit": "0705528149860c5e4aca92591f05b1e6dabc067f",
+      "bug_inducing_commit": [
+        "37b84fb6425485bd5f2ab0396885a9a9d616e47c"
+      ],
+      "language": [
+        "java"
+      ],
+      "source_repository": "thinkaurelius/titan"
+    }
+  ]
+}

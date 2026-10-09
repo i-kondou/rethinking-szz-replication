@@ -1,0 +1,424 @@
+{
+  "metadata": {
+    "timestamp": "20260906_032844",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/718/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 89.336,
+      "max": 89.336,
+      "mean": 89.336,
+      "median": 89.336,
+      "total": 89.336,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 88.811,
+      "max": 88.811,
+      "mean": 88.811,
+      "median": 88.811,
+      "total": 88.811,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 15,
+      "max": 15,
+      "mean": 15,
+      "median": 15,
+      "total": 15,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 26,
+      "max": 26,
+      "mean": 26,
+      "median": 26,
+      "total": 26,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 5601,
+      "max": 5601,
+      "mean": 5601,
+      "median": 5601,
+      "total": 5601,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 44939,
+      "max": 44939,
+      "mean": 44939,
+      "median": 44939,
+      "total": 44939,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 411879,
+      "max": 411879,
+      "mean": 411879,
+      "median": 411879,
+      "total": 411879,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.4772907,
+      "max": 0.4772907,
+      "mean": 0.4772907,
+      "median": 0.4772907,
+      "total": 0.4772907,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 6,
+      "Grep": 6,
+      "Glob": 1,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 23,
+      "max": 23,
+      "mean": 23,
+      "median": 23,
+      "total": 23,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 22,
+      "max": 22,
+      "mean": 22,
+      "median": 22,
+      "total": 22,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 22,
+      "max": 22,
+      "mean": 22,
+      "median": 22,
+      "total": 22,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "718",
+      "fix_commit_hash": "e3a09244c0309b814ff0b6ce85908a0d3ba82840",
+      "ground_truth_bics": [
+        "648864118d17e15f7278ab2c17ca2479fe88f17f"
+      ],
+      "predicted_bics": [
+        "002e91d05f4d34bbe9c82a756dc0c99b2283b22c"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "718",
+      "fix_commit": "e3a09244c0309b814ff0b6ce85908a0d3ba82840",
+      "ground_truth_bics": [
+        "648864118d17e15f7278ab2c17ca2479fe88f17f"
+      ],
+      "total_candidates": 23,
+      "gt_in_candidates": true,
+      "selected_commit": "002e91d05f4d34bbe9c82a756dc0c99b2283b22c",
+      "selected_index": 12,
+      "confidence": "HIGH",
+      "explanation": "The fix commit's diff to TableFactoryRenderer.java changes a generated line from: line(\"return \", Table, \".of(t, name, namespace, Triggers.getAllTriggers(t, sharedTriggers, triggers));\"); to: line(\"return \", Table, \".of(t, namespace, name, Triggers.getAllTriggers(t, sharedTriggers, triggers));\"); This corresponds exactly to the commit message note \"fixed generated table factory method argument ordering\": the generated static factory method for \"generic\" tables (those with a getGenericTableName()",
+      "is_correct": false,
+      "num_files_touched_by_fix": 22,
+      "num_source_files_touched_by_fix": 22,
+      "files_analyzed": [
+        "atlasdb-client/src/main/java/com/palantir/atlasdb/schema/generated/SweepPriorityTable.java",
+        "atlasdb-client/src/main/java/com/palantir/atlasdb/schema/generated/SweepProgressTable.java",
+        "atlasdb-client/src/main/java/com/palantir/atlasdb/schema/generated/UpgTaskMetadataTable.java",
+        "atlasdb-client/src/main/java/com/palantir/atlasdb/schema/generated/UpgradeMetadataTable.java",
+        "atlasdb-client/src/main/java/com/palantir/atlasdb/table/description/render/RowOrDynamicColumnRenderer.java",
+        "atlasdb-client/src/main/java/com/palantir/atlasdb/table/description/render/TableFactoryRenderer.java",
+        "atlasdb-client/src/main/java/com/palantir/atlasdb/table/description/render/TableRenderer.java",
+        "atlasdb-tests-shared/src/test/java/com/palantir/atlasdb/schema/indexing/generated/DataTable.java",
+        "atlasdb-tests-shared/src/test/java/com/palantir/atlasdb/schema/indexing/generated/TwoColumnsTable.java",
+        "atlasdb-tests-shared/src/test/java/com/palantir/atlasdb/schema/stream/generated/StreamTest2StreamHashAidxTable.java",
+        "atlasdb-tests-shared/src/test/java/com/palantir/atlasdb/schema/stream/generated/StreamTest2StreamIdxTable.java",
+        "atlasdb-tests-shared/src/test/java/com/palantir/atlasdb/schema/stream/generated/StreamTest2StreamMetadataTable.java",
+        "atlasdb-tests-shared/src/test/java/com/palantir/atlasdb/schema/stream/generated/StreamTest2StreamValueTable.java",
+        "atlasdb-tests-shared/src/test/java/com/palantir/atlasdb/schema/stream/generated/StreamTestStreamHashAidxTable.java",
+        "atlasdb-tests-shared/src/test/java/com/palantir/atlasdb/schema/stream/generated/StreamTestStreamIdxTable.java",
+        "atlasdb-tests-shared/src/test/java/com/palantir/atlasdb/schema/stream/generated/StreamTestStreamMetadataTable.java",
+        "atlasdb-tests-shared/src/test/java/com/palantir/atlasdb/schema/stream/generated/StreamTestStreamValueTable.java",
+        "examples/profile-client/src/main/java/com/palantir/example/profile/schema/generated/UserPhotosStreamHashAidxTable.java",
+        "examples/profile-client/src/main/java/com/palantir/example/profile/schema/generated/UserPhotosStreamIdxTable.java",
+        "examples/profile-client/src/main/java/com/palantir/example/profile/schema/generated/UserPhotosStreamMetadataTable.java",
+        "examples/profile-client/src/main/java/com/palantir/example/profile/schema/generated/UserPhotosStreamValueTable.java",
+        "examples/profile-client/src/main/java/com/palantir/example/profile/schema/generated/UserProfileTable.java"
+      ],
+      "call_stats": {
+        "duration_s": 89.336,
+        "duration_api_s": 88.811,
+        "num_turns": 15,
+        "input_tokens": 26,
+        "output_tokens": 5601,
+        "cache_creation_input_tokens": 44939,
+        "cache_read_input_tokens": 411879,
+        "total_cost_usd": 0.4772907,
+        "total_tool_calls": 14,
+        "tool_calls_by_name": {
+          "Read": 6,
+          "Grep": 6,
+          "Glob": 1,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/718/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_718_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/718/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_718_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/718/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_718_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 24602,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "get.*Table.*Transaction t, String name",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/718/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_718_candidate_selection/fix_commit_diff.txt",
+                  "output_mode": "content"
+                }
+              },
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 978,
+            "cache_read_input_tokens": 34285,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "TableFactoryRenderer",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/718/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_718_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 17,
+            "cache_creation_input_tokens": 535,
+            "cache_read_input_tokens": 35263,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "of\\(t, name, namespace|of\\(t, namespace, name|getGenericTableName",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/718/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_718_candidate_selection/candidates",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 1112,
+            "cache_read_input_tokens": 35798,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "of\\(t, name, namespace|of\\(t, namespace, name",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/718/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_718_candidate_selection/candidates/candidate_01.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 913,
+            "cache_read_input_tokens": 36910,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "Transaction t, String name.*Trigger|getGenericTableName",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/718/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_718_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 456,
+            "cache_read_input_tokens": 37823,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/718/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_718_candidate_selection/candidates/candidate_01.diff",
+                  "offset": 42930,
+                  "limit": 80
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1864,
+            "cache_read_input_tokens": 38279,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/718/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_718_candidate_selection/candidates/candidate_01.diff",
+                  "offset": 47800,
+                  "limit": 80
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1891,
+            "cache_read_input_tokens": 40143,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "get.*Table.*Trigger.*\\{.*$|of\\(t, name, namespace|of\\(t, namespace, name|String name, .*Trigger",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/718/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_718_candidate_selection/candidates/candidate_13.diff",
+                  "output_mode": "content",
+                  "-n": true
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 11,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1004,
+            "cache_read_input_tokens": 42034,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/718/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_718_candidate_selection/candidates/candidate_13.diff",
+                  "offset": 1,
+                  "limit": 145
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 12,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 3907,
+            "cache_read_input_tokens": 43038,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/718/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_718_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_13\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit's diff to TableFactoryRenderer.java changes a generated line from:\n    line(\"return \", Table, \".of(t, name, namespace, Triggers.getAllTriggers(t, sharedTriggers, triggers));\");\nto:\n    line(\"return \", Table, \".of(t, namespace, name, Triggers.getAllTriggers(t, sharedTriggers, triggers));\");\n\nThis corresponds exactly to the commit message note \"fixed generated table factory method argument ordering\": the generated static factory method for \"generic\" tables (those with a getGenericTableName()) is called as `Table.of(t, namespace, name, triggers)`, but the code-generator (TableFactoryRenderer) was emitting a call with `name` and `namespace` swapped, i.e. `Table.of(t, name, namespace, triggers)`.\n\nSearching the candidates for where this exact buggy line was introduced, candidate_13 is the commit that first adds the `namespace` parameter to `TableFactoryRenderer.getTable()` and generates the code:\n    _(\"return \", Table, \".of(t, name, namespace, Triggers.getAllTriggers(t, sharedTriggers, triggers));\");\n(candidate_13.diff, TableFactoryRenderer.java hunk, lines ~98-101).\n\nBefore candidate_13 (e.g. candidate_01), the generated call was `Table.of(t, name, Triggers...)` \u2014 there was no `namespace` argument at all, so the ordering bug could not yet exist. Candidate_13 is the commit that adds the namespace parameter but puts it in the wrong position relative to `name` in the generated `.of(...)` call, introducing the argument-ordering bug that persists through later candidates (e.g. candidate_16, which only renames the `_` method to `line` without correcting the order) until it is finally fixed in the target fix commit by swapping to `.of(t, namespace, name, ...)`.\n\nBecause the actual generated table classes' `of(...)` static factory methods take `(Transaction, Namespace, String name, ...)` (namespace before name), the TableFactoryRenderer-generated caller code introduced in candidate_13 has arguments in the wrong order, causing incorrect namespace/name values to be passed at runtime for generic (dynamically-named) tables \u2014 exactly the bug the fix commit corrects.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 13,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1392,
+            "cache_read_input_tokens": 46945,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

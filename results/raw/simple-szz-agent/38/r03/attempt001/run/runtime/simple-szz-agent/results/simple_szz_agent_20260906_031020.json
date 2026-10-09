@@ -1,0 +1,362 @@
+{
+  "metadata": {
+    "timestamp": "20260906_031020",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 65.801,
+      "max": 65.801,
+      "mean": 65.801,
+      "median": 65.801,
+      "total": 65.801,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 65.71,
+      "max": 65.71,
+      "mean": 65.71,
+      "median": 65.71,
+      "total": 65.71,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 16,
+      "max": 16,
+      "mean": 16,
+      "median": 16,
+      "total": 16,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 6956,
+      "max": 6956,
+      "mean": 6956,
+      "median": 6956,
+      "total": 6956,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 17845,
+      "max": 17845,
+      "mean": 17845,
+      "median": 17845,
+      "total": 17845,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 82424,
+      "max": 82424,
+      "mean": 82424,
+      "median": 82424,
+      "total": 82424,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.23617919999999998,
+      "max": 0.23617919999999998,
+      "mean": 0.23617919999999998,
+      "median": 0.23617919999999998,
+      "total": 0.23617919999999998,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 15,
+      "max": 15,
+      "mean": 15,
+      "median": 15,
+      "total": 15,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 4,
+      "Grep": 10,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 87,
+      "max": 87,
+      "mean": 87,
+      "median": 87,
+      "total": 87,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "38",
+      "fix_commit_hash": "45bddf5b5c2d9df754f984fb1cf9bf6b6e254441",
+      "ground_truth_bics": [
+        "d6e4936fa54dc3577296dbadaeb556178dcad2c3"
+      ],
+      "predicted_bics": [
+        "d6e4936fa54dc3577296dbadaeb556178dcad2c3"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "38",
+      "fix_commit": "45bddf5b5c2d9df754f984fb1cf9bf6b6e254441",
+      "ground_truth_bics": [
+        "d6e4936fa54dc3577296dbadaeb556178dcad2c3"
+      ],
+      "total_candidates": 87,
+      "gt_in_candidates": true,
+      "selected_commit": "d6e4936fa54dc3577296dbadaeb556178dcad2c3",
+      "selected_index": 67,
+      "confidence": "HIGH",
+      "explanation": "The fix commit modifies the fall-through switch statement in KeychainDatabase.onUpgrade(), removing a spurious extra `case 8:` label (merging it into `case 7:`) and renumbering every subsequent case (9->8, 10->9, 11->10, 12->11, 13->12, 14->13, 15->14). This is the \"ridiculous database migration bug\": at some point an extra, unnecessary case label was inserted into the fall-through chain, causing every migration step added afterward to be off by one relative to the actual DATABASE_VERSION it cor",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "OpenKeychain/src/main/java/org/sufficientlysecure/keychain/provider/KeychainDatabase.java"
+      ],
+      "call_stats": {
+        "duration_s": 65.801,
+        "duration_api_s": 65.71,
+        "num_turns": 16,
+        "input_tokens": 14,
+        "output_tokens": 6956,
+        "cache_creation_input_tokens": 17845,
+        "cache_read_input_tokens": 82424,
+        "total_cost_usd": 0.23617919999999998,
+        "total_tool_calls": 15,
+        "tool_calls_by_name": {
+          "Read": 4,
+          "Grep": 10,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_38_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 20,
+            "cache_creation_input_tokens": 1416,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_38_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_38_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1683,
+            "cache_read_input_tokens": 9696,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "consolidate",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_38_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "KeychainDatabase.java",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_38_candidate_selection/candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 2555,
+            "cache_read_input_tokens": 11379,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "case 7:|case 8:|case 9:|case 10:|case 11:",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_38_candidate_selection/candidates/candidate_58.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "case 7:|case 8:|case 9:|case 10:|case 11:",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_38_candidate_selection/candidates/candidate_59.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "case 7:|case 8:|case 9:|case 10:|case 11:",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_38_candidate_selection/candidates/candidate_62.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "case 7:|case 8:|case 9:|case 10:|case 11:",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_38_candidate_selection/candidates/candidate_63.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "case 7:|case 8:|case 9:|case 10:|case 11:",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_38_candidate_selection/candidates/candidate_64.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "case 7:|case 8:|case 9:|case 10:|case 11:",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_38_candidate_selection/candidates/candidate_66.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "case 7:|case 8:|case 9:|case 10:|case 11:",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_38_candidate_selection/candidates/candidate_67.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "case 7:|case 8:|case 9:|case 10:|case 11:",
+                  "path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_38_candidate_selection/candidates/candidate_68.diff",
+                  "output_mode": "content",
+                  "-C": 3
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2783,
+            "cache_read_input_tokens": 13934,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_38_candidate_selection/candidates/candidate_68.diff",
+                  "offset": 70,
+                  "limit": 80
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 6,
+            "cache_creation_input_tokens": 2303,
+            "cache_read_input_tokens": 16717,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/38/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_38_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_68\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit modifies the fall-through switch statement in KeychainDatabase.onUpgrade(), removing a spurious extra `case 8:` label (merging it into `case 7:`) and renumbering every subsequent case (9->8, 10->9, 11->10, 12->11, 13->12, 14->13, 15->14). This is the \"ridiculous database migration bug\": at some point an extra, unnecessary case label was inserted into the fall-through chain, causing every migration step added afterward to be off by one relative to the actual DATABASE_VERSION it corresponds to.\n\ncandidate_68 is where this exact problematic pattern was first introduced. In this commit:\n- `DATABASE_VERSION` is bumped from 7 to 8.\n- A new `CREATE_API_APPS_ALLOWED_KEYS` table/migration is added.\n- Crucially, the migration code is added as TWO separate case labels instead of one:\n    case 7:\n        // consolidate\n    case 8:\n        // new table for allowed key ids in API\n        try { db.execSQL(CREATE_API_APPS_ALLOWED_KEYS); } ...\n\nThis is the precise code block (word-for-word, including the \"// consolidate\" comment and the API_APPS_ALLOWED_KEYS try/catch) that the fix commit later collapses into a single `case 7:` before renumbering all later cases down by one. No other candidate introduces or contains this \"case 7: // consolidate\" followed by a distinct \"case 8:\" pattern \u2014 it originates exactly here. Because the switch statement relies purely on fall-through with no breaks, this extra case label silently introduced an extra \"slot\" in the migration sequence that every subsequently-added case (9, 10, 11, ...) inherited, compounding the numbering bug until it was corrected in the fix commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2223,
+            "cache_read_input_tokens": 19020,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

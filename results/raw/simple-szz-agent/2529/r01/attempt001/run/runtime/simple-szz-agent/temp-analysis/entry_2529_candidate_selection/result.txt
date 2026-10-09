@@ -1,0 +1,50 @@
+SELECTED: candidate_24
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (StatusUpdaterBolt : fixes bug and simplifies code) addresses a
+bug where the routing-key field name, when configured with a "metadata."
+prefix (e.g. "metadata.hostname"), was no longer correctly recognized as
+belonging under "metadata." once periods in the field name were URL-encoded
+to "%2E". The fix introduces a `routingFieldNameInMetadata` boolean that is
+set *before* the period-to-%2E replacement happens, and uses that flag later
+instead of re-checking `fieldNameForRoutingKey.startsWith("metadata.")` /
+`substring(9)` after the encoding was already applied.
+
+Tracing the history of StatusUpdaterBolt.java across the candidates (using
+the git blob hashes in each diff's `index` line) shows the exact sequence
+that produced this bug:
+
+- candidate_09 first introduces `fieldNameForRoutingKey` and writes it
+  directly into the document, with no "metadata." handling at all.
+- candidate_21 (index c2b4839..cdeb99a) adds the "metadata." support: it
+  checks `fieldNameForRoutingKey.startsWith("metadata.")` and, if true,
+  strips the prefix with `substring(9)` before writing the field into the
+  metadata object (otherwise it writes the field outside metadata). At this
+  point there is no period-encoding logic yet, so the check works correctly.
+- candidate_22 (cdeb99a..a7d1239) and candidate_23 (a7d1239..3dc28c1) touch
+  unrelated parts of the file (SHA-256 id generation), leaving the
+  "metadata." logic untouched.
+- candidate_24 (index 3dc28c1..ed3cf70) is the commit that introduces
+  `// periods are not allowed in ES2 - replace with %2E` and the
+  `fieldNameForRoutingKey = fieldNameForRoutingKey.replaceAll("\\.", "%2E")`
+  call, applied to the *whole* configured field name — including the literal
+  period in the "metadata." prefix itself. This is the bug: after this
+  replacement, a configured value like "metadata.hostname" becomes
+  "metadata%2Ehostname", which no longer satisfies
+  `startsWith("metadata.")`. As a result, the routing key is silently written
+  outside the metadata object (or dropped from the intended location)
+  instead of nested under "metadata", breaking the field's intended
+  behavior. This commit produces exactly the pre-fix code state (blob
+  ed3cf70) that the fix commit's diff starts from.
+- candidate_25 (index ed3cf70..2938f64) is in fact the fix commit itself —
+  its diff is byte-for-byte identical to fix_commit_diff.txt (adding the
+  `routingFieldNameInMetadata` flag set prior to the `replaceAll` call, and
+  using that flag instead of re-deriving "metadata." membership from the
+  already-encoded string).
+
+Because candidate_24 is the commit where the period-encoding logic was
+introduced without accounting for the "metadata." prefix check that already
+existed (added in candidate_21), it is the commit that actually introduced
+the bug that the fix commit resolves.

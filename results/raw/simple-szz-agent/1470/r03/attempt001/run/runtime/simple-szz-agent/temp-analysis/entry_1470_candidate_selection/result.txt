@@ -1,0 +1,21 @@
+SELECTED: candidate_13
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit removes a single dead-store line in AbstractStickyAssignor.generalAssign():
+    boolean isFreshAssignment = currentAssignment.isEmpty();
+because spotBugs flagged it as an unused ("dead store") local variable.
+
+Tracing the history of `isFreshAssignment`:
+- candidate_01/02/09/12 introduce and repeatedly thread `isFreshAssignment` through as a real parameter to the `sortPartitions(...)` method, where it is actively used in the condition `if (!isFreshAssignment && areSubscriptionsIdentical(...))`. At this point the variable is live and meaningful.
+- candidate_13 performs a large refactor of AbstractStickyAssignor (introducing constrainedAssign/generalAssign split, rewriting sortPartitions, etc.). Critically, it changes the call site from
+    sortPartitions(currentAssignment, prevAssignment.keySet(), isFreshAssignment, partition2AllPotentialConsumers, consumer2AllPotentialPartitions)
+  to
+    sortPartitions(partition2AllPotentialConsumers)
+  and rewrites sortPartitions() itself to no longer take an `isFreshAssignment` parameter at all (the entire old branch depending on `isFreshAssignment`/`areSubscriptionsIdentical` was deleted). However, the local variable declaration
+    boolean isFreshAssignment = currentAssignment.isEmpty();
+  was left untouched in the diff (it appears as an unmodified context line), so after this commit it is computed but never read anywhere — exactly the dead-store condition spotBugs later reported.
+- candidate_14 is identical to the fix commit itself (removes this now-dead declaration), confirming candidate_13 is the point right before the bug existed in its final, unused form.
+
+Therefore candidate_13 is the commit that introduced the bug (the dead store) by removing all usages of `isFreshAssignment` while forgetting to remove its declaration.

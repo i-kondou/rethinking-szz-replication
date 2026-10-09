@@ -1,0 +1,15 @@
+SELECTED: candidate_08
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes KVMPhysicalDisk.java line "rbdOpts += "\\\\:" + monPort;" to "rbdOpts += "\\:" + monPort;" (i.e. a Java source string that produces two literal backslashes before the colon is reduced to one), fixing a "double-escape" of the rados monitor port separator, as described in the commit message ("Fix double-escape issue while creating rbd disk options ... the rados host/monitor port was double escaped").
+
+Tracing the history of this exact code across the candidates, the method KVMPhysicalDisk.RBDStringBuilder(...) is first introduced in candidate_08, which adds:
+
+    rbdOpts = "rbd:" + image;
+    rbdOpts += ":mon_host=" + monHost + "\\\\:" + monPort;
+
+This is the very first appearance of the "\\\\:" (double-escaped backslash) pattern in the codebase — no prior candidate (01-07) contains any reference to RBDStringBuilder, mon_host, or monPort. Subsequent candidates (11, 12, 13, 14, 16, 19) only restructure surrounding logic (e.g., splitting the port-append into a conditional, reformatting call sites, adding rbd_default_format/client_mount_timeout options) but all preserve the same buggy "\\\\:" double-escaped separator introduced in candidate_08. Candidate_20 is the actual bug fix itself (its diff is byte-for-byte identical to fix_commit_diff.txt, changing "\\\\:" to "\\:"), confirming that the double backslash had persisted unchanged from its origin in candidate_08 all the way to the fix.
+
+Since candidate_08 is the commit that first wrote the double-escaped "\\\\:" string that every later commit (until the fix) merely inherited, it is the bug-introducing commit.

@@ -1,0 +1,627 @@
+diff --git a/src/main/java/spoon/reflect/visitor/AccessibleVariablesFinder.java b/src/main/java/spoon/reflect/visitor/AccessibleVariablesFinder.java
+new file mode 100644
+index 00000000..58561821
+--- /dev/null
++++ b/src/main/java/spoon/reflect/visitor/AccessibleVariablesFinder.java
+@@ -0,0 +1,162 @@
++/**
++ * Copyright (C) 2006-2016 INRIA and contributors
++ * Spoon - http://spoon.gforge.inria.fr/
++ *
++ * This software is governed by the CeCILL-C License under French law and
++ * abiding by the rules of distribution of free software. You can use, modify
++ * and/or redistribute the software under the terms of the CeCILL-C license as
++ * circulated by CEA, CNRS and INRIA at http://www.cecill.info.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE. See the CeCILL-C License for more details.
++ *
++ * The fact that you are presently reading this means that you have had
++ * knowledge of the CeCILL-C license and that you accept its terms.
++ */
++package spoon.reflect.visitor;
++
++import spoon.reflect.code.CtCatch;
++import spoon.reflect.code.CtFor;
++import spoon.reflect.code.CtForEach;
++import spoon.reflect.code.CtLocalVariable;
++import spoon.reflect.code.CtStatement;
++import spoon.reflect.code.CtStatementList;
++import spoon.reflect.code.CtTryWithResource;
++import spoon.reflect.declaration.CtElement;
++import spoon.reflect.declaration.CtExecutable;
++import spoon.reflect.declaration.CtField;
++import spoon.reflect.declaration.CtMethod;
++import spoon.reflect.declaration.CtPackage;
++import spoon.reflect.declaration.CtType;
++import spoon.reflect.declaration.CtVariable;
++import spoon.reflect.declaration.ModifierKind;
++import spoon.reflect.reference.CtTypeReference;
++
++import java.util.ArrayList;
++import java.util.Collections;
++import java.util.Iterator;
++import java.util.List;
++import java.util.Set;
++
++/**
++ * Find local variables catch, parameters, fields, super fields
++ * @author tdurieux
++ */
++public class AccessibleVariablesFinder {
++
++	private CtElement expression;
++
++	public AccessibleVariablesFinder(CtElement expression) {
++		this.expression = expression;
++	}
++
++	public List<CtVariable> find() {
++		if (expression.isParentInitialized()) {
++			return getVariable(expression.getParent());
++		}
++		return Collections.emptyList();
++	}
++
++	private List<CtVariable> getVariable(final CtElement parent) {
++		final List<CtVariable> variables = new ArrayList<>();
++		if (parent == null) {
++			return variables;
++		}
++		class VariableScanner extends CtInheritanceScanner {
++			@Override
++			public void visitCtStatementList(CtStatementList e) {
++				for (int i = 0; i < e.getStatements().size(); i++) {
++					CtStatement ctStatement = e.getStatements().get(i);
++					if (ctStatement.getPosition() == null) {
++					}
++					if (ctStatement.getPosition() != null
++							&& ctStatement.getPosition().getSourceStart() > expression.getPosition().getSourceEnd()) {
++						break;
++					}
++					if (ctStatement instanceof CtVariable) {
++						variables.add((CtVariable) ctStatement);
++					}
++				}
++				super.visitCtStatementList(e);
++			}
++
++			@Override
++			public <T> void scanCtType(CtType<T> type) {
++				List<CtField<?>> fields = type.getFields();
++				for (int i = 0; i < fields.size(); i++) {
++					CtField<?> ctField = fields.get(i);
++					if (ctField.hasModifier(ModifierKind.PUBLIC) || ctField.hasModifier(ModifierKind.PROTECTED)) {
++						variables.add(ctField);
++					} else if (ctField.hasModifier(ModifierKind.PRIVATE)) {
++						if (expression.hasParent(type)) {
++							variables.add(ctField);
++						}
++					} else if (expression.getParent(CtPackage.class).equals(type.getParent(CtPackage.class))) {
++						// default visibility
++						variables.add(ctField);
++					}
++				}
++				CtTypeReference<?> superclass = type.getSuperclass();
++				if (superclass != null) {
++					variables.addAll(getVariable(superclass.getTypeDeclaration()));
++				}
++				Set<CtTypeReference<?>> superInterfaces = type.getSuperInterfaces();
++				for (Iterator<CtTypeReference<?>> iterator = superInterfaces.iterator(); iterator.hasNext();) {
++					CtTypeReference<?> typeReference = iterator.next();
++					variables.addAll(getVariable(typeReference.getTypeDeclaration()));
++				}
++				super.scanCtType(type);
++			}
++
++			@Override
++			public void visitCtTryWithResource(CtTryWithResource e) {
++				variables.addAll(e.getResources());
++				super.visitCtTryWithResource(e);
++			}
++
++			@Override
++			public void scanCtExecutable(CtExecutable e) {
++				variables.addAll(e.getParameters());
++				super.scanCtExecutable(e);
++			}
++
++			@Override
++			public void visitCtFor(CtFor e) {
++				for (CtStatement ctStatement : e.getForInit()) {
++					this.scan(ctStatement);
++				}
++				super.visitCtFor(e);
++			}
++
++			@Override
++			public void visitCtForEach(CtForEach e) {
++				variables.add(e.getVariable());
++				super.visitCtForEach(e);
++			}
++
++			@Override
++			public void visitCtMethod(CtMethod e) {
++				this.scan(e.getBody());
++				super.visitCtMethod(e);
++			}
++
++			@Override
++			public void visitCtLocalVariable(CtLocalVariable e) {
++				variables.add(e);
++				super.visitCtLocalVariable(e);
++			}
++
++			@Override
++			public void visitCtCatch(CtCatch e) {
++				variables.add(e.getParameter());
++
++				super.visitCtCatch(e);
++			}
++		}
++
++		new VariableScanner().scan(parent);
++
++		return variables;
++	}
++}
+diff --git a/src/main/java/spoon/reflect/visitor/DefaultJavaPrettyPrinter.java b/src/main/java/spoon/reflect/visitor/DefaultJavaPrettyPrinter.java
+index d2d03868..c3901075 100644
+--- a/src/main/java/spoon/reflect/visitor/DefaultJavaPrettyPrinter.java
++++ b/src/main/java/spoon/reflect/visitor/DefaultJavaPrettyPrinter.java
+@@ -174,7 +174,6 @@ public class DefaultJavaPrettyPrinter implements CtVisitor, PrettyPrinter {
+ 		this.env = env;
+ 		printer = new PrinterHelper(env);
+ 		elementPrinterHelper = new ElementPrinterHelper(printer, this, env);
+-
+ 		if (env.isAutoImports()) {
+ 			this.importsContext = new ImportScannerImpl();
+ 		} else {
+@@ -1726,6 +1725,12 @@ public class DefaultJavaPrettyPrinter implements CtVisitor, PrettyPrinter {
+ 	@Override
+ 	public void calculate(CompilationUnit sourceCompilationUnit, List<CtType<?>> types) {
+ 		this.sourceCompilationUnit = sourceCompilationUnit;
++		// reset the import scanner between each compilationunit
++		if (env.isAutoImports()) {
++			this.importsContext = new ImportScannerImpl();
++		} else {
++			this.importsContext = new MinimalImportScanner();
++		}
+ 		Set<CtReference> imports = new HashSet<>();
+ 		for (CtType<?> t : types) {
+ 			imports.addAll(computeImports(t));
+diff --git a/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java b/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java
+index cc39d447..77837097 100644
+--- a/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java
++++ b/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java
+@@ -338,7 +338,7 @@ public class ImportScannerImpl extends CtScanner implements ImportScanner {
+ 		return true;
+ 	}
+ 
+-	private boolean isImportedInClassImports(CtTypeReference<?> ref) {
++	protected boolean isImportedInClassImports(CtTypeReference<?> ref) {
+ 		if (targetType != null) {
+ 			CtPackageReference pack = targetType.getPackage();
+ 
+@@ -369,13 +369,36 @@ public class ImportScannerImpl extends CtScanner implements ImportScanner {
+ 		return false;
+ 	}
+ 
++	/**
++	 * This method is used to check if the declaring type has been already imported, or if it is local
++	 * In both case we do not want to import it, even in FQN mode.
++	 * @param declaringType
++	 * @return true if it is local or imported
++	 */
++	private boolean declaringTypeIsLocalOrImported(CtTypeReference declaringType) {
++		if (declaringType != null) {
++			if (isImportedInClassImports(declaringType)) {
++				return true;
++			}
++
++			while (declaringType != null) {
++				if (declaringType.equals(targetType)) {
++					return true;
++				}
++				declaringType = declaringType.getDeclaringType();
++			}
++
++		}
++		return false;
++	}
++
+ 	protected boolean addMethodImport(CtExecutableReference ref) {
+ 		if (this.methodImports.containsKey(ref.getSimpleName())) {
+ 			return isImportedInMethodImports(ref);
+ 		}
+ 
+ 		// if the whole class is imported: no need to import the method.
+-		if (ref.getDeclaringType() != null && isImportedInClassImports(ref.getDeclaringType())) {
++		if (declaringTypeIsLocalOrImported(ref.getDeclaringType())) {
+ 			return false;
+ 		}
+ 
+@@ -392,7 +415,7 @@ public class ImportScannerImpl extends CtScanner implements ImportScanner {
+ 		return true;
+ 	}
+ 
+-	private boolean isImportedInMethodImports(CtExecutableReference<?> ref) {
++	protected boolean isImportedInMethodImports(CtExecutableReference<?> ref) {
+ 		if (!(ref.isImplicit()) && methodImports.containsKey(ref.getSimpleName())) {
+ 			CtExecutableReference<?> exist = methodImports.get(ref.getSimpleName());
+ 			if (exist.getSignature().equals(ref.getSignature())) {
+@@ -406,40 +429,16 @@ public class ImportScannerImpl extends CtScanner implements ImportScanner {
+ 		if (this.fieldImports.containsKey(ref.getSimpleName())) {
+ 			return isImportedInFieldImports(ref);
+ 		}
+-		//CtPackageReference pack = targetType.getPackage();
+-
+-		// if the whole class is imported: no need to import the method.
+-		CtTypeReference declaringType = ref.getDeclaringType();
+-		if (declaringType != null) {
+-			if (isImportedInClassImports(declaringType)) {
+-				return false;
+-			}
+-
+-			while (declaringType != null) {
+-				if (declaringType.equals(targetType)) {
+-					return false;
+-				}
+-				declaringType = declaringType.getDeclaringType();
+-			}
+ 
++		if (declaringTypeIsLocalOrImported(ref.getDeclaringType())) {
++			return false;
+ 		}
+ 
+-		/*if (ref.getDeclaringType().getPackage() != null && !ref.getDeclaringType().getPackage().isUnnamedPackage()) {
+-			// ignore java.lang package
+-			if (!ref.getDeclaringType().getPackage().getSimpleName().equals("java.lang")) {
+-				// ignore type in same package
+-				if (ref.getDeclaringType().getPackage().getSimpleName()
+-						.equals(pack.getSimpleName())) {
+-					return false;
+-				}
+-			}
+-		}*/
+-
+ 		fieldImports.put(ref.getSimpleName(), ref);
+ 		return true;
+ 	}
+ 
+-	private boolean isImportedInFieldImports(CtFieldReference<?> ref) {
++	protected boolean isImportedInFieldImports(CtFieldReference<?> ref) {
+ 		if (!(ref.isImplicit()) && fieldImports.containsKey(ref.getSimpleName())) {
+ 			CtFieldReference<?> exist = fieldImports.get(ref.getSimpleName());
+ 			try {
+@@ -452,11 +451,6 @@ public class ImportScannerImpl extends CtScanner implements ImportScanner {
+ 			}
+ 
+ 		}
+-		/*CtTypeReference typeRef = ref.getDeclaringType();
+-
+-		if (typeRef != null) {
+-			return isImportedInClassImports(typeRef);
+-		}*/
+ 
+ 		return false;
+ 	}
+diff --git a/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java b/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java
+index 8224cced..f3224126 100644
+--- a/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java
++++ b/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java
+@@ -16,10 +16,13 @@
+  */
+ package spoon.reflect.visitor;
+ 
++import spoon.reflect.code.CtBlock;
+ import spoon.reflect.declaration.CtClass;
+ import spoon.reflect.declaration.CtElement;
+-import spoon.reflect.declaration.CtNamedElement;
++import spoon.reflect.declaration.CtField;
++import spoon.reflect.declaration.CtMethod;
+ import spoon.reflect.declaration.CtPackage;
++import spoon.reflect.declaration.CtVariable;
+ import spoon.reflect.declaration.ParentNotInitializedException;
+ import spoon.reflect.reference.CtExecutableReference;
+ import spoon.reflect.reference.CtFieldReference;
+@@ -27,6 +30,7 @@ import spoon.reflect.reference.CtReference;
+ import spoon.reflect.reference.CtTypeReference;
+ 
+ import java.util.HashSet;
++import java.util.List;
+ import java.util.Set;
+ 
+ /**
+@@ -35,7 +39,7 @@ import java.util.Set;
+  */
+ public class MinimalImportScanner extends ImportScannerImpl implements ImportScanner {
+ 
+-	private Set<String> namedElements = new HashSet<String>();
++	private Set<String> fieldAndMethodsNames = new HashSet<String>();
+ 
+ 	private CtClass getParentClass(CtReference ref) {
+ 		CtElement parent = ref.getParent();
+@@ -51,6 +55,52 @@ public class MinimalImportScanner extends ImportScannerImpl implements ImportSca
+ 		}
+ 	}
+ 
++	private Set<String> lookForLocalVariables(CtElement parent) {
++		Set<String> result = new HashSet<>();
++
++		// try to get the block container
++		// if the first container is the class, then we are not in a block and we can quit now.
++		while (parent != null && !(parent instanceof CtBlock)) {
++			if (parent instanceof CtClass) {
++				return result;
++			}
++			parent = parent.getParent();
++		}
++
++		if (parent != null) {
++			CtBlock block = (CtBlock) parent;
++			boolean innerClass = false;
++
++			// now we have the first container block, we want to check if we're not in an inner class
++			while (parent != null && !(parent instanceof CtClass)) {
++				parent = parent.getParent();
++			}
++
++			if (parent != null) {
++				// uhoh it's not a package as a parent, we must in an inner block:
++				// let's find the last block BEFORE the class call: some collision could occur because of variables defined in that block
++				if (!(parent.getParent() instanceof CtPackage)) {
++					while (parent != null && !(parent instanceof CtBlock)) {
++						parent = parent.getParent();
++					}
++
++					if (parent != null) {
++						block = (CtBlock) parent;
++					}
++				}
++			}
++
++			AccessibleVariablesFinder avf = new AccessibleVariablesFinder(block);
++			List<CtVariable> variables = avf.find();
++
++			for (CtVariable variable : variables) {
++				result.add(variable.getSimpleName());
++			}
++		}
++
++		return result;
++	}
++
+ 	/**
+ 	 * Test if the reference should be imported by looking if there is a name conflict
+ 	 * @param ref
+@@ -70,30 +120,17 @@ public class MinimalImportScanner extends ImportScannerImpl implements ImportSca
+ 				parent = ref;
+ 			}
+ 
+-			CtClass parentClass = this.getParentClass(ref);
+-
+-			if (parent instanceof CtNamedElement) {
+-				CtNamedElement namedElement = (CtNamedElement) parent;
++			Set<String> localVariablesOfBlock = new HashSet<>();
+ 
+-				if (parentClass != null && parentClass.getReference() != null) {
+-					if (parentClass.getReference().equals(targetType)) {
+-						namedElements.add(namedElement.getSimpleName());
+-					}
+-				} else {
+-					namedElements.add(namedElement.getSimpleName());
+-				}
++			if (parent instanceof CtField) {
++				this.fieldAndMethodsNames.add(((CtField) parent).getSimpleName());
++			} else if (parent instanceof CtMethod) {
++				this.fieldAndMethodsNames.add(((CtMethod) parent).getSimpleName());
++			} else {
++				localVariablesOfBlock = this.lookForLocalVariables(parent);
+ 			}
+ 
+ 			while (!(parent instanceof CtPackage)) {
+-				/*if (parent instanceof CtClassImpl) {
+-					CtClassImpl classParent = (CtClassImpl)parent;
+-					CtTypeReference referencedType = classParent.getReference();
+-
+-					if (referencedType != null && referencedType.equals(this.targetType)) {
+-						return false;
+-					}
+-
+-				}*/
+ 				if ((parent instanceof CtFieldReference) || (parent instanceof CtExecutableReference)) {
+ 					CtReference parentType = (CtReference) parent;
+ 					Set<String> qualifiedNameTokens = new HashSet<>();
+@@ -129,7 +166,7 @@ public class MinimalImportScanner extends ImportScannerImpl implements ImportSca
+ 						}
+ 					}
+ 					for (String token : qualifiedNameTokens) {
+-						if (namedElements.contains(token)) {
++						if (fieldAndMethodsNames.contains(token) || localVariablesOfBlock.contains(token)) {
+ 							return true;
+ 						}
+ 					}
+@@ -160,7 +197,12 @@ public class MinimalImportScanner extends ImportScannerImpl implements ImportSca
+ 		boolean shouldTypeBeImported = this.shouldTypeBeImported(ref);
+ 
+ 		if (shouldTypeBeImported) {
+-			return super.addFieldImport(ref);
++			if (this.fieldImports.containsKey(ref.getSimpleName())) {
++				return isImportedInFieldImports(ref);
++			}
++
++			fieldImports.put(ref.getSimpleName(), ref);
++			return true;
+ 		} else {
+ 			return false;
+ 		}
+@@ -171,9 +213,33 @@ public class MinimalImportScanner extends ImportScannerImpl implements ImportSca
+ 		boolean shouldTypeBeImported = this.shouldTypeBeImported(ref);
+ 
+ 		if (shouldTypeBeImported) {
+-			return super.addMethodImport(ref);
++			if (this.methodImports.containsKey(ref.getSimpleName())) {
++				return isImportedInMethodImports(ref);
++			}
++
++			methodImports.put(ref.getSimpleName(), ref);
++
++			if (ref.getDeclaringType() != null) {
++				if (ref.getDeclaringType().getPackage() != null) {
++					if (ref.getDeclaringType().getPackage().equals(this.targetType.getPackage())) {
++						addClassImport(ref.getDeclaringType());
++					}
++				}
++			}
++			return true;
+ 		} else {
+ 			return false;
+ 		}
+ 	}
++
++	@Override
++	protected boolean isImportedInClassImports(CtTypeReference<?> ref) {
++		if (!(ref.isImplicit()) && classImports.containsKey(ref.getSimpleName())) {
++			CtTypeReference<?> exist = classImports.get(ref.getSimpleName());
++			if (exist.getQualifiedName().equals(ref.getQualifiedName())) {
++				return true;
++			}
++		}
++		return false;
++	}
+ }
+diff --git a/src/test/java/spoon/processing/CtGenerationTest.java b/src/test/java/spoon/processing/CtGenerationTest.java
+index 1225a618..fe45b1cf 100644
+--- a/src/test/java/spoon/processing/CtGenerationTest.java
++++ b/src/test/java/spoon/processing/CtGenerationTest.java
+@@ -10,11 +10,16 @@ import spoon.reflect.declaration.CtClass;
+ import spoon.reflect.declaration.CtElement;
+ import spoon.reflect.declaration.CtType;
+ import spoon.reflect.visitor.Filter;
++import spoon.reflect.visitor.PrettyPrinter;
++import spoon.support.visitor.replace.ReplacementVisitor;
+ 
+ import java.io.File;
++import java.util.ArrayList;
++import java.util.List;
+ import java.util.regex.Matcher;
+ import java.util.regex.Pattern;
+ 
++import static org.junit.Assert.assertTrue;
+ import static spoon.testing.Assert.assertThat;
+ import static spoon.testing.utils.ModelUtils.build;
+ 
+@@ -24,6 +29,7 @@ public class CtGenerationTest {
+ 		//use always LINUX line separator, because generated files are committed to Spoon repository which expects that. 
+ 		System.setProperty("line.separator", "\n");
+ 		final Launcher launcher = new Launcher();
++		launcher.getEnvironment().setAutoImports(false);
+ 		launcher.getEnvironment().setNoClasspath(true);
+ 		launcher.getEnvironment().setCommentEnabled(true);
+ 		launcher.getEnvironment().useTabulations(true);
+@@ -45,8 +51,7 @@ public class CtGenerationTest {
+ 		CtClass<Object> actual = build(new File(launcher.getModelBuilder().getSourceOutputDirectory()+"/spoon/support/visitor/replace/ReplacementVisitor.java")).Class().get("spoon.support.visitor.replace.ReplacementVisitor");
+ 		CtClass<Object> expected = build(new File("./src/main/java/spoon/support/visitor/replace/ReplacementVisitor.java")).Class().get("spoon.support.visitor.replace.ReplacementVisitor");
+ 		try {
+-			assertThat(actual)
+-				.isEqualTo(expected);
++			assertThat(actual).isEqualTo(expected);
+ 		} catch (AssertionError e) {
+ 			throw new ComparisonFailure("ReplacementVisitor different", expected.toString(), actual.toString());
+ 		}
+diff --git a/src/test/java/spoon/test/prettyprinter/PrinterTest.java b/src/test/java/spoon/test/prettyprinter/PrinterTest.java
+index 4355da5b..3ff9db99 100644
+--- a/src/test/java/spoon/test/prettyprinter/PrinterTest.java
++++ b/src/test/java/spoon/test/prettyprinter/PrinterTest.java
+@@ -1,23 +1,25 @@
+ package spoon.test.prettyprinter;
+ 
+ import static org.junit.Assert.assertEquals;
++import static org.junit.Assert.assertTrue;
+ 
+-import org.junit.Before;
+ import org.junit.Test;
+ 
+ import spoon.Launcher;
+ import spoon.compiler.SpoonResourceHelper;
+ import spoon.reflect.declaration.CtType;
+ import spoon.reflect.factory.Factory;
++import spoon.reflect.visitor.PrettyPrinter;
+ 
+-public class PrinterTest {
++import java.util.ArrayList;
++import java.util.List;
+ 
+-	Factory factory;
++public class PrinterTest {
+ 
+-	@Before
+-	public void setup() throws Exception {
+-	    Launcher spoon = new Launcher();
+-		factory = spoon.createFactory();
++	@Test
++	public void testPrettyPrinter() throws Exception {
++		Launcher spoon = new Launcher();
++		Factory factory = spoon.createFactory();
+ 		spoon.createCompiler(
+ 				factory,
+ 				SpoonResourceHelper
+@@ -25,11 +27,6 @@ public class PrinterTest {
+ 								"./src/test/java/spoon/test/annotation/testclasses/PersistenceProperty.java",
+ 								"./src/test/java/spoon/test/prettyprinter/Validation.java"))
+ 				.build();
+-	}
+-
+-	@Test
+-	public void testPrettyPrinter() throws Exception {
+-
+ 		for (CtType<?> t : factory.Type().getAll()) {
+ 			t.toString();
+ 		}
+@@ -38,4 +35,44 @@ public class PrinterTest {
+ 
+ 	}
+ 
++	@Test
++	public void testChangeAutoImportModeWorks() throws Exception {
++		Launcher spoon = new Launcher();
++		PrettyPrinter printer = spoon.createPrettyPrinter();
++		spoon.getEnvironment().setAutoImports(false);
++		spoon.addInputResource("./src/test/java/spoon/test/prettyprinter/testclasses/AClass.java");
++		spoon.buildModel();
++
++		CtType element = spoon.getFactory().Class().getAll().get(0);
++		List<CtType<?>> toPrint = new ArrayList<>();
++		toPrint.add(element);
++		printer.calculate(element.getPosition().getCompilationUnit(), toPrint);
++		String result = printer.getResult();
++
++		assertTrue("The result should not contain imports: "+result, !result.contains("import java.util.List;"));
++
++		spoon.getEnvironment().setAutoImports(true);
++		printer.calculate(element.getPosition().getCompilationUnit(), toPrint);
++		result = printer.getResult();
++		assertTrue("The result should now contain imports: "+result, result.contains("import java.util.List;"));
++	}
++
++	@Test
++	public void testFQNModeWriteFQNConstructorInCtVisitor() {
++		Launcher spoon = new Launcher();
++		PrettyPrinter printer = spoon.createPrettyPrinter();
++		spoon.getEnvironment().setAutoImports(false);
++		spoon.addInputResource("./src/main/java/spoon/support/visitor/replace/ReplacementVisitor.java");
++		spoon.buildModel();
++
++		CtType element = spoon.getFactory().Class().getAll().get(0);
++		List<CtType<?>> toPrint = new ArrayList<>();
++		toPrint.add(element);
++		printer.calculate(element.getPosition().getCompilationUnit(), toPrint);
++		String result = printer.getResult();
++
++		assertTrue("The result should contain FQN for constructor: "+result, result.contains("new spoon.support.visitor.replace.ReplacementVisitor("));
++		assertTrue("The result should not contain reduced constructors: "+result, !result.contains("new ReplacementVisitor("));
++	}
++
+ }

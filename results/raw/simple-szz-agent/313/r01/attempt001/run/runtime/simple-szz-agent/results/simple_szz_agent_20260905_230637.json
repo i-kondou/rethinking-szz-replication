@@ -1,0 +1,296 @@
+{
+  "metadata": {
+    "timestamp": "20260905_230637",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/313/r01/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "accuracy": 0.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 55.521,
+      "max": 55.521,
+      "mean": 55.521,
+      "median": 55.521,
+      "total": 55.521,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 54.982,
+      "max": 54.982,
+      "mean": 54.982,
+      "median": 54.982,
+      "total": 54.982,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 9,
+      "max": 9,
+      "mean": 9,
+      "median": 9,
+      "total": 9,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 3648,
+      "max": 3648,
+      "mean": 3648,
+      "median": 3648,
+      "total": 3648,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 31426,
+      "max": 31426,
+      "mean": 31426,
+      "median": 31426,
+      "total": 31426,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 95329,
+      "max": 95329,
+      "mean": 95329,
+      "median": 95329,
+      "total": 95329,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.2719167,
+      "max": 0.2719167,
+      "mean": 0.2719167,
+      "median": 0.2719167,
+      "total": 0.2719167,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 8,
+      "max": 8,
+      "mean": 8,
+      "median": 8,
+      "total": 8,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 4,
+      "Glob": 1,
+      "Grep": 2,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 55,
+      "max": 55,
+      "mean": 55,
+      "median": 55,
+      "total": 55,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "313",
+      "fix_commit_hash": "6a2dd27d7b12117f21ad7b9fd3f42327958ba1bc",
+      "ground_truth_bics": [
+        "49d5841f04025e5a481117e4100e946e0666b331"
+      ],
+      "predicted_bics": [
+        "54a35c3bc3a56e686bd09d3854528bb056e26740"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 0.0,
+      "precision": 0.0,
+      "correct": false,
+      "gt_in_predictions": false,
+      "num_matches": 0
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "313",
+      "fix_commit": "6a2dd27d7b12117f21ad7b9fd3f42327958ba1bc",
+      "ground_truth_bics": [
+        "49d5841f04025e5a481117e4100e946e0666b331"
+      ],
+      "total_candidates": 55,
+      "gt_in_candidates": true,
+      "selected_commit": "54a35c3bc3a56e686bd09d3854528bb056e26740",
+      "selected_index": 43,
+      "confidence": "HIGH",
+      "explanation": "The fix commit changes the loop in disableExpiredAlarms()-style code: for (Alarm alarm : set) { boolean isExpired = alarm.getNextTimeInMillis() < now; if (isExpired && !alarm.isEnabled()) { -           enable(alarm.getId(), false); +           alarm.setEnabled(false); +           writeToDb(alarm.getId()); }",
+      "is_correct": false,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "src/com/better/alarm/model/Alarms.java"
+      ],
+      "call_stats": {
+        "duration_s": 55.521,
+        "duration_api_s": 54.982,
+        "num_turns": 9,
+        "input_tokens": 14,
+        "output_tokens": 3648,
+        "cache_creation_input_tokens": 31426,
+        "cache_read_input_tokens": 95329,
+        "total_cost_usd": 0.2719167,
+        "total_tool_calls": 8,
+        "tool_calls_by_name": {
+          "Read": 4,
+          "Glob": 1,
+          "Grep": 2,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/313/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_313_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/313/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_313_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/313/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_313_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 3013,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1209,
+            "cache_read_input_tokens": 12696,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "isExpired|enable\\(alarm.getId\\(\\), false\\)",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "changeAlarm|set.remove\\(alarm\\)|set.add\\(alarm\\)",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 10,
+            "cache_creation_input_tokens": 611,
+            "cache_read_input_tokens": 13905,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/313/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_313_candidate_selection/candidates/candidate_44.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 18335,
+            "cache_read_input_tokens": 14516,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/313/r01/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_313_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_44\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit changes the loop in disableExpiredAlarms()-style code:\n\n    for (Alarm alarm : set) {\n        boolean isExpired = alarm.getNextTimeInMillis() < now;\n        if (isExpired && !alarm.isEnabled()) {\n-           enable(alarm.getId(), false);\n+           alarm.setEnabled(false);\n+           writeToDb(alarm.getId());\n        }\n    }\n\nand removes the old private changeAlarm(Alarm) method, which internally did:\n\n    set.remove(alarm);\n    set.add(alarm);\n    ...\n    setNextAlert();\n    notifyAlarmListChangedListeners();\n\nThe bug being fixed is a ConcurrentModificationException: the loop iterates\nover the `set` field with a Java for-each, and inside the loop it called\n`enable(alarm.getId(), false)` which ultimately called `changeAlarm(alarm)`,\nwhich mutated the very same `set` collection (`set.remove`/`set.add`) while it\nwas being iterated. The fix avoids this by directly calling\n`alarm.setEnabled(false)` and a new `writeToDb(id)` helper that only touches\nthe ContentResolver, not the `set` collection, so the set is never mutated\nduring iteration.\n\ncandidate_44 is the commit that introduces this exact problematic pattern for\nthe first time. In this diff, AlarmsManager.java is rewritten to hold an\nin-memory `Set<Alarm> set`, and:\n1. `disableExpiredAlarms()` is introduced with:\n       for (Alarm alarm : set) {\n           if (!alarm.isEnabled() && alarm.getTimeInMillis() != 0 && alarm.getTimeInMillis() < now) {\n               enable(alarm.getId(), false);\n           }\n       }\n2. `changeAlarm(Alarm alarm)` (renamed from `set(Alarm)`) is introduced with:\n       set.remove(alarm);\n       set.add(alarm);\n   and `enable(int id, boolean enable)` calls `changeAlarm(alarm)`.\n\nBefore this commit, alarms were queried fresh from a Cursor/ContentResolver\neach time (no persistent in-memory `set` field), so there was no shared\nmutable collection being iterated and modified simultaneously \u2014 the bug\nliterally could not exist yet. This commit is the first to combine (a) an\niteration over the `set` field and (b) a call path from inside that loop\n(enable -> changeAlarm) that mutates `set`, which is precisely the defect\nthat the fix commit later corrects by decoupling \"mark disabled\" from the\nset-mutating changeAlarm/writeToDb-with-set-remove-add pattern.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1973,
+            "cache_read_input_tokens": 32851,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

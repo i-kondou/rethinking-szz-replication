@@ -1,0 +1,13 @@
+SELECTED: candidate_40
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit resolves a bug where the saved SpimDataFilteringAndGrouping object was discarded (set to null) before it could be used by the asynchronous global optimization triggered from StitchingExplorerPanel. The fix wraps the line `savedFilteringAndGrouping = null;` (in StitchingExplorerPanel.java, right after `globalOptPopup.doClick();`) inside an `else` branch, so it only nulls the field when global optimization was NOT triggered; when it was triggered, the responsibility for clearing the field is moved to OptimizeGloballyPopupExpertBatch (setSavedFilteringAndGrouping(null) after the async work completes).
+
+Candidate_40 is the commit that originally introduced this exact code. It adds:
+1. The `savedFilteringAndGrouping` field to StitchingExplorerPanel.
+2. The logic that, when leaving link/preview mode with `doGlobalOpt == true`, calls `globalOptPopup.doClick()` to kick off OptimizeGloballyPopupExpertBatch (which runs its work, including the actual global optimization, in a background pattern), and then unconditionally executes `savedFilteringAndGrouping = null;` immediately afterward.
+3. The corresponding getter/setter and the consumption of `getSavedFilteringAndGrouping()` in OptimizeGloballyPopupExpertBatch.
+
+Because `doClick()` triggers processing that (as of a later commit, candidate_49) runs asynchronously in its own thread, the immediate unconditional nulling of `savedFilteringAndGrouping` in StitchingExplorerPanel races with and can precede the async consumption of that same field inside OptimizeGloballyPopupExpertBatch, causing the saved filtering/grouping data to be lost before use. This is exactly the bug the fix commit addresses, and the removed code in the fix diff (`savedFilteringAndGrouping = null;` executed unconditionally right after the doClick() call) matches verbatim what candidate_40 introduced. Later candidates (41, 45) touch adjacent code (generic types, unrelated popups) but do not alter this discard logic, so the bug traces back to its first introduction in candidate_40. Candidate_49 is the fix commit itself and therefore cannot be the bug-introducing commit.

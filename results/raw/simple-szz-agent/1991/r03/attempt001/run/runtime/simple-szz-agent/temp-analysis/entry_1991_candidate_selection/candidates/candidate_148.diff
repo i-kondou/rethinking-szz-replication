@@ -1,0 +1,137 @@
+diff --git a/src/net/nightwhistler/pageturner/view/bookview/BookView.java b/src/net/nightwhistler/pageturner/view/bookview/BookView.java
+index b6496b4..922ff01 100644
+--- a/src/net/nightwhistler/pageturner/view/bookview/BookView.java
++++ b/src/net/nightwhistler/pageturner/view/bookview/BookView.java
+@@ -1071,7 +1071,6 @@ public class BookView extends ScrollView implements LinkTagHandler.LinkCallBack
+         return spine.getTotalNumberOfPages();
+     }
+ 
+-
+ 	public int getPageNumberFor( int index, int position ) {
+ 		
+ 		int pageNum = 0;
+@@ -1152,7 +1151,18 @@ public class BookView extends ScrollView implements LinkTagHandler.LinkCallBack
+ 			bookView.onInnerViewResize();
+ 		}
+ 
+-		public boolean dispatchKeyEvent(KeyEvent event) {
++        @Override
++        public void onWindowFocusChanged(boolean hasWindowFocus) {
++            /*
++            We override this method to do nothing, since the base
++            implementation closes the ActionMode.
++
++            This means that when the user clicks the overflow menu,
++            the ActionMode is stopped and text selection is ended.
++             */
++        }
++
++        public boolean dispatchKeyEvent(KeyEvent event) {
+ 			return bookView.dispatchKeyEvent(event);
+ 		}
+ 
+@@ -1173,11 +1183,10 @@ public class BookView extends ScrollView implements LinkTagHandler.LinkCallBack
+         public ActionMode startActionMode(ActionMode.Callback callback) {
+ 
+             if ( System.currentTimeMillis() > blockUntil ) {
+-                ActionMode mode = super.startActionMode(callback);
+ 
+                 LOG.debug("InnerView starting action-mode");
++                return super.startActionMode(callback);
+ 
+-                return new WrappingActionMode(mode);
+             } else {
+                 LOG.debug("Not starting action-mode yet, since block time hasn't expired.");
+                 return null;
+diff --git a/src/net/nightwhistler/pageturner/view/bookview/WrappingActionMode.java b/src/net/nightwhistler/pageturner/view/bookview/WrappingActionMode.java
+deleted file mode 100644
+index 470171c..0000000
+--- a/src/net/nightwhistler/pageturner/view/bookview/WrappingActionMode.java
++++ /dev/null
+@@ -1,86 +0,0 @@
+-package net.nightwhistler.pageturner.view.bookview;
+-
+-import android.view.ActionMode;
+-import android.view.Menu;
+-import android.view.MenuInflater;
+-import android.view.View;
+-
+-/**
+- * Created with IntelliJ IDEA.
+- * User: alex
+- * Date: 5/12/13
+- * Time: 2:18 PM
+- * To change this template use File | Settings | File Templates.
+- */
+-public class WrappingActionMode extends ActionMode {
+-
+-    private ActionMode wrappedActionMode;
+-
+-    public WrappingActionMode(ActionMode wrappedActionMode) {
+-        this.wrappedActionMode = wrappedActionMode;
+-    }
+-
+-    @Override
+-    public void setTitle(CharSequence charSequence) {
+-       wrappedActionMode.setTitle(charSequence);
+-    }
+-
+-    @Override
+-    public void setTitle(int i) {
+-        wrappedActionMode.setTitle(i);
+-    }
+-
+-    @Override
+-    public void setSubtitle(CharSequence charSequence) {
+-        wrappedActionMode.setSubtitle(charSequence);
+-    }
+-
+-    @Override
+-    public void setSubtitle(int i) {
+-        wrappedActionMode.setSubtitle(i);
+-    }
+-
+-    @Override
+-    public void setCustomView(View view) {
+-        wrappedActionMode.setCustomView(view);
+-    }
+-
+-    @Override
+-    public void invalidate() {
+-        wrappedActionMode.invalidate();
+-    }
+-
+-    @Override
+-    public void finish() {
+-        //wrappedActionMode.finish();
+-    }
+-
+-    public void close() {
+-        wrappedActionMode.finish();
+-    }
+-
+-    @Override
+-    public Menu getMenu() {
+-        return wrappedActionMode.getMenu();
+-    }
+-
+-    @Override
+-    public CharSequence getTitle() {
+-        return wrappedActionMode.getTitle();
+-    }
+-
+-    @Override
+-    public CharSequence getSubtitle() {
+-        return wrappedActionMode.getSubtitle();
+-    }
+-
+-    @Override
+-    public View getCustomView() {
+-        return wrappedActionMode.getCustomView();
+-    }
+-
+-    @Override
+-    public MenuInflater getMenuInflater() {
+-        return wrappedActionMode.getMenuInflater();
+-    }
+-}

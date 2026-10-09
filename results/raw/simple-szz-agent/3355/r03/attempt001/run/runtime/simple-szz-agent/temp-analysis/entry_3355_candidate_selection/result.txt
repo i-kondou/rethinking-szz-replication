@@ -1,0 +1,18 @@
+SELECTED: candidate_15
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes FileHandler.java's fileMatcher visitFile method from:
+    String tempPath = fileName.toString();
+to:
+    String tempPath = location.relativize(path).toString();
+This restores the relative path (directory + filename) instead of just the bare filename, fixing a bug where the spec/config dropdown only showed the filename.
+
+Tracing the history of this exact line across the candidates:
+- candidate_04 introduced fileMatcher() originally using `path.toString().replaceAll(location + "/", "")`, i.e. computing a relative path manually — this preserved subdirectory information.
+- candidates_07/10/11/12/13/14 only tweaked case-folding, camelCase conversion, and separator handling, but always kept the relative-path-derived value (still based on `path`, not just the filename).
+- candidate_15 is the commit that refactored fileMatcher to change its signature to take a Path `location`, switched the match target from `path` to `path.getFileName()`, and set `tempPath = fileName.toString()`. This is precisely the regression: it discarded the relative directory portion and kept only the bare filename, matching the described bug ("only showed the filename without suffix" being lost in the surrounding relative path context).
+- candidate_16 is the actual fix commit itself, changing `fileName.toString()` back to `location.relativize(path).toString()`.
+
+Since candidate_15 is the first (and only) commit that introduces the `tempPath = fileName.toString()` line that the fix directly reverts, it is the bug-introducing commit.

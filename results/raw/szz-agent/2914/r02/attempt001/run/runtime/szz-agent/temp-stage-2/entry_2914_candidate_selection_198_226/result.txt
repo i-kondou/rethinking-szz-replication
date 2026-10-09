@@ -1,0 +1,42 @@
+SELECTED: candidate_20
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a `* 1e-6` conversion to two `return ret;` statements inside the
+`isextendtime` and `isextendfull` branches of `Input.parseRFC8601DateTime()`, which
+handle the time-only formats 'hh:mm:ss' and 'hh:mm:ss.ssssss'. In those branches, `ret`
+is accumulated in raw microseconds (`ret += hh*usPerHr; ret += mm*usPerMin; ret += ss*usPerSec; ...`)
+and was being returned unscaled.
+
+Candidate_20 is the commit that introduced this inconsistency. Before candidate_20,
+`parseRFC8601DateTime`/its helper `getUS` returned a value in raw microseconds for every
+supported format (both the full date+time formats and the time-only "extend" formats),
+and every call site divided the result by `1e6` to obtain seconds (e.g. in
+`FileToArray.java`: `double time = Input.parseRFC8601DateTime(str)/1e6;`, and in
+`Input.java`'s `parseDoubles`: `double element = Input.parseRFC8601DateTime(kw.getArg(i))/1e6;`).
+
+Candidate_20 refactored `getUS` (used only for the full date+time / date-only formats) to
+directly return simulation time in seconds instead of microseconds:
+  - changed `parseRFC8601DateTime` and `getUS` return type from `long` to `double`
+  - changed `getUS` to `return simModel.calendarMillisToSimTime(millis) + us/1e6d;`
+    (seconds), instead of computing raw microseconds
+  - and, critically, removed the `/1e6` division at every call site of
+    `parseRFC8601DateTime` (in `FileToArray.java` and in `Input.parseDoubles`), since the
+    method's return value was now already in seconds.
+
+However, candidate_20 did NOT touch the `isextendtime`/`isextendfull` branches, which are
+a separate code path that does not call `getUS` at all — they compute `ret` locally in
+raw microseconds and return it directly. After the call sites stopped dividing by `1e6`,
+any input using the time-only 'hh:mm:ss' or 'hh:mm:ss.ssssss' formats (parsed via these
+branches) would be returned as raw microseconds but treated as seconds by all callers,
+making the parsed time value roughly 1,000,000 times too large. This is precisely the bug
+described in the fix commit message ("fix bug in parsing a number in the time formats
+'hh:mm:ss' and 'hh:mm:ss.ssssss'"), and the fix simply adds the missing `* 1e-6` scaling
+that candidate_20 forgot to apply to these two branches when it changed the unit
+convention for the rest of the function.
+
+I verified that none of the other 28 candidates (before or after candidate_20) modify the
+`isextendtime`/`isextendfull` blocks or the surrounding `/1e6` call-site logic; the
+inconsistency is introduced exactly at candidate_20 and persists unchanged until the fix
+commit.

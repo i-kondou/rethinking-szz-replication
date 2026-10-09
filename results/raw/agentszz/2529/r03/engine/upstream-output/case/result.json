@@ -1,0 +1,22 @@
+{
+  "fix_commit": "fea56932fffe94e2d7dde77d8d27c159acac1795",
+  "bic": "42809e676825643189e9c16dfc8f5e7e17261077",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"Allow fieldNameForRoutingKey to be outside metadata and use a different key for spouts; fixes #384\") introduced the `fieldNameForRoutingKey.startsWith(\"metadata.\")` checks and `substring(9)` logic in StatusUpdaterBolt.java. The bug is that fieldNameForRoutingKey gets its periods replaced with \"%2E\" before these checks run, so a field name originally like \"metadata.hostname\" is transformed and the startsWith(\"metadata.\") check (and substring offset) becomes unreliable/incorrect. The fix commit directly reworks this exact logic by introducing a boolean flag (routingFieldNameInMetadata) computed once before the %2E replacement, replacing the buggy repeated startsWith/substring checks that were added in this commit.",
+  "metrics": {
+    "case_elapsed_seconds": 10.319919,
+    "api_elapsed_seconds": 10.161247,
+    "tool_elapsed_seconds": 0.065437,
+    "other_elapsed_seconds": 0.093243,
+    "api_call_count": 3,
+    "tool_call_count": 2,
+    "prompt_tokens": 18484,
+    "completion_tokens": 698,
+    "total_tokens": 19182,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T21:16:28.971623"
+}

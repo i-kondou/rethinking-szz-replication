@@ -1,0 +1,55 @@
+SELECTED: candidate_161
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit wraps a block of code in DisplayControlImpl.java with a new
+`if (myDataChoices != null) { ... }` null check to prevent a
+NullPointerException when `myDataChoices` is null. The wrapped block is:
+
+    if ((myDataChoices.size() > 0)
+            && (myDataChoices.get(0) instanceof DerivedDataChoice)) {
+        List cdcs = ((DerivedDataChoice) myDataChoices.get(0)).getChoices();
+        if (cdcs.size() > 0) {
+            DataChoice dc = (DataChoice) cdcs.get(0);
+            DataSelection ds = dc.getDataSelection();
+            if (ds != null) {
+                ...
+                this.usesTimeDriver = ((Boolean) ud1).booleanValue();
+            }
+        }
+    }
+
+candidate_161 is the commit that first introduces exactly this block
+(unconditionally calling `myDataChoices.size()` without any preceding
+null check):
+
+    if(myDataChoices.size() > 0 && myDataChoices.get(0) instanceof DerivedDataChoice){
+        List cdcs = ((DerivedDataChoice)myDataChoices.get(0)).getChoices();
+        if(cdcs.size() > 0)  {
+            DataChoice dc = (DataChoice)cdcs.get(0);
+            DataSelection ds = dc.getDataSelection();
+            if(ds != null){
+                ...
+                this.usesTimeDriver = ((Boolean)ud1).booleanValue();
+            }
+        }
+    }
+
+This diff context (`@@ -1100,6 +1089,20 @@`, with the block appearing as
+pure additions after the `return;` at the top of the method) shows the
+code did not exist before this commit — it was newly added here, with no
+guard against `myDataChoices` being null.
+
+candidate_162, the very next commit, only reformats this same block
+(whitespace/brace style changes and splitting long lines) without
+altering its logic or adding any null check, so it does not introduce the
+bug — it merely inherits it. All later candidates that reference this
+code (167, 170-174, etc.) likewise inherit the same unguarded
+`myDataChoices` access introduced in candidate_161, until the fix commit
+finally adds the `myDataChoices != null` check.
+
+Therefore candidate_161 is the bug-introducing commit: it added code that
+dereferences `myDataChoices` (calling `.size()`) without first checking
+it for null, which could throw a NullPointerException if `myDataChoices`
+was null at that point in `doRemoveField` (or equivalent method).

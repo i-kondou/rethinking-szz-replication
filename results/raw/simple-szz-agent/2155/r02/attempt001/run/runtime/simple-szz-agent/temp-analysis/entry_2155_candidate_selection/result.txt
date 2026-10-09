@@ -1,0 +1,10 @@
+SELECTED: candidate_06
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) modifies JavaSource/org/unitime/timetable/onlinesectioning/model/XReservation.java, changing the `Group`, `Curriculum`, and `Course` cases of a switch statement so that each uses its own type-specific ApplicationProperty settings (ReservationPriorityGroup/Curriculum/Course, ReservationCanOverLimitGroup/Curriculum/Course, ReservationMustBeUsedGroup/Curriculum/Course, ReservationAllowOverlapGroup/Curriculum/Course) instead of incorrectly reusing the Individual-suffixed properties. This matches the fix commit message: "fixed an issue taking all the properties (reservation priority, must be used, can assign over limit, allow overlap) from individual reservation".
+
+candidate_06 introduces this exact switch statement for the first time. It adds the new ApplicationProperty enum constants (ReservationPriorityIndividual, ReservationPriorityGroup, ReservationPriorityCurriculum, ReservationPriorityCourse, ReservationPriorityOverride, ReservationPriorityDummy, and corresponding MustBeUsed/CanOverLimit/AllowOverlap variants) in ApplicationProperty.java, and simultaneously adds the buggy switch block in XReservation.java's constructor where the `Group`, `Curriculum`, and `Course` cases all copy-paste the `...Individual` property calls instead of their own type-specific ones (only `Individual` and `Override`/`Dummy` cases used the correct properties). Interestingly, in the same commit, StudentSectioningDatabaseLoader.java correctly uses the type-specific properties (e.g., ReservationPriorityGroup for group reservations), showing the copy-paste error was isolated to the XReservation.java switch statement.
+
+No earlier candidate contains this switch statement or these ApplicationProperty enum values at all (they are newly introduced), so the bug could not have existed before candidate_06. All later candidates that touch this code (candidate_08) merely inherit the pre-existing bug without altering these specific lines. Therefore candidate_06 is the commit that introduced the bug.

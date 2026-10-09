@@ -1,0 +1,39 @@
+SELECTED: candidate_24
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix (StatusUpdaterBolt: fixes bug and simplifies code) addresses a bug where the
+`fieldNameForRoutingKey.startsWith("metadata.")` checks in `store()` (used to decide
+whether the routing key should be written inside the metadata sub-object or as a
+top-level field) always evaluated incorrectly, because by the time those checks ran,
+`fieldNameForRoutingKey` had already had all periods replaced with `%2E`. So a
+configured value like `"metadata.hostname"` had become `"metadata%2E hostname"`
+(literally `metadata%2Ehostname`) before the `startsWith("metadata.")` test, which
+could never match. The fix resolves this by capturing whether the field name started
+with "metadata." into a new boolean field (`routingFieldNameInMetadata`) BEFORE doing
+the period-to-%2E replacement, and using that boolean in the later checks instead of
+re-testing the already-mangled string.
+
+Candidate_21 introduced the original (correct-at-the-time) logic: it added the
+`fieldNameForRoutingKey.startsWith("metadata.")` checks in `store()` to decide whether
+to nest the routing key under metadata or place it as a top-level field
+(`builder.field(fieldNameForRoutingKey.substring(9), partitionKey)` vs
+`builder.field(fieldNameForRoutingKey, partitionKey)`). At that point `fieldNameForRoutingKey`
+was not being transformed, so this logic worked correctly.
+
+Candidate_24 then added the period-replacement code in `prepare()`:
+```java
+fieldNameForRoutingKey = fieldNameForRoutingKey.replaceAll("\\.", "%2E");
+```
+This is applied unconditionally to the whole field name, including any "metadata."
+prefix, immediately breaking the `startsWith("metadata.")` checks added by
+candidate_21 further down in `store()` — those checks could no longer match the now
+percent-encoded prefix. Candidate_24 is therefore the commit that introduced the
+regression: it did not account for the existing `startsWith("metadata.")` logic that
+depended on the field name still containing a literal ".", causing the routing-key
+field placement to silently misbehave for any "metadata.xxx" configuration going
+forward.
+
+Candidate_25 is the fix commit itself (its diff is identical to fix_commit_diff.txt),
+confirming candidate_24 is the immediately preceding, bug-introducing change.

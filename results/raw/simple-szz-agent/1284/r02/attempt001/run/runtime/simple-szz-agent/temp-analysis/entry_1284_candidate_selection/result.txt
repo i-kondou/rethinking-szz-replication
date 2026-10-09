@@ -1,0 +1,24 @@
+SELECTED: candidate_08
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the declaration of HIGH_SCORES_FILENAME in TetrisPanel.java from
+`private static final int HIGH_SCORES_FILENAME = "TetrisHighScores.txt";` to
+`private static final String HIGH_SCORES_FILENAME = "TetrisHighScores.txt";`, i.e. it corrects
+a type mismatch (a String literal was incorrectly declared with type `int`), which is a
+compile-time error ("fix build error").
+
+candidate_08 is the commit that first introduces this exact line:
+`private static final int HIGH_SCORES_FILENAME = "TetrisHighScores.txt";`
+as part of a larger refactor that converts several instance fields (WIDTH, HEIGHT, ROWS,
+COLUMNS, INIT_DELAY, etc.) into `static final` constants, and adds new constants including
+HIGH_SCORES_FILENAME, MAX_HIGH_SCORES, SCORE_INCREMENT_VALUE, and TEXT_COLOR. In this same
+commit, the previously hardcoded string literal "TetrisHighScores.txt" (used directly in
+`new File(...)` and `new FileWriter(...)` calls) was replaced by the new HIGH_SCORES_FILENAME
+constant — but the constant was mistakenly declared as `int` instead of `String`, introducing
+the build-breaking bug that the fix commit later resolves.
+
+No earlier candidate contains this field at all (it did not exist prior to candidate_08), and
+candidate_09 already reflects the corrected `String` type, matching the fix commit's diff
+exactly. Therefore candidate_08 is the bug-introducing commit.

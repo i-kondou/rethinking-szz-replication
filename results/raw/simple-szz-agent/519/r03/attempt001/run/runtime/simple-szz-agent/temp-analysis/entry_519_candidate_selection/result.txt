@@ -1,0 +1,23 @@
+SELECTED: candidate_38
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix restores a guard in AbstractFile.onModification() so that the path-uniqueness check (validatePath) is only executed when the static flag `validatePathUniqueness` (derived from the config switch `application.filesystem.unique.paths`) is true:
+
+    boolean valid = true;
+    if (validatePathUniqueness) {
+        valid = validatePath(securityContext, errorBuffer);
+    }
+    return valid && super.onModification(...);
+
+Tracing the history of AbstractFile.java:
+
+- candidate_31 introduced path uniqueness validation via a separate PathUniquenessValidator class attached to the `path` property.
+- candidate_33 replaced that validator with the `validatePathUniqueness` static field and moved the uniqueness-check logic directly into `validatePath()`. Crucially, at this point `validatePath()` itself contained the guard:
+      if (validatePathUniqueness) { ... query for duplicates ... }
+  and both onCreation() and onModification() called `validatePath()` unconditionally — which was still correct, because the flag check lived inside `validatePath()` and protected both callers.
+- candidate_34 only adapted the method signature of onModification() to add the new `ModificationQueue` parameter (unrelated refactor); the body and validatePath() logic were untouched and still correct.
+- candidate_38 refactored onCreation() to introduce `validateAndRenameFileOnce()` (which wraps the flag check: `if (validatePathUniqueness) { valid = validateAndRenameFileOnce(...); }`), and simultaneously REMOVED the `if (validatePathUniqueness)` guard from inside `validatePath()` itself, since the check was assumed to be pushed out to the callers. However, onModification() was left unchanged — it still calls `validatePath()` unconditionally, without any flag check around it, either internally (now removed) or externally (never added). From this commit onward, onModification() always enforces path uniqueness regardless of the `application.filesystem.unique.paths` configuration switch, which is exactly the bug described in the fix commit message ("Correctly respects configuration switch `application.filesystem.unique.paths` when renaming files/folders").
+
+Subsequent candidates (35, 37, 39, 40) either don't touch this logic or (candidate_40) represent the fix itself. No candidate between 34 and 38 alters onModification or validatePath, so candidate_38 is the commit that first introduced the unconditional/unguarded call in onModification(), causing the bug that the fix commit corrects.

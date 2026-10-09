@@ -1,0 +1,22 @@
+{
+  "fix_commit": "120201466dc5554166a2b5a894f50eb508a2d904",
+  "bic": "02a5f3fff3110cdf2fc8e1770e2cc238efa36dff",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit removed the `skip` parameter from `getStackForCallerOf` and correspondingly removed the \"skip 2 method calls (postProcess, shouldLog)\" logic in LogContext.java, based on a rationale that Proguard could break fixed skip counts. However, this introduced the actual bug being fixed in the target commit: without skipping the initial frames inside `postProcess()`/`shouldLog()`, overriding these methods causes the synthetic stack trace to be incorrect. The fix commit re-adds a `skip` parameter (this time hardcoded to 1, applied at the caller side) to address exactly this problem, directly reversing the logic removed in 02a5f3fff311.",
+  "metrics": {
+    "case_elapsed_seconds": 35.290098,
+    "api_elapsed_seconds": 35.008693,
+    "tool_elapsed_seconds": 0.173795,
+    "other_elapsed_seconds": 0.107613,
+    "api_call_count": 7,
+    "tool_call_count": 6,
+    "prompt_tokens": 46997,
+    "completion_tokens": 2528,
+    "total_tokens": 49525,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:12:10.218972"
+}

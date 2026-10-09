@@ -1,0 +1,17 @@
+SELECTED: candidate_210
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the line:
+  file.field = field % runCount;
+to:
+  file.field = field % (nFiles / (wellCount * runCount));
+in components/formats-gpl/src/loci/formats/in/FlexReader.java, because computing the field index as `field % runCount` is wrong when multiple wells are present (the modulus must be scaled by the number of files per well, i.e. nFiles / (wellCount * runCount), not just runCount).
+
+Tracing the history of this exact line through the candidates:
+- candidate_202 set the line to `file.field = field / runCount;` (using division, not the modulus form at issue).
+- candidate_210 changed this line to `file.field = field % runCount;`, which is the exact buggy expression that the fix commit later corrects.
+- candidate_211 is identical to the fix commit itself (it makes the exact same change from `field % runCount` to `field % (nFiles / (wellCount * runCount))`), so it is the bug-fixing commit, not the bug-introducing one.
+
+Since candidate_210 is the commit that first introduced the precise buggy code (`field % runCount`) that the fix commit modifies, it is the bug-introducing commit.

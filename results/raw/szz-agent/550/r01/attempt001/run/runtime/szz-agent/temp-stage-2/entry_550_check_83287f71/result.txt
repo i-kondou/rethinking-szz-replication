@@ -1,0 +1,18 @@
+VERDICT: BUG_NOT_PRESENT
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes the non-timetable branch of the WebTable construction in InstructorDetailAction.execute(), where the header-string array had 6 elements (Class, Check Conflicts, Share, Teaching Responsibility, Limit, Manager) but the alignment-string array `{"left", "left","left", "left", "left"}` had only 5 elements, causing an ArrayIndexOutOfBoundsException when an instructor has classes but no committed timetable (hasTimetable == false).
+
+In files/old/JavaSource/org/unitime/timetable/action/InstructorDetailAction.java, the corresponding code is:
+
+    new WebTable( 5,
+            null,
+            new String[] {"Class", "Check Conflicts", "Share", "Limit", "Manager"},
+            new String[] {"left", "left","left", "left", "left"},
+            null )
+
+This is a much earlier revision of the file (it still uses the old Struts MessageResources-based `rsc.getMessage(...)` op comparisons instead of the MSG localization constants seen in the buggy/fixed versions, and lacks many later features such as teaching responsibility, enrollment, conflicts, cancelled-class styling, etc.). At this point the header array has exactly 5 elements and the alignment array also has exactly 5 elements — they match, so there is no array-index mismatch and no ArrayIndexOutOfBoundsException.
+
+The "Teaching Responsibility" column (and the corresponding header/alignment array mismatch that caused the bug) was introduced in a later revision than files/old, after which the alignment array was not updated to match the new header count. Since that column doesn't exist yet in files/old, the specific bug being fixed cannot be present in this version.

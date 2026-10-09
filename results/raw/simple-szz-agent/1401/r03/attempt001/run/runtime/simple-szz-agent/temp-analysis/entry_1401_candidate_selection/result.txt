@@ -1,0 +1,25 @@
+SELECTED: candidate_327
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit (fix_commit_diff.txt) changes this exact line in LocalInspectionsPass.java:
+
+  - tooltip = XmlStringUtil.wrapInHtml(message.startsWith("<html>") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link ;
+  + tooltip = XmlStringUtil.wrapInHtml((message.startsWith("<html>") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link);
+
+The bug was that `+ link` was appended OUTSIDE of `XmlStringUtil.wrapInHtml(...)`, meaning the link text (an `<a href="...">...</a>` anchor used to navigate to the inspection) was not wrapped inside the `<html>...</html>` tags produced by wrapInHtml. As a result, when the tooltip was rendered, the link portion (and hence part of the warning content) would not display correctly inside the HTML tooltip, causing "Not all warnings are displayed in the editor" (IDEA-140967).
+
+Searching all 328 candidates for this exact buggy line, only candidate_327.diff introduces it. In that diff, the prior code was a two-branch if/else:
+
+  if (message.startsWith("<html>")) {
+    tooltip = XmlStringUtil.wrapInHtml(XmlStringUtil.stripHtml(message) + link);
+  } else {
+    tooltip = XmlStringUtil.wrapInHtml(XmlStringUtil.escapeString(message) + link);
+  }
+
+which correctly wrapped `+ link` inside `wrapInHtml(...)` in both branches. candidate_327 refactored this into a single ternary expression but moved `+ link` outside of `wrapInHtml(...)`, introducing the bug:
+
+  tooltip = XmlStringUtil.wrapInHtml(message.startsWith("<html>") ? XmlStringUtil.stripHtml(message): XmlStringUtil.escapeString(message)) + link ;
+
+candidate_328.diff is identical to the fix_commit_diff itself (the corrective commit), and candidate_291.diff contains an unrelated `tooltip` variable in a different class (PackagingElementNode), not the LocalInspectionsPass.java code path. Therefore candidate_327 is the commit that introduced the bug.

@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "kind": "claude-szz-agentic-baseline-subject-run",
+  "created_at": "2026-09-07T10:59:17.689562+00:00",
+  "state": "completed",
+  "scientific_result": true,
+  "test_stub": false,
+  "baseline": "agentszz",
+  "sample_id": "519",
+  "repository": "structr/structr",
+  "synthetic_fix_hash": "bbcc596ff1f3b1e7d3351947c9a9e441ab825be7",
+  "model": "claude-sonnet-5",
+  "base_url": "https://api.anthropic.com/v1/",
+  "per_run_cap_usd": "5",
+  "model_started": true,
+  "reported_cost_usd": "0.253796",
+  "duration_seconds": 39.98877341701882,
+  "predicted_bics": [
+    "1e8d8cde5bfab25b1d6e5ff39221c237374957f7"
+  ],
+  "reasoning": "This commit refactored path uniqueness validation, removing the `validatePathUniqueness` config check from inside `validatePath()` and moving it into the newly introduced `onCreation`/`validateAndRenameFileOnce` path. However, it neglected to add the equivalent `validatePathUniqueness` gate to `onModification()`, which continued to call `validatePath()` unconditionally. This means that even when `application.filesystem.unique.paths` was disabled, renaming files/folders would still incorrectly trigger path uniqueness validation. The fix commit directly restores the missing check in `onModification()`, matching the gap introduced here.",
+  "confidence": "high",
+  "upstream_metrics": {
+    "case_elapsed_seconds": 39.765062,
+    "api_elapsed_seconds": 38.880905,
+    "tool_elapsed_seconds": 0.768861,
+    "other_elapsed_seconds": 0.115299,
+    "api_call_count": 12,
+    "tool_call_count": 14,
+    "prompt_tokens": 111368,
+    "completion_tokens": 3106,
+    "total_tokens": 114474,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "provider_calls": [
+    {
+      "input_tokens": 3886,
+      "output_tokens": 269,
+      "cost_usd_equivalent": "0.010462",
+      "elapsed_seconds": 2.7359666249831207
+    },
+    {
+      "input_tokens": 5704,
+      "output_tokens": 430,
+      "cost_usd_equivalent": "0.015708",
+      "elapsed_seconds": 5.151599375007208
+    },
+    {
+      "input_tokens": 6232,
+      "output_tokens": 201,
+      "cost_usd_equivalent": "0.014474",
+      "elapsed_seconds": 2.4003382500377484
+    },
+    {
+      "input_tokens": 6782,
+      "output_tokens": 159,
+      "cost_usd_equivalent": "0.015154",
+      "elapsed_seconds": 1.8853015420027077
+    },
+    {
+      "input_tokens": 8501,
+      "output_tokens": 273,
+      "cost_usd_equivalent": "0.019732",
+      "elapsed_seconds": 3.927319374983199
+    },
+    {
+      "input_tokens": 9279,
+      "output_tokens": 237,
+      "cost_usd_equivalent": "0.020928",
+      "elapsed_seconds": 3.02650525001809
+    },
+    {
+      "input_tokens": 9472,
+      "output_tokens": 202,
+      "cost_usd_equivalent": "0.020964",
+      "elapsed_seconds": 2.4406159160425887
+    },
+    {
+      "input_tokens": 9880,
+      "output_tokens": 185,
+      "cost_usd_equivalent": "0.02161",
+      "elapsed_seconds": 2.540999541990459
+    },
+    {
+      "input_tokens": 10228,
+      "output_tokens": 406,
+      "cost_usd_equivalent": "0.024516",
+      "elapsed_seconds": 4.104973541980144
+    },
+    {
+      "input_tokens": 12027,
+      "output_tokens": 164,
+      "cost_usd_equivalent": "0.025694",
+      "elapsed_seconds": 2.3460349999950267
+    },
+    {
+      "input_tokens": 13667,
+      "output_tokens": 177,
+      "cost_usd_equivalent": "0.029104",
+      "elapsed_seconds": 2.8767647499917075
+    },
+    {
+      "input_tokens": 15710,
+      "output_tokens": 403,
+      "cost_usd_equivalent": "0.03545",
+      "elapsed_seconds": 5.431092417042237
+    }
+  ],
+  "source_provenance": {
+    "manifest_path": "/Users/user-01/research/workspaces/claude-szz/implementation/config/agentic-baseline-sources.json",
+    "manifest_sha256": "8fc7276c1bd2772698abeeaabfc6cc1a6bb24aac89db5601f27da49933147fb0",
+    "agentszz_source_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentszz-figshare-v2/replication_package/agentszz",
+    "agentszz_source_tree_sha256": "3436d1b781b11c9b2bf962105355f5f4ded84ede0ec599bda848e0cff9c72777",
+    "agentic_szz_path": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz",
+    "agentic_szz_commit": "0012a507b9087f15cdad340888a837f5618a3c29",
+    "agentic_szz_git_tree": "738bf1e17594df62dd198f7ffc220d728223b454",
+    "agentszz_python": {
+      "version": "3.11.11",
+      "modules": {
+        "openai": "2.16.0",
+        "git": "3.1.46"
+      },
+      "executable": "/Users/user-01/research/workspaces/claude-szz/baselines/venv/bin/python"
+    },
+    "agentic_szz_python": {
+      "version": "3.12.8",
+      "modules": {
+        "graphiti_core": "unknown",
+        "pydantic_ai": "2.31.1",
+        "neo4j": "6.2.0",
+        "git": "3.1.59",
+        "openai": "3.3.0"
+      },
+      "executable": "/Users/user-01/research/workspaces/claude-szz/baselines/agentic-szz-venv/bin/python"
+    },
+    "agentic_szz_requirements_path": "/Users/user-01/research/workspaces/claude-szz/implementation/config/llm-baselines/requirements-agentic-szz-python312.txt",
+    "agentic_szz_requirements_sha256": "e426ee65f956a8582aa195ac819d2c862d68abd66d20107d71558701ca313f22",
+    "neo4j": {
+      "reference": "neo4j:5.26.8-community",
+      "id": "sha256:c0f0ce3396c902c9ab6520d0c9d1c644a3aa83eed00036e609e5db10a84b2d92",
+      "repo_digests": [
+        "neo4j@sha256:5216b8f7bcca893448d5b4a809d91761609fc8aea900691d59531ada76c28c62"
+      ],
+      "architecture": "arm64",
+      "os": "linux"
+    }
+  },
+  "prompt_metadata_path": "/Users/user-01/research/workspaces/claude-szz/implementation/data/derived/subject-prompts-bfc-message-neutralized-final-v1/519.json",
+  "prompt_metadata_sha256": "4d23f46eb0416597f689b6639e19d97a3e7ba642700519c567528dc969f30373",
+  "repository_before": {
+    "head": "bbcc596ff1f3b1e7d3351947c9a9e441ab825be7",
+    "head_matches_synthetic_fix": true,
+    "source_fix_absent": true,
+    "clean": true,
+    "no_remotes": true,
+    "no_object_alternates": true
+  },
+  "repository_after": {
+    "head": "bbcc596ff1f3b1e7d3351947c9a9e441ab825be7",
+    "head_matches_synthetic_fix": true,
+    "source_fix_absent": true,
+    "clean": true,
+    "no_remotes": true,
+    "no_object_alternates": true
+  },
+  "postflight_clean": true,
+  "error": null,
+  "limitations": [
+    "Sonnet 5 through Anthropic is a matched-backbone adaptation, not the original-model replication.",
+    "Both upstream methods emit a single primary BIC; multi-BIC recall is structurally capped.",
+    "Reported cost is reconstructed from token usage and the frozen Anthropic price snapshot, not provider billing records.",
+    "AgenticSZZ checks its conservative total-token limit between requests, so one in-flight request can cross the nominal trigger."
+  ]
+}

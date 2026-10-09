@@ -1,0 +1,34 @@
+SELECTED: candidate_12
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit changes a single character range check in TextUtils.java:
+`(c >= 0xFE70 && c <= 0xFEFF)` -> `(c >= 0xFE70 && c <= 0xFEFE)`
+This narrows the upper bound of one of the RTL unicode ranges by one code point so that
+U+FEFF (the special zero-width no-break space / BOM marker) is no longer classified as RTL.
+
+Candidate_12 is the commit that introduces the `isRTLCharacter(char c)` method (and the
+related `hasRTLCharacters`/`processBidi` helper methods) in TextUtils.java from scratch, as
+part of adding a new bidi/Arabic-reshaping text pipeline. The newly added method contains
+exactly the faulty range that the fix later corrects:
+
+    public static boolean isRTLCharacter(char c) {
+        //range of RTL characters per unicode specification
+        return (c >= 0x0590 && c <= 0x05FF) ||
+               (c >= 0xFB1D && c <= 0xFB4F) ||
+               (c >= 0x0600 && c <= 0x07BF) ||
+               (c >= 0xFB50 && c <= 0xFDFF) ||
+               (c >= 0xFE70 && c <= 0xFEFF)    ;
+    }
+
+None of the earlier candidates (01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11) contain any
+reference to `isRTLCharacter` — the method and the surrounding bidi-handling code (including
+AndroidBidi.reorderAndReshapeBidiText, Styled.java's RTL reversal logic, and Canvas.java's
+drawText routing through TextUtils.processBidi) do not exist prior to candidate_12. This
+confirms candidate_12 is the first commit where the problematic `0xFE70`–`0xFEFF` range check
+was introduced, causing U+FEFF to be wrongly treated as an RTL character. Candidate_13
+happens to contain a diff hunk identical to the fix commit's change (FEFF -> FEFE on the same
+line), which appears to be a duplicate/backport of the same fix already present in the
+candidate history rather than a bug-introducing change — it modifies the line in the
+direction of the correct fix, not toward the bug.

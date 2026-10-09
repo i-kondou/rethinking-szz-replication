@@ -1,0 +1,36 @@
+SELECTED: candidate_01
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix ("Quantifiers are no Application terms any more") adds a `Z3_QUANTIFIER_AST` case
+to `Z3UnsafeFormulaManager.isAtom()` (making it return false for quantifiers) and adds
+`Preconditions.checkArgument(get_ast_kind(z3context, t) == Z3_APP_AST)` guards to
+`getArity()` and `getArg()`. This shows the bug was: `isAtom()` used a switch on the AST
+kind with only a `Z3_APP_AST` case and a `default: return true` branch, so any
+non-application AST node - including a quantifier (`Z3_QUANTIFIER_AST`) - was incorrectly
+reported as an atom. Downstream code (and the `getArity`/`getArg` methods, which called
+native `get_app_num_args`/`get_app_arg` without checking the AST kind) could then be
+invoked on quantifier terms, since nothing validated that the term was actually an
+application term.
+
+This exact buggy `isAtom()` implementation (switch with only `Z3_APP_AST` handled and a
+`default: return true`), together with `getArity`/`getArg` lacking any AST-kind check, is
+already present in `candidate_01`, the initial bulk import of the project's Z3 backend
+(`Z3UnsafeFormulaManager.java`, including quantifier-related native bindings like
+`is_quantifier_forall`/`get_quantifier_body`). None of the intervening candidates
+(02 rename-only, 03 formatting, 04 import reorganization, 05 license header, 06/07
+cosmetic refactors, 08 constant renaming) touch the actual logic of `isAtom`/`getArity`/
+`getArg` in any way that would introduce or change this behavior - they are all
+non-functional or unrelated changes. Candidate 09 adds the `SolverQuantifierTest` test
+class (without the introspection tests), and candidate_10 adds the
+`testIntrospectionForall`/`testIntrospectionExists` tests together with an explicit
+`assume(...).withFailureMessage("Bug in Z3QuantifiedFormulaManager")` workaround,
+confirming the bug's existence and symptoms but not introducing it (test-only change).
+Candidate_11 is in fact identical to the fix commit itself (removes the assume/workaround
+and adds the `Z3_QUANTIFIER_AST` case plus the `Preconditions` checks), so it cannot be
+the introducing commit.
+
+Since the problematic code was already present in the very first candidate provided,
+candidate_01 is the earliest point at which the bug existed in this commit range and is
+therefore selected as the bug-introducing commit.

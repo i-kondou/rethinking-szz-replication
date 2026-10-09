@@ -1,0 +1,12 @@
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+index 77b81e18bd0..49df3c099ec 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+@@ -398,6 +398,7 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+                                 storageKey, myVcs.getProject());
+       myDualView.switchToTheFlatMode();
+     }
++    new TableSpeedSearch(myDualView.getFlatView()).setComparator(new SpeedSearchComparator(false));
+     final TableLinkMouseListener listener = new TableLinkMouseListener();
+     listener.install(myDualView.getFlatView());
+     listener.install(myDualView.getTreeView());

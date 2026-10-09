@@ -1,0 +1,14 @@
+SELECTED: candidate_12
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds `, true` (includeRoot=true) to several `ConfigElement.getPath(TitanHadoopConfiguration.GRAPH_CONFIG_KEYS)` and `ConfigElement.getPath(TitanHadoopConfiguration.SCAN_JOB_CONFIG_KEYS)` calls in MapReduceIndexJobs.java, MapReduceIndexManagement.java, CassandraHadoopScanRunner.java, HBaseHadoopScanRunner.java, and CassandraScanJobIT.java, so that the Hadoop config keys these scanjob helper classes set/read include the full namespace root prefix again.
+
+candidate_12 is exactly where this problem was introduced. In that commit:
+1. `ConfigElement.getPath` is overloaded with a new `boolean includeRoot` parameter, defaulting the old no-boolean signature to `includeRoot=false`.
+2. `TitanHadoopConfiguration.TITAN_INPUT_CONFIG_KEYS` is renamed/restructured to `GRAPH_CONFIG_KEYS`, now nested one level deeper under a new `IOFORMAT_NS` namespace (previously directly under `MAPRED_NS`), and `SCAN_JOB_CONFIG_KEYS` is likewise moved under a new `SCAN_NS`.
+3. Internally, `ModifiableHadoopConfiguration.prefixView` was correctly updated to call `ConfigElement.getPath(prefixRoot, true)` to account for the new nesting.
+4. However, the direct call sites in MapReduceIndexJobs.java, MapReduceIndexManagement.java, CassandraHadoopScanRunner.java, HBaseHadoopScanRunner.java, and CassandraScanJobIT.java were only updated to reference the renamed `GRAPH_CONFIG_KEYS` constant but were NOT updated to pass `true` for `includeRoot`. Since these namespaces were moved deeper in the hierarchy as part of this same commit, the resulting path string omits the "mrscan"/"ioformat" root segment, producing an incomplete/incorrect Hadoop config key namespace. This is precisely the bug the fix commit corrects by adding `, true` to those same call sites.
+
+Since the renamed constants and the deeper namespace nesting (which made the old 1-arg `getPath` insufficient) were both introduced in this single commit, and the resulting incorrect key paths exactly match what the fix commit repairs, candidate_12 is the bug-introducing commit.

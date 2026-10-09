@@ -1,0 +1,22 @@
+{
+  "fix_commit": "926db5e93e31a740b53bdd16f843c32f0065252d",
+  "bic": "a606537bf9dcdc884820ae18adb9b5d78d1ef0b8",
+  "confidence": "high",
+  "type": "introduction",
+  "reasoning": "This commit (\"added use of try-with-resource\") wrapped the ResultSet in try-with-resources blocks in getAllWithData and getValues methods, causing the ResultSet to be closed immediately after execution\u2014even though it needed to remain open for lazy stream consumption via allWithDataStream()/valuesStream(). The fix commit reverts exactly this pattern (removing try-with-resources for the ResultSet, adding a comment explaining it \"can't be try-with-resource because it is required to stay open\"), directly undoing the bug introduced by a606537bf9dc.",
+  "metrics": {
+    "case_elapsed_seconds": 10.816098,
+    "api_elapsed_seconds": 10.64969,
+    "tool_elapsed_seconds": 0.075843,
+    "other_elapsed_seconds": 0.090571,
+    "api_call_count": 3,
+    "tool_call_count": 3,
+    "prompt_tokens": 26275,
+    "completion_tokens": 843,
+    "total_tokens": 27118,
+    "cached_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "validation": {},
+  "timestamp": "2026-09-07T20:55:39.222335"
+}

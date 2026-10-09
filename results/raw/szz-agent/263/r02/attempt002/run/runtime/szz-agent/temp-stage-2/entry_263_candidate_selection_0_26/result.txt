@@ -1,0 +1,23 @@
+SELECTED: candidate_25
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a single line to XMLFileReader.java's read(String updateSite, InputStream in, long timestamp) method:
+
+    this.updateSite = updateSite;
+    filesFromThisSite.clear();
+    newTimestamp = timestamp;
+
+This clear() call resets the `filesFromThisSite` field at the start of each call to read(), which is invoked once per update site when the updater processes multiple update sites (see XMLFileDownloader.start(), which calls reader.read(name, in, timestamp) in a loop over all update sites using the same XMLFileReader instance).
+
+Tracing the history of XMLFileReader.java across the candidates:
+- candidate_01 through candidate_23: XMLFileReader.java has no `filesFromThisSite` field at all. Shadowing between update sites is instead detected via a simple `already != null && !updateSite.equals(already.updateSite)` check.
+- candidate_24: The old shadow-detection block is removed in favor of a rank-based merge algorithm in endElement(), which compares `updateSite.equals(file.updateSite)` directly to decide whether the parsed record belongs to "the same file already seen from this site" versus a different site.
+- candidate_25: This is where the `filesFromThisSite` field is first introduced:
+      protected Set<FileObject> filesFromThisSite = new HashSet<FileObject>();
+  It replaces the direct `updateSite.equals(file.updateSite)` comparison with `filesFromThisSite.contains(file)`, and populates the set every time a file is added/updated during parsing (`filesFromThisSite.add(current)` / `.add(file)`). However, the field is only initialized once at field-declaration time and is NEVER cleared between separate calls to read() for different update sites. Since a single XMLFileReader instance is reused across all update sites in XMLFileDownloader.start(), files added to the set while parsing one update site remain in the set when parsing the next site. This causes the `filesFromThisSite.contains(file)` check to incorrectly return true for files that were actually populated by a previous (different) update site, making the reader treat them as "belonging to this site" and skip the proper override/shadow bookkeeping (overriddenUpdateSites, rank-based shadow warnings, etc.). This is exactly the "bug would prevent any shadowing" described in the fix commit message.
+- candidate_26: Only changes a warning to use files.log.warn(...) instead of appending to a warnings buffer; unrelated to the bug.
+- candidate_27: This is the actual fix, adding `filesFromThisSite.clear();`.
+
+Since candidate_25 is the commit that introduces the `filesFromThisSite` field and the logic that depends on it being properly reset per update-site read, and no candidate between 25 and the fix corrects this omission, candidate_25 is the bug-introducing commit.

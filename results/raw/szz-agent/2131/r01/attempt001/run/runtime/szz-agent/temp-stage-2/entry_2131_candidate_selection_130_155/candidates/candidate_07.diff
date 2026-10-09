@@ -1,0 +1,180 @@
+diff --git a/platform/vcs-api/src/com/intellij/openapi/vcs/VcsDataKeys.java b/platform/vcs-api/src/com/intellij/openapi/vcs/VcsDataKeys.java
+index 674005d462b..f71173dff76 100644
+--- a/platform/vcs-api/src/com/intellij/openapi/vcs/VcsDataKeys.java
++++ b/platform/vcs-api/src/com/intellij/openapi/vcs/VcsDataKeys.java
+@@ -23,7 +23,6 @@ import com.intellij.openapi.vcs.changes.ChangeRequestChain;
+ import com.intellij.openapi.vcs.history.VcsFileRevision;
+ import com.intellij.openapi.vfs.VirtualFile;
+ import com.intellij.openapi.vfs.pointers.VirtualFilePointer;
+-import com.intellij.pom.Navigatable;
+ import org.jetbrains.annotations.NonNls;
+ 
+ import java.io.File;
+@@ -36,6 +35,7 @@ public interface VcsDataKeys {
+   DataKey<File[]> IO_FILE_ARRAY = DataKey.create("IO_FILE_ARRAY");
+   DataKey<File> IO_FILE = DataKey.create("IO_FILE");
+   DataKey<VcsKey> VCS = DataKey.create("VCS");
++  DataKey<Boolean> VCS_NON_LOCAL_HISTORY_SESSION = DataKey.create("VCS_NON_LOCAL_HISTORY_SESSION");
+   DataKey<VcsFileRevision> VCS_FILE_REVISION = DataKey.create("VCS_FILE_REVISION");
+   DataKey<VcsFileRevision[]> VCS_FILE_REVISIONS = DataKey.create("VCS_FILE_REVISIONS");
+   DataKey<VirtualFile> VCS_VIRTUAL_FILE = DataKey.create("VCS_VIRTUAL_FILE");
+diff --git a/platform/vcs-api/src/com/intellij/openapi/vcs/annotate/ShowAllAffectedGenericAction.java b/platform/vcs-api/src/com/intellij/openapi/vcs/annotate/ShowAllAffectedGenericAction.java
+index abe73951ef3..45560106aa5 100644
+--- a/platform/vcs-api/src/com/intellij/openapi/vcs/annotate/ShowAllAffectedGenericAction.java
++++ b/platform/vcs-api/src/com/intellij/openapi/vcs/annotate/ShowAllAffectedGenericAction.java
+@@ -55,20 +55,22 @@ public class ShowAllAffectedGenericAction extends AnAction {
+     if (vcsKey == null) return;
+     final VcsFileRevision revision = e.getData(VcsDataKeys.VCS_FILE_REVISION);
+     VirtualFile revisionVirtualFile = e.getData(VcsDataKeys.VCS_VIRTUAL_FILE);
++    final Boolean isNonLocal = e.getData(VcsDataKeys.VCS_NON_LOCAL_HISTORY_SESSION);
+     if ((revision != null) && (revisionVirtualFile != null)) {
+-      showSubmittedFiles(project, revision.getRevisionNumber(), revisionVirtualFile, vcsKey, revision.getChangedRepositoryPath());
++      showSubmittedFiles(project, revision.getRevisionNumber(), revisionVirtualFile, vcsKey, revision.getChangedRepositoryPath(),
++                         Boolean.TRUE.equals(isNonLocal));
+     }
+   }
+ 
+   public static void showSubmittedFiles(final Project project, final VcsRevisionNumber revision, final VirtualFile virtualFile, final VcsKey vcsKey) {
+-    showSubmittedFiles(project, revision, virtualFile, vcsKey, null);
++    showSubmittedFiles(project, revision, virtualFile, vcsKey, null, false);
+   }
+ 
+   private static void showSubmittedFiles(final Project project, final VcsRevisionNumber revision, final VirtualFile virtualFile,
+-                                         final VcsKey vcsKey, final RepositoryLocation location) {
++                                         final VcsKey vcsKey, final RepositoryLocation location, final boolean isNonLocal) {
+     final AbstractVcs vcs = ProjectLevelVcsManager.getInstance(project).findVcsByName(vcsKey.getName());
+     if (vcs == null) return;
+-    if (! isInLocalFSHack(virtualFile) && ! canPresentNonLocal(project, vcsKey, virtualFile)) return;
++    if (isNonLocal && ! canPresentNonLocal(project, vcsKey, virtualFile)) return;
+ 
+     final String title = VcsBundle.message("paths.affected.in.revision",
+                                            revision instanceof ShortVcsRevisionNumber
+@@ -81,7 +83,7 @@ public class ShowAllAffectedGenericAction extends AnAction {
+       public void run(@NotNull ProgressIndicator indicator) {
+         try {
+           final CommittedChangesProvider provider = vcs.getCommittedChangesProvider();
+-          if (isInLocalFSHack(virtualFile)) {
++          if (! isNonLocal) {
+             final Pair<CommittedChangeList, FilePath> pair = provider.getOneList(virtualFile, revision);
+             if (pair != null) {
+               list[0] = pair.getFirst();
+@@ -132,12 +134,6 @@ public class ShowAllAffectedGenericAction extends AnAction {
+     });
+   }
+ 
+-  private static boolean isInLocalFSHack(final VirtualFile vf) {
+-    if (vf.isInLocalFileSystem()) return true;
+-    final String url = vf.getPresentableUrl();
+-    return ! url.contains("://") && ! url.contains(":\\\\");
+-  }
+-
+   private static String failedText(VirtualFile virtualFile, VcsRevisionNumber revision) {
+     return "Show all affected files for " + virtualFile.getPath() + " at " + revision.asString() + " failed";
+   }
+@@ -150,9 +146,10 @@ public class ShowAllAffectedGenericAction extends AnAction {
+       e.getPresentation().setEnabled(false);
+       return;
+     }
++    final Boolean isNonLocal = e.getData(VcsDataKeys.VCS_NON_LOCAL_HISTORY_SESSION);
+     final VirtualFile revisionVirtualFile = e.getData(VcsDataKeys.VCS_VIRTUAL_FILE);
+     boolean enabled = (e.getData(VcsDataKeys.VCS_FILE_REVISION) != null) && (revisionVirtualFile != null);
+-    enabled = enabled && (isInLocalFSHack(revisionVirtualFile) || canPresentNonLocal(project, vcsKey, revisionVirtualFile));
++    enabled = enabled && (! Boolean.TRUE.equals(isNonLocal) || canPresentNonLocal(project, vcsKey, revisionVirtualFile));
+     e.getPresentation().setEnabled(enabled);
+   }
+ 
+diff --git a/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsAbstractHistorySession.java b/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsAbstractHistorySession.java
+index fff6d49bac4..4534bce8d85 100644
+--- a/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsAbstractHistorySession.java
++++ b/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsAbstractHistorySession.java
+@@ -103,4 +103,9 @@ public abstract class VcsAbstractHistorySession implements VcsHistorySession {
+     }
+     return map;
+   }
++
++  @Override
++  public boolean hasLocalSource() {
++    return false;
++  }
+ }
+diff --git a/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsHistorySession.java b/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsHistorySession.java
+index 8a7f51bfb7c..0a4520c4876 100644
+--- a/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsHistorySession.java
++++ b/platform/vcs-api/src/com/intellij/openapi/vcs/history/VcsHistorySession.java
+@@ -28,4 +28,6 @@ public interface VcsHistorySession {
+   boolean isContentAvailable(VcsFileRevision revision);
+   @Nullable
+   HistoryAsTreeProvider getHistoryAsTreeProvider();
++  // i.e. is history for local file (opposite - history for some URL)
++  boolean hasLocalSource();
+ }
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+index 06465cc097a..618bf2a2506 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+@@ -1236,6 +1236,8 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+     }
+     else if (VcsDataKeys.VCS_FILE_REVISION.is(dataId)) {
+       return firstSelectedRevision;
++    } else if (VcsDataKeys.VCS_NON_LOCAL_HISTORY_SESSION.is(dataId) && myHistorySession != null) {
++      return ! myHistorySession.hasLocalSource();
+     } else if (VcsDataKeys.VCS.is(dataId)) {
+       return myVcs.getKeyInstanceMethod();
+     }
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistoryProvider.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistoryProvider.java
+index 4ba4e6383b7..9307ac879a8 100644
+--- a/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistoryProvider.java
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistoryProvider.java
+@@ -134,7 +134,7 @@ public class SvnHistoryProvider
+                                                @NotNull List<VcsFileRevision> revisions,
+                                                @NotNull FilePath filePath,
+                                                VcsRevisionNumber currentRevision) {
+-    return new SvnHistorySession(myVcs, revisions, filePath, aBoolean, currentRevision, false);
++    return new SvnHistorySession(myVcs, revisions, filePath, aBoolean, currentRevision, false, ! filePath.isNonLocal());
+   }
+ 
+   @Nullable
+@@ -188,7 +188,8 @@ public class SvnHistoryProvider
+     logLoader.initSupports15();
+ 
+     final SvnHistorySession historySession =
+-      new SvnHistorySession(myVcs, Collections.<VcsFileRevision>emptyList(), committedPath, Boolean.TRUE.equals(logLoader.mySupport15), null, false);
++      new SvnHistorySession(myVcs, Collections.<VcsFileRevision>emptyList(), committedPath, Boolean.TRUE.equals(logLoader.mySupport15), null, false,
++                            ! path.isNonLocal());
+ 
+     final Ref<Boolean> sessionReported = new Ref<Boolean>();
+     final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
+diff --git a/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistorySession.java b/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistorySession.java
+index d8ba5f1f849..362b1a80436 100644
+--- a/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistorySession.java
++++ b/plugins/svn4idea/src/org/jetbrains/idea/svn/history/SvnHistorySession.java
+@@ -39,13 +39,15 @@ public class SvnHistorySession extends VcsAbstractHistorySession {
+   private final SvnVcs myVcs;
+   private final FilePath myCommittedPath;
+   private final boolean mySupports15;
++  private final boolean myHasLocalSource;
+ 
+   public SvnHistorySession(SvnVcs vcs, final List<VcsFileRevision> revisions, final FilePath committedPath, final boolean supports15,
+-                    @Nullable final VcsRevisionNumber currentRevision, boolean skipRefreshOnStart) {
++                           @Nullable final VcsRevisionNumber currentRevision, boolean skipRefreshOnStart, boolean source) {
+     super(revisions, currentRevision);
+     myVcs = vcs;
+     myCommittedPath = committedPath;
+     mySupports15 = supports15;
++    myHasLocalSource = source;
+     if (!skipRefreshOnStart) {
+       shouldBeRefreshed();
+     }
+@@ -99,6 +101,11 @@ public class SvnHistorySession extends VcsAbstractHistorySession {
+ 
+   @Override
+   public VcsHistorySession copy() {
+-    return new SvnHistorySession(myVcs, getRevisionList(), myCommittedPath, mySupports15, getCurrentRevisionNumber(), true);
++    return new SvnHistorySession(myVcs, getRevisionList(), myCommittedPath, mySupports15, getCurrentRevisionNumber(), true, myHasLocalSource);
++  }
++
++  @Override
++  public boolean hasLocalSource() {
++    return myHasLocalSource;
+   }
+ }

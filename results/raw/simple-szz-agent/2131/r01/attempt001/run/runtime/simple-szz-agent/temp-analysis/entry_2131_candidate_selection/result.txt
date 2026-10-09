@@ -1,0 +1,43 @@
+SELECTED: candidate_208
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix (EA-79438 - IAE: PopupHandler.installPopupHandler) reorders two statements in
+FileHistoryPanelImpl's constructor so that `myPopupActions = createPopupActions();` runs
+BEFORE `createDualView();`, instead of after it.
+
+Tracing FileHistoryPanelImpl.java (originally FileHistoryPanel.java, renamed in
+candidate_09) back through history shows that the constructor has always called
+createDualView() before assigning myPopupActions. For a long time this was harmless
+because createDualView() only registered anonymous PopupHandler subclasses whose
+invokePopup() method referenced myPopupActions lazily (only evaluated when a popup
+was actually triggered by the user, by which time the constructor had already finished
+and myPopupActions was set):
+
+    myDualView.getTreeView().addMouseListener(new PopupHandler() {
+      public void invokePopup(...) {
+        ... ActionManager.getInstance().createActionPopupMenu(ActionPlaces.UPDATE_POPUP, myPopupActions);
+      }
+    });
+
+candidate_208 refactors createDualView() to use the PopupHandler.installPopupHandler(...)
+utility method instead of the anonymous listener classes:
+
+    PopupHandler.installPopupHandler(myDualView.getTreeView(), myPopupActions, ActionPlaces.UPDATE_POPUP, ActionManager.getInstance());
+    PopupHandler.installPopupHandler(myDualView.getFlatView(), myPopupActions, ActionPlaces.UPDATE_POPUP, ActionManager.getInstance());
+
+Unlike the old lazy closures, myPopupActions is now passed as an ordinary method
+argument, which is evaluated immediately when createDualView() executes. Since
+createDualView() still runs before myPopupActions is assigned in the constructor,
+myPopupActions is null at this point, and PopupHandler.installPopupHandler
+(which builds an ActionPopupMenu from the group right away) throws an
+IllegalArgumentException — exactly the "IAE: PopupHandler.installPopupHandler" bug
+described in the fix commit.
+
+Confirming evidence: candidate_208's resulting blob hash for FileHistoryPanelImpl.java
+(ecb621f08d0) is exactly the "before" blob hash of the fix commit itself, and
+candidate_209 in this dataset is in fact the fix commit's own diff. This proves
+candidate_208 is the last commit before the fix, and it is the commit that turned the
+previously-harmless statement ordering into a live null-argument bug by switching to
+eager evaluation of myPopupActions.

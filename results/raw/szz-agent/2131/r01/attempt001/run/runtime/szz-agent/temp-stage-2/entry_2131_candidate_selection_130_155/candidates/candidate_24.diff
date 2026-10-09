@@ -1,0 +1,130 @@
+diff --git a/platform/platform-api/src/com/intellij/util/Alarm.java b/platform/platform-api/src/com/intellij/util/Alarm.java
+index d5fa3a4484a..02ce034e0ad 100644
+--- a/platform/platform-api/src/com/intellij/util/Alarm.java
++++ b/platform/platform-api/src/com/intellij/util/Alarm.java
+@@ -18,10 +18,14 @@ package com.intellij.util;
+ import com.intellij.concurrency.JobScheduler;
+ import com.intellij.openapi.Disposable;
+ import com.intellij.openapi.application.Application;
++import com.intellij.openapi.application.ApplicationActivationListener;
+ import com.intellij.openapi.application.ApplicationManager;
+ import com.intellij.openapi.application.ModalityState;
+ import com.intellij.openapi.diagnostic.Logger;
+ import com.intellij.openapi.util.Disposer;
++import com.intellij.openapi.wm.IdeFrame;
++import com.intellij.util.messages.MessageBus;
++import com.intellij.util.messages.MessageBusConnection;
+ import com.intellij.util.ui.update.Activatable;
+ import com.intellij.util.ui.update.UiNotifyConnector;
+ import org.jetbrains.annotations.NotNull;
+@@ -92,6 +96,26 @@ public class Alarm implements Disposable {
+     }
+   }
+ 
++  public void addRequest(final Runnable request, final int delay, boolean runWithActiveFrameOnly) {
++    if (runWithActiveFrameOnly && !ApplicationManager.getApplication().isActive()) {
++      final MessageBus bus = ApplicationManager.getApplication().getMessageBus();
++      final MessageBusConnection connection = bus.connect(this);
++      connection.subscribe(ApplicationActivationListener.TOPIC, new ApplicationActivationListener() {
++        @Override
++        public void applicationActivated(IdeFrame ideFrame) {
++          connection.disconnect();
++          addRequest(request, delay);
++        }
++
++        @Override
++        public void applicationDeactivated(IdeFrame ideFrame) {
++        }
++      });
++    } else {
++      addRequest(request, delay);
++    }
++  }
++
+   public void addRequest(final Runnable request, long delayMillis) {
+     _addRequest(request, delayMillis, myThreadToUse == ThreadToUse.SWING_THREAD ? ModalityState.current() : null);
+   }
+diff --git a/platform/platform-impl/src/com/intellij/notification/impl/IdeNotificationArea.java b/platform/platform-impl/src/com/intellij/notification/impl/IdeNotificationArea.java
+index 3811c8eec11..aa843a09535 100644
+--- a/platform/platform-impl/src/com/intellij/notification/impl/IdeNotificationArea.java
++++ b/platform/platform-impl/src/com/intellij/notification/impl/IdeNotificationArea.java
+@@ -86,7 +86,7 @@ public class IdeNotificationArea extends JLabel implements CustomStatusBarWidget
+       @Override
+       public void run() {
+         updateStatus();
+-        myLogAlarm.addRequest(this, 100);
++        myLogAlarm.addRequest(this, 100, true);
+       }
+     }.run();
+ 
+diff --git a/platform/platform-impl/src/com/intellij/openapi/actionSystem/impl/ActionManagerImpl.java b/platform/platform-impl/src/com/intellij/openapi/actionSystem/impl/ActionManagerImpl.java
+index c2caaf12281..c7a838945b5 100644
+--- a/platform/platform-impl/src/com/intellij/openapi/actionSystem/impl/ActionManagerImpl.java
++++ b/platform/platform-impl/src/com/intellij/openapi/actionSystem/impl/ActionManagerImpl.java
+@@ -29,6 +29,7 @@ import com.intellij.openapi.actionSystem.ex.ActionManagerEx;
+ import com.intellij.openapi.actionSystem.ex.ActionUtil;
+ import com.intellij.openapi.actionSystem.ex.AnActionListener;
+ import com.intellij.openapi.application.Application;
++import com.intellij.openapi.application.ApplicationActivationListener;
+ import com.intellij.openapi.application.ApplicationManager;
+ import com.intellij.openapi.application.ModalityState;
+ import com.intellij.openapi.application.ex.ApplicationManagerEx;
+@@ -44,7 +45,9 @@ import com.intellij.openapi.util.*;
+ import com.intellij.openapi.util.registry.Registry;
+ import com.intellij.openapi.util.text.StringUtil;
+ import com.intellij.openapi.wm.IdeFocusManager;
++import com.intellij.openapi.wm.IdeFrame;
+ import com.intellij.util.ArrayUtil;
++import com.intellij.util.messages.MessageBusConnection;
+ import com.intellij.util.ui.UIUtil;
+ import gnu.trove.THashMap;
+ import gnu.trove.THashSet;
+@@ -1176,7 +1179,19 @@ public final class ActionManagerImpl extends ActionManagerEx implements Applicat
+       super(TIMER_DELAY, null);
+       addActionListener(this);
+       setRepeats(true);
+-     }
++      final MessageBusConnection connection = ApplicationManager.getApplication().getMessageBus().connect();
++      connection.subscribe(ApplicationActivationListener.TOPIC, new ApplicationActivationListener() {
++        @Override
++        public void applicationActivated(IdeFrame ideFrame) {
++          setDelay(TIMER_DELAY);
++        }
++
++        @Override
++        public void applicationDeactivated(IdeFrame ideFrame) {
++          setDelay(30000);
++        }
++      });
++    }
+ 
+     @Override
+     public String toString() {
+diff --git a/platform/platform-impl/src/com/intellij/openapi/wm/impl/FocusManagerImpl.java b/platform/platform-impl/src/com/intellij/openapi/wm/impl/FocusManagerImpl.java
+index 6983d336869..5240b381a75 100644
+--- a/platform/platform-impl/src/com/intellij/openapi/wm/impl/FocusManagerImpl.java
++++ b/platform/platform-impl/src/com/intellij/openapi/wm/impl/FocusManagerImpl.java
+@@ -474,6 +474,7 @@ public class FocusManagerImpl extends IdeFocusManager implements Disposable {
+   }
+ 
+   private void restartIdleAlarm() {
++    if (!ApplicationManager.getApplication().isActive()) return;
+     myIdleAlarm.cancelAllRequests();
+     myIdleAlarm.addRequest(new IdleRunnable(), Registry.intValue("actionSystem.focusIdleTimeout"));
+   }
+diff --git a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+index 66e49ab0ced..18bed0f867b 100644
+--- a/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
++++ b/platform/vcs-impl/src/com/intellij/openapi/vcs/history/FileHistoryPanelImpl.java
+@@ -424,7 +424,10 @@ public class FileHistoryPanelImpl extends PanelWithActionsAndCloseButton {
+         if (myVcs.getProject().isDisposed()) {
+           return;
+         }
+-        final boolean refresh = (! myInRefresh) && myHistorySession.shouldBeRefreshed();
++        boolean refresh = ApplicationManager.getApplication().isActive()
++          && !myInRefresh
++          && myHistorySession.shouldBeRefreshed();
++
+         myUpdateAlarm.cancelAllRequests();
+         if (myUpdateAlarm.isDisposed()) return;
+         myUpdateAlarm.addRequest(this, 20000);

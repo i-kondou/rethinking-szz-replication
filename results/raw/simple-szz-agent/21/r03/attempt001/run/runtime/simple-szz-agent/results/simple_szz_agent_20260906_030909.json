@@ -1,0 +1,362 @@
+{
+  "metadata": {
+    "timestamp": "20260906_030909",
+    "dataset_file": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/21/r03/attempt001/run/runtime/dataset.json",
+    "model": "claude-sonnet-5",
+    "agent": "claude-code",
+    "algorithm": "Simple SZZ Agent (direct candidate selection)",
+    "without_fc_message": false,
+    "without_fc_diff": false
+  },
+  "summary": {
+    "total_entries": 1,
+    "entries_with_result": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "accuracy": 1.0
+  },
+  "aggregate_stats": {
+    "duration_s": {
+      "min": 64.784,
+      "max": 64.784,
+      "mean": 64.784,
+      "median": 64.784,
+      "total": 64.784,
+      "count": 1
+    },
+    "duration_api_s": {
+      "min": 64.683,
+      "max": 64.683,
+      "mean": 64.683,
+      "median": 64.683,
+      "total": 64.683,
+      "count": 1
+    },
+    "num_turns": {
+      "min": 14,
+      "max": 14,
+      "mean": 14,
+      "median": 14,
+      "total": 14,
+      "count": 1
+    },
+    "input_tokens": {
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "median": 20,
+      "total": 20,
+      "count": 1
+    },
+    "output_tokens": {
+      "min": 4814,
+      "max": 4814,
+      "mean": 4814,
+      "median": 4814,
+      "total": 4814,
+      "count": 1
+    },
+    "cache_creation_input_tokens": {
+      "min": 22809,
+      "max": 22809,
+      "mean": 22809,
+      "median": 22809,
+      "total": 22809,
+      "count": 1
+    },
+    "cache_read_input_tokens": {
+      "min": 146659,
+      "max": 146659,
+      "mean": 146659,
+      "median": 146659,
+      "total": 146659,
+      "count": 1
+    },
+    "total_cost_usd": {
+      "min": 0.2531217,
+      "max": 0.2531217,
+      "mean": 0.2531217,
+      "median": 0.2531217,
+      "total": 0.2531217,
+      "count": 1
+    },
+    "total_tool_calls": {
+      "min": 13,
+      "max": 13,
+      "mean": 13,
+      "median": 13,
+      "total": 13,
+      "count": 1
+    },
+    "tool_calls_by_name": {
+      "Read": 6,
+      "Glob": 1,
+      "Grep": 5,
+      "Write": 1
+    },
+    "num_candidates": {
+      "min": 101,
+      "max": 101,
+      "mean": 101,
+      "median": 101,
+      "total": 101,
+      "count": 1
+    },
+    "num_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    },
+    "num_source_files_touched_by_fix": {
+      "min": 1,
+      "max": 1,
+      "mean": 1,
+      "median": 1,
+      "total": 1,
+      "count": 1
+    }
+  },
+  "results": [
+    {
+      "id": "21",
+      "fix_commit_hash": "3cee38982a7be5b85040b42b279b51383da57eeb",
+      "ground_truth_bics": [
+        "7339cc176cc7bbc671f4dec65b2f161d351ea270"
+      ],
+      "predicted_bics": [
+        "7339cc176cc7bbc671f4dec65b2f161d351ea270"
+      ],
+      "prediction_source": "simple_szz_agent",
+      "recall": 1.0,
+      "precision": 1.0,
+      "correct": true,
+      "gt_in_predictions": true,
+      "num_matches": 1
+    }
+  ],
+  "details": [
+    {
+      "entry_id": "21",
+      "fix_commit": "3cee38982a7be5b85040b42b279b51383da57eeb",
+      "ground_truth_bics": [
+        "7339cc176cc7bbc671f4dec65b2f161d351ea270"
+      ],
+      "total_candidates": 101,
+      "gt_in_candidates": true,
+      "selected_commit": "7339cc176cc7bbc671f4dec65b2f161d351ea270",
+      "selected_index": 98,
+      "confidence": "HIGH",
+      "explanation": "The fix commit adds a call to `spe.generateNASAThermoData()` immediately after `spe.setName(spe.getThermoData().getName())` inside `Species.java`, with a comment explaining that the Chemkin-formatted NASA polynomials contain the species name and must be regenerated whenever the name is changed. This confirms the bug: when a species' name is set from the primary thermo library, the already-generated NASA thermo data (which embeds the old name) is never regenerated, so the Chemkin output ends up w",
+      "is_correct": true,
+      "num_files_touched_by_fix": 1,
+      "num_source_files_touched_by_fix": 1,
+      "files_analyzed": [
+        "source/RMG/jing/chem/Species.java"
+      ],
+      "call_stats": {
+        "duration_s": 64.784,
+        "duration_api_s": 64.683,
+        "num_turns": 14,
+        "input_tokens": 20,
+        "output_tokens": 4814,
+        "cache_creation_input_tokens": 22809,
+        "cache_read_input_tokens": 146659,
+        "total_cost_usd": 0.2531217,
+        "total_tool_calls": 13,
+        "tool_calls_by_name": {
+          "Read": 6,
+          "Glob": 1,
+          "Grep": 5,
+          "Write": 1
+        },
+        "turns": [
+          {
+            "turn_number": 1,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 4882,
+            "cache_read_input_tokens": 3398,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/21/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_21_candidate_selection/INSTRUCTIONS.md"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 2,
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "cache_creation_input_tokens": 1403,
+            "cache_read_input_tokens": 8280,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/21/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_21_candidate_selection/fix_commit_message.txt"
+                }
+              },
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/21/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_21_candidate_selection/fix_commit_diff.txt"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 3,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 839,
+            "cache_read_input_tokens": 9683,
+            "tool_calls": [
+              {
+                "name": "Glob",
+                "input": {
+                  "pattern": "candidates/*.diff"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "setName\\(spe.getThermoData\\(\\)\\.getName\\(\\)\\)",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "generateNASAThermoData",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 4,
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 2055,
+            "cache_read_input_tokens": 10522,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/21/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_21_candidate_selection/candidates/candidate_01.diff",
+                  "limit": 100
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 5,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 3578,
+            "cache_read_input_tokens": 12577,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "generateNASAThermoData|setName\\(spe\\.getThermoData\\(\\)\\.getName\\(\\)\\)",
+                  "path": "candidates/candidate_101.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              },
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "generateNASAThermoData|setName\\(spe\\.getThermoData\\(\\)\\.getName\\(\\)\\)",
+                  "path": "candidates/candidate_99.diff",
+                  "output_mode": "content",
+                  "-C": 5
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 6,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1435,
+            "cache_read_input_tokens": 16155,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/21/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_21_candidate_selection/candidates/candidate_99.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 7,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 1031,
+            "cache_read_input_tokens": 17590,
+            "tool_calls": [
+              {
+                "name": "Read",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/21/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_21_candidate_selection/candidates/candidate_100.diff"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 8,
+            "input_tokens": 2,
+            "output_tokens": 1,
+            "cache_creation_input_tokens": 6147,
+            "cache_read_input_tokens": 18621,
+            "tool_calls": [
+              {
+                "name": "Grep",
+                "input": {
+                  "pattern": "use the name from the primary thermo library",
+                  "path": "candidates",
+                  "output_mode": "files_with_matches"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 9,
+            "input_tokens": 2,
+            "output_tokens": 7,
+            "cache_creation_input_tokens": 297,
+            "cache_read_input_tokens": 24768,
+            "tool_calls": [
+              {
+                "name": "Write",
+                "input": {
+                  "file_path": "/Users/user-01/research/workspaces/claude-szz/implementation/experiments/runs/llm-baselines/simple-szz-agent-bfc-message-neutralized-final-v2-dec017-retry10/21/r03/attempt001/run/runtime/simple-szz-agent/temp-analysis/entry_21_candidate_selection/result.txt",
+                  "content": "SELECTED: candidate_99\n\nCONFIDENCE: HIGH\n\nEXPLANATION:\nThe fix commit adds a call to `spe.generateNASAThermoData()` immediately after `spe.setName(spe.getThermoData().getName())` inside `Species.java`, with a comment explaining that the Chemkin-formatted NASA polynomials contain the species name and must be regenerated whenever the name is changed. This confirms the bug: when a species' name is set from the primary thermo library, the already-generated NASA thermo data (which embeds the old name) is never regenerated, so the Chemkin output ends up with the old species name in the thermo section.\n\ncandidate_99 is the commit that first introduces this exact code block:\n```java\nif ((p_name == null || p_name.length()==0) && p_chemGraph.fromprimarythermolibrary){\n    name = spe.getThermoData().getName();\n    if (name.matches(\"s\\\\d{8}\")){\n        // it's an ugly PrIMe ID! Ignore it.\n    } else{\n        // use the name from the primary thermo library!\n        spe.setName(spe.getThermoData().getName());\n    }\n}\n```\nThis is precisely the logic that calls `spe.setName(...)` without regenerating the NASA thermo data, matching the bug described in the fix commit message (\"the Chemkin file ended up with a thermo section containing the old species name\"). A search across all 101 candidate diffs for this code (the \"use the name from the primary thermo library!\" comment and the associated setName call) found it only in candidate_99 (introduction) and candidate_101 (the fix itself, which adds the missing regenerateNASAThermoData call). No candidate between 99 and 101 modifies this code block (e.g., candidate_100 touches unrelated DeltaEDown refactoring in the same file but doesn't touch this section). This makes candidate_99 the clear, sole bug-introducing commit.\n"
+                }
+              }
+            ]
+          },
+          {
+            "turn_number": 10,
+            "input_tokens": 2,
+            "output_tokens": 2,
+            "cache_creation_input_tokens": 1142,
+            "cache_read_input_tokens": 25065,
+            "tool_calls": []
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

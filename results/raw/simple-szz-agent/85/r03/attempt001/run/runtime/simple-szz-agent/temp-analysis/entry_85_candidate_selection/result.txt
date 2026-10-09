@@ -1,0 +1,18 @@
+SELECTED: candidate_214
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit modifies app/src/main/java/de/bitshares_munich/adapters/TransfersTableAdapter.java, reverting the fiat/equivalent-amount formatting logic in renderAmount() from a Currency.getInstance()/NumberFormat-based approach back to a simpler Smartcoins.getFiatSymbol()+String.format() approach. It also removes a `Locale locale` field and constructor parameter from TransfersTableAdapter, restoring local fetching of the language/locale inside renderAmount(), and reverts the call site in BalancesFragment.java to construct TransfersTableAdapter without passing a Locale argument.
+
+Tracing the history of TransfersTableAdapter.java through the candidates:
+- candidate_159 created the file using Helper.setLocaleNumberFormat (unrelated early implementation).
+- candidate_192/205/210 used a simple `fiatAmount.getAsset().getSymbol()` + String.format approach for the equivalent/fiat amount.
+- candidate_213 introduced `Smartcoins.getFiatSymbol(smartcoinAmount.getAsset())` combined with `String.format("~ %s %.2f", fiatSymbol, Util.fromBase(smartcoinAmount))` — functionally identical to the code the fix commit restores.
+- candidate_214 then replaced that exact code with:
+    final Currency currency = Currency.getInstance(smartcoinAmount.getAsset().getSymbol());
+    NumberFormat currencyFormatter = Helper.newCurrencyFormat(getContext(), currency, locale);
+    String eqValue = currencyFormatter.format(Util.fromBase(smartcoinAmount));
+  It also added the `Locale locale` field and changed the constructor signature to `TransfersTableAdapter(Context context, Locale locale, UserAccount userAccount, HistoricalTransferEntry[] data)`, commented out the local locale-fetching code, and updated the BalancesFragment.java call site to pass the fragment's locale field into the new constructor parameter.
+
+This is an exact, line-for-line match (in reverse) with what the fix commit undoes. The bug: Currency.getInstance() requires a valid ISO 4217 currency code; smartcoin asset symbols (e.g. bitcoin-style asset symbols) are not guaranteed to be valid ISO codes, so this call can throw IllegalArgumentException and crash the app when rendering a transfer's fiat-equivalent amount. Candidate_214 is the commit that introduced this problematic code, and the fix commit reverts it back to the safer Smartcoins.getFiatSymbol()-based implementation.

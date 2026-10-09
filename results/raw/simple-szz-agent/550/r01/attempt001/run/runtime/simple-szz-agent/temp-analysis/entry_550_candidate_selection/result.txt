@@ -1,0 +1,45 @@
+SELECTED: candidate_32
+
+CONFIDENCE: HIGH
+
+EXPLANATION:
+The fix commit adds a missing "left" string to an alignment array in
+InstructorDetailAction.java, changing:
+    new String[] {"left", "left","left", "left", "left"},
+to:
+    new String[] {"left", "left","left", "left", "left", "left"},
+This array is the third constructor argument of the WebTable used to render
+the "no committed timetable yet" branch of the instructor's class-assignment
+table, and it must have exactly as many entries as the header-label array
+(the second constructor argument) and the WebTable's declared column count
+(the first constructor argument), otherwise the WebTable code indexes past
+the end of the array and throws ArrayIndexOutOfBoundsException.
+
+Tracing this exact code block through the candidates:
+- candidate_01 first introduces the block with 5 columns, 5 headers, and a
+  matching 5-element alignment array (balanced).
+- candidate_06 and candidate_09 change header text/count but keep the
+  alignment array in sync (still balanced).
+- candidate_21 and candidate_26 similarly add columns to the "hasTimetable"
+  branch while leaving the untouched "else" branch (5 columns / 5 headers /
+  5 aligns) balanced.
+- candidate_32 changes the "else" branch from `new WebTable( 5, ...)` to
+  `new WebTable( 6, ...)` and adds `MSG.columnTeachingResponsibility()` to
+  the header array (making it 6 header labels: Class, Check Conflicts,
+  Share, Teaching Responsibility, Limit, Manager), but does NOT add a
+  corresponding 6th entry to the alignment array, which is left at:
+      new String[] {"left", "left","left", "left", "left"},
+  (only 5 elements). This mismatch (6 declared columns / 6 headers / 5
+  alignment strings) is precisely the bug that causes the
+  ArrayIndexOutOfBoundsException described in the fix commit message,
+  which occurs when an instructor is assigned to classes but there is no
+  committed timetable yet (i.e., exactly the "else" branch built in
+  candidate_32).
+- candidate_33 modifies nearby code (icon/conflict highlighting) but does
+  not touch this array at all, so the bug persists unchanged.
+- candidate_34 is the fix itself, adding the missing "left" to restore the
+  5-vs-6 balance, exactly matching fix_commit_diff.txt.
+
+Because candidate_32 is the commit that first created the 6-vs-5 mismatch
+between the header array and the alignment array in the no-timetable
+branch, it is the bug-introducing commit.
